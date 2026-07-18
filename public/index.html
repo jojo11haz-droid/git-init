@@ -879,13 +879,73 @@
     font-size:26px;
     margin:0 0 20px;
   }
+  /* ---- auth area ---- */
+  .btw-auth-area{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .btw-auth-user{
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .btw-auth-user strong{color:var(--ink);}
+  .btw-signedout-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:36px 28px;
+    max-width:520px;
+    margin:30px auto;
+    text-align:center;
+  }
+  .btw-signedout-box h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 8px;
+  }
+  .btw-signedout-box p{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0 0 18px;
+  }
+  .btw-add-patient-card{
+    flex-shrink:0;
+    width:104px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:10px;
+    cursor:pointer;
+    background:transparent;
+    color:var(--ink-soft);
+    font-size:12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    min-height:88px;
+  }
+  .btw-add-patient-card:hover{border-color:var(--moss);color:var(--moss);}
+  .btw-entry-delete{
+    background:none;
+    border:none;
+    color:var(--clay);
+    cursor:pointer;
+    font-size:12px;
+    padding:0;
+    float:right;
+  }
 </style>
 
 <div class="btw-root">
-  <div class="btw-modal-overlay" id="btwConsentOverlay">
+  <div class="btw-modal-overlay" id="btwConsentOverlay" style="display:none;">
     <div class="btw-modal">
-      <div class="btw-modal-eyebrow">Before you start</div>
-      <h2>How Between uses your check-ins</h2>
+      <div class="btw-modal-eyebrow">Patient consent</div>
+      <h2>Enable AI summaries for <span id="btwConsentPatientName"></span>?</h2>
       <ul>
         <li>Your check-ins are shared with your therapist as short summaries — not always the raw recording.</li>
         <li>If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). This counts as "profiling" of your health information.</li>
@@ -893,35 +953,49 @@
         <li>You can see everything the app has inferred about your patterns at any time, and ask for it to be deleted.</li>
       </ul>
 
-      <div class="btw-modal-toggle-row">
-        <div>
-          <strong>Enable AI summaries &amp; trend charts</strong>
-          Off by default. You choose.
-        </div>
-        <label class="btw-switch">
-          <input type="checkbox" id="btwConsentToggle">
-          <span class="btw-switch-slider"></span>
-        </label>
-      </div>
-
       <div class="btw-modal-crisis">
         Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Canada Suicide Crisis Helpline) or <strong>911</strong> — don't wait on this app.
       </div>
 
       <label class="btw-modal-agree">
         <input type="checkbox" id="btwConsentAgree">
-        <span>I understand how my check-ins are used and processed, and I consent to that use as described above (I can change the AI toggle anytime in settings).</span>
+        <span>I confirm this patient has been shown the above, understands how their check-ins are used and processed, and has consented to AI analysis (they can withdraw this anytime).</span>
       </label>
 
-      <button class="btw-modal-continue" id="btwConsentContinue" disabled>Continue</button>
+      <div class="btw-form-error" id="btwConsentError"></div>
+      <div class="btw-form-row">
+        <button class="btw-modal-continue secondary" id="btwConsentCancel">Cancel</button>
+        <button class="btw-modal-continue" id="btwConsentContinue" disabled>Enable AI summaries</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwLoginOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:400px;">
+      <div class="btw-modal-eyebrow">Welcome back</div>
+      <h2>Log in</h2>
+      <div class="btw-form-field">
+        <label>Email</label>
+        <input type="email" id="btwLoginEmail" placeholder="jamie@yourpractice.ca">
+      </div>
+      <div class="btw-form-field">
+        <label>Password</label>
+        <input type="password" id="btwLoginPassword" placeholder="Your password">
+      </div>
+      <div class="btw-form-error" id="btwLoginError"></div>
+      <div class="btw-form-row">
+        <button class="btw-modal-continue secondary" id="btwLoginCancel">Cancel</button>
+        <button class="btw-modal-continue" id="btwLoginSubmit">Log in</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">No account yet? <button id="btwLoginToSignup" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Start a free trial</button></div>
     </div>
   </div>
 
   <div class="btw-modal-overlay" id="btwDataOverlay" style="display:none;">
     <div class="btw-modal">
-      <div class="btw-modal-eyebrow">Your data</div>
-      <h2>What Between knows about you</h2>
-      <div style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px;">Every check-in you've sent, and any AI-generated summary or tags attached to it. You have the right to see, correct, or delete this at any time.</div>
+      <div class="btw-modal-eyebrow">Patient data</div>
+      <h2 id="btwDataTitle">Stored check-ins</h2>
+      <div style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px;">Every check-in on file for this patient, and any AI-generated summary or tags attached to it. Patients have the right to see, correct, or delete this at any time.</div>
 
       <div class="btw-modal-toggle-row">
         <div>
@@ -947,9 +1021,14 @@
       <div class="btw-sub">Between-session check-ins for therapy — patients send a quick note in the moment, AI summarizes it, therapists see the pattern.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
-        <button class="btw-nav-btn" id="btwNavProduct">Product demo</button>
+        <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
         <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
       </div>
+    </div>
+    <div class="btw-auth-area">
+      <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
+      <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
+      <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
     </div>
   </div>
 
@@ -1074,15 +1153,23 @@
   </div>
 
   <div class="btw-view" id="btwViewProduct">
-  <div class="btw-grid">
+  <div class="btw-signedout-box" id="btwSignedOutBox" style="display:none;">
+    <h3>Your dashboard lives here.</h3>
+    <p>Log in to see your caseload, or start a free trial to create your clinician account. Patient data is only visible to the clinician it belongs to.</p>
+    <div class="btw-hero-cta" style="justify-content:center;">
+      <button class="btw-hero-btn primary" id="btwSignedOutLogin">Log in</button>
+      <button class="btw-hero-btn secondary" id="btwSignedOutSignup">Start 14-day free trial</button>
+    </div>
+  </div>
+  <div class="btw-grid" id="btwDashGrid" style="display:none;">
     <!-- PATIENT PANE -->
     <div class="btw-pane">
-      <div class="btw-eyebrow">Patient view · sending as Alex M.</div>
+      <div class="btw-eyebrow" id="btwPatientPaneEyebrow">Patient view</div>
       <h3>How are things right now?</h3>
       <div class="btw-pane-desc">Send a quick check-in. Your therapist will see a short summary, not the raw recording.</div>
       <div id="btwAiStatus" style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);margin:-8px 0 6px;padding:6px 10px;background:var(--paper);border:1px solid var(--line);border-radius:7px;display:inline-block;">AI summaries: off</div>
       <div style="margin:0 0 14px;">
-        <button id="btwOpenData" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">View my data &amp; settings</button>
+        <button id="btwOpenData" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">View patient data &amp; AI settings</button>
       </div>
 
       <div class="btw-field-label">Mood right now</div>
@@ -1119,14 +1206,14 @@
         This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.
       </div>
 
-      <div class="btw-disclaimer">Demo only — check-ins are summarized live by an AI model for this prototype, but nothing is stored beyond this browser session, and this is not a real crisis response system.</div>
+      <div class="btw-disclaimer">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
     </div>
 
     <div class="btw-seam"></div>
 
     <!-- THERAPIST PANE -->
     <div class="btw-pane">
-      <div class="btw-eyebrow">Therapist view · Jamie R.</div>
+      <div class="btw-eyebrow" id="btwTherapistPaneEyebrow">Therapist view</div>
       <h3>Caseload</h3>
       <div class="btw-pane-desc">Auto-updating as check-ins come in. Select a patient to see their timeline and trends.</div>
 
@@ -1303,7 +1390,7 @@
         <div class="btw-signup-step" id="btwStepDone" style="display:none;">
           <div class="btw-modal-eyebrow">You're in</div>
           <h2>Trial started 🎉</h2>
-          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Your 14-day trial is active — no card required. We've sent a confirmation to <strong id="btwDoneEmail"></strong>. Next, you can invite your first patient to send a check-in.</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Your 14-day trial is active — no card required. You're signed in as <strong id="btwDoneEmail"></strong>. Next, add your first patient and send a check-in.</div>
           <button class="btw-modal-continue" id="btwSignupClose">Go to my dashboard</button>
         </div>
 
@@ -1314,7 +1401,52 @@
 
 <script>
 (function(){
-  const MY_PATIENT_ID = 'p1'; // the patient pane always represents this patient in the demo
+  // --- tiny same-origin API helper (session cookie rides along automatically) ---
+  async function api(method, url, body){
+    const resp = await fetch(url, {
+      method,
+      headers: body !== undefined ? {'Content-Type':'application/json'} : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+    let data = null;
+    try { data = await resp.json(); } catch(e) {}
+    if(!resp.ok){
+      const err = new Error((data && data.error) || ('Request failed (' + resp.status + ')'));
+      err.status = resp.status;
+      throw err;
+    }
+    return data;
+  }
+  // Everything rendered below comes from the server (i.e. from stored patient
+  // text), so it must be escaped before touching innerHTML.
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // --- app state: all server-backed, no demo data ---
+  const state = {
+    me: null,               // signed-in clinician from /api/auth/me
+    patients: [],           // caseload from GET /api/patients
+    selectedPatientId: null,
+    checkIns: [],           // check-ins for the selected patient
+    selectedTags: new Set()
+  };
+  function selectedPatient(){ return state.patients.find(p=>p.id===state.selectedPatientId) || null; }
+  function initials(name){
+    const parts = String(name||'').trim().split(/\s+/).filter(Boolean);
+    return (parts.map(w=>w[0]).join('').slice(0,2).toUpperCase()) || '?';
+  }
+  // Server row -> shape the render functions use
+  function mapCheckIn(row){
+    return {
+      id: row.id,
+      time: new Date(row.submitted_at).getTime(),
+      mood: row.mood_score,
+      tags: [...(row.manual_tags||[]), ...(row.auto_tags||[])],
+      summary: row.summary_text || row.raw_text || 'Check-in received (no notes).',
+      risk: !!row.risk_flag
+    };
+  }
 
   // --- nav tabs ---
   const navHome = document.getElementById('btwNavHome');
@@ -1355,6 +1487,94 @@
       });
     }, 90);
   })();
+
+  // --- auth state / header ---
+  const authUserEl = document.getElementById('btwAuthUser');
+  const loginBtn = document.getElementById('btwLoginBtn');
+  const logoutBtn = document.getElementById('btwLogoutBtn');
+  const signedOutBox = document.getElementById('btwSignedOutBox');
+  const dashGrid = document.getElementById('btwDashGrid');
+
+  function renderAuthState(){
+    const signedIn = !!state.me;
+    authUserEl.style.display = signedIn ? '' : 'none';
+    authUserEl.innerHTML = signedIn ? `Signed in as <strong>${esc(state.me.name)}</strong>` : '';
+    loginBtn.style.display = signedIn ? 'none' : '';
+    logoutBtn.style.display = signedIn ? '' : 'none';
+    signedOutBox.style.display = signedIn ? 'none' : '';
+    dashGrid.style.display = signedIn ? '' : 'none';
+    const therapistEyebrow = document.getElementById('btwTherapistPaneEyebrow');
+    if(therapistEyebrow) therapistEyebrow.textContent = signedIn ? ('Therapist view · ' + state.me.name) : 'Therapist view';
+  }
+
+  async function loadSession(){
+    try{
+      const data = await api('GET', '/api/auth/me');
+      state.me = data.clinician;
+    }catch(err){
+      state.me = null; // 401 = signed out; 503 = no DB configured — same UI either way
+    }
+    renderAuthState();
+    if(state.me) await loadPatients();
+  }
+
+  async function loadPatients(){
+    state.patients = await api('GET', '/api/patients');
+    if(!state.patients.find(p=>p.id===state.selectedPatientId)){
+      state.selectedPatientId = state.patients.length ? state.patients[0].id : null;
+    }
+    await loadCheckIns();
+  }
+
+  async function loadCheckIns(){
+    if(state.selectedPatientId){
+      const rows = await api('GET', '/api/patients/' + state.selectedPatientId + '/check-ins');
+      state.checkIns = rows.map(mapCheckIn);
+    } else {
+      state.checkIns = [];
+    }
+    renderAll();
+  }
+
+  logoutBtn.addEventListener('click', async ()=>{
+    try{ await api('POST', '/api/auth/logout'); }catch(err){}
+    state.me = null; state.patients = []; state.checkIns = []; state.selectedPatientId = null;
+    renderAuthState();
+    renderAll();
+  });
+
+  // --- login modal ---
+  const loginOverlay = document.getElementById('btwLoginOverlay');
+  const loginError = document.getElementById('btwLoginError');
+  function openLogin(){
+    loginError.textContent = '';
+    loginOverlay.style.display = 'flex';
+    document.getElementById('btwLoginEmail').focus();
+  }
+  loginBtn.addEventListener('click', openLogin);
+  document.getElementById('btwSignedOutLogin').addEventListener('click', openLogin);
+  document.getElementById('btwSignedOutSignup').addEventListener('click', ()=> window.btwOpenSignup('solo_monthly'));
+  document.getElementById('btwLoginCancel').addEventListener('click', ()=>{ loginOverlay.style.display = 'none'; });
+  document.getElementById('btwLoginToSignup').addEventListener('click', ()=>{
+    loginOverlay.style.display = 'none';
+    window.btwOpenSignup('solo_monthly');
+  });
+  document.getElementById('btwLoginSubmit').addEventListener('click', async ()=>{
+    const email = document.getElementById('btwLoginEmail').value.trim();
+    const password = document.getElementById('btwLoginPassword').value;
+    if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
+    try{
+      const data = await api('POST', '/api/auth/login', { email, password });
+      state.me = data.clinician;
+      loginOverlay.style.display = 'none';
+      document.getElementById('btwLoginPassword').value = '';
+      renderAuthState();
+      await loadPatients();
+      goToView(navProduct, viewProduct);
+    }catch(err){
+      loginError.textContent = err.message;
+    }
+  });
 
   // --- signup flow ---
   const signupOverlay = document.getElementById('btwSignupOverlay');
@@ -1402,10 +1622,10 @@
     const province = document.getElementById('btwSuProvince').value;
     const provinceNames = {QC:'Quebec',ON:'Ontario',BC:'British Columbia',AB:'Alberta',other:'Other'};
     document.getElementById('btwReviewBox').innerHTML = `
-      <div><span class="label">Name:</span> <strong>${name}</strong></div>
-      <div><span class="label">Email:</span> <strong>${email}</strong></div>
-      <div><span class="label">Practice:</span> <strong>${practice}</strong></div>
-      <div><span class="label">Province:</span> <strong>${provinceNames[province]||province}</strong></div>
+      <div><span class="label">Name:</span> <strong>${esc(name)}</strong></div>
+      <div><span class="label">Email:</span> <strong>${esc(email)}</strong></div>
+      <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
+      <div><span class="label">Province:</span> <strong>${esc(provinceNames[province]||province)}</strong></div>
       <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong></div>
       <div><span class="label">Trial:</span> <strong>14 days, no card required</strong></div>
     `;
@@ -1415,61 +1635,131 @@
   const agreeTerms = document.getElementById('btwSuAgreeTerms');
   const submitBtn = document.getElementById('btwStep3Submit');
   agreeTerms.addEventListener('change', ()=>{ submitBtn.disabled = !agreeTerms.checked; });
-  submitBtn.addEventListener('click', ()=>{
+  submitBtn.addEventListener('click', async ()=>{
     if(!agreeTerms.checked) return;
-    document.getElementById('btwDoneEmail').textContent = document.getElementById('btwSuEmail').value.trim();
-    showStep('btwStepDone');
+    const err = document.getElementById('btwStep3Error');
+    err.textContent = '';
+    submitBtn.disabled = true;
+    try{
+      const data = await api('POST', '/api/auth/signup', {
+        name: document.getElementById('btwSuName').value.trim(),
+        email: document.getElementById('btwSuEmail').value.trim(),
+        password: document.getElementById('btwSuPassword').value,
+        licenceNumber: document.getElementById('btwSuLicence').value.trim(),
+        province: document.getElementById('btwSuProvince').value,
+        practiceName: document.getElementById('btwSuPractice').value.trim() || null
+      });
+      state.me = data.clinician;
+      renderAuthState();
+      await loadPatients();
+      document.getElementById('btwDoneEmail').textContent = state.me.email;
+      showStep('btwStepDone');
+    }catch(e){
+      err.textContent = e.message;
+    }finally{
+      submitBtn.disabled = !agreeTerms.checked;
+    }
   });
   document.getElementById('btwSignupClose').addEventListener('click', ()=>{
     signupOverlay.style.display = 'none';
-    navProduct.click();
+    goToView(navProduct, viewProduct);
   });
 
-  // --- consent modal ---
-  let aiConsentEnabled = false;
-  const overlay = document.getElementById('btwConsentOverlay');
-  const consentToggle = document.getElementById('btwConsentToggle');
+  // --- per-patient AI consent ---
+  const consentOverlay = document.getElementById('btwConsentOverlay');
   const consentAgree = document.getElementById('btwConsentAgree');
   const consentContinue = document.getElementById('btwConsentContinue');
-  const appPanes = document.querySelectorAll('.btw-header, .btw-grid');
-  appPanes.forEach(el => el.classList.add('btw-app-hidden'));
+  const consentError = document.getElementById('btwConsentError');
 
-  consentAgree.addEventListener('change', ()=>{
-    consentContinue.disabled = !consentAgree.checked;
+  function openConsentModal(){
+    const p = selectedPatient();
+    if(!p) return;
+    document.getElementById('btwConsentPatientName').textContent = p.display_name;
+    consentAgree.checked = false;
+    consentContinue.disabled = true;
+    consentError.textContent = '';
+    consentOverlay.style.display = 'flex';
+  }
+  consentAgree.addEventListener('change', ()=>{ consentContinue.disabled = !consentAgree.checked; });
+  document.getElementById('btwConsentCancel').addEventListener('click', ()=>{
+    consentOverlay.style.display = 'none';
+    syncConsentUi();
   });
-  consentContinue.addEventListener('click', ()=>{
-    if(!consentAgree.checked) return;
-    aiConsentEnabled = consentToggle.checked;
-    overlay.style.display = 'none';
-    appPanes.forEach(el => el.classList.remove('btw-app-hidden'));
-    const statusEl = document.getElementById('btwAiStatus');
-    if(statusEl) statusEl.textContent = 'AI summaries: ' + (aiConsentEnabled ? 'on' : 'off');
+  consentContinue.addEventListener('click', async ()=>{
+    if(!consentAgree.checked || !state.selectedPatientId) return;
+    try{
+      await setConsent(true);
+      consentOverlay.style.display = 'none';
+    }catch(err){
+      consentError.textContent = err.message;
+    }
   });
 
-  // --- data & settings modal ---
+  async function setConsent(enabled){
+    const updated = await api('POST', '/api/patients/' + state.selectedPatientId + '/consent', { enabled });
+    const idx = state.patients.findIndex(p=>p.id===updated.id);
+    if(idx !== -1) state.patients[idx] = {...state.patients[idx], ...updated};
+    syncConsentUi();
+  }
+
+  const aiStatusEl = document.getElementById('btwAiStatus');
+  aiStatusEl.style.cursor = 'pointer';
+  aiStatusEl.title = 'Click to change this patient’s AI consent';
+  function syncConsentUi(){
+    const p = selectedPatient();
+    const on = !!(p && p.ai_consent_enabled);
+    aiStatusEl.textContent = 'AI summaries: ' + (p ? (on ? 'on' : 'off') : '—');
+    const dataToggle = document.getElementById('btwDataAiToggle');
+    if(dataToggle) dataToggle.checked = on;
+  }
+  aiStatusEl.addEventListener('click', ()=>{
+    const p = selectedPatient();
+    if(!p) return;
+    if(p.ai_consent_enabled){
+      if(confirm('Turn off AI summaries for ' + p.display_name + '? Future check-ins will be stored as written, with no AI analysis.')){
+        setConsent(false).catch(err=>alert(err.message));
+      }
+    } else {
+      openConsentModal();
+    }
+  });
+
+  // --- patient data modal (stored check-ins, consent toggle, deletion) ---
   const dataOverlay = document.getElementById('btwDataOverlay');
   const dataAiToggle = document.getElementById('btwDataAiToggle');
   const dataList = document.getElementById('btwDataList');
 
   function renderDataList(){
-    const mine = state.checkIns.filter(c=>c.patientId===MY_PATIENT_ID);
-    if(mine.length===0){
+    if(state.checkIns.length===0){
       dataList.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--ink-soft);">No check-ins on file.</div>';
       return;
     }
-    const sorted = [...mine].sort((a,b)=>b.time-a.time);
-    dataList.innerHTML = sorted.map(c=>{
+    dataList.innerHTML = state.checkIns.map(c=>{
       const d = new Date(c.time);
       const when = d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
       return `<div style="padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;">
-        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · mood ${c.mood}/10${c.risk?' · <span style=\"color:var(--amber)\">safety flag</span>':''}</div>
-        <div>${c.summary}</div>
+        <button class="btw-entry-delete" data-cid="${esc(c.id)}" title="Delete this check-in">✕</button>
+        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · mood ${esc(c.mood!=null?c.mood:'–')}/10${c.risk?' · <span style="color:var(--amber)">safety flag</span>':''}</div>
+        <div>${esc(c.summary)}</div>
       </div>`;
     }).join('');
+    dataList.querySelectorAll('.btw-entry-delete').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm('Delete this check-in? It will no longer appear in the timeline or trends.')) return;
+        try{
+          await api('DELETE', '/api/patients/' + state.selectedPatientId + '/check-ins/' + btn.dataset.cid);
+          await loadPatients();
+          renderDataList();
+        }catch(err){ alert(err.message); }
+      });
+    });
   }
 
   document.getElementById('btwOpenData').addEventListener('click', ()=>{
-    dataAiToggle.checked = aiConsentEnabled;
+    const p = selectedPatient();
+    if(!p){ alert('Add a patient first.'); return; }
+    document.getElementById('btwDataTitle').textContent = 'Stored check-ins · ' + p.display_name;
+    syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
   });
@@ -1477,48 +1767,29 @@
     dataOverlay.style.display = 'none';
   });
   dataAiToggle.addEventListener('change', ()=>{
-    aiConsentEnabled = dataAiToggle.checked;
-    const statusEl = document.getElementById('btwAiStatus');
-    if(statusEl) statusEl.textContent = 'AI summaries: ' + (aiConsentEnabled ? 'on' : 'off');
+    const p = selectedPatient();
+    if(!p){ dataAiToggle.checked = false; return; }
+    if(dataAiToggle.checked && !p.ai_consent_enabled){
+      openConsentModal(); // toggle stays visually on; cancel resyncs it
+    } else if(!dataAiToggle.checked && p.ai_consent_enabled){
+      setConsent(false).catch(err=>{ alert(err.message); syncConsentUi(); });
+    }
   });
-  document.getElementById('btwDeleteAll').addEventListener('click', ()=>{
-    if(!confirm('This removes all of your check-in history and trend data for this session. Continue?')) return;
-    state.checkIns = state.checkIns.filter(c=>c.patientId!==MY_PATIENT_ID);
-    renderDataList();
-    renderAll();
+  document.getElementById('btwDeleteAll').addEventListener('click', async ()=>{
+    const p = selectedPatient();
+    if(!p) return;
+    if(!confirm('This removes all of ' + p.display_name + '’s check-in history and trend data. Continue?')) return;
+    try{
+      await api('DELETE', '/api/patients/' + p.id + '/check-ins');
+      await loadPatients();
+      renderDataList();
+    }catch(err){ alert(err.message); }
   });
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#B5654F', Craving:'#C97A2C',
     Panic:'#9C4A4A', Family:'#8C7AA8', Win:'#4C6B58', Social:'#5B8A72', Other:'#8A8A8A'
   };
-
-  const now = Date.now();
-  const state = {
-    selectedTags: new Set(),
-    selectedPatientId: 'p1',
-    patients: [
-      {id:'p1', name:'Alex M.', initials:'AM'},
-      {id:'p2', name:'Priya S.', initials:'PS'},
-      {id:'p3', name:'Marc T.', initials:'MT'}
-    ],
-    checkIns: [
-      {patientId:'p1', time: now - 1000*60*60*30, mood:4, tags:['Work','Conflict'], summary:'Tense back-and-forth with a coworker over a missed deadline; felt dismissed in the conversation.', risk:false},
-      {patientId:'p1', time: now - 1000*60*60*20, mood:6, tags:['Sleep'], summary:'Slept better than usual, felt more level heading into the day.', risk:false},
-      {patientId:'p1', time: now - 1000*60*60*12, mood:3, tags:['Family','Panic'], summary:'Difficult call with a parent; noticed racing heartbeat afterward and had to sit down for a few minutes.', risk:false},
-      {patientId:'p1', time: now - 1000*60*60*3, mood:7, tags:['Win','Social'], summary:'Went to dinner at a friend’s place and actually enjoyed the whole evening without leaving early.', risk:false},
-      {patientId:'p2', time: now - 1000*60*60*40, mood:5, tags:['Work'], summary:'Steady day, kept up with workload without feeling overwhelmed.', risk:false},
-      {patientId:'p2', time: now - 1000*60*60*15, mood:6, tags:['Social','Win'], summary:'Reconnected with an old friend over coffee, felt genuinely good afterward.', risk:false},
-      {patientId:'p3', time: now - 1000*60*60*50, mood:2, tags:['Craving','Panic'], summary:'Strong urge to drink after a stressful shift; called a friend instead and it passed after about 20 minutes.', risk:false},
-      {patientId:'p3', time: now - 1000*60*60*6, mood:3, tags:['Sleep','Craving'], summary:'Barely slept, craving returned this morning; feeling shaky and discouraged.', risk:false}
-    ]
-  };
-
-  function currentCheckIns(){ return state.checkIns.filter(c=>c.patientId===state.selectedPatientId); }
-  function patientHasRecentRisk(pid){
-    const cutoff = Date.now() - 1000*60*60*48;
-    return state.checkIns.some(c=> c.patientId===pid && c.risk && c.time>=cutoff);
-  }
 
   const moodEl = document.getElementById('btwMood');
   const moodValEl = document.getElementById('btwMoodVal');
@@ -1556,59 +1827,85 @@
     });
   }
 
-  function fmtTime(ts){
+  function fmtTimeParts(ts){
     const d = new Date(ts);
-    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + '\\n' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    return [
+      d.toLocaleDateString(undefined,{month:'short',day:'numeric'}),
+      d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})
+    ];
   }
 
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     el.innerHTML = state.patients.map(p=>{
       const active = p.id === state.selectedPatientId;
-      const flagged = patientHasRecentRisk(p.id);
-      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${p.id}">
-        ${flagged?'<span class="btw-patient-flag"></span>':''}
-        <div class="btw-patient-avatar">${p.initials}</div>
-        <div class="btw-patient-name">${p.name}</div>
-        <div class="btw-patient-meta">${state.checkIns.filter(c=>c.patientId===p.id).length} check-ins</div>
+      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
+        ${p.has_recent_risk?'<span class="btw-patient-flag"></span>':''}
+        <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
+        <div class="btw-patient-name">${esc(p.display_name)}</div>
+        <div class="btw-patient-meta">${p.check_in_count||0} check-ins</div>
       </div>`;
-    }).join('');
+    }).join('') + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>Add patient</button>`;
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
       card.addEventListener('click', ()=>{
         state.selectedPatientId = card.dataset.pid;
-        renderAll();
+        loadCheckIns().catch(err=>alert(err.message));
       });
     });
+    document.getElementById('btwAddPatient').addEventListener('click', async ()=>{
+      const name = prompt('Patient display name (as you’d like it to appear in your caseload):');
+      if(!name || !name.trim()) return;
+      try{
+        const patient = await api('POST', '/api/patients', { displayName: name.trim() });
+        state.selectedPatientId = patient.id;
+        await loadPatients();
+      }catch(err){ alert(err.message); }
+    });
+  }
+
+  function renderPatientPane(){
+    const p = selectedPatient();
+    const eyebrow = document.getElementById('btwPatientPaneEyebrow');
+    eyebrow.textContent = p ? ('Patient view · sending as ' + p.display_name) : 'Patient view · no patient selected';
+    document.getElementById('btwSend').disabled = !p;
+    syncConsentUi();
   }
 
   function renderDigest(){
     const el = document.getElementById('btwDigest');
     const titleEl = document.getElementById('btwTimelineTitle');
-    const patient = state.patients.find(p=>p.id===state.selectedPatientId);
-    const list = currentCheckIns();
-    if(titleEl) titleEl.textContent = 'Timeline · ' + (patient?patient.name:'');
-    if(list.length===0){
-      el.innerHTML = `No check-ins yet for ${patient?patient.name:'this patient'}.`;
+    const patient = selectedPatient();
+    const list = state.checkIns;
+    if(titleEl) titleEl.textContent = 'Timeline' + (patient ? ' · ' + patient.display_name : '');
+    if(!patient){
+      el.innerHTML = 'No patients yet — add your first patient to start receiving check-ins.';
       return;
     }
-    const avgMood = (list.reduce((s,c)=>s+c.mood,0)/list.length).toFixed(1);
+    if(list.length===0){
+      el.innerHTML = `No check-ins yet for ${esc(patient.display_name)}.`;
+      return;
+    }
+    const rated = list.filter(c=>c.mood!=null);
+    const avgMood = rated.length ? (rated.reduce((s,c)=>s+c.mood,0)/rated.length).toFixed(1) : null;
     const counts = {};
     list.forEach(c=>c.tags.forEach(t=>counts[t]=(counts[t]||0)+1));
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
-    el.innerHTML = `<strong>${list.length} check-in${list.length===1?'':'s'}</strong> since last session · avg mood <strong>${avgMood}/10</strong>${topTag ? ` · most common theme: <strong>${topTag[0]}</strong> (${topTag[1]}×)` : ''}`;
+    el.innerHTML = `<strong>${list.length} check-in${list.length===1?'':'s'}</strong> since last session` +
+      (avgMood ? ` · avg mood <strong>${avgMood}/10</strong>` : '') +
+      (topTag ? ` · most common theme: <strong>${esc(topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
   function renderTimeline(){
     const el = document.getElementById('btwTimeline');
-    const sorted = [...currentCheckIns()].sort((a,b)=>b.time-a.time);
+    const sorted = [...state.checkIns].sort((a,b)=>b.time-a.time);
     el.innerHTML = sorted.length ? sorted.map(c=>{
-      const [datePart,timePart] = fmtTime(c.time).split('\\n');
-      const tagsHtml = c.tags.map(t=>`<span class="btw-entry-tag">${t}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">safety flag</span>` : '');
+      const [datePart,timePart] = fmtTimeParts(c.time);
+      const tagsHtml = c.tags.map(t=>`<span class="btw-entry-tag">${esc(t)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">safety flag</span>` : '');
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
-          <div class="btw-entry-mood ${c.risk?'risk':''}">mood ${c.mood}/10</div>
-          <div class="btw-entry-summary">${c.summary}</div>
+          <div class="btw-entry-mood ${c.risk?'risk':''}">mood ${esc(c.mood!=null?c.mood:'–')}/10</div>
+          <div class="btw-entry-summary">${esc(c.summary)}</div>
           <div class="btw-entry-tags">${tagsHtml}</div>
         </div>
       </div>`;
@@ -1617,7 +1914,7 @@
 
   function renderMoodChart(){
     const svg = document.getElementById('btwMoodChart');
-    const sorted = [...currentCheckIns()].sort((a,b)=>a.time-b.time);
+    const sorted = [...state.checkIns].filter(c=>c.mood!=null).sort((a,b)=>a.time-b.time);
     const w=260,h=90,pad=10;
     const n = sorted.length;
     if(n===0){ svg.innerHTML = `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#D9DED2" stroke-width="1"/>`; return; }
@@ -1635,7 +1932,7 @@
 
   function renderPie(){
     const counts = {};
-    currentCheckIns().forEach(c=> c.tags.forEach(t=> counts[t]=(counts[t]||0)+1));
+    state.checkIns.forEach(c=> c.tags.forEach(t=> counts[t]=(counts[t]||0)+1));
     const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
     let acc = 0;
     const stops = Object.entries(counts).map(([tag,count])=>{
@@ -1648,42 +1945,35 @@
     document.getElementById('btwPie').style.background = stops.length ? `conic-gradient(${stops.join(',')})` : '#D9DED2';
     document.getElementById('btwLegend').innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([tag,count])=>{
       const color = tagColors[tag]||tagColors.Other;
-      return `<div><span class="btw-legend-dot" style="background:${color}"></span>${tag} (${count})</div>`;
+      return `<div><span class="btw-legend-dot" style="background:${color}"></span>${esc(tag)} (${count})</div>`;
     }).join('');
   }
 
-  function renderAll(){ renderPatientList(); renderDigest(); renderTimeline(); renderMoodChart(); renderPie(); }
-  renderAll();
+  function renderAlertBanner(){
+    const cutoff = Date.now() - 1000*60*60*48;
+    const recentRisk = state.checkIns.some(c=>c.risk && c.time>=cutoff);
+    document.getElementById('btwAlertBanner').classList.toggle('show', recentRisk);
+  }
 
-  // --- send / AI summarize ---
+  function renderAll(){
+    renderPatientList();
+    renderPatientPane();
+    renderDigest();
+    renderTimeline();
+    renderMoodChart();
+    renderPie();
+    renderAlertBanner();
+  }
+
+  // --- send a check-in (server stores it; AI runs server-side only if the
+  //     selected patient's consent flag is on) ---
   const sendBtn = document.getElementById('btwSend');
   const processingEl = document.getElementById('btwProcessing');
   const crisisEl = document.getElementById('btwCrisis');
-  const alertBanner = document.getElementById('btwAlertBanner');
-  const validTags = ['Sleep','Work','Conflict','Craving','Panic','Family','Health','Win','Social','Other'];
-
-  function localFallback(text, manualTags, mood){
-    const trimmed = text.trim();
-    const summary = trimmed.length
-      ? (trimmed.length > 160 ? trimmed.slice(0,157)+'…' : trimmed)
-      : 'Check-in sent with mood rating and tags, no additional notes.';
-    return { summary, auto_tags: [], risk_flag: false };
-  }
-
-  async function summarizeWithAI(text){
-    const resp = await fetch('/api/summarize', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ text })
-    });
-    if(!resp.ok){
-      const err = await resp.json().catch(()=>({}));
-      throw new Error(err.error || 'Summarization request failed.');
-    }
-    return await resp.json(); // { summary, auto_tags, risk_flag }
-  }
 
   sendBtn.addEventListener('click', async ()=>{
+    const p = selectedPatient();
+    if(!p) return;
     const text = textEl.value.trim();
     const mood = parseInt(moodEl.value,10);
     const manualTags = [...state.selectedTags];
@@ -1696,45 +1986,34 @@
     processingEl.style.display = 'block';
     crisisEl.style.display = 'none';
 
-    let result;
-    if(!aiConsentEnabled){
-      result = localFallback(text, manualTags, mood);
-    } else {
-      try{
-        result = text ? await summarizeWithAI(text) : {summary:'Check-in sent with mood rating and tags, no additional notes.', auto_tags:[], risk_flag:false};
-      }catch(err){
-        result = localFallback(text, manualTags, mood);
+    try{
+      const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
+        text: text || null,
+        moodScore: mood,
+        manualTags
+      });
+
+      if(checkIn.risk_flag){
+        crisisEl.style.display = 'block';
       }
+
+      // reset patient form
+      textEl.value = '';
+      state.selectedTags.clear();
+      document.querySelectorAll('.btw-tag.active').forEach(el=>el.classList.remove('active'));
+      moodEl.value = 5; moodValEl.textContent = '5';
+
+      await loadPatients();
+    }catch(err){
+      alert('Could not send check-in: ' + err.message);
+    }finally{
+      processingEl.style.display = 'none';
+      sendBtn.disabled = !selectedPatient();
     }
-
-    const mergedTags = [...new Set([...manualTags, ...(result.auto_tags||[]).filter(t=>validTags.includes(t))])];
-    if(mergedTags.length===0) mergedTags.push('Other');
-
-    state.checkIns.push({
-      patientId: MY_PATIENT_ID,
-      time: Date.now(),
-      mood: mood,
-      tags: mergedTags,
-      summary: result.summary || 'Check-in received.',
-      risk: !!result.risk_flag
-    });
-    state.selectedPatientId = MY_PATIENT_ID;
-
-    processingEl.style.display = 'none';
-    sendBtn.disabled = false;
-
-    if(result.risk_flag){
-      crisisEl.style.display = 'block';
-      alertBanner.classList.add('show');
-    }
-
-    // reset patient form
-    textEl.value = '';
-    state.selectedTags.clear();
-    document.querySelectorAll('.btw-tag.active').forEach(el=>el.classList.remove('active'));
-    moodEl.value = 5; moodValEl.textContent = '5';
-
-    renderAll();
   });
+
+  renderAuthState();
+  renderAll();
+  loadSession().catch(err=>console.error('Failed to load session:', err));
 })();
 </script>
