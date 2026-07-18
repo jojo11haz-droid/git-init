@@ -10,6 +10,7 @@ import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
   readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS
 } from './auth.js';
+import { rateLimit } from './rate-limit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -74,7 +75,35 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
   };
 }
 
-app.post('/api/summarize', async (req, res) => {
+// --- Rate limits ---
+// All in-memory (single instance). Login is keyed per IP+email so one office
+// behind a shared IP can't lock everyone out, with a wider per-IP backstop
+// against sweeping many emails from one machine.
+
+const summarizeLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 10,
+  message: 'Too many summarize requests — wait a minute and try again.'
+});
+const loginEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  keyFn: req => req.ip + '|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
+  message: 'Too many login attempts for this account — wait 15 minutes and try again.'
+});
+const loginIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 50,
+  message: 'Too many login attempts — wait 15 minutes and try again.'
+});
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10,
+  message: 'Too many signup attempts — wait an hour and try again.'
+});
+const checkInLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 15,
+  keyFn: req => (req.clinician && req.clinician.id) || req.ip,
+  message: 'Too many check-ins at once — wait a minute and try again.'
+});
+
+app.post('/api/summarize', summarizeLimiter, async (req, res) => {
   try {
     const { text } = req.body || {};
     if (!text || typeof text !== 'string' || !text.trim()) {
@@ -125,7 +154,7 @@ async function startSession(res, req, clinicianId) {
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-app.post('/api/auth/signup', requireDb, async (req, res) => {
+app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, licenceNumber, province, practiceName } = req.body || {};
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
@@ -159,7 +188,7 @@ app.post('/api/auth/signup', requireDb, async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', requireDb, async (req, res) => {
+app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
@@ -241,7 +270,7 @@ app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) =
 
 // --- Check-ins ---
 
-app.post('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
+app.post('/api/patients/:id/check-ins', requireDb, requireAuth, checkInLimiter, async (req, res) => {
   try {
     const { moodScore, manualTags, text } = req.body || {};
 

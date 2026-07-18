@@ -80,7 +80,7 @@ Once deployed, every host above has a "custom domain" setting — point your dom
 This is still a prototype backend, not a production one. Before any real check-in data flows through it:
 
 - **Auth is basic.** Clinician signup/login with hashed passwords and per-clinician data scoping are in place, but there's no MFA, no password reset, no patient-facing auth (the patient pane is the clinician simulating their patient), and licence verification is stubbed — `licence_verified` is never set true. All of these are in `backend-spec.md` and needed before real use.
-- **No rate limiting** — add something like `express-rate-limit` before this is public, so `/api/summarize`, login (brute-force), and the check-in routes can't be abused.
+- **Rate limiting is in-memory and single-instance.** Login (10 tries per account per 15 min, 50 per IP), signup (10/hour per IP), `/api/summarize` (10/min per IP), and check-in creation (15/min per clinician) are all rate-limited via `rate-limit.js`. Counters live in process memory, so they reset on restart and aren't shared across instances — fine for one Render dyno, but swap in Redis/Postgres-backed counters before scaling out.
 - **Canadian data residency** — the Anthropic API call in `server.js` has a placeholder comment where you'd add the region setting once confirmed available on your account (see `docs.claude.com` data-residency page, and the earlier Law 25 discussion). Also confirm your Postgres provider's region — Neon and Supabase both let you pick one.
 - **Risk-classifier validation** — the summarization prompt includes a basic risk flag, but per `risk-classifier-eval.md`, this needs real clinical review and testing before it's trusted with real patients.
 
