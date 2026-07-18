@@ -3,11 +3,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients,
-  createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns
+  createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession
 } from './db.js';
+import {
+  hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
+  readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS
+} from './auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set('trust proxy', 1); // honor x-forwarded-proto behind Render/Railway/Fly
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -85,18 +91,126 @@ app.post('/api/summarize', async (req, res) => {
   }
 });
 
-// --- Patients ---
-// No auth yet — these are open. Do not point this at real patient data until
-// the auth system in backend-spec.md is in place.
+// --- Auth ---
+// Cookie-based sessions: the token lives in an httpOnly cookie, its hash in
+// the auth_sessions table. See backend-spec.md §Auth & account.
 
-app.post('/api/patients', async (req, res) => {
+function requireDb(req, res, next) {
   if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+  next();
+}
+
+async function requireAuth(req, res, next) {
+  try {
+    const token = readSessionCookie(req);
+    if (token) {
+      const clinician = await getClinicianBySession(hashSessionToken(token));
+      if (clinician) {
+        req.clinician = clinician;
+        return next();
+      }
+    }
+    res.status(401).json({ error: 'Not signed in.' });
+  } catch (err) {
+    console.error('Auth check failed:', err);
+    res.status(500).json({ error: 'Could not verify session.' });
+  }
+}
+
+async function startSession(res, req, clinicianId) {
+  const token = generateSessionToken();
+  await createSession(hashSessionToken(token), clinicianId, SESSION_TTL_DAYS);
+  res.setHeader('Set-Cookie', sessionCookieHeader(token, req));
+}
+
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
+app.post('/api/auth/signup', requireDb, async (req, res) => {
+  try {
+    const { name, email, password, licenceNumber, province, practiceName } = req.body || {};
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    // Licence number is required at signup per backend-spec.md — verification
+    // against the provincial order registry is stubbed for now (licence_verified
+    // stays false until that exists).
+    if (!licenceNumber || !licenceNumber.trim()) return res.status(400).json({ error: 'A professional licence/order number is required.' });
+
+    if (await getClinicianByEmail(email.trim())) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+
+    const clinician = await createClinician({
+      name: name.trim(),
+      email: email.trim(),
+      passwordHash: await hashPassword(password),
+      licenceNumber: licenceNumber.trim(),
+      province: typeof province === 'string' ? province.trim() : null,
+      practiceName: typeof practiceName === 'string' ? practiceName.trim() : null
+    });
+    await startSession(res, req, clinician.id);
+    res.status(201).json({ clinician });
+  } catch (err) {
+    if (err && err.code === '23505') { // unique_violation — signup raced the pre-check
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+    console.error('Error in signup:', err);
+    res.status(500).json({ error: 'Could not create account.' });
+  }
+});
+
+app.post('/api/auth/login', requireDb, async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+
+    const clinician = await getClinicianByEmail(email.trim());
+    // Verify against a throwaway hash when the account doesn't exist, so the
+    // response time doesn't reveal which emails are registered.
+    const ok = await verifyPassword(password, clinician
+      ? clinician.password_hash
+      : 'scrypt$16384$8$1$00000000000000000000000000000000$00');
+    if (!clinician || !ok) {
+      return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+
+    await startSession(res, req, clinician.id);
+    const { password_hash, ...publicClinician } = clinician;
+    res.json({ clinician: publicClinician });
+  } catch (err) {
+    console.error('Error in login:', err);
+    res.status(500).json({ error: 'Could not sign in.' });
+  }
+});
+
+app.post('/api/auth/logout', requireDb, async (req, res) => {
+  try {
+    const token = readSessionCookie(req);
+    if (token) await deleteSession(hashSessionToken(token));
+    res.setHeader('Set-Cookie', sessionCookieHeader('', req, { clear: true }));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error in logout:', err);
+    res.status(500).json({ error: 'Could not sign out.' });
+  }
+});
+
+app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
+  res.json({ clinician: req.clinician });
+});
+
+// --- Patients ---
+// All patient routes require a signed-in clinician, and every lookup is scoped
+// to that clinician server-side — client-supplied patient IDs are never
+// trusted (backend-spec.md §2).
+
+app.post('/api/patients', requireDb, requireAuth, async (req, res) => {
   try {
     const { displayName } = req.body || {};
     if (!displayName || !displayName.trim()) {
       return res.status(400).json({ error: 'displayName is required.' });
     }
-    const patient = await createPatient(displayName.trim());
+    const patient = await createPatient(req.clinician.id, displayName.trim());
     res.status(201).json(patient);
   } catch (err) {
     console.error('Error creating patient:', err);
@@ -104,21 +218,19 @@ app.post('/api/patients', async (req, res) => {
   }
 });
 
-app.get('/api/patients', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.get('/api/patients', requireDb, requireAuth, async (req, res) => {
   try {
-    res.json(await listPatients());
+    res.json(await listPatients(req.clinician.id));
   } catch (err) {
     console.error('Error listing patients:', err);
     res.status(500).json({ error: 'Could not list patients.' });
   }
 });
 
-app.post('/api/patients/:id/consent', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) => {
   try {
     const { enabled } = req.body || {};
-    const patient = await setPatientConsent(req.params.id, !!enabled);
+    const patient = await setPatientConsent(req.clinician.id, req.params.id, !!enabled);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     res.json(patient);
   } catch (err) {
@@ -129,13 +241,11 @@ app.post('/api/patients/:id/consent', async (req, res) => {
 
 // --- Check-ins ---
 
-app.post('/api/patients/:id/check-ins', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.post('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
   try {
-    const patientId = req.params.id;
     const { moodScore, manualTags, text } = req.body || {};
 
-    const patient = await getPatient(patientId);
+    const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
     let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
@@ -143,41 +253,49 @@ app.post('/api/patients/:id/check-ins', async (req, res) => {
     // Only call the AI if this patient has actually opted in — mirrors the
     // privacy-by-default rule from the consent flow, enforced server-side too.
     if (patient.ai_consent_enabled && text && text.trim()) {
-      const result = await summarizeCheckIn(text.trim());
-      summaryText = result.summary;
-      autoTags = result.auto_tags;
-      riskFlag = result.risk_flag;
-      modelVersion = MODEL_VERSION;
+      try {
+        const result = await summarizeCheckIn(text.trim());
+        summaryText = result.summary;
+        autoTags = result.auto_tags;
+        riskFlag = result.risk_flag;
+        modelVersion = MODEL_VERSION;
+      } catch (aiErr) {
+        // Don't lose the check-in because the AI call failed — store it raw.
+        console.error('AI summarization failed, storing check-in without summary:', aiErr);
+        summaryText = text.trim().slice(0, 1000);
+      }
     } else if (text && text.trim()) {
       summaryText = text.trim().slice(0, 1000); // no AI: store as-typed, no profiling
     }
 
     const checkIn = await createCheckIn({
-      patientId, moodScore, manualTags, rawText: text || null,
+      patientId: patient.id, moodScore, manualTags, rawText: text || null,
       summaryText, autoTags, riskFlag, modelVersion
     });
 
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
-    res.status(500).json({ error: err.message || 'Could not create check-in.' });
+    res.status(500).json({ error: 'Could not create check-in.' });
   }
 });
 
-app.get('/api/patients/:id/check-ins', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.get('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
   try {
-    res.json(await listCheckIns(req.params.id));
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json(await listCheckIns(patient.id));
   } catch (err) {
     console.error('Error listing check-ins:', err);
     res.status(500).json({ error: 'Could not list check-ins.' });
   }
 });
 
-app.delete('/api/patients/:id/check-ins/:checkInId', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.delete('/api/patients/:id/check-ins/:checkInId', requireDb, requireAuth, async (req, res) => {
   try {
-    const deleted = await softDeleteCheckIn(req.params.checkInId, req.params.id);
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const deleted = await softDeleteCheckIn(req.params.checkInId, patient.id);
     if (!deleted) return res.status(404).json({ error: 'Check-in not found.' });
     res.json({ ok: true });
   } catch (err) {
@@ -186,10 +304,11 @@ app.delete('/api/patients/:id/check-ins/:checkInId', async (req, res) => {
   }
 });
 
-app.delete('/api/patients/:id/check-ins', async (req, res) => {
-  if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
   try {
-    await deleteAllCheckIns(req.params.id);
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    await deleteAllCheckIns(patient.id);
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting check-ins:', err);

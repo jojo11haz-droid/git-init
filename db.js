@@ -7,7 +7,9 @@ const { Pool } = pg;
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false } // most hosted free-tier Postgres requires SSL
+      ssl: process.env.DATABASE_SSL === 'disable'
+        ? false
+        : { rejectUnauthorized: false } // most hosted free-tier Postgres requires SSL
     })
   : null;
 
@@ -16,10 +18,30 @@ export function dbEnabled() {
 }
 
 // Minimal schema for now — a trimmed version of backend-spec.md's full model.
-// No clinicians/auth table yet: that has to arrive before this is used with real patient data.
 const SCHEMA = `
+CREATE TABLE IF NOT EXISTS clinicians (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  licence_number TEXT NOT NULL,
+  licence_verified BOOLEAN NOT NULL DEFAULT false,
+  province TEXT,
+  practice_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  token_hash TEXT PRIMARY KEY,
+  clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS patients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clinician_id UUID REFERENCES clinicians(id),
   display_name TEXT NOT NULL,
   ai_consent_enabled BOOLEAN NOT NULL DEFAULT false,
   consent_recorded_at TIMESTAMPTZ,
@@ -41,6 +63,14 @@ CREATE TABLE IF NOT EXISTS check_ins (
 );
 `;
 
+// Databases created before the auth release have a patients table without
+// clinician_id. Pre-auth rows keep a NULL clinician_id and become invisible
+// to every account (rather than leaking to the first signup); reassign them
+// manually if they matter.
+const MIGRATIONS = `
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS clinician_id UUID REFERENCES clinicians(id);
+`;
+
 export async function initDb() {
   if (!pool) {
     console.warn('⚠️  DATABASE_URL not set — running without persistence (check-ins will not be saved).');
@@ -48,34 +78,101 @@ export async function initDb() {
   }
   await pool.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";'); // needed for gen_random_uuid()
   await pool.query(SCHEMA);
+  await pool.query(MIGRATIONS);
   console.log('✅ Database ready.');
 }
 
-export async function createPatient(displayName) {
+// --- Clinicians & sessions ---
+
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, created_at';
+
+export async function createClinician({ name, email, passwordHash, licenceNumber, province, practiceName }) {
   const { rows } = await pool.query(
-    `INSERT INTO patients (display_name) VALUES ($1) RETURNING *`,
-    [displayName]
+    `INSERT INTO clinicians (name, email, password_hash, licence_number, province, practice_name)
+     VALUES ($1, lower($2), $3, $4, $5, $6)
+     RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [name, email, passwordHash, licenceNumber, province || null, practiceName || null]
   );
   return rows[0];
 }
 
-export async function setPatientConsent(patientId, enabled) {
+export async function getClinicianByEmail(email) {
   const { rows } = await pool.query(
-    `UPDATE patients SET ai_consent_enabled = $1, consent_recorded_at = now() WHERE id = $2 RETURNING *`,
-    [enabled, patientId]
+    `SELECT * FROM clinicians WHERE email = lower($1)`,
+    [email]
   );
-  return rows[0];
-}
-
-export async function getPatient(patientId) {
-  const { rows } = await pool.query(`SELECT * FROM patients WHERE id = $1`, [patientId]);
   return rows[0] || null;
 }
 
-export async function listPatients() {
-  const { rows } = await pool.query(`SELECT * FROM patients ORDER BY created_at DESC`);
+export async function createSession(tokenHash, clinicianId, ttlDays) {
+  await pool.query(
+    `INSERT INTO auth_sessions (token_hash, clinician_id, expires_at)
+     VALUES ($1, $2, now() + ($3 || ' days')::interval)`,
+    [tokenHash, clinicianId, String(ttlDays)]
+  );
+}
+
+export async function getClinicianBySession(tokenHash) {
+  const { rows } = await pool.query(
+    `SELECT ${CLINICIAN_PUBLIC_COLS.split(', ').map(c => 'c.' + c).join(', ')}
+     FROM auth_sessions s JOIN clinicians c ON c.id = s.clinician_id
+     WHERE s.token_hash = $1 AND s.expires_at > now()`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteSession(tokenHash) {
+  await pool.query(`DELETE FROM auth_sessions WHERE token_hash = $1`, [tokenHash]);
+}
+
+// --- Patients ---
+// Every query below is scoped by clinician_id: a clinician can only ever see
+// or touch their own patients, no matter what IDs the client sends.
+
+export async function createPatient(clinicianId, displayName) {
+  const { rows } = await pool.query(
+    `INSERT INTO patients (clinician_id, display_name) VALUES ($1, $2) RETURNING *`,
+    [clinicianId, displayName]
+  );
+  return rows[0];
+}
+
+export async function setPatientConsent(clinicianId, patientId, enabled) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET ai_consent_enabled = $1, consent_recorded_at = now()
+     WHERE id = $2 AND clinician_id = $3 RETURNING *`,
+    [enabled, patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function getPatient(clinicianId, patientId) {
+  const { rows } = await pool.query(
+    `SELECT * FROM patients WHERE id = $1 AND clinician_id = $2`,
+    [patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function listPatients(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT p.*,
+       count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS check_in_count,
+       coalesce(bool_or(c.risk_flag AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '48 hours'), false) AS has_recent_risk
+     FROM patients p
+     LEFT JOIN check_ins c ON c.patient_id = p.id
+     WHERE p.clinician_id = $1
+     GROUP BY p.id
+     ORDER BY p.created_at DESC`,
+    [clinicianId]
+  );
   return rows;
 }
+
+// --- Check-ins ---
+// Routes must resolve the patient through getPatient (clinician-scoped) first,
+// so by the time these run, patientId is known to belong to the caller.
 
 export async function createCheckIn({ patientId, moodScore, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion }) {
   const { rows } = await pool.query(
