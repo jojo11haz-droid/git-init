@@ -59,4 +59,26 @@ class ApiClient {
   Future<dynamic> post(String path, [Object? body]) =>
       _send('POST', path, body ?? const {});
   Future<dynamic> delete(String path) => _send('DELETE', path);
+
+  /// PUT raw bytes (used for the signed audio-upload URL, which authenticates
+  /// itself — no Bearer header needed).
+  Future<dynamic> putBytes(String path, List<int> bytes, String mime) async {
+    final response = await http
+        .put(Uri.parse('$apiBase$path'),
+            headers: {'Content-Type': mime}, body: bytes)
+        .timeout(const Duration(seconds: 60));
+    dynamic data;
+    try {
+      data = jsonDecode(response.body);
+    } catch (_) {
+      data = null;
+    }
+    if (response.statusCode >= 400) {
+      final message = (data is Map && data['error'] is String)
+          ? data['error'] as String
+          : 'Upload failed (${response.statusCode}). Please try again.';
+      throw ApiException(response.statusCode, message);
+    }
+    return data;
+  }
 }

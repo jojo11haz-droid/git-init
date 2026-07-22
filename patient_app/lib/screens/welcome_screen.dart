@@ -115,7 +115,38 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _busy ? null : _submit,
               child: Text(_busy ? 'Signing in…' : 'Log in'),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            Center(
+              child: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: BtwColors.cream,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24)),
+                    title: const Text('Forgot your password?'),
+                    content: const Text(
+                      'Ask your therapist to reset your app access — they can '
+                      'do it from their dashboard in a few seconds. You\'ll '
+                      'get a new invite code, and setting up again keeps all '
+                      'your history.',
+                      style: TextStyle(height: 1.5),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('Got it',
+                            style: TextStyle(color: BtwColors.moss)),
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Text('Forgot your password?',
+                    style:
+                        TextStyle(fontSize: 13, color: BtwColors.inkSoft)),
+              ),
+            ),
+            const SizedBox(height: 8),
             const CrisisFooter(),
           ],
         ),

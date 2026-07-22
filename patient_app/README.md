@@ -17,8 +17,10 @@ concept anywhere in this codebase.
 
 ## Screens
 
-- **Check-in** (home): greeting, free-text first, mood + tags as a light
-  optional step after writing. Crisis line quietly at the bottom.
+- **Check-in** (home): greeting, free-text or a voice memo first, mood + tags
+  as a light optional step after. Crisis line quietly at the bottom. Voice
+  memos upload through a short-lived signed URL (never the JSON API) and are
+  playable by the therapist on the web dashboard.
 - **Sent**: confirmation; if the server flagged risk language, crisis
   resources (988/911) appear immediately — independent of any therapist alert.
   15-minute undo, except for risk-flagged check-ins.
@@ -52,10 +54,15 @@ app works from any origin.
 
 ## Not built yet (deliberately)
 
-- **Voice memos** — the backend has no audio-upload/transcription endpoint
-  yet (`/check-ins/audio-upload-url` in backend-spec.md). The UI says
-  "coming soon" rather than pretending.
-- Push notifications, offline queueing, password reset.
+- **Transcription** — voice memos are stored and playable, but not
+  transcribed, summarized, or risk-screened until a speech-to-text provider
+  is added server-side. The check-in shows "Voice memo (no transcript yet)".
+- Push notifications, offline queueing.
+
+Forgot password? It's therapist-mediated: the clinician hits "Reset app
+access" on their dashboard, which issues a fresh invite code and revokes the
+old login — history and consent stay intact. No patient email infrastructure
+needed.
 
 The auth token is kept in `flutter_secure_storage` (Keychain/Keystore on
 mobile). Sessions last 30 days; logout revokes server-side.

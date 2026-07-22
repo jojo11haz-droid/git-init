@@ -1,7 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:record/record.dart';
 
 import '../app_state.dart';
+import '../recording_bytes.dart';
 import '../theme.dart';
 import 'history_screen.dart';
 import 'sent_screen.dart';
@@ -28,6 +34,14 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _detailsOpen = false;
   bool _sending = false;
 
+  final _recorder = AudioRecorder();
+  bool _recording = false;
+  String? _recordingResult; // file path (mobile) or blob URL (web)
+  int _recordSeconds = 0;
+  Timer? _recordTimer;
+  // Web records webm/opus via MediaRecorder; mobile records AAC in an m4a.
+  String get _audioMime => kIsWeb ? 'audio/webm' : 'audio/mp4';
+
   @override
   void initState() {
     super.initState();
@@ -39,20 +53,89 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _recordTimer?.cancel();
+    _recorder.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_recording) {
+      _recordTimer?.cancel();
+      final result = await _recorder.stop();
+      setState(() {
+        _recording = false;
+        _recordingResult = result;
+        _detailsOpen = true; // same optional step as after typing
+      });
+      return;
+    }
+    try {
+      // On web, skip the hasPermission() pre-check: the browser enforces mic
+      // permission inside start()'s getUserMedia anyway, and record_web's
+      // permissions query has been seen to never resolve in some Chromium
+      // environments. On mobile the pre-check is what triggers the OS prompt.
+      if (!kIsWeb && !await _recorder.hasPermission()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Microphone access is off. You can type instead, or allow it in settings.')));
+        }
+        return;
+      }
+      String path = '';
+      if (!kIsWeb) {
+        final dir = await getTemporaryDirectory();
+        path = '${dir.path}/between-checkin-${DateTime.now().millisecondsSinceEpoch}.m4a';
+      }
+      await _recorder.start(
+        const RecordConfig(encoder: kIsWeb ? AudioEncoder.opus : AudioEncoder.aacLc),
+        path: path,
+      );
+      setState(() {
+        _recording = true;
+        _recordingResult = null;
+        _recordSeconds = 0;
+      });
+      _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() => _recordSeconds++);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Couldn\'t start recording — you can type instead. ($e)')));
+      }
+    }
+  }
+
+  String _fmtSeconds(int s) =>
+      '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+
   Future<void> _send() async {
     final text = _text.text.trim();
-    if (text.isEmpty && _tags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content:
-              Text('Say a little about what happened, or tap a tag first.')));
+    final app = context.read<AppState>();
+    final messenger = ScaffoldMessenger.of(context);
+    if (_recording) await _toggleRecording(); // sending while recording = stop first
+    final recording = _recordingResult;
+    if (text.isEmpty && _tags.isEmpty && recording == null) {
+      messenger.showSnackBar(const SnackBar(
+          content: Text(
+              'Say a little about what happened — record, type, or tap a tag.')));
       return;
     }
     setState(() => _sending = true);
     try {
-      final result = await context.read<AppState>().sendCheckIn(
+      String? audioUploadId;
+      if (recording != null) {
+        final bytes = await readRecordingBytes(recording);
+        audioUploadId = await app.uploadAudio(bytes, _audioMime);
+      }
+      final result = await app.sendCheckIn(
             text: text.isEmpty ? null : text,
             mood: _mood.round(),
             tags: _tags.toList(),
+            audioUploadId: audioUploadId,
           );
       if (!mounted) return;
       _text.clear();
@@ -60,6 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _tags.clear();
         _mood = 5;
         _detailsOpen = false;
+        _recordingResult = null;
+        _recordSeconds = 0;
       });
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => SentScreen(result: result)),
@@ -149,12 +234,72 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Voice memos are coming soon — for now, typing it out works '
-                    'just as well.',
-                    style:
-                        TextStyle(fontSize: 12.5, color: BtwColors.inkSoft),
+                  const SizedBox(height: 12),
+                  // Voice memo: record instead of (or as well as) typing.
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: FilledButton(
+                          onPressed: _sending ? null : _toggleRecording,
+                          style: FilledButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(54, 54),
+                            backgroundColor:
+                                _recording ? BtwColors.clay : BtwColors.moss,
+                          ),
+                          child: Icon(
+                            _recording
+                                ? Icons.stop_rounded
+                                : Icons.mic_rounded,
+                            semanticLabel: _recording
+                                ? 'Stop recording'
+                                : 'Record a voice memo',
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _recording
+                            ? Text(
+                                'Recording… ${_fmtSeconds(_recordSeconds)} — tap to stop',
+                                style: const TextStyle(
+                                    fontSize: 13.5, color: BtwColors.clay),
+                              )
+                            : _recordingResult != null
+                                ? Row(children: [
+                                    const Icon(Icons.graphic_eq_rounded,
+                                        size: 18, color: BtwColors.moss),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Voice memo attached (${_fmtSeconds(_recordSeconds)})',
+                                      style: const TextStyle(
+                                          fontSize: 13.5,
+                                          color: BtwColors.moss),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Remove recording',
+                                      icon: const Icon(Icons.close_rounded,
+                                          size: 18, color: BtwColors.inkSoft),
+                                      onPressed: () => setState(() {
+                                        _recordingResult = null;
+                                        _recordSeconds = 0;
+                                      }),
+                                    ),
+                                  ])
+                                : const Text(
+                                    'Or record a voice memo — whichever is '
+                                    'easier right now.',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: BtwColors.inkSoft),
+                                  ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   // Optional, after writing — never a gate.

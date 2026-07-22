@@ -29,7 +29,8 @@ class CheckIn {
   String get summary =>
       (raw['summary_text'] as String?) ??
       (raw['raw_text'] as String?) ??
-      'Check-in sent.';
+      (hasAudio ? 'Voice memo (no transcript yet).' : 'Check-in sent.');
+  bool get hasAudio => raw['audio_upload_id'] != null;
   bool get isAiSummary => raw['model_version'] != null;
   bool get riskFlag => raw['risk_flag'] == true;
   bool get flaggedInaccurate => raw['patient_flagged_inaccurate'] == true;
@@ -130,15 +131,27 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Voice memo upload, per backend-spec.md: ask for a short-lived signed
+  /// URL, then PUT the raw bytes there — audio never rides through the JSON
+  /// API. Returns the audioUploadId to attach to a check-in.
+  Future<String> uploadAudio(List<int> bytes, String mime) async {
+    final grant = await _api.post('/api/patient/check-ins/audio-upload-url');
+    final uploadUrl = (grant as Map)['uploadUrl'] as String;
+    final result = await _api.putBytes(uploadUrl, bytes, mime);
+    return (result as Map)['audioUploadId'] as String;
+  }
+
   Future<SendResult> sendCheckIn({
     String? text,
     required int mood,
     required List<String> tags,
+    String? audioUploadId,
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       'text': text,
       'moodScore': mood,
       'manualTags': tags,
+      'audioUploadId': audioUploadId,
     });
     final map = (data as Map).cast<String, dynamic>();
     return SendResult(

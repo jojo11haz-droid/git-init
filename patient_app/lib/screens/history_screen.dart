@@ -120,6 +120,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(c.summary,
                           style:
                               const TextStyle(fontSize: 15, height: 1.5)),
+                      if (c.hasAudio) ...[
+                        const SizedBox(height: 6),
+                        const Row(children: [
+                          Icon(Icons.graphic_eq_rounded,
+                              size: 15, color: BtwColors.moss),
+                          SizedBox(width: 5),
+                          Text('Voice memo',
+                              style: TextStyle(
+                                  fontSize: 12, color: BtwColors.moss)),
+                        ]),
+                      ],
                       if (c.tags.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         Wrap(
