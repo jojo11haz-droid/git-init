@@ -4,11 +4,15 @@ import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
-  createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession
+  createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
+  getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, setOwnConsent,
+  createPatientSession, getPatientBySession, deletePatientSession,
+  flagCheckInInaccurate, getCheckIn
 } from './db.js';
 import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
-  readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS
+  readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS,
+  generateInviteCode, readBearerToken
 } from './auth.js';
 import { rateLimit } from './rate-limit.js';
 
@@ -239,7 +243,7 @@ app.post('/api/patients', requireDb, requireAuth, async (req, res) => {
     if (!displayName || !displayName.trim()) {
       return res.status(400).json({ error: 'displayName is required.' });
     }
-    const patient = await createPatient(req.clinician.id, displayName.trim());
+    const patient = await createPatient(req.clinician.id, displayName.trim(), generateInviteCode());
     res.status(201).json(patient);
   } catch (err) {
     console.error('Error creating patient:', err);
@@ -259,7 +263,7 @@ app.get('/api/patients', requireDb, requireAuth, async (req, res) => {
 app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) => {
   try {
     const { enabled } = req.body || {};
-    const patient = await setPatientConsent(req.clinician.id, req.params.id, !!enabled);
+    const patient = await setPatientConsent(req.clinician.id, req.params.id, !!enabled, 'v1-clinician-recorded');
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     res.json(patient);
   } catch (err) {
@@ -270,6 +274,36 @@ app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) =
 
 // --- Check-ins ---
 
+// Shared by the clinician route below and the patient-facing route further
+// down: applies the consent rule, calls the AI only when opted in, and never
+// loses a check-in to an AI failure.
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags }) {
+  let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
+
+  // Only call the AI if this patient has actually opted in — mirrors the
+  // privacy-by-default rule from the consent flow, enforced server-side too.
+  if (patient.ai_consent_enabled && text && text.trim()) {
+    try {
+      const result = await summarizeCheckIn(text.trim());
+      summaryText = result.summary;
+      autoTags = result.auto_tags;
+      riskFlag = result.risk_flag;
+      modelVersion = MODEL_VERSION;
+    } catch (aiErr) {
+      // Don't lose the check-in because the AI call failed — store it raw.
+      console.error('AI summarization failed, storing check-in without summary:', aiErr);
+      summaryText = text.trim().slice(0, 1000);
+    }
+  } else if (text && text.trim()) {
+    summaryText = text.trim().slice(0, 1000); // no AI: store as-typed, no profiling
+  }
+
+  return createCheckIn({
+    patientId: patient.id, moodScore, manualTags, rawText: text || null,
+    summaryText, autoTags, riskFlag, modelVersion
+  });
+}
+
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, checkInLimiter, async (req, res) => {
   try {
     const { moodScore, manualTags, text } = req.body || {};
@@ -277,31 +311,7 @@ app.post('/api/patients/:id/check-ins', requireDb, requireAuth, checkInLimiter, 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
-
-    // Only call the AI if this patient has actually opted in — mirrors the
-    // privacy-by-default rule from the consent flow, enforced server-side too.
-    if (patient.ai_consent_enabled && text && text.trim()) {
-      try {
-        const result = await summarizeCheckIn(text.trim());
-        summaryText = result.summary;
-        autoTags = result.auto_tags;
-        riskFlag = result.risk_flag;
-        modelVersion = MODEL_VERSION;
-      } catch (aiErr) {
-        // Don't lose the check-in because the AI call failed — store it raw.
-        console.error('AI summarization failed, storing check-in without summary:', aiErr);
-        summaryText = text.trim().slice(0, 1000);
-      }
-    } else if (text && text.trim()) {
-      summaryText = text.trim().slice(0, 1000); // no AI: store as-typed, no profiling
-    }
-
-    const checkIn = await createCheckIn({
-      patientId: patient.id, moodScore, manualTags, rawText: text || null,
-      summaryText, autoTags, riskFlag, modelVersion
-    });
-
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -342,6 +352,252 @@ app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, re
   } catch (err) {
     console.error('Error deleting check-ins:', err);
     res.status(500).json({ error: 'Could not delete check-ins.' });
+  }
+});
+
+// --- Patient-facing API (mobile app scope) ---
+// Authenticated with "Authorization: Bearer <token>" (native apps keep the
+// token in secure storage; there is no cookie in this scope). Every route
+// operates only on the signed-in patient's own row — this scope has no
+// caseload concept and no route that can return another patient's data.
+
+const CONSENT_VERSION = 'v1';
+const CHECK_IN_GRACE_MINUTES = 15;
+const CRISIS_RESOURCES = {
+  message: "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please reach out now.",
+  lines: [
+    { name: '988 Suicide Crisis Helpline (call or text, Canada)', number: '988' },
+    { name: 'Emergency services', number: '911' }
+  ]
+};
+
+// CORS for the patient scope only: Bearer auth doesn't rely on cookies, so a
+// wildcard origin is safe here, and the Flutter web build / local dev can call
+// the API cross-origin. The cookie-authenticated clinician routes stay
+// same-origin only.
+app.use('/api/patient', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+async function requirePatientAuth(req, res, next) {
+  try {
+    const token = readBearerToken(req);
+    if (token) {
+      const patient = await getPatientBySession(hashSessionToken(token));
+      if (patient) {
+        req.patient = patient;
+        return next();
+      }
+    }
+    res.status(401).json({ error: 'Not signed in.' });
+  } catch (err) {
+    console.error('Patient auth check failed:', err);
+    res.status(500).json({ error: 'Could not verify session.' });
+  }
+}
+
+async function startPatientSession(patientId) {
+  const token = generateSessionToken();
+  await createPatientSession(hashSessionToken(token), patientId, SESSION_TTL_DAYS);
+  return token;
+}
+
+function publicPatient(p) {
+  return {
+    id: p.id,
+    display_name: p.display_name,
+    email: p.email,
+    ai_consent_enabled: p.ai_consent_enabled,
+    consent_recorded_at: p.consent_recorded_at,
+    consent_version: p.consent_version
+  };
+}
+
+const inviteLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10,
+  message: 'Too many attempts — wait an hour and try again.'
+});
+const patientLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  keyFn: req => req.ip + '|p|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
+  message: 'Too many login attempts for this account — wait 15 minutes and try again.'
+});
+const patientCheckInLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 15,
+  keyFn: req => (req.patient && req.patient.id) || req.ip,
+  message: 'Too many check-ins at once — wait a minute and try again.'
+});
+
+// Accept the therapist's invite: turns an invite code into login credentials
+// on the patient's own row. One-time — the code stops working once accepted.
+app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res) => {
+  try {
+    const { inviteCode, email, password } = req.body || {};
+    if (!inviteCode || !inviteCode.trim()) return res.status(400).json({ error: 'An invite code is required.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+
+    const code = inviteCode.trim().toUpperCase();
+    const found = await getPatientByInviteCode(code);
+    if (!found || found.invite_status !== 'pending') {
+      return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
+    }
+    if (await getPatientByEmail(email.trim())) {
+      return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
+    }
+
+    const patient = await acceptPatientInvite(found.id, email.trim(), await hashPassword(password));
+    if (!patient) return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
+
+    const token = await startPatientSession(patient.id);
+    res.status(201).json({ token, patient: publicPatient(patient) });
+  } catch (err) {
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
+    }
+    console.error('Error accepting invite:', err);
+    res.status(500).json({ error: 'Could not set up your account.' });
+  }
+});
+
+app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+
+    const patient = await getPatientByEmail(email.trim());
+    const ok = await verifyPassword(password, patient && patient.password_hash
+      ? patient.password_hash
+      : 'scrypt$16384$8$1$00000000000000000000000000000000$00');
+    if (!patient || !ok || patient.invite_status === 'revoked') {
+      return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+
+    const token = await startPatientSession(patient.id);
+    res.json({ token, patient: publicPatient(patient) });
+  } catch (err) {
+    console.error('Error in patient login:', err);
+    res.status(500).json({ error: 'Could not sign in.' });
+  }
+});
+
+app.post('/api/patient/logout', requireDb, async (req, res) => {
+  try {
+    const token = readBearerToken(req);
+    if (token) await deletePatientSession(hashSessionToken(token));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error in patient logout:', err);
+    res.status(500).json({ error: 'Could not sign out.' });
+  }
+});
+
+app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
+  res.json({ patient: publicPatient(req.patient) });
+});
+
+app.get('/api/patient/consent', requireDb, requirePatientAuth, (req, res) => {
+  res.json({
+    ai_consent_enabled: req.patient.ai_consent_enabled,
+    consent_recorded_at: req.patient.consent_recorded_at,
+    consent_version: req.patient.consent_version,
+    current_consent_version: CONSENT_VERSION
+  });
+});
+
+// Records the patient's own consent decision (Law 25: consent version +
+// timestamp). Called from onboarding and from settings when they change the
+// AI toggle. enabled:false is a valid, recordable choice — consent to use the
+// app without profiling.
+app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const { enabled } = req.body || {};
+    const patient = await setOwnConsent(req.patient.id, !!enabled, CONSENT_VERSION);
+    res.json({ patient: publicPatient(patient) });
+  } catch (err) {
+    console.error('Error recording patient consent:', err);
+    res.status(500).json({ error: 'Could not record your choice.' });
+  }
+});
+
+app.post('/api/patient/check-ins', requireDb, requirePatientAuth, patientCheckInLimiter, async (req, res) => {
+  try {
+    if (!req.patient.consent_recorded_at) {
+      return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
+    }
+    const { moodScore, manualTags, text } = req.body || {};
+    if (text && (typeof text !== 'string' || text.length > 4000)) {
+      return res.status(400).json({ error: 'Check-in text is too long.' });
+    }
+
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text, moodScore, manualTags });
+
+    // Crisis resources are returned directly to the patient, independent of
+    // any therapist alert — the safety net must never wait on a human.
+    const body = { checkIn };
+    if (checkIn.risk_flag) body.crisis = CRISIS_RESOURCES;
+    res.status(201).json(body);
+  } catch (err) {
+    console.error('Error creating patient check-in:', err);
+    res.status(500).json({ error: 'Could not send your check-in.' });
+  }
+});
+
+app.get('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    res.json(await listCheckIns(req.patient.id));
+  } catch (err) {
+    console.error('Error listing patient check-ins:', err);
+    res.status(500).json({ error: 'Could not load your history.' });
+  }
+});
+
+// Grace-period undo: a patient can delete a just-sent check-in within
+// CHECK_IN_GRACE_MINUTES, unless it raised a risk flag (the safety record
+// stays). Full-history deletion below is the Law 25 erasure path and is not
+// time-limited.
+app.delete('/api/patient/check-ins/:id', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const checkIn = await getCheckIn(req.params.id, req.patient.id);
+    if (!checkIn) return res.status(404).json({ error: 'Check-in not found.' });
+    if (checkIn.risk_flag) {
+      return res.status(403).json({ error: 'This check-in raised a safety flag and can’t be removed this way. You can still request deletion of your history in settings.' });
+    }
+    const ageMs = Date.now() - new Date(checkIn.submitted_at).getTime();
+    if (ageMs > CHECK_IN_GRACE_MINUTES * 60 * 1000) {
+      return res.status(403).json({ error: `The ${CHECK_IN_GRACE_MINUTES}-minute undo window has passed. You can request deletion of your history in settings.` });
+    }
+    await softDeleteCheckIn(checkIn.id, req.patient.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error undoing check-in:', err);
+    res.status(500).json({ error: 'Could not remove the check-in.' });
+  }
+});
+
+app.delete('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    await deleteAllCheckIns(req.patient.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting patient history:', err);
+    res.status(500).json({ error: 'Could not delete your history.' });
+  }
+});
+
+// The patient's right to contest an automated output (Law 25).
+app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const updated = await flagCheckInInaccurate(req.params.id, req.patient.id);
+    if (!updated) return res.status(404).json({ error: 'Check-in not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error flagging summary:', err);
+    res.status(500).json({ error: 'Could not flag the summary.' });
   }
 });
 

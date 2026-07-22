@@ -997,6 +997,8 @@
       <h2 id="btwDataTitle">Stored check-ins</h2>
       <div style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px;">Every check-in on file for this patient, and any AI-generated summary or tags attached to it. Patients have the right to see, correct, or delete this at any time.</div>
 
+      <div id="btwInviteInfo" style="background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:14px;line-height:1.6;"></div>
+
       <div class="btw-modal-toggle-row">
         <div>
           <strong>AI summaries &amp; trend charts</strong>
@@ -1759,6 +1761,12 @@
     const p = selectedPatient();
     if(!p){ alert('Add a patient first.'); return; }
     document.getElementById('btwDataTitle').textContent = 'Stored check-ins · ' + p.display_name;
+    const inviteEl = document.getElementById('btwInviteInfo');
+    if(p.invite_status === 'accepted'){
+      inviteEl.innerHTML = '<strong>Patient app:</strong> connected' + (p.email ? ' as ' + esc(p.email) : '') + '.';
+    } else {
+      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span><br>Share this with ' + esc(p.display_name) + ' so they can create their account in the Between app. It stops working once used.';
+    }
     syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
@@ -1859,6 +1867,9 @@
         const patient = await api('POST', '/api/patients', { displayName: name.trim() });
         state.selectedPatientId = patient.id;
         await loadPatients();
+        if(patient.invite_code){
+          alert('Patient added.\n\nInvite code for the Between app: ' + patient.invite_code + '\n\nShare this with ' + patient.display_name + ' so they can create their account. You can find it again under "View patient data & AI settings".');
+        }
       }catch(err){ alert(err.message); }
     });
   }

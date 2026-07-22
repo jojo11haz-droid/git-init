@@ -65,6 +65,24 @@ export function readSessionCookie(req) {
   return null;
 }
 
+// Patient invite codes: short, human-shareable (a therapist reads it out or
+// writes it down). Unambiguous alphabet — no 0/O, 1/I/L.
+const INVITE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+export function generateInviteCode() {
+  const bytes = crypto.randomBytes(8);
+  let code = '';
+  for (let i = 0; i < 8; i++) code += INVITE_ALPHABET[bytes[i] % INVITE_ALPHABET.length];
+  return code.slice(0, 4) + '-' + code.slice(4);
+}
+
+// The mobile/patient scope authenticates with "Authorization: Bearer <token>"
+// instead of a cookie — native apps hold the token in secure storage.
+export function readBearerToken(req) {
+  const header = req.headers.authorization || '';
+  return header.startsWith('Bearer ') ? header.slice(7).trim() || null : null;
+}
+
 export function sessionCookieHeader(token, req, { clear = false } = {}) {
   const secure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   const attrs = [
