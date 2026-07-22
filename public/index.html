@@ -987,7 +987,42 @@
         <button class="btw-modal-continue secondary" id="btwLoginCancel">Cancel</button>
         <button class="btw-modal-continue" id="btwLoginSubmit">Log in</button>
       </div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">No account yet? <button id="btwLoginToSignup" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Start a free trial</button></div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">No account yet? <button id="btwLoginToSignup" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Start a free trial</button> · <button id="btwLoginForgot" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Forgot password?</button></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwResetOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:400px;">
+      <div id="btwResetRequestStep">
+        <div class="btw-modal-eyebrow">Password reset</div>
+        <h2>Reset your password</h2>
+        <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px;">Enter your account email and we'll send you a reset link.</div>
+        <div class="btw-form-field">
+          <label>Email</label>
+          <input type="email" id="btwResetEmail" placeholder="jamie@yourpractice.ca">
+        </div>
+        <div class="btw-form-error" id="btwResetReqError"></div>
+        <div class="btw-form-row">
+          <button class="btw-modal-continue secondary" id="btwResetReqCancel">Cancel</button>
+          <button class="btw-modal-continue" id="btwResetReqSubmit">Send reset link</button>
+        </div>
+      </div>
+      <div id="btwResetSentStep" style="display:none;">
+        <div class="btw-modal-eyebrow">Password reset</div>
+        <h2>Check your email</h2>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:16px;" id="btwResetSentMsg">If an account exists for that address, a reset link is on its way. The link works for 60 minutes.</div>
+        <button class="btw-modal-continue" id="btwResetSentClose">Close</button>
+      </div>
+      <div id="btwResetConfirmStep" style="display:none;">
+        <div class="btw-modal-eyebrow">Password reset</div>
+        <h2>Choose a new password</h2>
+        <div class="btw-form-field">
+          <label>New password</label>
+          <input type="password" id="btwResetNewPw" placeholder="At least 10 characters">
+        </div>
+        <div class="btw-form-error" id="btwResetConfError"></div>
+        <button class="btw-modal-continue" id="btwResetConfSubmit">Set new password</button>
+      </div>
     </div>
   </div>
 
@@ -1012,6 +1047,7 @@
 
       <div id="btwDataList" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px;"></div>
 
+      <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
       <button id="btwCloseData" class="btw-modal-continue">Close</button>
     </div>
@@ -1222,6 +1258,8 @@
       <div class="btw-patient-list" id="btwPatientList"></div>
 
       <div class="btw-alert-banner" id="btwAlertBanner">⚠ New check-in flagged for possible safety concern — reviewed above patient's usual pattern.</div>
+
+      <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
       <div class="btw-digest" id="btwDigest"></div>
 
@@ -1445,8 +1483,9 @@
       time: new Date(row.submitted_at).getTime(),
       mood: row.mood_score,
       tags: [...(row.manual_tags||[]), ...(row.auto_tags||[])],
-      summary: row.summary_text || row.raw_text || 'Check-in received (no notes).',
-      risk: !!row.risk_flag
+      summary: row.summary_text || row.raw_text || (row.audio_upload_id ? 'Voice memo (no transcript yet).' : 'Check-in received (no notes).'),
+      risk: !!row.risk_flag,
+      hasAudio: !!row.audio_upload_id
     };
   }
 
@@ -1525,7 +1564,40 @@
     if(!state.patients.find(p=>p.id===state.selectedPatientId)){
       state.selectedPatientId = state.patients.length ? state.patients[0].id : null;
     }
+    loadAlerts().catch(()=>{}); // best-effort, in parallel
     await loadCheckIns();
+  }
+
+  // --- risk alert feed ---
+  async function loadAlerts(){
+    const alerts = await api('GET', '/api/alerts');
+    const unviewed = alerts.filter(a=>!a.viewed_at);
+    const el = document.getElementById('btwAlertFeed');
+    if(unviewed.length === 0){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    el.innerHTML = unviewed.map(a=>{
+      const d = new Date(a.submitted_at);
+      const when = d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+      return `<div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:8px;display:flex;gap:10px;align-items:center;">
+        <div style="flex:1;">⚠ <strong>${esc(a.patient_name)}</strong> — check-in flagged for possible safety concern (${when}).</div>
+        <button data-alert="${esc(a.id)}" data-pid="${esc(a.patient_id)}" class="btw-alert-view" style="background:none;border:1px solid var(--amber);border-radius:7px;color:#7A4A19;font-size:11.5px;padding:4px 9px;cursor:pointer;flex-shrink:0;">View</button>
+        <button data-alert="${esc(a.id)}" class="btw-alert-dismiss" style="background:none;border:none;color:#7A4A19;font-size:11.5px;text-decoration:underline;cursor:pointer;flex-shrink:0;">Mark reviewed</button>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.btw-alert-view').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.selectedPatientId = btn.dataset.pid;
+        loadCheckIns().catch(err=>alert(err.message));
+      });
+    });
+    el.querySelectorAll('.btw-alert-dismiss').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        try{
+          await api('POST', '/api/alerts/' + btn.dataset.alert + '/mark-viewed');
+          await loadAlerts();
+        }catch(err){ alert(err.message); }
+      });
+    });
   }
 
   async function loadCheckIns(){
@@ -1561,6 +1633,52 @@
     loginOverlay.style.display = 'none';
     window.btwOpenSignup('solo_monthly');
   });
+
+  // --- password reset ---
+  const resetOverlay = document.getElementById('btwResetOverlay');
+  function showResetStep(id){
+    ['btwResetRequestStep','btwResetSentStep','btwResetConfirmStep'].forEach(s=>{
+      document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
+    });
+    resetOverlay.style.display = 'flex';
+  }
+  document.getElementById('btwLoginForgot').addEventListener('click', ()=>{
+    loginOverlay.style.display = 'none';
+    document.getElementById('btwResetReqError').textContent = '';
+    showResetStep('btwResetRequestStep');
+  });
+  document.getElementById('btwResetReqCancel').addEventListener('click', ()=>{ resetOverlay.style.display = 'none'; });
+  document.getElementById('btwResetReqSubmit').addEventListener('click', async ()=>{
+    const email = document.getElementById('btwResetEmail').value.trim();
+    const err = document.getElementById('btwResetReqError');
+    if(!email){ err.textContent = 'Enter your account email.'; return; }
+    try{
+      const resp = await api('POST', '/api/auth/password/reset-request', { email });
+      document.getElementById('btwResetSentMsg').textContent = resp.emailConfigured
+        ? 'If an account exists for that address, a reset link is on its way. The link works for 60 minutes.'
+        : 'Email delivery isn\'t configured on this server yet — the reset link was printed to the server logs (ask whoever runs the server).';
+      showResetStep('btwResetSentStep');
+    }catch(e){ err.textContent = e.message; }
+  });
+  document.getElementById('btwResetSentClose').addEventListener('click', ()=>{ resetOverlay.style.display = 'none'; });
+  document.getElementById('btwResetConfSubmit').addEventListener('click', async ()=>{
+    const err = document.getElementById('btwResetConfError');
+    const pw = document.getElementById('btwResetNewPw').value;
+    if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
+    try{
+      await api('POST', '/api/auth/password/reset-confirm', { token: resetToken, newPassword: pw });
+      resetOverlay.style.display = 'none';
+      history.replaceState(null, '', location.pathname); // drop ?reset= from the URL
+      alert('Password updated. Log in with your new password.');
+      openLogin();
+    }catch(e){ err.textContent = e.message; }
+  });
+  // Arriving from the emailed link: ?reset=<token>
+  const resetToken = new URLSearchParams(location.search).get('reset');
+  if(resetToken){
+    document.getElementById('btwResetConfError').textContent = '';
+    showResetStep('btwResetConfirmStep');
+  }
   document.getElementById('btwLoginSubmit').addEventListener('click', async ()=>{
     const email = document.getElementById('btwLoginEmail').value.trim();
     const password = document.getElementById('btwLoginPassword').value;
@@ -1783,6 +1901,19 @@
       setConsent(false).catch(err=>{ alert(err.message); syncConsentUi(); });
     }
   });
+  document.getElementById('btwResetAccess').addEventListener('click', async ()=>{
+    const p = selectedPatient();
+    if(!p) return;
+    if(!confirm('Reset app access for ' + p.display_name + '? Their current login stops working and they\'ll need the new invite code to set up again. Their history is kept.')) return;
+    try{
+      const updated = await api('POST', '/api/patients/' + p.id + '/reset-access');
+      await loadPatients();
+      alert('Access reset.\n\nNew invite code: ' + updated.invite_code + '\n\nShare it with ' + updated.display_name + ' — the old login no longer works.');
+      const inviteEl = document.getElementById('btwInviteInfo');
+      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span><br>Share this with ' + esc(updated.display_name) + ' so they can set up the app again. It stops working once used.';
+    }catch(err){ alert(err.message); }
+  });
+
   document.getElementById('btwDeleteAll').addEventListener('click', async ()=>{
     const p = selectedPatient();
     if(!p) return;
@@ -1912,11 +2043,15 @@
     el.innerHTML = sorted.length ? sorted.map(c=>{
       const [datePart,timePart] = fmtTimeParts(c.time);
       const tagsHtml = c.tags.map(t=>`<span class="btw-entry-tag">${esc(t)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">safety flag</span>` : '');
+      const audioHtml = c.hasAudio
+        ? `<audio controls preload="none" style="width:100%;height:32px;margin:6px 0 2px;" src="/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/audio"></audio>`
+        : '';
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
           <div class="btw-entry-mood ${c.risk?'risk':''}">mood ${esc(c.mood!=null?c.mood:'–')}/10</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
+          ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
         </div>
       </div>`;

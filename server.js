@@ -7,8 +7,14 @@ import {
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, setOwnConsent,
   createPatientSession, getPatientBySession, deletePatientSession,
-  flagCheckInInaccurate, getCheckIn
+  flagCheckInInaccurate, getCheckIn,
+  getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
+  resetPatientAccess,
+  createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
+  getAudioUploadOwned, getAudioForClinician,
+  createAlert, listAlerts, markAlertViewed
 } from './db.js';
+import { sendEmail, emailConfigured } from './email.js';
 import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
   readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS,
@@ -232,6 +238,64 @@ app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
   res.json({ clinician: req.clinician });
 });
 
+// --- Clinician password reset ---
+// Token flow: request → emailed link (or server console in dev, when no email
+// provider is configured) → confirm with new password. Responses never reveal
+// whether an email has an account.
+
+const RESET_TTL_MINUTES = 60;
+const resetRequestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 5,
+  keyFn: req => req.ip + '|r|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
+  message: 'Too many reset requests — wait an hour and try again.'
+});
+
+app.post('/api/auth/password/reset-request', requireDb, resetRequestLimiter, async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !EMAIL_RE.test(email.trim())) {
+      return res.status(400).json({ error: 'A valid email is required.' });
+    }
+    const clinician = await getClinicianByEmail(email.trim());
+    if (clinician) {
+      const token = generateSessionToken();
+      await createPasswordReset(hashSessionToken(token), clinician.id, RESET_TTL_MINUTES);
+      const origin = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
+      await sendEmail({
+        to: clinician.email,
+        subject: 'Reset your Between password',
+        text: `Someone (hopefully you) asked to reset the password for this Between account.\n\n` +
+          `Open this link within ${RESET_TTL_MINUTES} minutes to choose a new password:\n` +
+          `${origin}/?reset=${token}\n\nIf this wasn't you, you can ignore this email.`
+      });
+    }
+    // Same response either way — no account enumeration.
+    res.json({ ok: true, emailConfigured: emailConfigured() });
+  } catch (err) {
+    console.error('Error in reset-request:', err);
+    res.status(500).json({ error: 'Could not process the request.' });
+  }
+});
+
+app.post('/api/auth/password/reset-confirm', requireDb, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'Missing reset token.' });
+    if (!newPassword || newPassword.length < 10) {
+      return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    }
+    const reset = await getValidPasswordReset(hashSessionToken(token));
+    if (!reset) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+    }
+    await consumePasswordReset(reset.token_hash, reset.clinician_id, await hashPassword(newPassword));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error in reset-confirm:', err);
+    res.status(500).json({ error: 'Could not reset the password.' });
+  }
+});
+
 // --- Patients ---
 // All patient routes require a signed-in clinician, and every lookup is scoped
 // to that clinician server-side — client-supplied patient IDs are never
@@ -272,12 +336,75 @@ app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) =
   }
 });
 
+// Reset a patient's app access: issues a fresh one-time invite code, clears
+// their password, and signs them out everywhere. This is the patient
+// "password reset" — mediated by the therapist, so no patient email
+// infrastructure is needed. History and consent are untouched.
+app.post('/api/patients/:id/reset-access', requireDb, requireAuth, async (req, res) => {
+  try {
+    const patient = await resetPatientAccess(req.clinician.id, req.params.id, generateInviteCode());
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json(patient);
+  } catch (err) {
+    console.error('Error resetting patient access:', err);
+    res.status(500).json({ error: 'Could not reset access.' });
+  }
+});
+
+// --- Alerts (risk-flag feed for the signed-in clinician) ---
+
+app.get('/api/alerts', requireDb, requireAuth, async (req, res) => {
+  try {
+    res.json(await listAlerts(req.clinician.id));
+  } catch (err) {
+    console.error('Error listing alerts:', err);
+    res.status(500).json({ error: 'Could not load alerts.' });
+  }
+});
+
+app.post('/api/alerts/:id/mark-viewed', requireDb, requireAuth, async (req, res) => {
+  try {
+    const alert = await markAlertViewed(req.params.id, req.clinician.id);
+    if (!alert) return res.status(404).json({ error: 'Alert not found.' });
+    res.json(alert);
+  } catch (err) {
+    console.error('Error marking alert viewed:', err);
+    res.status(500).json({ error: 'Could not update the alert.' });
+  }
+});
+
 // --- Check-ins ---
 
 // Shared by the clinician route below and the patient-facing route further
 // down: applies the consent rule, calls the AI only when opted in, and never
 // loses a check-in to an AI failure.
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags }) {
+// When a check-in raises a risk flag, record an alert for the treating
+// clinician and try to deliver it by email. Delivery is best-effort and
+// independent of the patient's crisis resources, which are returned in the
+// check-in response itself.
+async function raiseRiskAlert(patient, checkIn) {
+  try {
+    let deliveredAt = null;
+    let channel = null;
+    const clinician = patient.clinician_id ? await getClinicianById(patient.clinician_id) : null;
+    if (clinician) {
+      channel = 'email';
+      const { delivered } = await sendEmail({
+        to: clinician.email,
+        subject: `Between: check-in flagged for ${patient.display_name}`,
+        text: `A check-in from ${patient.display_name} was flagged for possible safety concern.\n\n` +
+          `Open your Between dashboard to review it. The patient has already been shown crisis resources in the app.\n\n` +
+          `(No response is required through Between — it is a documentation tool, not a monitoring service.)`
+      });
+      if (delivered) deliveredAt = new Date();
+      await createAlert({ checkInId: checkIn.id, clinicianId: clinician.id, deliveryChannel: channel, deliveredAt });
+    }
+  } catch (err) {
+    console.error('Failed to record/deliver risk alert:', err);
+  }
+}
+
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Only call the AI if this patient has actually opted in — mirrors the
@@ -298,10 +425,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags }) {
     summaryText = text.trim().slice(0, 1000); // no AI: store as-typed, no profiling
   }
 
-  return createCheckIn({
+  const checkIn = await createCheckIn({
     patientId: patient.id, moodScore, manualTags, rawText: text || null,
-    summaryText, autoTags, riskFlag, modelVersion
+    summaryText, autoTags, riskFlag, modelVersion, audioUploadId
   });
+  if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
+  return checkIn;
 }
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, checkInLimiter, async (req, res) => {
@@ -327,6 +456,24 @@ app.get('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) 
   } catch (err) {
     console.error('Error listing check-ins:', err);
     res.status(500).json({ error: 'Could not list check-ins.' });
+  }
+});
+
+// Stream a check-in's voice memo to its treating clinician.
+app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIn = await getCheckIn(req.params.checkInId, patient.id);
+    if (!checkIn || !checkIn.audio_upload_id) return res.status(404).json({ error: 'No audio for this check-in.' });
+    const audio = await getAudioForClinician(checkIn.audio_upload_id, req.clinician.id);
+    if (!audio) return res.status(404).json({ error: 'No audio for this check-in.' });
+    res.setHeader('Content-Type', audio.mime);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(audio.data);
+  } catch (err) {
+    console.error('Error streaming audio:', err);
+    res.status(500).json({ error: 'Could not load the audio.' });
   }
 });
 
@@ -378,7 +525,7 @@ const CRISIS_RESOURCES = {
 app.use('/api/patient', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -446,7 +593,10 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
     if (!found || found.invite_status !== 'pending') {
       return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
     }
-    if (await getPatientByEmail(email.trim())) {
+    // Conflict check excludes the invited patient's own row, so re-onboarding
+    // with the same email after a therapist access-reset works.
+    const existing = await getPatientByEmail(email.trim());
+    if (existing && existing.id !== found.id) {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
 
@@ -524,17 +674,69 @@ app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res)
   }
 });
 
+// Voice memos, step 1: ask for a short-lived signed upload URL. Raw audio
+// never rides through the JSON API (backend-spec.md) — it goes to the URL
+// below. Stored in Postgres for the MVP; move to object storage at scale.
+const AUDIO_TOKEN_TTL_MINUTES = 10;
+const AUDIO_MAX_BYTES = 15 * 1024 * 1024;
+const AUDIO_MIMES = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/aac', 'audio/x-m4a'];
+
+app.post('/api/patient/check-ins/audio-upload-url', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const token = generateSessionToken();
+    await createAudioUploadToken(hashSessionToken(token), req.patient.id, AUDIO_TOKEN_TTL_MINUTES);
+    res.json({
+      uploadUrl: `/api/patient/audio-upload/${token}`,
+      method: 'PUT',
+      maxBytes: AUDIO_MAX_BYTES,
+      expiresInMinutes: AUDIO_TOKEN_TTL_MINUTES
+    });
+  } catch (err) {
+    console.error('Error creating upload URL:', err);
+    res.status(500).json({ error: 'Could not prepare the upload.' });
+  }
+});
+
+// Step 2: PUT the audio bytes to the signed URL. The token is single-use and
+// itself authenticates the request (that's what makes the URL "signed").
+app.put('/api/patient/audio-upload/:token',
+  express.raw({ type: () => true, limit: AUDIO_MAX_BYTES }),
+  requireDb,
+  async (req, res) => {
+    try {
+      const grant = await consumeAudioUploadToken(hashSessionToken(req.params.token));
+      if (!grant) return res.status(403).json({ error: 'Upload link expired — try recording again.' });
+      const mime = (req.headers['content-type'] || '').split(';')[0].trim();
+      if (!AUDIO_MIMES.includes(mime)) {
+        return res.status(415).json({ error: 'Unsupported audio format.' });
+      }
+      if (!req.body || !req.body.length) {
+        return res.status(400).json({ error: 'No audio received.' });
+      }
+      const audioUploadId = await storeAudioUpload(grant.patient_id, mime, req.body);
+      res.status(201).json({ audioUploadId });
+    } catch (err) {
+      console.error('Error storing audio upload:', err);
+      res.status(500).json({ error: 'Could not save the recording.' });
+    }
+  });
+
 app.post('/api/patient/check-ins', requireDb, requirePatientAuth, patientCheckInLimiter, async (req, res) => {
   try {
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
+    if (audioUploadId && !(await getAudioUploadOwned(audioUploadId, req.patient.id))) {
+      return res.status(400).json({ error: 'That recording could not be found — try again.' });
+    }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text, moodScore, manualTags });
+    // No server-side transcription yet (needs a speech-to-text provider), so
+    // voice memos are stored and playable but not summarized or risk-screened.
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text, moodScore, manualTags, audioUploadId });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
@@ -586,6 +788,22 @@ app.delete('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, 
   } catch (err) {
     console.error('Error deleting patient history:', err);
     res.status(500).json({ error: 'Could not delete your history.' });
+  }
+});
+
+// Stream the patient's own voice memo back to them.
+app.get('/api/patient/check-ins/:id/audio', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const checkIn = await getCheckIn(req.params.id, req.patient.id);
+    if (!checkIn || !checkIn.audio_upload_id) return res.status(404).json({ error: 'No audio for this check-in.' });
+    const audio = await getAudioUploadOwned(checkIn.audio_upload_id, req.patient.id);
+    if (!audio) return res.status(404).json({ error: 'No audio for this check-in.' });
+    res.setHeader('Content-Type', audio.mime);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(audio.data);
+  } catch (err) {
+    console.error('Error streaming patient audio:', err);
+    res.status(500).json({ error: 'Could not load the audio.' });
   }
 });
 

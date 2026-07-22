@@ -35,6 +35,8 @@ If `DATABASE_URL` isn't set, the server still runs (so you can test the static s
 | `POST /api/auth/login` | `{ email, password }` — sets an httpOnly session cookie (30-day, DB-backed) |
 | `POST /api/auth/logout` | Deletes the session server-side and clears the cookie |
 | `GET /api/auth/me` | The signed-in clinician, or 401 |
+| `POST /api/auth/password/reset-request` | `{ email }` — always returns ok (no account enumeration). Emails a 60-minute reset link via Resend if `RESEND_API_KEY` is set, otherwise prints it to the server logs |
+| `POST /api/auth/password/reset-confirm` | `{ token, newPassword }` — single-use token; also revokes every existing session for the account |
 
 ### Patients & check-ins (require auth)
 
@@ -42,9 +44,13 @@ Every route below requires a signed-in clinician, and every lookup is scoped to 
 
 | Route | What it does |
 |---|---|
-| `POST /api/patients` | Create a patient (`{ displayName }`) under the signed-in clinician |
+| `POST /api/patients` | Create a patient (`{ displayName }`) under the signed-in clinician — returns a one-time `invite_code` for the patient app |
 | `GET /api/patients` | Caseload for the signed-in clinician (includes `check_in_count` and `has_recent_risk`) |
+| `POST /api/patients/:id/reset-access` | Patient "password reset", therapist-mediated: issues a fresh invite code, clears the patient's password, revokes their sessions. History and consent stay intact |
 | `POST /api/patients/:id/consent` | Set `ai_consent_enabled` (`{ enabled: true/false }`) |
+| `GET /api/patients/:id/check-ins/:checkInId/audio` | Stream a check-in's voice memo |
+| `GET /api/alerts` | Risk-alert feed for the signed-in clinician (created automatically when a check-in is risk-flagged; also emailed if email is configured) |
+| `POST /api/alerts/:id/mark-viewed` | For the clinician's own tracking only — no escalation logic, per the no-response-required product decision |
 | `POST /api/patients/:id/check-ins` | Create a check-in (`{ text, moodScore, manualTags }`) — only calls the AI if that patient has consent enabled; if the AI call fails, the check-in is stored raw instead of being lost |
 | `GET /api/patients/:id/check-ins` | List a patient's check-in history |
 | `DELETE /api/patients/:id/check-ins/:checkInId` | Soft-delete one check-in |
@@ -60,7 +66,10 @@ Separate auth scope for patients, used by the mobile app in `patient_app/`. Auth
 | `POST /api/patient/login` / `logout` | Bearer-token session (30 days, revocable) |
 | `GET /api/patient/me` | The signed-in patient |
 | `GET/POST /api/patient/consent` | Read / record the patient's own consent (version + timestamp, Law 25). Check-ins are blocked until consent is recorded |
-| `POST /api/patient/check-ins` | Send a check-in. AI runs only if this patient opted in. If risk is flagged, crisis resources come back in the same response |
+| `POST /api/patient/check-ins` | Send a check-in (`{ text?, moodScore?, manualTags?, audioUploadId? }`). AI runs only if this patient opted in. If risk is flagged, crisis resources come back in the same response |
+| `POST /api/patient/check-ins/audio-upload-url` | Returns a short-lived signed upload URL for a voice memo — raw audio never goes through the JSON API |
+| `PUT /api/patient/audio-upload/:token` | Upload the audio bytes (single-use token, 15 MB max). Stored in Postgres for the MVP; move to object storage at scale. **No transcription yet** — voice memos are stored and playable, but not summarized or risk-screened until a speech-to-text provider is added |
+| `GET /api/patient/check-ins/:id/audio` | Stream the patient's own voice memo |
 | `GET /api/patient/check-ins` | Own history only |
 | `DELETE /api/patient/check-ins/:id` | 15-minute grace-period undo (refused for risk-flagged check-ins) |
 | `DELETE /api/patient/check-ins` | Request deletion of the whole history (erasure right, not time-limited) |
@@ -95,7 +104,8 @@ Once deployed, every host above has a "custom domain" setting — point your dom
 ## Important before this touches real patients
 This is still a prototype backend, not a production one. Before any real check-in data flows through it:
 
-- **Auth is basic.** Clinician signup/login and patient invite/login with hashed passwords and strict per-account data scoping are in place, but there's no MFA, no password reset for either scope, and licence verification is stubbed — `licence_verified` is never set true. All of these are in `backend-spec.md` and needed before real use.
+- **Auth is basic.** Clinician signup/login and patient invite/login with hashed passwords, strict per-account data scoping, and password reset for both scopes (email-link for clinicians, therapist-mediated access reset for patients) are in place — but there's no MFA, and licence verification is stubbed (`licence_verified` is never set true). Still in `backend-spec.md` and needed before real use.
+- **Voice memos aren't transcribed or risk-screened.** Audio check-ins are stored and playable by patient and clinician, but until a speech-to-text provider is wired in server-side, they get no AI summary and — importantly — no risk flag. Alert delivery is email-only (via Resend if configured); real push/SMS is future work.
 - **Rate limiting is in-memory and single-instance.** Login (10 tries per account per 15 min, 50 per IP), signup (10/hour per IP), `/api/summarize` (10/min per IP), and check-in creation (15/min per clinician) are all rate-limited via `rate-limit.js`. Counters live in process memory, so they reset on restart and aren't shared across instances — fine for one Render dyno, but swap in Redis/Postgres-backed counters before scaling out.
 - **Canadian data residency** — the Anthropic API call in `server.js` has a placeholder comment where you'd add the region setting once confirmed available on your account (see `docs.claude.com` data-residency page, and the earlier Law 25 discussion). Also confirm your Postgres provider's region — Neon and Supabase both let you pick one.
 - **Risk-classifier validation** — the summarization prompt includes a basic risk flag, but per `risk-classifier-eval.md`, this needs real clinical review and testing before it's trusted with real patients.
