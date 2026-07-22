@@ -50,6 +50,22 @@ Every route below requires a signed-in clinician, and every lookup is scoped to 
 | `DELETE /api/patients/:id/check-ins/:checkInId` | Soft-delete one check-in |
 | `DELETE /api/patients/:id/check-ins` | Soft-delete all of a patient's check-ins (the "request deletion" button) |
 
+### Patient scope (`/api/patient/*`, Bearer-token auth — used by the Flutter app)
+
+Separate auth scope for patients, used by the mobile app in `patient_app/`. Authenticated with `Authorization: Bearer <token>` (no cookies). Every route is limited to the signed-in patient's own row — this scope has no caseload concept and no way to reach another patient's data. CORS is enabled for this scope only.
+
+| Route | What it does |
+|---|---|
+| `POST /api/patient/accept-invite` | `{ inviteCode, email, password }` — one-time: turns a therapist-issued invite code into the patient's own login |
+| `POST /api/patient/login` / `logout` | Bearer-token session (30 days, revocable) |
+| `GET /api/patient/me` | The signed-in patient |
+| `GET/POST /api/patient/consent` | Read / record the patient's own consent (version + timestamp, Law 25). Check-ins are blocked until consent is recorded |
+| `POST /api/patient/check-ins` | Send a check-in. AI runs only if this patient opted in. If risk is flagged, crisis resources come back in the same response |
+| `GET /api/patient/check-ins` | Own history only |
+| `DELETE /api/patient/check-ins/:id` | 15-minute grace-period undo (refused for risk-flagged check-ins) |
+| `DELETE /api/patient/check-ins` | Request deletion of the whole history (erasure right, not time-limited) |
+| `POST /api/patient/check-ins/:id/flag-inaccurate` | Contest an AI summary |
+
 ### Unauthenticated
 
 | Route | What it does |
@@ -79,11 +95,13 @@ Once deployed, every host above has a "custom domain" setting — point your dom
 ## Important before this touches real patients
 This is still a prototype backend, not a production one. Before any real check-in data flows through it:
 
-- **Auth is basic.** Clinician signup/login with hashed passwords and per-clinician data scoping are in place, but there's no MFA, no password reset, no patient-facing auth (the patient pane is the clinician simulating their patient), and licence verification is stubbed — `licence_verified` is never set true. All of these are in `backend-spec.md` and needed before real use.
+- **Auth is basic.** Clinician signup/login and patient invite/login with hashed passwords and strict per-account data scoping are in place, but there's no MFA, no password reset for either scope, and licence verification is stubbed — `licence_verified` is never set true. All of these are in `backend-spec.md` and needed before real use.
 - **Rate limiting is in-memory and single-instance.** Login (10 tries per account per 15 min, 50 per IP), signup (10/hour per IP), `/api/summarize` (10/min per IP), and check-in creation (15/min per clinician) are all rate-limited via `rate-limit.js`. Counters live in process memory, so they reset on restart and aren't shared across instances — fine for one Render dyno, but swap in Redis/Postgres-backed counters before scaling out.
 - **Canadian data residency** — the Anthropic API call in `server.js` has a placeholder comment where you'd add the region setting once confirmed available on your account (see `docs.claude.com` data-residency page, and the earlier Law 25 discussion). Also confirm your Postgres provider's region — Neon and Supabase both let you pick one.
 - **Risk-classifier validation** — the summarization prompt includes a basic risk flag, but per `risk-classifier-eval.md`, this needs real clinical review and testing before it's trusted with real patients.
 
-The frontend (`public/index.html`) is now wired to these endpoints: sign up or log in from the header, and the dashboard shows your real caseload — add patients, send check-ins (stored in Postgres), toggle per-patient AI consent, and view/delete stored data.
+The frontend (`public/index.html`) is now wired to these endpoints: sign up or log in from the header, and the dashboard shows your real caseload — add patients (each gets a one-time invite code for the patient app), send check-ins (stored in Postgres), toggle per-patient AI consent, and view/delete stored data.
+
+The patient-facing mobile app lives in `patient_app/` (Flutter) — see its README. Patients accept their therapist's invite code, record their own consent, and send check-ins that land on the therapist dashboard.
 
 This backend is meant as a working starting point to build the rest of `backend-spec.md` onto — not a finished product.
