@@ -982,6 +982,10 @@
         <label>Password</label>
         <input type="password" id="btwLoginPassword" placeholder="Your password">
       </div>
+      <div class="btw-form-field" id="btwMfaField" style="display:none;">
+        <label>Two-factor code</label>
+        <input type="text" id="btwLoginMfaCode" placeholder="6-digit code from your authenticator app" inputmode="numeric" autocomplete="one-time-code">
+      </div>
       <div class="btw-form-error" id="btwLoginError"></div>
       <div class="btw-form-row">
         <button class="btw-modal-continue secondary" id="btwLoginCancel">Cancel</button>
@@ -1026,6 +1030,37 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwSecurityOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:440px;">
+      <div class="btw-modal-eyebrow">Security</div>
+      <h2>Two-factor authentication</h2>
+      <div id="btwMfaStatusOff" style="display:none;">
+        <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Add a second step at login: a 6-digit code from an authenticator app (Google Authenticator, 1Password, Authy…). Strongly recommended before any real patient data.</div>
+        <button class="btw-modal-continue" id="btwMfaEnrollBtn">Set up two-factor</button>
+      </div>
+      <div id="btwMfaEnrollStep" style="display:none;">
+        <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;">In your authenticator app, choose <strong>"Enter a setup key"</strong> and paste this secret (account name: your Between email):</div>
+        <div id="btwMfaSecret" style="font-family:var(--font-mono);font-size:15px;letter-spacing:.06em;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:12px;word-break:break-all;color:var(--moss);"></div>
+        <div class="btw-form-field">
+          <label>Enter the 6-digit code the app shows</label>
+          <input type="text" id="btwMfaVerifyCode" inputmode="numeric" placeholder="123456">
+        </div>
+        <div class="btw-form-error" id="btwMfaError"></div>
+        <button class="btw-modal-continue" id="btwMfaVerifyBtn">Turn on two-factor</button>
+      </div>
+      <div id="btwMfaStatusOn" style="display:none;">
+        <div style="font-size:12.5px;color:var(--moss);line-height:1.6;margin-bottom:14px;">✓ Two-factor is <strong>on</strong>. Logging in requires a code from your authenticator app.</div>
+        <div class="btw-form-field">
+          <label>To turn it off, enter a current code</label>
+          <input type="text" id="btwMfaDisableCode" inputmode="numeric" placeholder="123456">
+        </div>
+        <div class="btw-form-error" id="btwMfaOffError"></div>
+        <button class="btw-modal-continue secondary" id="btwMfaDisableBtn">Turn off two-factor</button>
+      </div>
+      <button class="btw-modal-continue secondary" id="btwSecurityClose" style="margin-top:10px;">Close</button>
+    </div>
+  </div>
+
   <div class="btw-modal-overlay" id="btwDataOverlay" style="display:none;">
     <div class="btw-modal">
       <div class="btw-modal-eyebrow">Patient data</div>
@@ -1066,6 +1101,7 @@
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
+      <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
       <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
     </div>
   </div>
@@ -1541,6 +1577,7 @@
     authUserEl.style.display = signedIn ? '' : 'none';
     authUserEl.innerHTML = signedIn ? `Signed in as <strong>${esc(state.me.name)}</strong>` : '';
     loginBtn.style.display = signedIn ? 'none' : '';
+    document.getElementById('btwSecurityBtn').style.display = signedIn ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
     signedOutBox.style.display = signedIn ? 'none' : '';
     dashGrid.style.display = signedIn ? '' : 'none';
@@ -1620,8 +1657,12 @@
   // --- login modal ---
   const loginOverlay = document.getElementById('btwLoginOverlay');
   const loginError = document.getElementById('btwLoginError');
+  let pendingMfaToken = null;
   function openLogin(){
     loginError.textContent = '';
+    pendingMfaToken = null;
+    document.getElementById('btwMfaField').style.display = 'none';
+    document.getElementById('btwLoginMfaCode').value = '';
     loginOverlay.style.display = 'flex';
     document.getElementById('btwLoginEmail').focus();
   }
@@ -1679,21 +1720,83 @@
     document.getElementById('btwResetConfError').textContent = '';
     showResetStep('btwResetConfirmStep');
   }
+  async function finishLogin(clinician){
+    state.me = clinician;
+    loginOverlay.style.display = 'none';
+    document.getElementById('btwLoginPassword').value = '';
+    document.getElementById('btwLoginMfaCode').value = '';
+    pendingMfaToken = null;
+    renderAuthState();
+    await loadPatients();
+    goToView(navProduct, viewProduct);
+  }
+
   document.getElementById('btwLoginSubmit').addEventListener('click', async ()=>{
     const email = document.getElementById('btwLoginEmail').value.trim();
     const password = document.getElementById('btwLoginPassword').value;
-    if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
     try{
+      if(pendingMfaToken){
+        const code = document.getElementById('btwLoginMfaCode').value.trim();
+        if(!code){ loginError.textContent = 'Enter the 6-digit code from your authenticator app.'; return; }
+        const data = await api('POST', '/api/auth/login/mfa', { mfaToken: pendingMfaToken, code });
+        await finishLogin(data.clinician);
+        return;
+      }
+      if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
       const data = await api('POST', '/api/auth/login', { email, password });
-      state.me = data.clinician;
-      loginOverlay.style.display = 'none';
-      document.getElementById('btwLoginPassword').value = '';
-      renderAuthState();
-      await loadPatients();
-      goToView(navProduct, viewProduct);
+      if(data.mfaRequired){
+        pendingMfaToken = data.mfaToken;
+        loginError.textContent = '';
+        document.getElementById('btwMfaField').style.display = '';
+        document.getElementById('btwLoginMfaCode').focus();
+        return;
+      }
+      await finishLogin(data.clinician);
     }catch(err){
       loginError.textContent = err.message;
     }
+  });
+
+  // --- two-factor (security modal) ---
+  const securityOverlay = document.getElementById('btwSecurityOverlay');
+  function renderSecurityModal(){
+    const on = !!(state.me && state.me.mfa_enabled);
+    document.getElementById('btwMfaStatusOff').style.display = on ? 'none' : '';
+    document.getElementById('btwMfaStatusOn').style.display = on ? '' : 'none';
+    document.getElementById('btwMfaEnrollStep').style.display = 'none';
+    document.getElementById('btwMfaError').textContent = '';
+    document.getElementById('btwMfaOffError').textContent = '';
+  }
+  document.getElementById('btwSecurityBtn').addEventListener('click', ()=>{
+    renderSecurityModal();
+    securityOverlay.style.display = 'flex';
+  });
+  document.getElementById('btwSecurityClose').addEventListener('click', ()=>{ securityOverlay.style.display = 'none'; });
+  document.getElementById('btwMfaEnrollBtn').addEventListener('click', async ()=>{
+    try{
+      const data = await api('POST', '/api/auth/mfa/enroll');
+      document.getElementById('btwMfaSecret').textContent = data.secret;
+      document.getElementById('btwMfaStatusOff').style.display = 'none';
+      document.getElementById('btwMfaEnrollStep').style.display = '';
+    }catch(err){ alert(err.message); }
+  });
+  document.getElementById('btwMfaVerifyBtn').addEventListener('click', async ()=>{
+    const err = document.getElementById('btwMfaError');
+    try{
+      await api('POST', '/api/auth/mfa/verify', { code: document.getElementById('btwMfaVerifyCode').value.trim() });
+      state.me.mfa_enabled = true;
+      document.getElementById('btwMfaVerifyCode').value = '';
+      renderSecurityModal();
+    }catch(e){ err.textContent = e.message; }
+  });
+  document.getElementById('btwMfaDisableBtn').addEventListener('click', async ()=>{
+    const err = document.getElementById('btwMfaOffError');
+    try{
+      await api('POST', '/api/auth/mfa/disable', { code: document.getElementById('btwMfaDisableCode').value.trim() });
+      state.me.mfa_enabled = false;
+      document.getElementById('btwMfaDisableCode').value = '';
+      renderSecurityModal();
+    }catch(e){ err.textContent = e.message; }
   });
 
   // --- signup flow ---

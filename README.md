@@ -37,6 +37,12 @@ If `DATABASE_URL` isn't set, the server still runs (so you can test the static s
 | `GET /api/auth/me` | The signed-in clinician, or 401 |
 | `POST /api/auth/password/reset-request` | `{ email }` — always returns ok (no account enumeration). Emails a 60-minute reset link via Resend if `RESEND_API_KEY` is set, otherwise prints it to the server logs |
 | `POST /api/auth/password/reset-confirm` | `{ token, newPassword }` — single-use token; also revokes every existing session for the account |
+| `POST /api/auth/mfa/enroll` | Generate a TOTP secret + `otpauth://` URL (shown once). Not active until verified |
+| `POST /api/auth/mfa/verify` | `{ code }` — confirm one authenticator code to switch MFA on |
+| `POST /api/auth/mfa/disable` | `{ code }` — turn MFA off (requires a current code) |
+| `POST /api/auth/login/mfa` | `{ mfaToken, code }` — when login returns `{ mfaRequired, mfaToken }`, complete it here to get the session |
+
+Two-factor is standard TOTP (RFC 6238), so any authenticator app works (Google Authenticator, 1Password, Authy…). Implemented on Node's `crypto` — no extra dependencies.
 
 ### Patients & check-ins (require auth)
 
@@ -104,8 +110,8 @@ Once deployed, every host above has a "custom domain" setting — point your dom
 ## Important before this touches real patients
 This is still a prototype backend, not a production one. Before any real check-in data flows through it:
 
-- **Auth is basic.** Clinician signup/login and patient invite/login with hashed passwords, strict per-account data scoping, and password reset for both scopes (email-link for clinicians, therapist-mediated access reset for patients) are in place — but there's no MFA, and licence verification is stubbed (`licence_verified` is never set true). Still in `backend-spec.md` and needed before real use.
-- **Voice memos aren't transcribed or risk-screened.** Audio check-ins are stored and playable by patient and clinician, but until a speech-to-text provider is wired in server-side, they get no AI summary and — importantly — no risk flag. Alert delivery is email-only (via Resend if configured); real push/SMS is future work.
+- **Auth.** Clinician signup/login and patient invite/login with hashed passwords, strict per-account data scoping, password reset for both scopes (email-link for clinicians, therapist-mediated access reset for patients), and optional TOTP two-factor for clinicians are all in place. Licence verification is still stubbed (`licence_verified` is never set true) — the remaining item in `backend-spec.md` before real use.
+- **Voice-memo transcription needs a Deepgram key to be active.** With `DEEPGRAM_API_KEY` set, voice memos are transcribed server-side and flow through the same consent-gated AI summary + risk screening as typed check-ins. Without it, memos are stored and playable but not transcribed or risk-screened. Alert delivery is email-only (via Resend if configured); real push/SMS is future work.
 - **Rate limiting is in-memory and single-instance.** Login (10 tries per account per 15 min, 50 per IP), signup (10/hour per IP), `/api/summarize` (10/min per IP), and check-in creation (15/min per clinician) are all rate-limited via `rate-limit.js`. Counters live in process memory, so they reset on restart and aren't shared across instances — fine for one Render dyno, but swap in Redis/Postgres-backed counters before scaling out.
 - **Canadian data residency** — the Anthropic API call in `server.js` has a placeholder comment where you'd add the region setting once confirmed available on your account (see `docs.claude.com` data-residency page, and the earlier Law 25 discussion). Also confirm your Postgres provider's region — Neon and Supabase both let you pick one.
 - **Risk-classifier validation** — the summarization prompt includes a basic risk flag, but per `risk-classifier-eval.md`, this needs real clinical review and testing before it's trusted with real patients.

@@ -15,11 +15,17 @@ import {
   createAlert, listAlerts, markAlertViewed
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
+import { transcribeAudio } from './transcribe.js';
 import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
   readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS,
-  generateInviteCode, readBearerToken
+  generateInviteCode, readBearerToken,
+  generateTotpSecret, verifyTotp, otpauthUrl
 } from './auth.js';
+import {
+  getClinicianMfa, setMfaSecret, setMfaEnabled,
+  createMfaChallenge, getValidMfaChallenge, deleteMfaChallenge
+} from './db.js';
 import { rateLimit } from './rate-limit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -213,12 +219,92 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
       return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
+    // With MFA on, a correct password only earns a short-lived challenge —
+    // the session starts after the authenticator code checks out.
+    if (clinician.mfa_enabled) {
+      const mfaToken = generateSessionToken();
+      await createMfaChallenge(hashSessionToken(mfaToken), clinician.id, 5);
+      return res.json({ mfaRequired: true, mfaToken });
+    }
+
     await startSession(res, req, clinician.id);
-    const { password_hash, ...publicClinician } = clinician;
+    const { password_hash, mfa_secret, ...publicClinician } = clinician;
     res.json({ clinician: publicClinician });
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
+  }
+});
+
+const mfaCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 20,
+  message: 'Too many code attempts — wait 15 minutes and try again.'
+});
+
+app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
+  try {
+    const { mfaToken, code } = req.body || {};
+    if (!mfaToken || !code) return res.status(400).json({ error: 'Missing code.' });
+    const challenge = await getValidMfaChallenge(hashSessionToken(mfaToken));
+    if (!challenge) return res.status(401).json({ error: 'This login attempt expired — start again.' });
+    const mfa = await getClinicianMfa(challenge.clinician_id);
+    if (!mfa || !mfa.mfa_secret || !verifyTotp(mfa.mfa_secret, code)) {
+      return res.status(401).json({ error: 'That code isn\'t right. Check your authenticator app.' });
+    }
+    await deleteMfaChallenge(challenge.token_hash);
+    await startSession(res, req, challenge.clinician_id);
+    const clinician = await getClinicianById(challenge.clinician_id);
+    res.json({ clinician });
+  } catch (err) {
+    console.error('Error in MFA login:', err);
+    res.status(500).json({ error: 'Could not sign in.' });
+  }
+});
+
+// MFA enrolment: generate a secret (shown once, entered into any
+// authenticator app), then verify one code to switch it on. Disabling also
+// requires a current code.
+app.post('/api/auth/mfa/enroll', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (req.clinician.mfa_enabled) {
+      return res.status(400).json({ error: 'Two-factor is already enabled.' });
+    }
+    const secret = generateTotpSecret();
+    await setMfaSecret(req.clinician.id, secret);
+    res.json({ secret, otpauthUrl: otpauthUrl(secret, req.clinician.email) });
+  } catch (err) {
+    console.error('Error in MFA enroll:', err);
+    res.status(500).json({ error: 'Could not start two-factor setup.' });
+  }
+});
+
+app.post('/api/auth/mfa/verify', requireDb, requireAuth, mfaCodeLimiter, async (req, res) => {
+  try {
+    const mfa = await getClinicianMfa(req.clinician.id);
+    if (!mfa || !mfa.mfa_secret) return res.status(400).json({ error: 'Start two-factor setup first.' });
+    if (!verifyTotp(mfa.mfa_secret, (req.body || {}).code)) {
+      return res.status(400).json({ error: 'That code isn\'t right. Check your authenticator app.' });
+    }
+    await setMfaEnabled(req.clinician.id, true);
+    res.json({ ok: true, mfa_enabled: true });
+  } catch (err) {
+    console.error('Error in MFA verify:', err);
+    res.status(500).json({ error: 'Could not enable two-factor.' });
+  }
+});
+
+app.post('/api/auth/mfa/disable', requireDb, requireAuth, mfaCodeLimiter, async (req, res) => {
+  try {
+    const mfa = await getClinicianMfa(req.clinician.id);
+    if (!mfa || !mfa.mfa_enabled) return res.status(400).json({ error: 'Two-factor is not enabled.' });
+    if (!verifyTotp(mfa.mfa_secret, (req.body || {}).code)) {
+      return res.status(400).json({ error: 'That code isn\'t right. Check your authenticator app.' });
+    }
+    await setMfaEnabled(req.clinician.id, false);
+    res.json({ ok: true, mfa_enabled: false });
+  } catch (err) {
+    console.error('Error in MFA disable:', err);
+    res.status(500).json({ error: 'Could not disable two-factor.' });
   }
 });
 
@@ -730,13 +816,25 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, patientCheckIn
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
-    if (audioUploadId && !(await getAudioUploadOwned(audioUploadId, req.patient.id))) {
-      return res.status(400).json({ error: 'That recording could not be found — try again.' });
+
+    let effectiveText = text;
+    if (audioUploadId) {
+      const audio = await getAudioUploadOwned(audioUploadId, req.patient.id);
+      if (!audio) {
+        return res.status(400).json({ error: 'That recording could not be found — try again.' });
+      }
+      // Transcribe the memo server-side when no text was typed, so voice
+      // check-ins flow through the same consent-gated AI summarization and
+      // risk screening as typed ones. If transcription is unconfigured or
+      // fails, the memo is stored playable-but-untranscribed (and therefore
+      // not risk-screened — documented in the README).
+      if (!effectiveText || !effectiveText.trim()) {
+        const transcript = await transcribeAudio(audio.data, audio.mime);
+        if (transcript) effectiveText = transcript.slice(0, 4000);
+      }
     }
 
-    // No server-side transcription yet (needs a speech-to-text provider), so
-    // voice memos are stored and playable but not summarized or risk-screened.
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text, moodScore, manualTags, audioUploadId });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.

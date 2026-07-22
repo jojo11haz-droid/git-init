@@ -28,8 +28,17 @@ CREATE TABLE IF NOT EXISTS clinicians (
   licence_verified BOOLEAN NOT NULL DEFAULT false,
   province TEXT,
   practice_name TEXT,
+  mfa_secret TEXT,
+  mfa_enabled BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS mfa_challenges (
+  token_hash TEXT PRIMARY KEY,
+  clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS auth_sessions (
@@ -121,6 +130,8 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS invite_code TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS invite_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS consent_version TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_secret TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS patient_flagged_inaccurate BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS audio_upload_id UUID REFERENCES audio_uploads(id);
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
@@ -140,7 +151,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, mfa_enabled, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, province, practiceName }) {
   const { rows } = await pool.query(
@@ -192,6 +203,52 @@ export async function deleteSession(tokenHash) {
 
 export async function deleteClinicianSessions(clinicianId) {
   await pool.query(`DELETE FROM auth_sessions WHERE clinician_id = $1`, [clinicianId]);
+}
+
+// --- MFA (TOTP) ---
+
+export async function getClinicianMfa(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT id, mfa_secret, mfa_enabled FROM clinicians WHERE id = $1`,
+    [clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function setMfaSecret(clinicianId, secret) {
+  await pool.query(
+    `UPDATE clinicians SET mfa_secret = $1, mfa_enabled = false, updated_at = now() WHERE id = $2`,
+    [secret, clinicianId]
+  );
+}
+
+export async function setMfaEnabled(clinicianId, enabled) {
+  await pool.query(
+    `UPDATE clinicians SET mfa_enabled = $1, mfa_secret = CASE WHEN $1 THEN mfa_secret ELSE NULL END, updated_at = now() WHERE id = $2`,
+    [enabled, clinicianId]
+  );
+}
+
+// Short-lived challenge issued after a correct password when MFA is on; the
+// session only starts once the TOTP code checks out.
+export async function createMfaChallenge(tokenHash, clinicianId, ttlMinutes) {
+  await pool.query(
+    `INSERT INTO mfa_challenges (token_hash, clinician_id, expires_at)
+     VALUES ($1, $2, now() + ($3 || ' minutes')::interval)`,
+    [tokenHash, clinicianId, String(ttlMinutes)]
+  );
+}
+
+export async function getValidMfaChallenge(tokenHash) {
+  const { rows } = await pool.query(
+    `SELECT * FROM mfa_challenges WHERE token_hash = $1 AND expires_at > now()`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteMfaChallenge(tokenHash) {
+  await pool.query(`DELETE FROM mfa_challenges WHERE token_hash = $1`, [tokenHash]);
 }
 
 // --- Clinician password reset ---
