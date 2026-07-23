@@ -64,6 +64,11 @@
     .btw-grid{grid-template-columns:1fr;}
     .btw-seam{display:none;}
   }
+  /* The dashboard uses more of the screen than the marketing pages, so the
+     caseload and timeline have room to breathe. Header widens with it so the
+     two stay aligned. */
+  .btw-root.btw-dash-wide .btw-header,
+  .btw-root.btw-dash-wide .btw-grid{max-width:1600px;}
   .btw-seam{
     align-self:stretch;
     display:flex;
@@ -372,7 +377,7 @@
   }
   /* ---- consent modal ---- */
   .btw-modal-overlay{
-    position:absolute;
+    position:fixed;
     inset:0;
     background:rgba(31,45,40,0.55);
     display:flex;
@@ -380,7 +385,6 @@
     justify-content:center;
     z-index:50;
     padding:20px;
-    border-radius:12px;
   }
   .btw-modal{
     position:relative;
@@ -1557,11 +1561,14 @@
   const viewPricing = document.getElementById('btwViewPricing');
   const allNavBtns = [navHome, navProduct, navPricing];
   const allViews = [viewHome, viewProduct, viewPricing];
+  const btwRoot = document.querySelector('.btw-root');
   function goToView(nav, view){
     allNavBtns.forEach(b=>b.classList.remove('active'));
     allViews.forEach(v=>v.classList.remove('active'));
     nav.classList.add('active');
     view.classList.add('active');
+    // Widen the layout on the dashboard; keep marketing pages comfortably narrow.
+    if(btwRoot) btwRoot.classList.toggle('btw-dash-wide', view === viewProduct);
     window.scrollTo({top:0, behavior:'instant'});
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
