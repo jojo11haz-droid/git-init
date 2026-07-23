@@ -65,6 +65,88 @@ export function readSessionCookie(req) {
   return null;
 }
 
+// --- TOTP (RFC 6238) for clinician MFA — standard authenticator-app codes,
+// implemented on Node's crypto so there's nothing extra to audit. ---
+
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+function base32Encode(buf) {
+  let bits = 0, value = 0, out = '';
+  for (const byte of buf) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += BASE32_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += BASE32_ALPHABET[(value << (5 - bits)) & 31];
+  return out;
+}
+
+function base32Decode(str) {
+  let bits = 0, value = 0;
+  const out = [];
+  for (const ch of str.toUpperCase().replace(/=+$/, '')) {
+    const idx = BASE32_ALPHABET.indexOf(ch);
+    if (idx === -1) continue;
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      out.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(out);
+}
+
+export function generateTotpSecret() {
+  return base32Encode(crypto.randomBytes(20));
+}
+
+export function totpCode(secretBase32, { stepOffset = 0, periodSec = 30, digits = 6 } = {}) {
+  const counter = Math.floor(Date.now() / 1000 / periodSec) + stepOffset;
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(counter));
+  const hmac = crypto.createHmac('sha1', base32Decode(secretBase32)).update(msg).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code = ((hmac.readUInt32BE(offset) & 0x7fffffff) % 10 ** digits);
+  return String(code).padStart(digits, '0');
+}
+
+// Accepts the previous/current/next 30s window to absorb clock drift.
+export function verifyTotp(secretBase32, code) {
+  const given = String(code || '').trim();
+  if (!/^\d{6}$/.test(given)) return false;
+  for (const stepOffset of [-1, 0, 1]) {
+    const expected = totpCode(secretBase32, { stepOffset });
+    if (crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(given))) return true;
+  }
+  return false;
+}
+
+export function otpauthUrl(secretBase32, accountEmail) {
+  return `otpauth://totp/${encodeURIComponent('Between:' + accountEmail)}?secret=${secretBase32}&issuer=Between`;
+}
+
+// Patient invite codes: short, human-shareable (a therapist reads it out or
+// writes it down). Unambiguous alphabet — no 0/O, 1/I/L.
+const INVITE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+export function generateInviteCode() {
+  const bytes = crypto.randomBytes(8);
+  let code = '';
+  for (let i = 0; i < 8; i++) code += INVITE_ALPHABET[bytes[i] % INVITE_ALPHABET.length];
+  return code.slice(0, 4) + '-' + code.slice(4);
+}
+
+// The mobile/patient scope authenticates with "Authorization: Bearer <token>"
+// instead of a cookie — native apps hold the token in secure storage.
+export function readBearerToken(req) {
+  const header = req.headers.authorization || '';
+  return header.startsWith('Bearer ') ? header.slice(7).trim() || null : null;
+}
+
 export function sessionCookieHeader(token, req, { clear = false } = {}) {
   const secure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   const attrs = [
