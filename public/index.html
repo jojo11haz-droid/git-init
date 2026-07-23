@@ -1986,7 +1986,7 @@
     if(p.invite_status === 'accepted'){
       inviteEl.innerHTML = '<strong>Patient app:</strong> connected' + (p.email ? ' as ' + esc(p.email) : '') + '.';
     } else {
-      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span><br>Share this with ' + esc(p.display_name) + ' so they can create their account in the Between app. It stops working once used.';
+      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span><br>Ask ' + esc(p.display_name) + ' to open <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span> on their phone and enter this code. It stops working once used.';
     }
     syncConsentUi();
     renderDataList();
@@ -2013,7 +2013,7 @@
       await loadPatients();
       alert('Access reset.\n\nNew invite code: ' + updated.invite_code + '\n\nShare it with ' + updated.display_name + ' — the old login no longer works.');
       const inviteEl = document.getElementById('btwInviteInfo');
-      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span><br>Share this with ' + esc(updated.display_name) + ' so they can set up the app again. It stops working once used.';
+      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span><br>Ask ' + esc(updated.display_name) + ' to open <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span> on their phone and enter this code. It stops working once used.';
     }catch(err){ alert(err.message); }
   });
 
@@ -2102,7 +2102,7 @@
         state.selectedPatientId = patient.id;
         await loadPatients();
         if(patient.invite_code){
-          alert('Patient added.\n\nInvite code for the Between app: ' + patient.invite_code + '\n\nShare this with ' + patient.display_name + ' so they can create their account. You can find it again under "View patient data & AI settings".');
+          alert('Patient added.\n\nInvite code: ' + patient.invite_code + '\n\nAsk ' + patient.display_name + ' to open ' + location.origin + '/app on their phone and enter this code. You can find it again under "View patient data & AI settings".');
         }
       }catch(err){ alert(err.message); }
     });

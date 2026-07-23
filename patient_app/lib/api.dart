@@ -1,13 +1,22 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
-/// Where the Between backend lives. Override at build time:
-///   flutter build web --dart-define=API_BASE=https://your-app.onrender.com
-const apiBase = String.fromEnvironment(
-  'API_BASE',
-  defaultValue: 'http://localhost:3000',
-);
+/// Where the Between backend lives.
+/// - Optional override at build time (used for native mobile builds):
+///     flutter build apk --dart-define=API_BASE=https://your-app.onrender.com
+/// - Web build with no override: talk to whatever origin served the page, so
+///   the hosted web app (served by the same server at /app) just works with no
+///   URL baked in.
+/// - Otherwise (local dev on device/emulator): localhost.
+const _apiBaseDefine = String.fromEnvironment('API_BASE', defaultValue: '');
+
+Uri resolveApiUri(String path) {
+  if (_apiBaseDefine.isNotEmpty) return Uri.parse('$_apiBaseDefine$path');
+  if (kIsWeb) return Uri.base.resolve(path); // same origin as the served page
+  return Uri.parse('http://localhost:3000$path');
+}
 
 class ApiException implements Exception {
   ApiException(this.status, this.message);
@@ -32,7 +41,7 @@ class ApiClient {
       };
 
   Future<dynamic> _send(String method, String path, [Object? body]) async {
-    final uri = Uri.parse('$apiBase$path');
+    final uri = resolveApiUri(path);
     final request = http.Request(method, uri);
     request.headers.addAll(_headers(json: body != null));
     if (body != null) request.body = jsonEncode(body);
@@ -64,7 +73,7 @@ class ApiClient {
   /// itself — no Bearer header needed).
   Future<dynamic> putBytes(String path, List<int> bytes, String mime) async {
     final response = await http
-        .put(Uri.parse('$apiBase$path'),
+        .put(resolveApiUri(path),
             headers: {'Content-Type': mime}, body: bytes)
         .timeout(const Duration(seconds: 60));
     dynamic data;

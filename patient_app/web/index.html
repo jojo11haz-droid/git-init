@@ -39,7 +39,7 @@
     // Serve CanvasKit from our own bundle instead of Google's CDN, so the app
     // works without third-party requests (and in locked-down networks).
     _flutter.loader.load({
-      config: { canvasKitBaseUrl: "canvaskit/" }
+      config: { canvasKitBaseUrl: "canvaskit/", renderer: "canvaskit" }
     });
   </script>
 </body>
