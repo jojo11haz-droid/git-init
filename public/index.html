@@ -991,6 +991,7 @@
 
   <div class="btw-modal-overlay" id="btwLoginOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:400px;">
+      <button class="btw-modal-close" data-close="btwLoginOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Welcome back</div>
       <h2>Log in</h2>
       <div class="btw-form-field">
@@ -1016,6 +1017,7 @@
 
   <div class="btw-modal-overlay" id="btwResetOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:400px;">
+      <button class="btw-modal-close" data-close="btwResetOverlay" type="button" aria-label="Close">✕</button>
       <div id="btwResetRequestStep">
         <div class="btw-modal-eyebrow">Password reset</div>
         <h2>Reset your password</h2>
@@ -1051,6 +1053,7 @@
 
   <div class="btw-modal-overlay" id="btwSecurityOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:440px;">
+      <button class="btw-modal-close" data-close="btwSecurityOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Security</div>
       <h2>Two-factor authentication</h2>
       <div id="btwMfaStatusOff" style="display:none;">
@@ -1847,6 +1850,17 @@
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });
+  });
+  // X buttons (data-close="overlayId") and backdrop clicks dismiss these modals.
+  document.querySelectorAll('.btw-modal-close[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const el = document.getElementById(btn.dataset.close);
+      if(el) el.style.display = 'none';
+    });
+  });
+  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });
 
   document.getElementById('btwStep1Next').addEventListener('click', ()=>{
