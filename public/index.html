@@ -534,6 +534,28 @@
     border-color:var(--ink);
     color:#fff;
   }
+  .btw-lang{
+    display:inline-flex;
+    padding:2px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:var(--panel);
+  }
+  .btw-lang-btn{
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:12px;
+    padding:5px 11px;
+    border-radius:16px;
+    cursor:pointer;
+  }
+  .btw-lang-btn.active{
+    background:var(--moss);
+    color:#fff;
+  }
   .btw-view{display:none;}
   .btw-view.active{display:block;}
   /* ---- pricing ---- */
@@ -1128,6 +1150,10 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
+      <div class="btw-lang" role="group" aria-label="Language / Langue">
+        <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
+        <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
+      </div>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
       <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
@@ -1140,7 +1166,7 @@
       <section class="btw-hero">
         <div class="btw-hero-copy">
           <div class="btw-hero-eyebrow">For therapists &amp; counsellors</div>
-          <h1>What happens<br><em>between</em> sessions<br>doesn't have to<br>stay a mystery.</h1>
+          <h1 id="btwHeroH1">What happens<br><em>between</em> sessions<br>doesn't have to<br>stay a mystery.</h1>
           <p class="btw-hero-sub">Patients send a quick voice memo or text the moment something happens. AI turns it into a short summary and pattern — so you walk into every session already knowing the shape of the week.</p>
           <div class="btw-hero-cta">
             <button class="btw-hero-btn primary" id="btwHeroTrial">Start 14-day free trial</button>
@@ -1528,6 +1554,214 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // --- i18n: English / Quebec French ------------------------------------
+  // Static text is translated by walking the DOM text nodes and looking each
+  // up by its exact English text; dynamic strings built in JS go through t().
+  const FR = {
+    // header / nav
+    "Between-session check-ins for therapy — patients send a quick note in the moment, AI summarizes it, therapists see the pattern.":
+      "Des suivis entre les séances pour la thérapie — les patients envoient une note sur le vif, l'IA la résume, les thérapeutes voient les tendances.",
+    "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
+    "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion",
+    // hero
+    "For therapists & counsellors":"Pour thérapeutes et conseillers",
+    "Patients send a quick voice memo or text the moment something happens. AI turns it into a short summary and pattern — so you walk into every session already knowing the shape of the week.":
+      "Les patients envoient une courte note vocale ou un texto dès que quelque chose arrive. L'IA en fait un résumé et dégage des tendances — vous entrez à chaque séance en connaissant déjà l'allure de la semaine.",
+    "Start 14-day free trial":"Commencer l'essai gratuit de 14 jours",
+    "See how it works ↓":"Voir comment ça marche ↓",
+    "No credit card required · Canadian data residency · Not a crisis service":
+      "Aucune carte de crédit requise · Données hébergées au Canada · Pas un service de crise",
+    "check-in received":"suivi reçu","AI SUMMARY":"RÉSUMÉ IA",
+    // how it works
+    "How it works":"Comment ça marche",
+    "Patient sends a check-in":"Le patient envoie un suivi",
+    "Stressed, anxious, or just had a win — a quick voice memo or text, right when it happens, not a week later at intake.":
+      "Stressé, anxieux ou une belle réussite — une courte note vocale ou un texto, au moment même, pas une semaine plus tard en séance.",
+    "AI summarizes it":"L'IA le résume",
+    "A short, neutral summary and theme tags — never a diagnosis, never an interpretation. Only with the patient's explicit, opt-in consent.":
+      "Un court résumé neutre et des étiquettes de thèmes — jamais de diagnostic, jamais d'interprétation. Uniquement avec le consentement explicite du patient.",
+    "You see the pattern":"Vous voyez les tendances",
+    "Mood trends, recurring themes, and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Tendances d'humeur, thèmes récurrents et un résumé « depuis la dernière séance » vous attendent dans votre tableau de bord avant chaque rendez-vous.",
+    // features
+    "Built for real practice":"Conçu pour la pratique réelle",
+    "Voice or text":"Voix ou texte",
+    "Patients check in however's easiest in the moment.":"Les patients font leur suivi de la façon la plus simple sur le moment.",
+    "Mood & theme trends":"Tendances d'humeur et de thèmes",
+    "Real charts from real check-ins — not a guess at what happened this week.":"De vrais graphiques à partir de vrais suivis — pas une supposition de ce qui s'est passé cette semaine.",
+    "Privacy by default":"Confidentialité par défaut",
+    "AI analysis is opt-in and off by default. Patients see and control their own data.":"L'analyse par IA est optionnelle et désactivée par défaut. Les patients voient et contrôlent leurs propres données.",
+    "Canadian data residency":"Données hébergées au Canada",
+    "Built with Quebec's Law 25 and provincial privacy rules in mind from day one.":"Conçu dès le départ en tenant compte de la loi 25 du Québec et des règles provinciales de protection des renseignements personnels.",
+    "Multi-patient dashboard":"Tableau de bord multipatient",
+    "Your whole caseload, at-a-glance, with flags for anything that needs a closer look.":"Toute votre clientèle d'un coup d'œil, avec des indicateurs pour ce qui mérite un examen plus attentif.",
+    "Built-in safety net":"Filet de sécurité intégré",
+    "Crisis resources shown to patients instantly if risk language is detected — never waiting on anyone.":"Des ressources de crise sont montrées au patient immédiatement si un langage à risque est détecté — sans jamais attendre personne.",
+    // trust / cta
+    "Between is a documentation tool, not a monitoring service.":"Between est un outil de documentation, pas un service de surveillance.",
+    "Notifications are delivered on a best-effort basis. Between is never a substitute for emergency services — patients always see crisis resources directly, independent of anyone else's response time.":
+      "Les notifications sont livrées au mieux des efforts. Between ne remplace jamais les services d'urgence — les patients voient toujours les ressources de crise directement, indépendamment du temps de réponse de qui que ce soit.",
+    "See what's happening between sessions.":"Voyez ce qui se passe entre les séances.",
+    // dashboard signed-out
+    "Your dashboard lives here.":"Votre tableau de bord est ici.",
+    "Log in to see your caseload, or start a free trial to create your clinician account. Patient data is only visible to the clinician it belongs to.":
+      "Connectez-vous pour voir votre clientèle, ou commencez un essai gratuit pour créer votre compte clinicien. Les données d'un patient ne sont visibles que par le clinicien à qui elles appartiennent.",
+    // patient pane
+    "Patient view":"Vue patient",
+    "How are things right now?":"Comment ça va en ce moment?",
+    "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Envoyez un court suivi. Votre thérapeute verra un bref résumé, pas l'enregistrement brut.",
+    "View patient data & AI settings":"Voir les données du patient et les réglages IA",
+    "Mood right now":"Humeur en ce moment","Low":"Bas","High":"Élevé",
+    "What's going on? (tap any that fit)":"Qu'est-ce qui se passe? (touchez ce qui correspond)",
+    "Sleep":"Sommeil","Work":"Travail","Conflict":"Conflit","Craving":"Envie","Panic":"Panique","Family":"Famille","Win":"Réussite","Social":"Social",
+    "Tell it like it happened":"Dites-le comme ça s'est passé",
+    "Send check-in":"Envoyer le suivi",
+    "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
+    "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.":
+      "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise — si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local. Votre thérapeute a aussi été avisé.",
+    "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
+      "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
+    // therapist pane
+    "Therapist view":"Vue thérapeute","Caseload":"Clientèle",
+    "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Sélectionnez un patient pour voir sa chronologie et ses tendances.",
+    "New check-in flagged for possible safety concern — reviewed above patient's usual pattern.":"Nouveau suivi signalé pour un possible enjeu de sécurité — au-delà des habitudes du patient.",
+    "Mood trend":"Tendance de l'humeur","Theme frequency":"Fréquence des thèmes","Timeline":"Chronologie",
+    // pricing
+    "Simple, per-clinician pricing":"Tarification simple, par clinicien",
+    "One price per clinician seat. Unlimited patients, unlimited check-ins. No setup fees, no per-patient charges. Between is built to sit alongside the EHR you already use, not replace it.":
+      "Un seul prix par siège de clinicien. Patients illimités, suivis illimités. Aucuns frais d'installation, aucuns frais par patient. Between est conçu pour accompagner le DME que vous utilisez déjà, pas le remplacer.",
+    "Every plan includes AI-powered summaries and trend charts — the AI processing cost per check-in is small enough that we don't meter it. Use it as much as your patients need.":
+      "Chaque forfait inclut les résumés par IA et les graphiques de tendances — le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
+    "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
+    "CAD / clinician / month":"CAD / clinicien / mois","Billed monthly. Cancel anytime.":"Facturé mensuellement. Annulable en tout temps.",
+    "Unlimited patients & check-ins":"Patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
+    "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
+    "In-app crisis resources for patients":"Ressources de crise dans l'app pour les patients",
+    "Most practices":"La plupart des cabinets","Solo Annual":"Solo annuel","Same plan, paid yearly":"Même forfait, payé annuellement",
+    "Billed annually ($288/year) — save ~17%":"Facturé annuellement (288 $/an) — économisez ~17 %",
+    "Everything in Solo":"Tout ce qui est dans Solo","Priority email support":"Soutien prioritaire par courriel",
+    "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
+    "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
+    "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
+    "Admin/practice-manager role":"Rôle d'administrateur / gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
+    "Talk to us":"Contactez-nous",
+    "Do my patients pay anything?":"Mes patients paient-ils quelque chose?",
+    "No. Patients never see a bill — Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture — Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
+    "What happens after my trial?":"Que se passe-t-il après mon essai?",
+    "No credit card is required to start. You'll get a reminder before your trial ends, and nothing is charged unless you choose a plan.":"Aucune carte de crédit n'est requise pour commencer. Vous recevrez un rappel avant la fin de l'essai, et rien n'est facturé à moins que vous choisissiez un forfait.",
+    "Is this a replacement for my EHR?":"Est-ce un remplacement de mon DME?",
+    "No — Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"Non — Between se concentre précisément sur les suivis entre les séances. Il est conçu pour fonctionner avec le logiciel de gestion ou de notes que vous utilisez déjà.",
+    "Is my patients' data stored in Canada?":"Les données de mes patients sont-elles hébergées au Canada?",
+    "Yes. Check-in data and AI processing are kept within Canadian data residency, consistent with Quebec's Law 25 and other provincial privacy requirements.":"Oui. Les données de suivi et le traitement par IA sont conservés au Canada, conformément à la loi 25 du Québec et aux autres exigences provinciales de confidentialité.",
+    // buttons / common
+    "Continue":"Continuer","Back":"Retour","Cancel":"Annuler","Close":"Fermer","Email":"Courriel","Password":"Mot de passe",
+    // consent modal
+    "Patient consent":"Consentement du patient","Enable AI summaries for":"Activer les résumés IA pour",
+    "Your check-ins are shared with your therapist as short summaries — not always the raw recording.":"Vos suivis sont partagés avec votre thérapeute sous forme de courts résumés — pas toujours l'enregistrement brut.",
+    "If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). This counts as \"profiling\" of your health information.":"Si vous activez les résumés IA ci-dessous, un modèle d'IA analyse ce que vous envoyez pour rédiger le résumé et repérer des tendances dans le temps (humeur, thèmes, moments). Cela constitue du « profilage » de vos renseignements de santé.",
+    "You can turn this off and still send check-ins — they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis — ils iront à votre thérapeute tels que saisis ou enregistrés, sans analyse par IA.",
+    "You can see everything the app has inferred about your patterns at any time, and ask for it to be deleted.":"Vous pouvez voir en tout temps tout ce que l'application a déduit de vos tendances, et en demander la suppression.",
+    "Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact 988 (Canada Suicide Crisis Helpline) or 911 — don't wait on this app.":"Between n'est pas un service de crise ou d'urgence. Si vous êtes en danger immédiat ou pensez au suicide, composez le 988 (Ligne d'aide en cas de crise suicidaire du Canada) ou le 911 — n'attendez pas après cette application.",
+    "I confirm this patient has been shown the above, understands how their check-ins are used and processed, and has consented to AI analysis (they can withdraw this anytime).":"Je confirme que ce patient a vu ce qui précède, comprend comment ses suivis sont utilisés et traités, et a consenti à l'analyse par IA (il peut se rétracter en tout temps).",
+    "Enable AI summaries":"Activer les résumés IA",
+    // login modal
+    "Welcome back":"Bon retour","Two-factor code":"Code de double authentification",
+    "No account yet?":"Pas encore de compte?","Start a free trial":"Commencer un essai gratuit","Forgot password?":"Mot de passe oublié?",
+    // reset modal
+    "Password reset":"Réinitialisation du mot de passe","Reset your password":"Réinitialiser votre mot de passe",
+    "Enter your account email and we'll send you a reset link.":"Entrez le courriel de votre compte et nous vous enverrons un lien de réinitialisation.",
+    "Send reset link":"Envoyer le lien","Check your email":"Vérifiez vos courriels",
+    "If an account exists for that address, a reset link is on its way. The link works for 60 minutes.":"Si un compte existe pour cette adresse, un lien de réinitialisation est en route. Le lien est valide 60 minutes.",
+    "Choose a new password":"Choisissez un nouveau mot de passe","New password":"Nouveau mot de passe","Set new password":"Définir le mot de passe",
+    // security modal
+    "Two-factor authentication":"Double authentification",
+    "Add a second step at login: a 6-digit code from an authenticator app (Google Authenticator, 1Password, Authy…). Strongly recommended before any real patient data.":"Ajoutez une deuxième étape à la connexion : un code à 6 chiffres d'une application d'authentification (Google Authenticator, 1Password, Authy…). Fortement recommandé avant toute vraie donnée de patient.",
+    "Set up two-factor":"Configurer la double authentification","Turn on two-factor":"Activer la double authentification",
+    "Enter the 6-digit code the app shows":"Entrez le code à 6 chiffres affiché par l'application",
+    "To turn it off, enter a current code":"Pour la désactiver, entrez un code actuel","Turn off two-factor":"Désactiver la double authentification",
+    // data modal
+    "Patient data":"Données du patient","Stored check-ins":"Suivis enregistrés",
+    "Every check-in on file for this patient, and any AI-generated summary or tags attached to it. Patients have the right to see, correct, or delete this at any time.":"Chaque suivi au dossier de ce patient, ainsi que tout résumé ou étiquette générés par IA qui y sont rattachés. Les patients ont le droit de les consulter, corriger ou supprimer en tout temps.",
+    "AI summaries & trend charts":"Résumés IA et graphiques de tendances","Change your choice anytime.":"Modifiez votre choix en tout temps.",
+    "Reset app access (new invite code)":"Réinitialiser l'accès à l'app (nouveau code)","Request deletion of my check-in history":"Demander la suppression de mon historique de suivis",
+    // signup modal
+    "Step 1 of 3 · Account":"Étape 1 de 3 · Compte","Create your account":"Créez votre compte","Full name":"Nom complet","Work email":"Courriel professionnel",
+    "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province",
+    "Quebec":"Québec","Ontario":"Ontario","British Columbia":"Colombie-Britannique","Alberta":"Alberta","Other":"Autre",
+    "Professional licence / order number":"Numéro de permis / d'ordre professionnel",
+    "We ask for this to confirm you're a licensed clinician — Between is for professional use with your own patients, not general wellness tracking.":"Nous le demandons pour confirmer que vous êtes un clinicien autorisé — Between est destiné à un usage professionnel avec vos propres patients, pas au suivi de bien-être général.",
+    "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & start your trial":"Vérifiez et commencez votre essai",
+    "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
+    "You're in":"Vous y êtes","Trial started":"Essai commencé","Go to my dashboard":"Aller à mon tableau de bord",
+    // dynamic (built in JS)
+    "Signed in as":"Connecté en tant que",
+    "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries: —":"Résumés IA : —",
+    "No check-ins on file.":"Aucun suivi au dossier.","safety flag":"signal de sécurité","mood":"humeur",
+    "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
+    "No check-ins yet.":"Aucun suivi pour l'instant.",
+    "No patients yet — add your first patient to start receiving check-ins.":"Aucun patient pour l'instant — ajoutez votre premier patient pour commencer à recevoir des suivis.",
+    "No check-ins yet for":"Aucun suivi pour l'instant pour",
+    "check-in":"suivi","check-ins":"suivis",
+    "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
+    "Add patient":"Ajouter un patient",
+    "Patient app: connected":"App patient : connectée","Patient app invite code:":"Code d'invitation de l'app patient :",
+    "Share this code so they can set up the Between app on their phone. It stops working once used.":"Partagez ce code pour qu'il configure l'app Between sur son téléphone. Il cesse de fonctionner une fois utilisé.",
+    "flagged for possible safety concern":"signalé pour un possible enjeu de sécurité",
+    "View":"Voir","Mark reviewed":"Marquer comme vu",
+    "Add a patient first.":"Ajoutez d'abord un patient.",
+    "Patient display name (as you'd like it to appear in your caseload):":"Nom d'affichage du patient (tel que vous voulez le voir dans votre clientèle) :"
+  };
+
+  let curLang = 'en';
+  const _orig = new WeakMap();
+  const heroH1 = document.getElementById('btwHeroH1');
+  const heroEn = heroH1 ? heroH1.innerHTML : '';
+  const heroFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
+  // Inputs whose placeholders translate: [id, fr]
+  const PH_FR = {
+    btwLoginPassword:'Votre mot de passe',
+    btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
+    btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
+    btwResetNewPw:'Au moins 10 caractères', btwSuPassword:'Au moins 10 caractères',
+    btwSuPractice:"Une pratique solo, c'est parfait", btwSuLicence:'ex. numéro OPQ'
+  };
+  const _phEn = {};
+
+  function t(en){ return curLang === 'fr' ? (FR[en] || en) : en; }
+
+  function translateStatic(){
+    const walker = document.createTreeWalker(btwRoot, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    for(const n of nodes){
+      if(!_orig.has(n)){ if(!n.nodeValue.trim()) continue; _orig.set(n, n.nodeValue); }
+      const original = _orig.get(n); if(original === undefined) continue;
+      const key = original.trim();
+      if(curLang === 'fr' && FR[key]) n.nodeValue = original.replace(key, FR[key]);
+      else n.nodeValue = original;
+    }
+    if(heroH1) heroH1.innerHTML = curLang === 'fr' ? heroFr : heroEn;
+    for(const id in PH_FR){
+      const el = document.getElementById(id); if(!el) continue;
+      if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
+      el.setAttribute('placeholder', curLang === 'fr' ? PH_FR[id] : _phEn[id]);
+    }
+    const mic = document.getElementById('btwMic');
+    if(mic){ const l = curLang === 'fr' ? 'Enregistrer une note vocale' : 'Record voice memo'; mic.title = l; mic.setAttribute('aria-label', l); }
+  }
+
+  function setLang(l, opts){
+    curLang = (l === 'fr') ? 'fr' : 'en';
+    try { localStorage.setItem('btw_lang', curLang); } catch(e){}
+    document.documentElement.lang = curLang;
+    document.querySelectorAll('.btw-lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang === curLang));
+    translateStatic();
+    if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
+  }
+  document.querySelectorAll('.btw-lang-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setLang(b.dataset.lang));
+  });
+
   // --- app state: all server-backed, no demo data ---
   const state = {
     me: null,               // signed-in clinician from /api/auth/me
@@ -1607,14 +1841,14 @@
   function renderAuthState(){
     const signedIn = !!state.me;
     authUserEl.style.display = signedIn ? '' : 'none';
-    authUserEl.innerHTML = signedIn ? `Signed in as <strong>${esc(state.me.name)}</strong>` : '';
+    authUserEl.innerHTML = signedIn ? `${esc(t('Signed in as'))} <strong>${esc(state.me.name)}</strong>` : '';
     loginBtn.style.display = signedIn ? 'none' : '';
     document.getElementById('btwSecurityBtn').style.display = signedIn ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
     signedOutBox.style.display = signedIn ? 'none' : '';
     dashGrid.style.display = signedIn ? '' : 'none';
     const therapistEyebrow = document.getElementById('btwTherapistPaneEyebrow');
-    if(therapistEyebrow) therapistEyebrow.textContent = signedIn ? ('Therapist view · ' + state.me.name) : 'Therapist view';
+    if(therapistEyebrow) therapistEyebrow.textContent = signedIn ? (t('Therapist view') + ' · ' + state.me.name) : t('Therapist view');
   }
 
   async function loadSession(){
@@ -1646,11 +1880,12 @@
     el.style.display = '';
     el.innerHTML = unviewed.map(a=>{
       const d = new Date(a.submitted_at);
-      const when = d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+      const loc = curLang === 'fr' ? 'fr-CA' : undefined;
+      const when = d.toLocaleDateString(loc,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(loc,{hour:'numeric',minute:'2-digit'});
       return `<div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:8px;display:flex;gap:10px;align-items:center;">
-        <div style="flex:1;"><strong>${esc(a.patient_name)}</strong> — check-in flagged for possible safety concern (${when}).</div>
-        <button data-alert="${esc(a.id)}" data-pid="${esc(a.patient_id)}" class="btw-alert-view" style="background:none;border:1px solid var(--amber);border-radius:7px;color:#7A4A19;font-size:11.5px;padding:4px 9px;cursor:pointer;flex-shrink:0;">View</button>
-        <button data-alert="${esc(a.id)}" class="btw-alert-dismiss" style="background:none;border:none;color:#7A4A19;font-size:11.5px;text-decoration:underline;cursor:pointer;flex-shrink:0;">Mark reviewed</button>
+        <div style="flex:1;"><strong>${esc(a.patient_name)}</strong> — ${esc(t('flagged for possible safety concern'))} (${when}).</div>
+        <button data-alert="${esc(a.id)}" data-pid="${esc(a.patient_id)}" class="btw-alert-view" style="background:none;border:1px solid var(--amber);border-radius:7px;color:#7A4A19;font-size:11.5px;padding:4px 9px;cursor:pointer;flex-shrink:0;">${esc(t('View'))}</button>
+        <button data-alert="${esc(a.id)}" class="btw-alert-dismiss" style="background:none;border:none;color:#7A4A19;font-size:11.5px;text-decoration:underline;cursor:pointer;flex-shrink:0;">${esc(t('Mark reviewed'))}</button>
       </div>`;
     }).join('');
     el.querySelectorAll('.btw-alert-view').forEach(btn=>{
@@ -1987,7 +2222,7 @@
   function syncConsentUi(){
     const p = selectedPatient();
     const on = !!(p && p.ai_consent_enabled);
-    aiStatusEl.textContent = 'AI summaries: ' + (p ? (on ? 'on' : 'off') : '—');
+    aiStatusEl.textContent = p ? (on ? t('AI summaries: on') : t('AI summaries: off')) : t('AI summaries: —');
     const dataToggle = document.getElementById('btwDataAiToggle');
     if(dataToggle) dataToggle.checked = on;
   }
@@ -2010,15 +2245,16 @@
 
   function renderDataList(){
     if(state.checkIns.length===0){
-      dataList.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--ink-soft);">No check-ins on file.</div>';
+      dataList.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--ink-soft);">'+esc(t('No check-ins on file.'))+'</div>';
       return;
     }
     dataList.innerHTML = state.checkIns.map(c=>{
       const d = new Date(c.time);
-      const when = d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+      const loc = curLang === 'fr' ? 'fr-CA' : undefined;
+      const when = d.toLocaleDateString(loc,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(loc,{hour:'numeric',minute:'2-digit'});
       return `<div style="padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;">
-        <button class="btw-entry-delete" data-cid="${esc(c.id)}" title="Delete this check-in">✕</button>
-        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · mood ${esc(c.mood!=null?c.mood:'–')}/10${c.risk?' · <span style="color:var(--amber)">safety flag</span>':''}</div>
+        <button class="btw-entry-delete" data-cid="${esc(c.id)}" title="✕">✕</button>
+        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · ${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10${c.risk?' · <span style="color:var(--amber)">'+esc(t('safety flag'))+'</span>':''}</div>
         <div>${esc(c.summary)}</div>
       </div>`;
     }).join('');
@@ -2036,13 +2272,13 @@
 
   document.getElementById('btwOpenData').addEventListener('click', ()=>{
     const p = selectedPatient();
-    if(!p){ alert('Add a patient first.'); return; }
-    document.getElementById('btwDataTitle').textContent = 'Stored check-ins · ' + p.display_name;
+    if(!p){ alert(t('Add a patient first.')); return; }
+    document.getElementById('btwDataTitle').textContent = t('Stored check-ins ·') + ' ' + p.display_name;
     const inviteEl = document.getElementById('btwInviteInfo');
     if(p.invite_status === 'accepted'){
-      inviteEl.innerHTML = '<strong>Patient app:</strong> connected' + (p.email ? ' as ' + esc(p.email) : '') + '.';
+      inviteEl.innerHTML = '<strong>' + esc(t('Patient app: connected')) + '</strong>' + (p.email ? ' (' + esc(p.email) + ')' : '') + '.';
     } else {
-      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span><br>Ask ' + esc(p.display_name) + ' to open <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span> on their phone and enter this code. It stops working once used.';
+      inviteEl.innerHTML = '<strong>' + esc(t('Patient app invite code:')) + '</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span> · <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span><br>' + esc(t('Share this code so they can set up the Between app on their phone. It stops working once used.'));
     }
     syncConsentUi();
     renderDataList();
@@ -2069,7 +2305,7 @@
       await loadPatients();
       alert('Access reset.\n\nNew invite code: ' + updated.invite_code + '\n\nShare it with ' + updated.display_name + ' — the old login no longer works.');
       const inviteEl = document.getElementById('btwInviteInfo');
-      inviteEl.innerHTML = '<strong>Patient app invite code:</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span><br>Ask ' + esc(updated.display_name) + ' to open <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span> on their phone and enter this code. It stops working once used.';
+      inviteEl.innerHTML = '<strong>' + esc(t('Patient app invite code:')) + '</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span> · <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span><br>' + esc(t('Share this code so they can set up the Between app on their phone. It stops working once used.'));
     }catch(err){ alert(err.message); }
   });
 
@@ -2127,9 +2363,10 @@
 
   function fmtTimeParts(ts){
     const d = new Date(ts);
+    const loc = curLang === 'fr' ? 'fr-CA' : undefined;
     return [
-      d.toLocaleDateString(undefined,{month:'short',day:'numeric'}),
-      d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})
+      d.toLocaleDateString(loc,{month:'short',day:'numeric'}),
+      d.toLocaleTimeString(loc,{hour:'numeric',minute:'2-digit'})
     ];
   }
 
@@ -2141,9 +2378,9 @@
         ${p.has_recent_risk?'<span class="btw-patient-flag"></span>':''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${esc(p.display_name)}</div>
-        <div class="btw-patient-meta">${p.check_in_count||0} check-ins</div>
+        <div class="btw-patient-meta">${p.check_in_count||0} ${esc((p.check_in_count===1)?t('check-in'):t('check-ins'))}</div>
       </div>`;
-    }).join('') + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>Add patient</button>`;
+    }).join('') + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
       card.addEventListener('click', ()=>{
         state.selectedPatientId = card.dataset.pid;
@@ -2151,14 +2388,14 @@
       });
     });
     document.getElementById('btwAddPatient').addEventListener('click', async ()=>{
-      const name = prompt('Patient display name (as you’d like it to appear in your caseload):');
+      const name = prompt(t("Patient display name (as you'd like it to appear in your caseload):"));
       if(!name || !name.trim()) return;
       try{
         const patient = await api('POST', '/api/patients', { displayName: name.trim() });
         state.selectedPatientId = patient.id;
         await loadPatients();
         if(patient.invite_code){
-          alert('Patient added.\n\nInvite code: ' + patient.invite_code + '\n\nAsk ' + patient.display_name + ' to open ' + location.origin + '/app on their phone and enter this code. You can find it again under "View patient data & AI settings".');
+          alert(t('Add patient') + '\n\n' + t('Patient app invite code:') + ' ' + patient.invite_code + '\n\n' + location.origin + '/app');
         }
       }catch(err){ alert(err.message); }
     });
@@ -2167,7 +2404,7 @@
   function renderPatientPane(){
     const p = selectedPatient();
     const eyebrow = document.getElementById('btwPatientPaneEyebrow');
-    eyebrow.textContent = p ? ('Patient view · sending as ' + p.display_name) : 'Patient view · no patient selected';
+    eyebrow.textContent = p ? (t('Patient view') + ' · ' + p.display_name) : t('Patient view');
     document.getElementById('btwSend').disabled = !p;
     syncConsentUi();
   }
@@ -2177,23 +2414,24 @@
     const titleEl = document.getElementById('btwTimelineTitle');
     const patient = selectedPatient();
     const list = state.checkIns;
-    if(titleEl) titleEl.textContent = 'Timeline' + (patient ? ' · ' + patient.display_name : '');
+    if(titleEl) titleEl.textContent = t('Timeline') + (patient ? ' · ' + patient.display_name : '');
     if(!patient){
-      el.innerHTML = 'No patients yet — add your first patient to start receiving check-ins.';
+      el.innerHTML = esc(t('No patients yet — add your first patient to start receiving check-ins.'));
       return;
     }
     if(list.length===0){
-      el.innerHTML = `No check-ins yet for ${esc(patient.display_name)}.`;
+      el.innerHTML = `${esc(t('No check-ins yet for'))} ${esc(patient.display_name)}.`;
       return;
     }
     const rated = list.filter(c=>c.mood!=null);
     const avgMood = rated.length ? (rated.reduce((s,c)=>s+c.mood,0)/rated.length).toFixed(1) : null;
     const counts = {};
-    list.forEach(c=>c.tags.forEach(t=>counts[t]=(counts[t]||0)+1));
+    list.forEach(c=>c.tags.forEach(tg=>counts[tg]=(counts[tg]||0)+1));
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
-    el.innerHTML = `<strong>${list.length} check-in${list.length===1?'':'s'}</strong> since last session` +
-      (avgMood ? ` · avg mood <strong>${avgMood}/10</strong>` : '') +
-      (topTag ? ` · most common theme: <strong>${esc(topTag[0])}</strong> (${topTag[1]}×)` : '');
+    const n = list.length;
+    el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('since last session'))}` +
+      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${avgMood}/10</strong>` : '') +
+      (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
   function renderTimeline(){
@@ -2201,20 +2439,20 @@
     const sorted = [...state.checkIns].sort((a,b)=>b.time-a.time);
     el.innerHTML = sorted.length ? sorted.map(c=>{
       const [datePart,timePart] = fmtTimeParts(c.time);
-      const tagsHtml = c.tags.map(t=>`<span class="btw-entry-tag">${esc(t)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">safety flag</span>` : '');
+      const tagsHtml = c.tags.map(tg=>`<span class="btw-entry-tag">${esc(curLang==='fr'?(FR[tg]||tg):tg)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">${esc(t('safety flag'))}</span>` : '');
       const audioHtml = c.hasAudio
         ? `<audio controls preload="none" style="width:100%;height:32px;margin:6px 0 2px;" src="/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/audio"></audio>`
         : '';
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
-          <div class="btw-entry-mood ${c.risk?'risk':''}">mood ${esc(c.mood!=null?c.mood:'–')}/10</div>
+          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
         </div>
       </div>`;
-    }).join('') : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">No check-ins yet.</div>';
+    }).join('') : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>';
   }
 
   function renderMoodChart(){
@@ -2250,7 +2488,7 @@
     document.getElementById('btwPie').style.background = stops.length ? `conic-gradient(${stops.join(',')})` : '#D9DED2';
     document.getElementById('btwLegend').innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([tag,count])=>{
       const color = tagColors[tag]||tagColors.Other;
-      return `<div><span class="btw-legend-dot" style="background:${color}"></span>${esc(tag)} (${count})</div>`;
+      return `<div><span class="btw-legend-dot" style="background:${color}"></span>${esc(curLang==='fr'?(FR[tag]||tag):tag)} (${count})</div>`;
     }).join('');
   }
 
@@ -2316,6 +2554,14 @@
       sendBtn.disabled = !selectedPatient();
     }
   });
+
+  // Pick the starting language: stored choice, else the browser's language.
+  let _startLang = 'en';
+  try {
+    const stored = localStorage.getItem('btw_lang');
+    _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
+  } catch(e){}
+  setLang(_startLang, {initial:true});
 
   renderAuthState();
   renderAll();
