@@ -78,9 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
       // environments. On mobile the pre-check is what triggers the OS prompt.
       if (!kIsWeb && !await _recorder.hasPermission()) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                  'Microphone access is off. You can type instead, or allow it in settings.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.read<AppState>().s.micOff)));
         }
         return;
       }
@@ -104,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Couldn\'t start recording — you can type instead. ($e)')));
+            content: Text(context.read<AppState>().s.recordFailed(e.toString()))));
       }
     }
   }
@@ -119,9 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_recording) await _toggleRecording(); // sending while recording = stop first
     final recording = _recordingResult;
     if (text.isEmpty && _tags.isEmpty && recording == null) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text(
-              'Say a little about what happened — record, type, or tap a tag.')));
+      messenger.showSnackBar(SnackBar(content: Text(app.s.saySomething)));
       return;
     }
     setState(() => _sending = true);
@@ -161,7 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final patient = context.watch<AppState>().patient!;
+    final state = context.watch<AppState>();
+    final s = state.s;
+    final patient = state.patient!;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -173,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Wordmark(size: 24),
                   const Spacer(),
                   IconButton(
-                    tooltip: 'My history',
+                    tooltip: s.myHistory,
                     icon: const Icon(Icons.history_rounded,
                         color: BtwColors.inkSoft),
                     onPressed: () => Navigator.of(context).push(
@@ -181,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'My data & settings',
+                    tooltip: s.myDataSettings,
                     icon: const Icon(Icons.tune_rounded,
                         color: BtwColors.inkSoft),
                     onPressed: () => Navigator.of(context).push(
@@ -196,14 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.fromLTRB(28, 18, 28, 12),
                 children: [
                   Text(
-                    'Hi ${patient.firstName}.',
+                    s.hi(patient.firstName),
                     style: const TextStyle(
                         fontSize: 30, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'How are things right now? Take your time.',
-                    style: TextStyle(
+                  Text(
+                    s.howAreThings,
+                    style: const TextStyle(
                         fontSize: 16.5,
                         color: BtwColors.inkSoft,
                         height: 1.5),
@@ -222,15 +221,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 10,
                       maxLength: 4000,
                       style: const TextStyle(fontSize: 16.5, height: 1.5),
-                      decoration: const InputDecoration(
-                        hintText: 'Tell it like it happened…',
-                        hintStyle: TextStyle(color: BtwColors.inkSoft),
+                      decoration: InputDecoration(
+                        hintText: s.tellItHint,
+                        hintStyle: const TextStyle(color: BtwColors.inkSoft),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         filled: false,
                         counterText: '',
-                        contentPadding: EdgeInsets.all(16),
+                        contentPadding: const EdgeInsets.all(16),
                       ),
                     ),
                   ),
@@ -254,9 +253,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             _recording
                                 ? Icons.stop_rounded
                                 : Icons.mic_rounded,
-                            semanticLabel: _recording
-                                ? 'Stop recording'
-                                : 'Record a voice memo',
+                            semanticLabel:
+                                _recording ? s.stopRecording : s.recordVoice,
                             color: Colors.white,
                             size: 26,
                           ),
@@ -266,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: _recording
                             ? Text(
-                                'Recording… ${_fmtSeconds(_recordSeconds)} — tap to stop',
+                                s.recordingElapsed(_fmtSeconds(_recordSeconds)),
                                 style: const TextStyle(
                                     fontSize: 13.5, color: BtwColors.clay),
                               )
@@ -275,14 +273,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const Icon(Icons.graphic_eq_rounded,
                                         size: 18, color: BtwColors.moss),
                                     const SizedBox(width: 6),
-                                    Text(
-                                      'Voice memo attached (${_fmtSeconds(_recordSeconds)})',
-                                      style: const TextStyle(
-                                          fontSize: 13.5,
-                                          color: BtwColors.moss),
+                                    Expanded(
+                                      child: Text(
+                                        s.voiceAttached(
+                                            _fmtSeconds(_recordSeconds)),
+                                        style: const TextStyle(
+                                            fontSize: 13.5,
+                                            color: BtwColors.moss),
+                                      ),
                                     ),
                                     IconButton(
-                                      tooltip: 'Remove recording',
+                                      tooltip: s.close,
                                       icon: const Icon(Icons.close_rounded,
                                           size: 18, color: BtwColors.inkSoft),
                                       onPressed: () => setState(() {
@@ -291,10 +292,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       }),
                                     ),
                                   ])
-                                : const Text(
-                                    'Or record a voice memo — whichever is '
-                                    'easier right now.',
-                                    style: TextStyle(
+                                : Text(
+                                    s.orRecord,
+                                    style: const TextStyle(
                                         fontSize: 13,
                                         color: BtwColors.inkSoft),
                                   ),
@@ -310,19 +310,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         : CrossFadeState.showFirst,
                     firstChild: TextButton(
                       onPressed: () => setState(() => _detailsOpen = true),
-                      child: const Text('Add mood & tags (optional)',
-                          style: TextStyle(color: BtwColors.moss)),
+                      child: Text(s.addMoodTags,
+                          style: const TextStyle(color: BtwColors.moss)),
                     ),
                     secondChild: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Mood right now',
-                            style: TextStyle(
+                        Text(s.moodRightNow,
+                            style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600)),
                         Row(
                           children: [
-                            const Text('Low',
-                                style: TextStyle(
+                            Text(s.low,
+                                style: const TextStyle(
                                     fontSize: 12, color: BtwColors.inkSoft)),
                             Expanded(
                               child: Slider(
@@ -335,14 +335,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onChanged: (v) => setState(() => _mood = v),
                               ),
                             ),
-                            const Text('High',
-                                style: TextStyle(
+                            Text(s.high,
+                                style: const TextStyle(
                                     fontSize: 12, color: BtwColors.inkSoft)),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        const Text('Anything that fits (optional)',
-                            style: TextStyle(
+                        Text(s.anythingFits,
+                            style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 10),
                         Wrap(
@@ -351,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             for (final tag in _quickTags)
                               FilterChip(
-                                label: Text(tag),
+                                label: Text(s.tagLabel(tag)),
                                 selected: _tags.contains(tag),
                                 color: WidgetStateProperty.resolveWith(
                                   (states) =>
@@ -383,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 22),
                   FilledButton(
                     onPressed: _sending ? null : _send,
-                    child: Text(_sending ? 'Sending…' : 'Send to my therapist'),
+                    child: Text(_sending ? s.sending : s.sendToTherapist),
                   ),
                 ],
               ),

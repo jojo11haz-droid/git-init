@@ -38,37 +38,30 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = context.watch<AppState>().patient?.firstName ?? '';
+    final state = context.watch<AppState>();
+    final s = state.s;
+    final name = state.patient?.firstName ?? '';
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(28),
           children: [
             const SizedBox(height: 8),
-            const Wordmark(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [Wordmark(), LanguageToggle()],
+            ),
             const SizedBox(height: 20),
             Text(
-              'Before you start, $name — how Between uses your check-ins.',
+              s.consentTitle(name),
               style: const TextStyle(
                   fontSize: 24, fontWeight: FontWeight.w700, height: 1.3),
             ),
             const SizedBox(height: 18),
-            const _Bullet(
-                'Your check-ins are shared with your therapist as short '
-                'summaries — not always the raw recording.'),
-            const _Bullet(
-                'If you turn on AI summaries below, an AI model analyzes what '
-                'you send to write the summary and to find patterns over time '
-                '(mood, themes, timing). Under Quebec\'s privacy law (Law 25), '
-                'this counts as "profiling" of your health information.'),
-            const _Bullet(
-                'You can leave it off and still send check-ins — they\'ll go '
-                'to your therapist exactly as you wrote them, with no AI '
-                'analysis.'),
-            const _Bullet(
-                'You can see everything the app has on file about you at any '
-                'time, change this choice, and ask for your history to be '
-                'deleted.'),
+            _Bullet(s.consentBullet1),
+            _Bullet(s.consentBullet2),
+            _Bullet(s.consentBullet3),
+            _Bullet(s.consentBullet4),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(18),
@@ -79,16 +72,16 @@ class _ConsentScreenState extends State<ConsentScreen> {
               ),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('AI summaries & trends',
-                            style: TextStyle(
+                        Text(s.aiSummariesTrends,
+                            style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w600)),
-                        SizedBox(height: 4),
-                        Text('Off by default. Your choice, changeable anytime.',
-                            style: TextStyle(
+                        const SizedBox(height: 4),
+                        Text(s.offByDefault,
+                            style: const TextStyle(
                                 fontSize: 13, color: BtwColors.inkSoft)),
                       ],
                     ),
@@ -109,12 +102,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: BtwColors.amber),
               ),
-              child: const Text(
-                'Between is not a crisis or emergency service. If you\'re in '
-                'immediate danger or thinking about suicide, call or text 988 '
-                '(Suicide Crisis Helpline) or call 911 — don\'t wait on this '
-                'app.',
-                style: TextStyle(
+              child: Text(
+                s.consentCrisis,
+                style: const TextStyle(
                     fontSize: 13.5, height: 1.5, color: BtwColors.amberInk),
               ),
             ),
@@ -125,10 +115,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
               controlAffinity: ListTileControlAffinity.leading,
               contentPadding: EdgeInsets.zero,
               activeColor: BtwColors.moss,
-              title: const Text(
-                'I understand how my check-ins are used and processed, and I '
-                'consent to that use as described above.',
-                style: TextStyle(fontSize: 14, height: 1.5),
+              title: Text(
+                s.consentAgree,
+                style: const TextStyle(fontSize: 14, height: 1.5),
               ),
             ),
             if (_error != null)
@@ -140,7 +129,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
               ),
             FilledButton(
               onPressed: (_agreed && !_busy) ? _continue : null,
-              child: Text(_busy ? 'Saving…' : 'Continue'),
+              child: Text(_busy ? s.saving : s.continueBtn),
             ),
             const SizedBox(height: 12),
           ],

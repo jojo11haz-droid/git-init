@@ -50,7 +50,7 @@ async function summarizeCheckIn(text) {
   const prompt = `A patient sent this between-session check-in to their therapist: "${text.replace(/"/g, '\\"')}"
 
 Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly this shape:
-{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation", "auto_tags": ["choose 0-3 from: Sleep, Work, Conflict, Craving, Panic, Family, Health, Win, Social, Other"], "risk_flag": true or false (true ONLY if there is language suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
+{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation. Write the summary in the SAME language the patient wrote in (e.g. French if they wrote in French).", "auto_tags": ["choose 0-3 from these exact English keys regardless of the patient's language: Sleep, Work, Conflict, Craving, Panic, Family, Health, Win, Social, Other"], "risk_flag": true or false (true ONLY if there is language, in any language, suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

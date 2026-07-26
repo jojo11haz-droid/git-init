@@ -10,6 +10,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -17,14 +18,17 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Align(
+                alignment: Alignment.topRight,
+                child: LanguageToggle(),
+              ),
               const Spacer(),
               const Center(child: Wordmark(size: 40)),
               const SizedBox(height: 16),
-              const Text(
-                'A quiet place to tell your therapist\nhow things really are, '
-                'between sessions.',
+              Text(
+                s.welcomeTagline,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 16, height: 1.6, color: BtwColors.inkSoft),
               ),
               const Spacer(),
@@ -32,14 +36,14 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                 ),
-                child: const Text('Log in'),
+                child: Text(s.logIn),
               ),
               const SizedBox(height: 14),
               OutlinedButton(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const InviteScreen()),
                 ),
-                child: const Text('I have an invite from my therapist'),
+                child: Text(s.haveInvite, textAlign: TextAlign.center),
               ),
               const SizedBox(height: 8),
               const CrisisFooter(),
@@ -65,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _busy = false;
 
   Future<void> _submit() async {
+    final s = context.read<AppState>().s;
     setState(() {
       _busy = true;
       _error = null;
@@ -77,8 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
-      setState(() => _error =
-          'Couldn\'t reach Between right now. Check your connection and try again.');
+      setState(() => _error = s.offlineError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -86,8 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome back')),
+      appBar: AppBar(title: Text(s.welcomeBack), actions: const [
+        Padding(padding: EdgeInsets.only(right: 12), child: Center(child: LanguageToggle())),
+      ]),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(28),
@@ -96,13 +103,13 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: s.email),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: s.password),
               onSubmitted: (_) => _submit(),
             ),
             if (_error != null) ...[
@@ -113,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 22),
             FilledButton(
               onPressed: _busy ? null : _submit,
-              child: Text(_busy ? 'Signing in…' : 'Log in'),
+              child: Text(_busy ? s.signingIn : s.logIn),
             ),
             const SizedBox(height: 12),
             Center(
@@ -124,26 +131,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     backgroundColor: BtwColors.cream,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24)),
-                    title: const Text('Forgot your password?'),
-                    content: const Text(
-                      'Ask your therapist to reset your app access — they can '
-                      'do it from their dashboard in a few seconds. You\'ll '
-                      'get a new invite code, and setting up again keeps all '
-                      'your history.',
-                      style: TextStyle(height: 1.5),
-                    ),
+                    title: Text(s.forgotPassword),
+                    content: Text(s.forgotPasswordBody,
+                        style: const TextStyle(height: 1.5)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('Got it',
-                            style: TextStyle(color: BtwColors.moss)),
+                        child: Text(s.gotIt,
+                            style: const TextStyle(color: BtwColors.moss)),
                       ),
                     ],
                   ),
                 ),
-                child: const Text('Forgot your password?',
+                child: Text(s.forgotPassword,
                     style:
-                        TextStyle(fontSize: 13, color: BtwColors.inkSoft)),
+                        const TextStyle(fontSize: 13, color: BtwColors.inkSoft)),
               ),
             ),
             const SizedBox(height: 8),
@@ -172,15 +174,15 @@ class _InviteScreenState extends State<InviteScreen> {
   bool _busy = false;
 
   Future<void> _submit() async {
+    final s = context.read<AppState>().s;
     final code = _code.text.trim();
     final email = _email.text.trim();
     if (code.isEmpty || email.isEmpty || _password.text.isEmpty) {
-      setState(() => _error = 'Please fill in all three fields.');
+      setState(() => _error = s.fillAllThree);
       return;
     }
     if (_password.text.length < 10) {
-      setState(
-          () => _error = 'Your password needs to be at least 10 characters.');
+      setState(() => _error = s.passwordTooShort);
       return;
     }
     setState(() {
@@ -193,8 +195,7 @@ class _InviteScreenState extends State<InviteScreen> {
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
-      setState(() => _error =
-          'Couldn\'t reach Between right now. Check your connection and try again.');
+      setState(() => _error = s.offlineError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -202,26 +203,26 @@ class _InviteScreenState extends State<InviteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Set up your account')),
+      appBar: AppBar(title: Text(s.setUpAccount), actions: const [
+        Padding(padding: EdgeInsets.only(right: 12), child: Center(child: LanguageToggle())),
+      ]),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(28),
           children: [
-            const Text(
-              'Your therapist gave you a short invite code. Enter it here with '
-              'the email and password you\'d like to use.',
-              style: TextStyle(
-                  fontSize: 15, height: 1.6, color: BtwColors.inkSoft),
-            ),
+            Text(s.inviteIntro,
+                style: const TextStyle(
+                    fontSize: 15, height: 1.6, color: BtwColors.inkSoft)),
             const SizedBox(height: 22),
             TextField(
               controller: _code,
               textCapitalization: TextCapitalization.characters,
               autocorrect: false,
-              decoration: const InputDecoration(
-                labelText: 'Invite code',
-                hintText: 'e.g. QNY7-PKHQ',
+              decoration: InputDecoration(
+                labelText: s.inviteCode,
+                hintText: 'ex. QNY7-PKHQ',
               ),
             ),
             const SizedBox(height: 14),
@@ -229,15 +230,15 @@ class _InviteScreenState extends State<InviteScreen> {
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               autocorrect: false,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: s.email),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _password,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Choose a password',
-                hintText: 'At least 10 characters',
+              decoration: InputDecoration(
+                labelText: s.choosePassword,
+                hintText: s.atLeast10,
               ),
               onSubmitted: (_) => _submit(),
             ),
@@ -249,7 +250,7 @@ class _InviteScreenState extends State<InviteScreen> {
             const SizedBox(height: 22),
             FilledButton(
               onPressed: _busy ? null : _submit,
-              child: Text(_busy ? 'Setting up…' : 'Continue'),
+              child: Text(_busy ? s.settingUp : s.continueBtn),
             ),
             const SizedBox(height: 20),
             const CrisisFooter(),

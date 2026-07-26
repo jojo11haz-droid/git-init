@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api.dart';
+import 'strings.dart';
 
 class Patient {
   Patient(this.raw);
@@ -54,6 +55,7 @@ class AppState extends ChangeNotifier {
         _storage = storage ?? const FlutterSecureStorage();
 
   static const _tokenKey = 'between_patient_token';
+  static const _langKey = 'between_patient_lang';
 
   final ApiClient _api;
   final FlutterSecureStorage _storage;
@@ -61,10 +63,26 @@ class AppState extends ChangeNotifier {
   Patient? patient;
   bool restoring = true;
 
+  AppLang lang = detectInitialLang();
+  S get s => S(lang);
+
   bool get signedIn => patient != null;
+
+  Future<void> setLang(AppLang value) async {
+    if (lang == value) return;
+    lang = value;
+    notifyListeners();
+    try {
+      await _storage.write(key: _langKey, value: langCode(value));
+    } catch (_) {/* best effort */}
+  }
 
   /// Try to restore a stored session on app launch.
   Future<void> restore() async {
+    try {
+      final storedLang = await _storage.read(key: _langKey);
+      if (storedLang != null) lang = langFromCode(storedLang);
+    } catch (_) {/* fall back to device language */}
     try {
       final token = await _storage.read(key: _tokenKey);
       if (token != null) {

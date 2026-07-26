@@ -27,10 +27,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     try {
       await context.read<AppState>().flagInaccurate(checkIn.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Flagged. Your therapist will see this summary is marked as '
-              'not accurate.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.read<AppState>().s.flaggedSnack)));
       setState(() => _future = context.read<AppState>().fetchHistory());
     } catch (e) {
       if (mounted) {
@@ -40,21 +38,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  String _when(DateTime t) {
-    const months = [
+  String _when(DateTime t, bool fr) {
+    const monthsEn = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
+    const monthsFr = [
+      'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+      'juill.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'
+    ];
+    final month = (fr ? monthsFr : monthsEn)[t.month - 1];
+    if (fr) {
+      // 24-hour clock in French.
+      return '${t.day} $month · '
+          '${t.hour}:${t.minute.toString().padLeft(2, '0')}';
+    }
     final hour12 = t.hour % 12 == 0 ? 12 : t.hour % 12;
     final ampm = t.hour < 12 ? 'am' : 'pm';
-    return '${months[t.month - 1]} ${t.day} · '
+    return '$month ${t.day} · '
         '$hour12:${t.minute.toString().padLeft(2, '0')}$ampm';
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     return Scaffold(
-      appBar: AppBar(title: const Text('My check-ins')),
+      appBar: AppBar(title: Text(s.myCheckIns), actions: const [
+        Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: LanguageToggle())),
+      ]),
       body: SafeArea(
         child: FutureBuilder<List<CheckIn>>(
           future: _future,
@@ -75,9 +88,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             }
             final items = snapshot.data!;
             if (items.isEmpty) {
-              return const Center(
-                child: Text('No check-ins yet.',
-                    style: TextStyle(color: BtwColors.inkSoft, fontSize: 15)),
+              return Center(
+                child: Text(s.noCheckIns,
+                    style: const TextStyle(
+                        color: BtwColors.inkSoft, fontSize: 15)),
               );
             }
             return ListView.separated(
@@ -98,7 +112,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     children: [
                       Row(
                         children: [
-                          Text(_when(c.submittedAt),
+                          Text(_when(c.submittedAt, s.isFr),
                               style: const TextStyle(
                                   fontSize: 12.5, color: BtwColors.inkSoft)),
                           const Spacer(),
@@ -110,7 +124,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 color: BtwColors.mossLight,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text('mood ${c.mood}/10',
+                              child: Text(s.mood(c.mood!),
                                   style: const TextStyle(
                                       fontSize: 12, color: BtwColors.moss)),
                             ),
@@ -122,12 +136,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               const TextStyle(fontSize: 15, height: 1.5)),
                       if (c.hasAudio) ...[
                         const SizedBox(height: 6),
-                        const Row(children: [
-                          Icon(Icons.graphic_eq_rounded,
+                        Row(children: [
+                          const Icon(Icons.graphic_eq_rounded,
                               size: 15, color: BtwColors.moss),
-                          SizedBox(width: 5),
-                          Text('Voice memo',
-                              style: TextStyle(
+                          const SizedBox(width: 5),
+                          Text(s.voiceMemo,
+                              style: const TextStyle(
                                   fontSize: 12, color: BtwColors.moss)),
                         ]),
                       ],
@@ -147,7 +161,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   border:
                                       Border.all(color: BtwColors.line),
                                 ),
-                                child: Text(tag,
+                                child: Text(s.tagLabel(tag),
                                     style: const TextStyle(
                                         fontSize: 11.5,
                                         color: BtwColors.inkSoft)),
@@ -162,13 +176,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             const Icon(Icons.auto_awesome,
                                 size: 14, color: BtwColors.inkSoft),
                             const SizedBox(width: 5),
-                            const Text('AI summary',
-                                style: TextStyle(
+                            Text(s.aiSummary,
+                                style: const TextStyle(
                                     fontSize: 12, color: BtwColors.inkSoft)),
                             const Spacer(),
                             c.flaggedInaccurate
-                                ? const Text('Flagged as not accurate',
-                                    style: TextStyle(
+                                ? Text(s.flaggedInaccurate,
+                                    style: const TextStyle(
                                         fontSize: 12, color: BtwColors.clay))
                                 : TextButton(
                                     style: TextButton.styleFrom(
@@ -176,9 +190,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       minimumSize: const Size(0, 30),
                                     ),
                                     onPressed: () => _flag(c),
-                                    child: const Text(
-                                        'This isn\'t accurate',
-                                        style: TextStyle(
+                                    child: Text(
+                                        s.notAccurate,
+                                        style: const TextStyle(
                                             fontSize: 12.5,
                                             color: BtwColors.clay)),
                                   ),
