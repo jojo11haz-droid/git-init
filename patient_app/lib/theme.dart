@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'app_state.dart';
+import 'strings.dart';
 
 /// Between's patient-side palette: same moss green as the therapist web app
 /// so the brand is recognizable, but on a warmer cream — the softer sibling.
@@ -120,14 +124,62 @@ class CrisisFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Text(
-        'Between is not a crisis service. If you\'re in immediate danger or '
-        'thinking about suicide, call or text 988, or call 911.',
+        s.crisisFooter,
         textAlign: TextAlign.center,
         style: const TextStyle(
             fontSize: 12.5, color: BtwColors.inkSoft, height: 1.5),
+      ),
+    );
+  }
+}
+
+/// EN | FR language switch — a compact two-option segmented toggle.
+class LanguageToggle extends StatelessWidget {
+  const LanguageToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    Widget seg(String label, AppLang value) {
+      final selected = state.lang == value;
+      return GestureDetector(
+        onTap: () => state.setLang(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? BtwColors.moss : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : BtwColors.inkSoft,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Semantics(
+      label: 'Language / Langue',
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: BtwColors.line),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          seg('EN', AppLang.en),
+          seg('FR', AppLang.fr),
+        ]),
       ),
     );
   }

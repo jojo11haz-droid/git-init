@@ -20,12 +20,13 @@ class _SentScreenState extends State<SentScreen> {
   bool _undoing = false;
 
   Future<void> _undo() async {
+    final s = context.read<AppState>().s;
     setState(() => _undoing = true);
     try {
       await context.read<AppState>().undoCheckIn(widget.result.checkIn.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Check-in removed. Nothing was kept.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.removed)));
       Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -38,6 +39,7 @@ class _SentScreenState extends State<SentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
     final crisis = widget.result.crisis;
     return Scaffold(
       body: SafeArea(
@@ -50,11 +52,9 @@ class _SentScreenState extends State<SentScreen> {
               if (crisis != null) ...[
                 CrisisCard(crisis: crisis),
                 const SizedBox(height: 24),
-                const Text(
-                  'Your check-in was sent and your therapist has been '
-                  'notified — but please don\'t wait on anyone if you\'re in '
-                  'danger right now.',
-                  style: TextStyle(
+                Text(
+                  s.sentCrisisNote,
+                  style: const TextStyle(
                       fontSize: 15, height: 1.6, color: BtwColors.inkSoft),
                 ),
               ] else ...[
@@ -67,24 +67,24 @@ class _SentScreenState extends State<SentScreen> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const Text(
-                  'Sent.',
+                Text(
+                  s.sent,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Your therapist will see this before your next session. '
-                  'That\'s it — nothing else you need to do.',
+                Text(
+                  s.sentReassure,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 15.5, height: 1.6, color: BtwColors.inkSoft),
                 ),
               ],
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Done'),
+                child: Text(s.done),
               ),
               // No quiet undo for risk-flagged check-ins — the safety record
               // stays (history deletion in settings still applies).
@@ -93,9 +93,7 @@ class _SentScreenState extends State<SentScreen> {
                 TextButton(
                   onPressed: _undoing ? null : _undo,
                   child: Text(
-                    _undoing
-                        ? 'Removing…'
-                        : 'Didn\'t mean to send it? Undo (15 min)',
+                    _undoing ? s.removing : s.undo,
                     style: const TextStyle(color: BtwColors.inkSoft),
                   ),
                 ),
