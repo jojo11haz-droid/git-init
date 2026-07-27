@@ -367,6 +367,20 @@ export async function getPatientByEmail(email) {
   return rows[0] || null;
 }
 
+// Self-serve signup: a patient who bought Between on their own, with no
+// therapist behind them. clinician_id stays NULL — there is no caseload and
+// no clinician can ever see this row (all therapist queries are scoped by
+// clinician_id). invite_status is 'accepted' since there was never an invite.
+export async function createSelfServePatient(displayName, email, passwordHash) {
+  const { rows } = await pool.query(
+    `INSERT INTO patients (clinician_id, display_name, email, password_hash, invite_status)
+     VALUES (NULL, $1, $2, $3, 'accepted')
+     RETURNING ${PATIENT_ROW_COLS}`,
+    [displayName, email, passwordHash]
+  );
+  return rows[0];
+}
+
 export async function acceptPatientInvite(patientId, email, passwordHash) {
   const { rows } = await pool.query(
     `UPDATE patients SET email = $1, password_hash = $2, invite_status = 'accepted'

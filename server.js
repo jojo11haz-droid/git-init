@@ -5,7 +5,7 @@ import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
-  getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, setOwnConsent,
+  getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
@@ -696,6 +696,34 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
     console.error('Error accepting invite:', err);
+    res.status(500).json({ error: 'Could not set up your account.' });
+  }
+});
+
+// Self-serve patient signup: a patient buys Between for themselves, with no
+// therapist. Creates a standalone account (clinician_id NULL) and signs them
+// in. AI profiling stays off until they explicitly opt in, exactly as with an
+// invited patient — but they still record a consent decision at onboarding.
+app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
+  try {
+    const { name, email, password } = req.body || {};
+    if (!name || !name.trim()) return res.status(400).json({ error: 'A name is required.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+
+    const existing = await getPatientByEmail(email.trim());
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
+    }
+
+    const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password));
+    const token = await startPatientSession(patient.id);
+    res.status(201).json({ token, patient: publicPatient(patient) });
+  } catch (err) {
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
+    }
+    console.error('Error in patient signup:', err);
     res.status(500).json({ error: 'Could not set up your account.' });
   }
 });
