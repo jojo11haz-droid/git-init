@@ -134,6 +134,10 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_secret TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS patient_flagged_inaccurate BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS audio_upload_id UUID REFERENCES audio_uploads(id);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -303,7 +307,7 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, ai_consent_enabled, consent_recorded_at, consent_version, created_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, ai_consent_enabled, consent_recorded_at, consent_version, plan, subscription_status, created_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode) {
   const { rows } = await pool.query(
@@ -363,6 +367,51 @@ export async function getPatientByEmail(email) {
   const { rows } = await pool.query(
     `SELECT * FROM patients WHERE lower(email) = lower($1)`,
     [email]
+  );
+  return rows[0] || null;
+}
+
+// Self-serve signup: a patient who bought Between on their own, with no
+// therapist behind them. clinician_id stays NULL — there is no caseload and
+// no clinician can ever see this row (all therapist queries are scoped by
+// clinician_id). invite_status is 'accepted' since there was never an invite.
+export async function createSelfServePatient(displayName, email, passwordHash, plan) {
+  const { rows } = await pool.query(
+    `INSERT INTO patients (clinician_id, display_name, email, password_hash, invite_status, plan, subscription_status)
+     VALUES (NULL, $1, $2, $3, 'accepted', $4, $5)
+     RETURNING ${PATIENT_ROW_COLS}`,
+    [displayName, email, passwordHash, plan || null, plan ? 'incomplete' : null]
+  );
+  return rows[0];
+}
+
+// Stripe subscription state for a self-serve patient. Scoped by id only — a
+// patient owns exactly one row and there's no clinician in this flow.
+export async function updatePatientSubscription(patientId, { status, plan, customerId, subscriptionId }) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET
+       subscription_status = coalesce($1, subscription_status),
+       plan = coalesce($2, plan),
+       stripe_customer_id = coalesce($3, stripe_customer_id),
+       stripe_subscription_id = coalesce($4, stripe_subscription_id)
+     WHERE id = $5 RETURNING ${PATIENT_ROW_COLS}`,
+    [status || null, plan || null, customerId || null, subscriptionId || null, patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function getPatientById(patientId) {
+  const { rows } = await pool.query(
+    `SELECT ${PATIENT_ROW_COLS} FROM patients WHERE id = $1`,
+    [patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function getPatientByStripeSubscription(subscriptionId) {
+  const { rows } = await pool.query(
+    `SELECT ${PATIENT_ROW_COLS} FROM patients WHERE stripe_subscription_id = $1`,
+    [subscriptionId]
   );
   return rows[0] || null;
 }

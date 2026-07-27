@@ -69,6 +69,9 @@ Separate auth scope for patients, used by the mobile app in `patient_app/`. Auth
 | Route | What it does |
 |---|---|
 | `POST /api/patient/accept-invite` | `{ inviteCode, email, password }` — one-time: turns a therapist-issued invite code into the patient's own login |
+| `POST /api/patient/signup` | `{ name, email, password, plan }` — self-serve signup for a patient buying Between on their own (no therapist; `clinician_id` stays NULL). Returns a Stripe `checkoutUrl` when billing is configured |
+| `POST /api/patient/checkout/start` | Start (or restart) Stripe Checkout for the signed-in patient — returns a `checkoutUrl` |
+| `POST /api/patient/checkout/verify` | `{ sessionId }` — confirm payment on the Checkout return and mark the subscription active |
 | `POST /api/patient/login` / `logout` | Bearer-token session (30 days, revocable) |
 | `GET /api/patient/me` | The signed-in patient |
 | `GET/POST /api/patient/consent` | Read / record the patient's own consent (version + timestamp, Law 25). Check-ins are blocked until consent is recorded |
@@ -115,6 +118,7 @@ This is still a prototype backend, not a production one. Before any real check-i
 - **Rate limiting is in-memory and single-instance.** Login (10 tries per account per 15 min, 50 per IP), signup (10/hour per IP), `/api/summarize` (10/min per IP), and check-in creation (15/min per clinician) are all rate-limited via `rate-limit.js`. Counters live in process memory, so they reset on restart and aren't shared across instances — fine for one Render dyno, but swap in Redis/Postgres-backed counters before scaling out.
 - **Canadian data residency** — the Anthropic API call in `server.js` has a placeholder comment where you'd add the region setting once confirmed available on your account (see `docs.claude.com` data-residency page, and the earlier Law 25 discussion). Also confirm your Postgres provider's region — Neon and Supabase both let you pick one.
 - **Risk-classifier validation** — the summarization prompt includes a basic risk flag, but per `risk-classifier-eval.md`, this needs real clinical review and testing before it's trusted with real patients.
+- **Payments (patients buying Between directly).** Self-serve patient signup can charge via **Stripe Checkout** (subscription). Set `STRIPE_SECRET_KEY` plus `STRIPE_PRICE_PATIENT_MONTHLY` / `STRIPE_PRICE_PATIENT_ANNUAL` (and, recommended, a webhook at `/api/stripe/webhook` with `STRIPE_WEBHOOK_SECRET`) to turn on real charging — until then, patient signup still works but creates the account for free. Card data never touches this server: patients enter it on Stripe's hosted page and are redirected back. By design the app is **not** paywalled — the account is created and usable, and crisis resources are always shown, regardless of payment state; the subscription status is tracked and surfaced in the patient's settings. Clinician plans are still a card-free 14-day trial. Use Stripe **test** keys until you're ready to go live, and confirm you're comfortable being the payment intermediary (tax/receipts/disputes) before switching to live keys.
 
 The frontend (`public/index.html`) is now wired to these endpoints: sign up or log in from the header, and the dashboard shows your real caseload — add patients (each gets a one-time invite code for the patient app), send check-ins (stored in Postgres), toggle per-patient AI consent, and view/delete stored data.
 
