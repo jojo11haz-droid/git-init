@@ -138,6 +138,10 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS plan TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -155,16 +159,38 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, mfa_enabled, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, mfa_enabled, plan, subscription_status, created_at';
 
-export async function createClinician({ name, email, passwordHash, licenceNumber, province, practiceName }) {
+export async function createClinician({ name, email, passwordHash, licenceNumber, province, practiceName, plan }) {
   const { rows } = await pool.query(
-    `INSERT INTO clinicians (name, email, password_hash, licence_number, province, practice_name)
-     VALUES ($1, lower($2), $3, $4, $5, $6)
+    `INSERT INTO clinicians (name, email, password_hash, licence_number, province, practice_name, plan)
+     VALUES ($1, lower($2), $3, $4, $5, $6, $7)
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
-    [name, email, passwordHash, licenceNumber, province || null, practiceName || null]
+    [name, email, passwordHash, licenceNumber, province || null, practiceName || null, plan || null]
   );
   return rows[0];
+}
+
+// Stripe subscription state for a clinician (mirrors the patient helper).
+export async function updateClinicianSubscription(clinicianId, { status, plan, customerId, subscriptionId }) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians SET
+       subscription_status = coalesce($1, subscription_status),
+       plan = coalesce($2, plan),
+       stripe_customer_id = coalesce($3, stripe_customer_id),
+       stripe_subscription_id = coalesce($4, stripe_subscription_id)
+     WHERE id = $5 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [status || null, plan || null, customerId || null, subscriptionId || null, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function getClinicianByStripeSubscription(subscriptionId) {
+  const { rows } = await pool.query(
+    `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians WHERE stripe_subscription_id = $1`,
+    [subscriptionId]
+  );
+  return rows[0] || null;
 }
 
 export async function getClinicianById(id) {

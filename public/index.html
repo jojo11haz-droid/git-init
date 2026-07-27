@@ -1199,6 +1199,7 @@
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
+      <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
       <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
       <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
     </div>
@@ -1216,7 +1217,7 @@
             <button class="btw-hero-btn primary" id="btwHeroTrial">Start 14-day free trial</button>
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
-          <div class="btw-hero-meta">No credit card required · Canadian data residency · Not a crisis service</div>
+          <div class="btw-hero-meta">14-day free trial · Canadian data residency · Not a crisis service</div>
         </div>
         <div class="btw-hero-visual" aria-hidden="true">
           <svg viewBox="0 0 320 300" width="100%" height="100%">
@@ -1663,6 +1664,16 @@
       <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">Already set up? <button id="btwInvToLogin" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Log in</button></div>
     </div>
   </div>
+
+  <div class="btw-modal-overlay" id="btwBillingOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:420px;">
+      <button class="btw-modal-close" data-close="btwBillingOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Billing</div>
+      <h2>Your subscription</h2>
+      <div id="btwBillingBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;"></div>
+      <button class="btw-modal-continue" id="btwBillingAction">Start subscription</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1937,7 +1948,19 @@
     "(it's already in the link). You'll create your own password, and your check-ins stay private to you.":"(il est déjà dans le lien). Vous créerez votre propre mot de passe, et vos suivis vous restent privés.",
     "Between isn't a crisis service — in an emergency, call 988 or 911.":"Between n'est pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
     "Patient added. Open their card and tap \"View patient data & AI settings\" → \"Copy invite message\" to send them a sign-up link.":
-      "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription."
+      "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription.",
+    // --- clinician billing ---
+    "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
+    "Your 14-day free trial is on; your card is charged when it ends unless you cancel.":
+      "Votre essai gratuit de 14 jours est actif; votre carte est débitée à la fin, sauf annulation.",
+    "Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.":
+      "Commencez votre essai gratuit de 14 jours. Ajoutez une carte maintenant — rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps d'ici là.",
+    "You're all set — your 14-day free trial has started. No charge until it ends.":
+      "Tout est prêt — votre essai gratuit de 14 jours a commencé. Aucun frais avant la fin.",
+    "Thanks! Your subscription is still processing — check back shortly.":
+      "Merci! Votre abonnement est en cours de traitement — revenez sous peu.",
+    "14-day free trial · Canadian data residency · Not a crisis service":
+      "Essai gratuit de 14 jours · Données hébergées au Canada · Pas un service de crise"
   };
 
   let curLang = 'en';
@@ -2080,6 +2103,7 @@
     loginBtn.style.display = signedIn ? 'none' : '';
     // Two-factor is a clinician feature for now.
     document.getElementById('btwSecurityBtn').style.display = asTherapist ? '' : 'none';
+    document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled) ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
     signedOutBox.style.display = signedIn ? 'none' : '';
     dashGrid.style.display = signedIn ? '' : 'none';
@@ -2130,7 +2154,7 @@
     }
     try{
       const data = await api('GET', '/api/auth/me');
-      state.me = data.clinician; state.role = 'therapist';
+      state.me = data.clinician; state.role = 'therapist'; billingEnabled = !!data.billingEnabled;
     }catch(err){
       state.me = null; state.role = null; // 401 = signed out; 503 = no DB configured
     }
@@ -2290,10 +2314,11 @@
     document.getElementById('btwResetConfError').textContent = '';
     showResetStep('btwResetConfirmStep');
   }
-  async function finishLogin(clinician){
+  async function finishLogin(clinician, biEnabled){
     // Clear any patient session in this browser so the two roles never mix.
     setPToken(null); state.patient = null;
     state.me = clinician; state.role = 'therapist';
+    if(biEnabled !== undefined) billingEnabled = !!biEnabled;
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
     document.getElementById('btwLoginMfaCode').value = '';
@@ -2328,7 +2353,7 @@
         const code = document.getElementById('btwLoginMfaCode').value.trim();
         if(!code){ loginError.textContent = 'Enter the 6-digit code from your authenticator app.'; return; }
         const data = await api('POST', '/api/auth/login/mfa', { mfaToken: pendingMfaToken, code });
-        await finishLogin(data.clinician);
+        await finishLogin(data.clinician, data.billingEnabled);
         return;
       }
       if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
@@ -2340,7 +2365,7 @@
         document.getElementById('btwLoginMfaCode').focus();
         return;
       }
-      await finishLogin(data.clinician);
+      await finishLogin(data.clinician, data.billingEnabled);
     }catch(err){
       loginError.textContent = err.message;
     }
@@ -2359,6 +2384,31 @@
   document.getElementById('btwSecurityBtn').addEventListener('click', ()=>{
     renderSecurityModal();
     securityOverlay.style.display = 'flex';
+  });
+
+  // --- clinician billing ---
+  const billingOverlay = document.getElementById('btwBillingOverlay');
+  function openBilling(){
+    const st = state.me && state.me.subscription_status;
+    const planName = (state.me && state.me.plan === 'solo_annual') ? t('Solo Annual') : t('Solo');
+    const body = document.getElementById('btwBillingBody');
+    const action = document.getElementById('btwBillingAction');
+    if(st === 'active' || st === 'trialing'){
+      body.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.<br>'
+        + esc(t('Your 14-day free trial is on; your card is charged when it ends unless you cancel.'));
+      action.textContent = t('Change plan');
+    } else {
+      body.innerHTML = esc(t('Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.'));
+      action.textContent = t('Start subscription');
+    }
+    billingOverlay.style.display = 'flex';
+  }
+  document.getElementById('btwBillingBtn').addEventListener('click', openBilling);
+  document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
+    try{
+      const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly' });
+      if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+    }catch(e){ alert(e.message); }
   });
   document.getElementById('btwSecurityClose').addEventListener('click', ()=>{ securityOverlay.style.display = 'none'; });
   document.getElementById('btwMfaEnrollBtn').addEventListener('click', async ()=>{
@@ -2414,7 +2464,7 @@
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });
@@ -2426,7 +2476,7 @@
       if(el) el.style.display = 'none';
     });
   });
-  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay'].forEach(id=>{
+  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwBillingOverlay'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });
@@ -2465,7 +2515,7 @@
       <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
       <div><span class="label">Province:</span> <strong>${esc(provinceNames[province]||province)}</strong></div>
       <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong></div>
-      <div><span class="label">Trial:</span> <strong>14 days, no card required</strong></div>
+      <div><span class="label">Trial:</span> <strong>14-day free trial</strong></div>
     `;
   }
 
@@ -2485,12 +2535,17 @@
         password: document.getElementById('btwSuPassword').value,
         licenceNumber: document.getElementById('btwSuLicence').value.trim(),
         province: document.getElementById('btwSuProvince').value,
-        practiceName: document.getElementById('btwSuPractice').value.trim() || null
+        practiceName: document.getElementById('btwSuPractice').value.trim() || null,
+        plan: selectedPlan
       });
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
+      billingEnabled = !!data.billingEnabled;
       renderAuthState();
       await loadPatients();
+      // With billing on, put a card on file for the trial via Stripe; nothing
+      // is charged for 14 days. Otherwise show the plain trial-started screen.
+      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
       document.getElementById('btwDoneEmail').textContent = state.me.email;
       showStep('btwStepDone');
     }catch(e){
@@ -2740,6 +2795,15 @@
         goToView(navProduct, viewProduct);
         alert(r.paid ? t('Payment received — your subscription is active. Welcome to Between.')
                      : t('Thanks! Your payment is still processing — check back shortly.'));
+      }catch(e){ /* leave the account usable regardless */ }
+    } else if(co === 'success' && isTherapist()){
+      try{
+        const r = await api('POST', '/api/auth/checkout/verify', { sessionId: params.get('session_id') });
+        state.me = {...state.me, ...r.clinician};
+        renderAuthState();
+        goToView(navProduct, viewProduct);
+        alert(r.active ? t('You\'re all set — your 14-day free trial has started. No charge until it ends.')
+                       : t('Thanks! Your subscription is still processing — check back shortly.'));
       }catch(e){ /* leave the account usable regardless */ }
     } else if(co === 'cancel'){
       if(isPatient()) goToView(navProduct, viewProduct);
