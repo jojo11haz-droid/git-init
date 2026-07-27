@@ -5,6 +5,7 @@ import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
+  updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
   updatePatientSubscription, getPatientById, getPatientByStripeSubscription,
   createPatientSession, getPatientBySession, deletePatientSession,
@@ -51,20 +52,24 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) =
   }
   try {
     const obj = event.data && event.data.object ? event.data.object : {};
+    const meta = obj.metadata || {};
     if (event.type === 'checkout.session.completed') {
-      const patientId = (obj.metadata && obj.metadata.patient_id) || obj.client_reference_id;
-      if (patientId) {
-        await updatePatientSubscription(patientId, {
-          status: 'active', customerId: obj.customer, subscriptionId: obj.subscription
-        });
+      // A trial checkout completes with payment_status 'no_payment_required';
+      // treat any completed session as the subscription being live (trialing
+      // or active). The next subscription.updated will refine the status.
+      const fields = { status: 'active', customerId: obj.customer, subscriptionId: obj.subscription };
+      if (meta.clinician_id) await updateClinicianSubscription(meta.clinician_id, fields);
+      else if (meta.patient_id || obj.client_reference_id) {
+        await updatePatientSubscription(meta.patient_id || obj.client_reference_id, fields);
       }
     } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
-      const patientId = obj.metadata && obj.metadata.patient_id;
       const status = event.type === 'customer.subscription.deleted' ? 'canceled' : obj.status;
-      if (patientId) await updatePatientSubscription(patientId, { status });
+      if (meta.clinician_id) await updateClinicianSubscription(meta.clinician_id, { status });
+      else if (meta.patient_id) await updatePatientSubscription(meta.patient_id, { status });
       else {
         const p = await getPatientByStripeSubscription(obj.id);
         if (p) await updatePatientSubscription(p.id, { status });
+        else { const c = await getClinicianByStripeSubscription(obj.id); if (c) await updateClinicianSubscription(c.id, { status }); }
       }
     }
     res.json({ received: true });
@@ -213,9 +218,12 @@ async function startSession(res, req, clinicianId) {
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
+const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
+
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, licenceNumber, province, practiceName } = req.body || {};
+    const plan = THERAPIST_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'solo_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
@@ -234,10 +242,19 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       passwordHash: await hashPassword(password),
       licenceNumber: licenceNumber.trim(),
       province: typeof province === 'string' ? province.trim() : null,
-      practiceName: typeof practiceName === 'string' ? practiceName.trim() : null
+      practiceName: typeof practiceName === 'string' ? practiceName.trim() : null,
+      plan
     });
     await startSession(res, req, clinician.id);
-    res.status(201).json({ clinician });
+
+    // Send them to Stripe to put a card on file for the 14-day trial. Nothing
+    // is charged today; if Stripe isn't configured, checkoutUrl is null and the
+    // trial just runs without a card (as before).
+    let checkoutUrl = null;
+    try { checkoutUrl = await startClinicianCheckout(clinician, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start clinician checkout:', e.message); }
+
+    res.status(201).json({ clinician, checkoutUrl, billingEnabled: stripeConfigured() });
   } catch (err) {
     if (err && err.code === '23505') { // unique_violation — signup raced the pre-check
       return res.status(409).json({ error: 'An account with this email already exists.' });
@@ -272,7 +289,7 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
 
     await startSession(res, req, clinician.id);
     const { password_hash, mfa_secret, ...publicClinician } = clinician;
-    res.json({ clinician: publicClinician });
+    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured() });
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -297,7 +314,7 @@ app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
     await deleteMfaChallenge(challenge.token_hash);
     await startSession(res, req, challenge.clinician_id);
     const clinician = await getClinicianById(challenge.clinician_id);
-    res.json({ clinician });
+    res.json({ clinician, billingEnabled: stripeConfigured() });
   } catch (err) {
     console.error('Error in MFA login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -364,7 +381,50 @@ app.post('/api/auth/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
-  res.json({ clinician: req.clinician });
+  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured() });
+});
+
+// Start (or restart) clinician checkout — used after a cancel, or to add a card
+// during/after the trial.
+app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const plan = THERAPIST_PLANS.includes((req.body || {}).plan) ? req.body.plan : (req.clinician.plan || 'solo_monthly');
+    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
+    if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
+    if (plan !== req.clinician.plan) await updateClinicianSubscription(req.clinician.id, { plan });
+    res.json({ checkoutUrl: url });
+  } catch (err) {
+    console.error('Error starting clinician checkout:', err);
+    res.status(500).json({ error: 'Could not start checkout.' });
+  }
+});
+
+// Confirm the clinician's checkout when Stripe redirects back.
+app.post('/api/auth/checkout/verify', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.json({ clinician: req.clinician });
+    const { sessionId } = req.body || {};
+    if (!sessionId) return res.status(400).json({ error: 'Missing session id.' });
+    const session = await retrieveCheckoutSession(sessionId);
+    const belongs = session && (
+      (session.metadata && session.metadata.clinician_id === req.clinician.id) ||
+      session.client_reference_id === req.clinician.id
+    );
+    if (!belongs) return res.status(403).json({ error: 'That checkout does not belong to your account.' });
+    // A trial checkout is "complete" with no payment due — that still means the
+    // subscription is live (trialing). Treat complete OR paid as active.
+    const live = session.status === 'complete' || session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+    const updated = await updateClinicianSubscription(req.clinician.id, {
+      status: live ? 'active' : 'incomplete',
+      customerId: session.customer,
+      subscriptionId: session.subscription
+    });
+    res.json({ clinician: updated || req.clinician, active: live });
+  } catch (err) {
+    console.error('Error verifying clinician checkout:', err);
+    res.status(500).json({ error: 'Could not verify your subscription.' });
+  }
 });
 
 // --- Clinician password reset ---
@@ -702,7 +762,26 @@ async function startPatientCheckout(patient, plan, origin) {
   const session = await createSubscriptionCheckout({
     priceId,
     customerEmail: patient.email,
-    patientId: patient.id,
+    refType: 'patient',
+    refId: patient.id,
+    successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${origin}/?checkout=cancel`
+  });
+  return session.url || null;
+}
+
+// Clinician checkout — same idea, but with a 14-day free trial so no card is
+// charged today (honoring the "14-day free trial" on the pricing page).
+const CLINICIAN_TRIAL_DAYS = 14;
+async function startClinicianCheckout(clinician, plan, origin) {
+  const priceId = priceForPlan(plan);
+  if (!stripeConfigured() || !priceId) return null;
+  const session = await createSubscriptionCheckout({
+    priceId,
+    customerEmail: clinician.email,
+    refType: 'clinician',
+    refId: clinician.id,
+    trialDays: CLINICIAN_TRIAL_DAYS,
     successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/?checkout=cancel`
   });

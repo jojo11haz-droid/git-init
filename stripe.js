@@ -15,7 +15,9 @@ export function stripeConfigured() {
 export function priceForPlan(plan) {
   const map = {
     patient_monthly: process.env.STRIPE_PRICE_PATIENT_MONTHLY,
-    patient_annual: process.env.STRIPE_PRICE_PATIENT_ANNUAL
+    patient_annual: process.env.STRIPE_PRICE_PATIENT_ANNUAL,
+    solo_monthly: process.env.STRIPE_PRICE_THERAPIST_MONTHLY,
+    solo_annual: process.env.STRIPE_PRICE_THERAPIST_ANNUAL
   };
   return map[plan] || null;
 }
@@ -39,21 +41,30 @@ async function stripeRequest(method, path, params) {
   return data;
 }
 
-// Creates a hosted Checkout session for a subscription. The patient is sent to
+// Creates a hosted Checkout session for a subscription. The user is sent to
 // session.url to enter their card; Stripe redirects back to success/cancel.
-export async function createSubscriptionCheckout({ priceId, customerEmail, patientId, successUrl, cancelUrl }) {
-  return stripeRequest('POST', '/v1/checkout/sessions', {
+// refType is 'patient' or 'clinician' — the id is stamped on both the session
+// and the subscription metadata so we can reconcile on return and via webhook.
+// trialDays (optional) starts the subscription with a free trial (no charge
+// today), used for clinician plans.
+export async function createSubscriptionCheckout({ priceId, customerEmail, refType, refId, trialDays, successUrl, cancelUrl }) {
+  const metaKey = (refType || 'patient') + '_id';
+  const params = {
     mode: 'subscription',
     'line_items[0][price]': priceId,
     'line_items[0][quantity]': '1',
     customer_email: customerEmail,
-    client_reference_id: patientId,
-    'subscription_data[metadata][patient_id]': patientId,
-    'metadata[patient_id]': patientId,
+    client_reference_id: refId,
+    ['subscription_data[metadata][' + metaKey + ']']: refId,
+    ['metadata[' + metaKey + ']']: refId,
     success_url: successUrl,
     cancel_url: cancelUrl,
     allow_promotion_codes: 'true'
-  });
+  };
+  if (trialDays && Number(trialDays) > 0) {
+    params['subscription_data[trial_period_days]'] = String(Math.floor(trialDays));
+  }
+  return stripeRequest('POST', '/v1/checkout/sessions', params);
 }
 
 export async function retrieveCheckoutSession(id) {
