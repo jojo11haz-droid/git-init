@@ -6,6 +6,7 @@ import {
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
+  updatePatientSubscription, getPatientById, getPatientByStripeSubscription,
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
@@ -27,10 +28,52 @@ import {
   createMfaChallenge, getValidMfaChallenge, deleteMfaChallenge
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
+import {
+  stripeConfigured, priceForPlan, createSubscriptionCheckout,
+  retrieveCheckoutSession, constructWebhookEvent
+} from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.set('trust proxy', 1); // honor x-forwarded-proto behind Render/Railway/Fly
+
+// Stripe webhook must see the RAW body to verify the signature, so it's mounted
+// before express.json() consumes it. Best-effort: activation also happens on
+// the checkout return, so the app is correct even if webhooks aren't set up.
+app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) => {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return res.status(400).json({ error: 'Webhook not configured.' });
+  let event;
+  try {
+    event = constructWebhookEvent(req.body, req.headers['stripe-signature'], secret);
+  } catch (err) {
+    return res.status(400).json({ error: 'Signature check failed.' });
+  }
+  try {
+    const obj = event.data && event.data.object ? event.data.object : {};
+    if (event.type === 'checkout.session.completed') {
+      const patientId = (obj.metadata && obj.metadata.patient_id) || obj.client_reference_id;
+      if (patientId) {
+        await updatePatientSubscription(patientId, {
+          status: 'active', customerId: obj.customer, subscriptionId: obj.subscription
+        });
+      }
+    } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+      const patientId = obj.metadata && obj.metadata.patient_id;
+      const status = event.type === 'customer.subscription.deleted' ? 'canceled' : obj.status;
+      if (patientId) await updatePatientSubscription(patientId, { status });
+      else {
+        const p = await getPatientByStripeSubscription(obj.id);
+        if (p) await updatePatientSubscription(p.id, { status });
+      }
+    }
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Error handling Stripe webhook:', err);
+    res.status(500).json({ error: 'Webhook handler failed.' });
+  }
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -646,8 +689,28 @@ function publicPatient(p) {
     email: p.email,
     ai_consent_enabled: p.ai_consent_enabled,
     consent_recorded_at: p.consent_recorded_at,
-    consent_version: p.consent_version
+    consent_version: p.consent_version,
+    plan: p.plan,
+    subscription_status: p.subscription_status
   };
+}
+
+// Build the Checkout URL for a plan, or null if Stripe/plan isn't set up.
+async function startPatientCheckout(patient, plan, origin) {
+  const priceId = priceForPlan(plan);
+  if (!stripeConfigured() || !priceId) return null;
+  const session = await createSubscriptionCheckout({
+    priceId,
+    customerEmail: patient.email,
+    patientId: patient.id,
+    successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${origin}/?checkout=cancel`
+  });
+  return session.url || null;
+}
+
+function siteOrigin(req) {
+  return process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
 }
 
 const inviteLimiter = rateLimit({
@@ -704,9 +767,12 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
 // therapist. Creates a standalone account (clinician_id NULL) and signs them
 // in. AI profiling stays off until they explicitly opt in, exactly as with an
 // invited patient — but they still record a consent decision at onboarding.
+const PATIENT_PLANS = ['patient_monthly', 'patient_annual'];
+
 app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
+    const plan = PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'patient_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'A name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
@@ -716,15 +782,65 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
 
-    const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password));
+    const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password), plan);
     const token = await startPatientSession(patient.id);
-    res.status(201).json({ token, patient: publicPatient(patient) });
+
+    // Hand back a Stripe Checkout URL so the client can send them to pay. If
+    // Stripe isn't configured, checkoutUrl is null and the account is simply
+    // created for free (dev/no-Stripe mode).
+    let checkoutUrl = null;
+    try { checkoutUrl = await startPatientCheckout(patient, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start checkout:', e.message); }
+
+    res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured() });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
     console.error('Error in patient signup:', err);
     res.status(500).json({ error: 'Could not set up your account.' });
+  }
+});
+
+// Start (or restart) checkout for an already-signed-in patient — used when they
+// cancelled, or signed up before billing was switched on.
+app.post('/api/patient/checkout/start', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const plan = PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : (req.patient.plan || 'patient_monthly');
+    const url = await startPatientCheckout(req.patient, plan, siteOrigin(req));
+    if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
+    if (plan !== req.patient.plan) await updatePatientSubscription(req.patient.id, { plan });
+    res.json({ checkoutUrl: url });
+  } catch (err) {
+    console.error('Error starting checkout:', err);
+    res.status(500).json({ error: 'Could not start checkout.' });
+  }
+});
+
+// Confirm payment when Stripe redirects back. We query Stripe directly with our
+// secret key, so this is trustworthy on its own (webhooks are a nice-to-have).
+app.post('/api/patient/checkout/verify', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.json({ patient: publicPatient(req.patient) });
+    const { sessionId } = req.body || {};
+    if (!sessionId) return res.status(400).json({ error: 'Missing session id.' });
+    const session = await retrieveCheckoutSession(sessionId);
+    const belongs = session && (
+      (session.metadata && session.metadata.patient_id === req.patient.id) ||
+      session.client_reference_id === req.patient.id
+    );
+    if (!belongs) return res.status(403).json({ error: 'That checkout does not belong to your account.' });
+    const paid = session.payment_status === 'paid' || session.status === 'complete';
+    const updated = await updatePatientSubscription(req.patient.id, {
+      status: paid ? 'active' : 'incomplete',
+      customerId: session.customer,
+      subscriptionId: session.subscription
+    });
+    res.json({ patient: publicPatient(updated || req.patient), paid });
+  } catch (err) {
+    console.error('Error verifying checkout:', err);
+    res.status(500).json({ error: 'Could not verify your payment.' });
   }
 });
 
@@ -742,7 +858,7 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
     }
 
     const token = await startPatientSession(patient.id);
-    res.json({ token, patient: publicPatient(patient) });
+    res.json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured() });
   } catch (err) {
     console.error('Error in patient login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -761,7 +877,7 @@ app.post('/api/patient/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
-  res.json({ patient: publicPatient(req.patient) });
+  res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured() });
 });
 
 app.get('/api/patient/consent', requireDb, requirePatientAuth, (req, res) => {

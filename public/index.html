@@ -1675,6 +1675,7 @@
   }
   function isPatient(){ return state.role === 'patient'; }
   function isTherapist(){ return state.role === 'therapist'; }
+  let billingEnabled = false; // set from the server: is Stripe configured?
   // Everything rendered below comes from the server (i.e. from stored patient
   // text), so it must be escaped before touching innerHTML.
   function esc(s){
@@ -1885,7 +1886,12 @@
     "Please fill in all fields.":"Veuillez remplir tous les champs.",
     "That email address looks incomplete.":"Cette adresse courriel semble incomplète.",
     "Password needs to be at least 10 characters.":"Le mot de passe doit compter au moins 10 caractères.",
-    "Voice memo":"Note vocale"
+    "Voice memo":"Note vocale",
+    "Subscription: active":"Abonnement : actif","Subscription: not active yet":"Abonnement : pas encore actif",
+    "Subscribe now":"S'abonner maintenant",
+    "Payment received — your subscription is active. Welcome to Between.":"Paiement reçu — votre abonnement est actif. Bienvenue à Between.",
+    "Thanks! Your payment is still processing — check back shortly.":"Merci! Votre paiement est en cours de traitement — revenez sous peu.",
+    "Checkout canceled. Your account is ready — you can subscribe anytime from your settings.":"Paiement annulé. Votre compte est prêt — vous pouvez vous abonner en tout temps depuis vos réglages."
   };
 
   let curLang = 'en';
@@ -2066,6 +2072,7 @@
       try{
         const data = await pApi('GET', '/api/patient/me');
         state.patient = data.patient; state.role = 'patient'; state.me = null;
+        billingEnabled = !!data.billingEnabled;
         renderAuthState();
         await loadPatientCheckIns();
         goToView(navProduct, viewProduct); // land a signed-in user in their dashboard
@@ -2250,6 +2257,7 @@
   async function finishPatientLogin(data){
     setPToken(data.token);
     state.patient = data.patient; state.role = 'patient'; state.me = null;
+    billingEnabled = !!data.billingEnabled;
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
     renderAuthState();
@@ -2450,7 +2458,9 @@
   const patientSignupOverlay = document.getElementById('btwPatientSignupOverlay');
   const psAgree = document.getElementById('btwPsAgree');
   const psSubmit = document.getElementById('btwPsSubmit');
+  let patientPlan = 'patient_monthly';
   window.btwOpenPatientSignup = function(plan){
+    patientPlan = (plan === 'patient_annual') ? 'patient_annual' : 'patient_monthly';
     document.getElementById('btwPsError').textContent = '';
     psAgree.checked = false; psSubmit.disabled = true;
     patientSignupOverlay.style.display = 'flex';
@@ -2472,17 +2482,21 @@
     if(pw.length < 10){ err.textContent = t('Password needs to be at least 10 characters.'); return; }
     err.textContent = ''; psSubmit.disabled = true;
     try{
-      const data = await pApi('POST', '/api/patient/signup', { name, email, password: pw });
+      const data = await pApi('POST', '/api/patient/signup', { name, email, password: pw, plan: patientPlan });
       setPToken(data.token);
       state.patient = data.patient; state.role = 'patient'; state.me = null;
+      billingEnabled = !!data.billingEnabled;
       // Record a baseline consent decision (AI off) so check-ins are unblocked;
       // the agree checkbox above is that explicit, opt-in-off consent moment.
       try{
         const r = await pApi('POST', '/api/patient/consent', { enabled: false });
         state.patient = {...state.patient, ...r.patient};
       }catch(e){}
-      patientSignupOverlay.style.display = 'none';
       document.getElementById('btwPsPassword').value = '';
+      // If billing is on, send them to Stripe to pay; the account is already
+      // created and they return signed in. Otherwise, straight to the dashboard.
+      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
+      patientSignupOverlay.style.display = 'none';
       renderAuthState();
       await loadPatientCheckIns();
       goToView(navProduct, viewProduct);
@@ -2541,6 +2555,48 @@
     const dataToggle = document.getElementById('btwDataAiToggle');
     if(dataToggle) dataToggle.checked = on;
   }
+  // Subscription status + a subscribe/complete-payment action, shown in the
+  // patient's data & settings when billing is enabled on the server.
+  function renderSubscriptionInfo(el){
+    const st = state.patient && state.patient.subscription_status;
+    const planName = (state.patient && state.patient.plan === 'patient_annual') ? t('Personal Annual') : t('Personal');
+    if(st === 'active'){
+      el.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.';
+      return;
+    }
+    el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong> — '
+      + '<button id="btwSubscribeBtn" style="background:none;border:none;padding:0;font-size:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;">'
+      + esc(t('Subscribe now')) + '</button>';
+    const b = document.getElementById('btwSubscribeBtn');
+    if(b) b.addEventListener('click', async ()=>{
+      try{
+        const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly' });
+        if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+      }catch(e){ alert(e.message); }
+    });
+  }
+
+  // Handle the redirect back from Stripe Checkout (?checkout=success|cancel).
+  async function handleCheckoutReturn(){
+    const params = new URLSearchParams(location.search);
+    const co = params.get('checkout');
+    if(!co) return;
+    if(co === 'success' && isPatient()){
+      try{
+        const r = await pApi('POST', '/api/patient/checkout/verify', { sessionId: params.get('session_id') });
+        state.patient = {...state.patient, ...r.patient};
+        renderAuthState(); renderAll();
+        goToView(navProduct, viewProduct);
+        alert(r.paid ? t('Payment received — your subscription is active. Welcome to Between.')
+                     : t('Thanks! Your payment is still processing — check back shortly.'));
+      }catch(e){ /* leave the account usable regardless */ }
+    } else if(co === 'cancel'){
+      if(isPatient()) goToView(navProduct, viewProduct);
+      alert(t('Checkout canceled. Your account is ready — you can subscribe anytime from your settings.'));
+    }
+    history.replaceState(null, '', location.pathname); // drop ?checkout=… from the URL
+  }
+
   // A patient sets consent on their own row; a therapist sets it per patient.
   async function setConsentPatient(enabled){
     const r = await pApi('POST', '/api/patient/consent', { enabled });
@@ -2612,7 +2668,10 @@
     if(isPatient()){
       document.getElementById('btwDataTitle').textContent = t('Your data & settings');
       const inviteEl = document.getElementById('btwInviteInfo');
-      if(inviteEl) inviteEl.style.display = 'none';
+      if(inviteEl){
+        if(billingEnabled){ inviteEl.style.display = ''; renderSubscriptionInfo(inviteEl); }
+        else inviteEl.style.display = 'none';
+      }
       const resetBtn = document.getElementById('btwResetAccess');
       if(resetBtn) resetBtn.style.display = 'none';
       syncConsentUi();
@@ -2969,6 +3028,8 @@
 
   renderAuthState();
   renderAll();
-  loadSession().catch(err=>console.error('Failed to load session:', err));
+  loadSession()
+    .catch(err=>console.error('Failed to load session:', err))
+    .finally(()=> handleCheckoutReturn().catch(()=>{}));
 })();
 </script>
