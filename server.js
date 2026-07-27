@@ -753,7 +753,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
     if (!patient) return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
 
     const token = await startPatientSession(patient.id);
-    res.status(201).json({ token, patient: publicPatient(patient) });
+    res.status(201).json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured() });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });

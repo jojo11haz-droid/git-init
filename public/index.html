@@ -1083,6 +1083,7 @@
         <button class="btw-modal-continue" id="btwLoginSubmit">Log in</button>
       </div>
       <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">No account yet? <button id="btwLoginToSignup" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Start a free trial</button> · <button id="btwLoginForgot" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Forgot password?</button></div>
+      <div id="btwLoginInviteRow" style="display:none;font-size:11.5px;color:var(--ink-soft);margin-top:8px;text-align:center;">Invited by your therapist? <button id="btwLoginToInvite" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Redeem your invite code</button></div>
     </div>
   </div>
 
@@ -1634,6 +1635,34 @@
       </div>
     </div>
   </div>
+
+  <div class="btw-modal-overlay" id="btwInviteOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:420px;">
+      <button class="btw-modal-close" data-close="btwInviteOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Invited by your therapist</div>
+      <h2>Set up your check-ins</h2>
+      <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.</div>
+      <div class="btw-form-field">
+        <label>Invite code</label>
+        <input type="text" id="btwInvCode" placeholder="e.g. A1B2C3" autocapitalize="characters">
+      </div>
+      <div class="btw-form-field">
+        <label>Email</label>
+        <input type="email" id="btwInvEmail" placeholder="you@email.com">
+      </div>
+      <div class="btw-form-field">
+        <label>Password</label>
+        <input type="password" id="btwInvPassword" placeholder="At least 10 characters">
+      </div>
+      <label class="btw-modal-agree">
+        <input type="checkbox" id="btwInvAgree">
+        <span>I understand Between is a personal check-in tool, not a crisis or emergency service, and that crisis resources are always shown to me directly.</span>
+      </label>
+      <div class="btw-form-error" id="btwInvError"></div>
+      <button class="btw-modal-continue" id="btwInvSubmit" disabled>Set up my account</button>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">Already set up? <button id="btwInvToLogin" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Log in</button></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1891,7 +1920,23 @@
     "Subscribe now":"S'abonner maintenant",
     "Payment received — your subscription is active. Welcome to Between.":"Paiement reçu — votre abonnement est actif. Bienvenue à Between.",
     "Thanks! Your payment is still processing — check back shortly.":"Merci! Votre paiement est en cours de traitement — revenez sous peu.",
-    "Checkout canceled. Your account is ready — you can subscribe anytime from your settings.":"Paiement annulé. Votre compte est prêt — vous pouvez vous abonner en tout temps depuis vos réglages."
+    "Checkout canceled. Your account is ready — you can subscribe anytime from your settings.":"Paiement annulé. Votre compte est prêt — vous pouvez vous abonner en tout temps depuis vos réglages.",
+    // --- invite redemption + therapist invite sharing ---
+    "Invited by your therapist":"Invité par votre thérapeute","Set up your check-ins":"Configurez vos suivis",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":
+      "Entrez le code d'invitation que votre thérapeute vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Invite code":"Code d'invitation","Set up my account":"Configurer mon compte","Already set up?":"Déjà configuré?",
+    "Invited by your therapist?":"Invité par votre thérapeute?","Redeem your invite code":"Utiliser votre code d'invitation",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre thérapeute.",
+    "Invite this patient":"Invitez ce patient","Send them this link — their code is built in:":"Envoyez-lui ce lien — son code y est intégré :",
+    "Copy invite message":"Copier le message d'invitation","Copied!":"Copié!","code:":"code :",
+    "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre patient :",
+    "Hi — I set up Between so we can check in between our sessions.":"Bonjour — j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances.",
+    "Tap to get started:":"Touchez pour commencer :","Your invite code is":"Votre code d'invitation est",
+    "(it's already in the link). You'll create your own password, and your check-ins stay private to you.":"(il est déjà dans le lien). Vous créerez votre propre mot de passe, et vos suivis vous restent privés.",
+    "Between isn't a crisis service — in an emergency, call 988 or 911.":"Between n'est pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
+    "Patient added. Open their card and tap \"View patient data & AI settings\" → \"Copy invite message\" to send them a sign-up link.":
+      "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription."
   };
 
   let curLang = 'en';
@@ -1906,7 +1951,8 @@
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
     btwResetNewPw:'Au moins 10 caractères', btwSuPassword:'Au moins 10 caractères',
     btwSuPractice:"Une pratique solo, c'est parfait", btwSuLicence:'ex. numéro OPQ',
-    btwPsName:'Un prénom suffit', btwPsEmail:'vous@courriel.com', btwPsPassword:'Au moins 10 caractères'
+    btwPsName:'Un prénom suffit', btwPsEmail:'vous@courriel.com', btwPsPassword:'Au moins 10 caractères',
+    btwInvEmail:'vous@courriel.com', btwInvPassword:'Au moins 10 caractères'
   };
   const _phEn = {};
 
@@ -2171,6 +2217,8 @@
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
     document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : 'jamie@yourpractice.ca';
+    const invRow = document.getElementById('btwLoginInviteRow');
+    if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
     if(loginRole === 'patient'){ pendingMfaToken = null; document.getElementById('btwMfaField').style.display = 'none'; }
   }
@@ -2361,10 +2409,11 @@
   // Click the dark backdrop (outside the white card) to dismiss.
   signupOverlay.addEventListener('click', (e)=>{ if(e.target === signupOverlay) closeSignup(); });
   document.getElementById('btwPatientSignupOverlay').addEventListener('click', (e)=>{ if(e.target === e.currentTarget) e.currentTarget.style.display = 'none'; });
+  document.getElementById('btwInviteOverlay').addEventListener('click', (e)=>{ if(e.target === e.currentTarget) e.currentTarget.style.display = 'none'; });
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });
@@ -2507,6 +2556,88 @@
     }
   });
 
+  // --- invited-patient redemption (turn a therapist's code into a login) ---
+  const inviteOverlay = document.getElementById('btwInviteOverlay');
+  const invAgree = document.getElementById('btwInvAgree');
+  const invSubmit = document.getElementById('btwInvSubmit');
+  window.btwOpenInvite = function(code){
+    document.getElementById('btwInvError').textContent = '';
+    if(code) document.getElementById('btwInvCode').value = code;
+    invAgree.checked = false; invSubmit.disabled = true;
+    inviteOverlay.style.display = 'flex';
+    (code ? document.getElementById('btwInvEmail') : document.getElementById('btwInvCode')).focus();
+  };
+  invAgree.addEventListener('change', ()=>{ invSubmit.disabled = !invAgree.checked; });
+  document.getElementById('btwInvToLogin').addEventListener('click', ()=>{
+    inviteOverlay.style.display = 'none'; openLogin('patient');
+  });
+  invSubmit.addEventListener('click', async ()=>{
+    if(!invAgree.checked) return;
+    const err = document.getElementById('btwInvError');
+    const inviteCode = document.getElementById('btwInvCode').value.trim();
+    const email = document.getElementById('btwInvEmail').value.trim();
+    const pw = document.getElementById('btwInvPassword').value;
+    if(!inviteCode){ err.textContent = t('Enter the invite code from your therapist.'); return; }
+    if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = t('That email address looks incomplete.'); return; }
+    if(pw.length < 10){ err.textContent = t('Password needs to be at least 10 characters.'); return; }
+    err.textContent = ''; invSubmit.disabled = true;
+    try{
+      const data = await pApi('POST', '/api/patient/accept-invite', { inviteCode, email, password: pw });
+      setPToken(data.token);
+      state.patient = data.patient; state.role = 'patient'; state.me = null;
+      billingEnabled = !!data.billingEnabled;
+      try{
+        const r = await pApi('POST', '/api/patient/consent', { enabled: false });
+        state.patient = {...state.patient, ...r.patient};
+      }catch(e){}
+      inviteOverlay.style.display = 'none';
+      document.getElementById('btwInvPassword').value = '';
+      renderAuthState();
+      await loadPatientCheckIns();
+      goToView(navProduct, viewProduct);
+    }catch(e){
+      err.textContent = e.message;
+    }finally{
+      invSubmit.disabled = !invAgree.checked;
+    }
+  });
+  document.getElementById('btwLoginToInvite').addEventListener('click', ()=>{
+    loginOverlay.style.display = 'none'; window.btwOpenInvite();
+  });
+
+  // --- therapist-side invite sharing (magic link + copyable message) ---
+  function inviteLink(code){ return location.origin + '/?invite=' + encodeURIComponent(code); }
+  function composeInviteMessage(code){
+    return t('Hi — I set up Between so we can check in between our sessions.') + '\n\n'
+      + t('Tap to get started:') + ' ' + inviteLink(code) + '\n\n'
+      + t('Your invite code is') + ' ' + code + ' ' + t("(it's already in the link). You'll create your own password, and your check-ins stay private to you.") + '\n\n'
+      + t("Between isn't a crisis service — in an emergency, call 988 or 911.");
+  }
+  async function copyInvite(code, btn){
+    const msg = composeInviteMessage(code);
+    try{
+      await navigator.clipboard.writeText(msg);
+      if(btn){ const o = btn.textContent; btn.textContent = t('Copied!'); setTimeout(()=>{ btn.textContent = o; }, 1500); }
+    }catch(e){
+      prompt(t('Copy this message and send it to your patient:'), msg);
+    }
+  }
+  // Renders the invite/connection status inside the therapist's data modal.
+  function renderTherapistInvite(el, p){
+    if(p.invite_status === 'accepted'){
+      el.innerHTML = '<strong>' + esc(t('Patient app: connected')) + '</strong>' + (p.email ? ' (' + esc(p.email) + ')' : '') + '.';
+      return;
+    }
+    const link = inviteLink(p.invite_code || '');
+    el.innerHTML = '<strong>' + esc(t('Invite this patient')) + '</strong><br>'
+      + esc(t('Send them this link — their code is built in:')) + '<br>'
+      + '<span style="font-family:var(--font-mono);color:var(--moss);word-break:break-all;font-size:11px;">' + esc(link) + '</span><br>'
+      + '<button id="btwCopyInvite" data-code="' + esc(p.invite_code || '') + '" style="margin-top:8px;background:var(--moss);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-family:var(--font-body);font-size:12px;cursor:pointer;">' + esc(t('Copy invite message')) + '</button>'
+      + ' <span style="font-size:11px;color:var(--ink-soft);">' + esc(t('code:')) + ' <span style="font-family:var(--font-mono);">' + esc(p.invite_code || '—') + '</span></span>';
+    const b = el.querySelector('#btwCopyInvite');
+    if(b) b.addEventListener('click', ()=> copyInvite(b.dataset.code, b));
+  }
+
   // --- per-patient AI consent ---
   const consentOverlay = document.getElementById('btwConsentOverlay');
   const consentAgree = document.getElementById('btwConsentAgree');
@@ -2583,10 +2714,12 @@
   function handleDeepLinks(){
     if(state.me || state.patient) return;
     const params = new URLSearchParams(location.search);
+    const invite = params.get('invite');
     const forWho = (params.get('for') || '').toLowerCase();
     const loginWho = (params.get('login') || '').toLowerCase();
     let acted = true;
-    if(loginWho === 'patient' || loginWho === 'therapist') openLogin(loginWho);
+    if(invite) window.btwOpenInvite(invite.trim().toUpperCase());
+    else if(loginWho === 'patient' || loginWho === 'therapist') openLogin(loginWho);
     else if(forWho === 'patient') window.btwOpenPatientSignup('patient_monthly');
     else if(forWho === 'therapist') window.btwOpenSignup('solo_monthly');
     else acted = false;
@@ -2686,7 +2819,9 @@
       document.getElementById('btwDataTitle').textContent = t('Your data & settings');
       const inviteEl = document.getElementById('btwInviteInfo');
       if(inviteEl){
-        if(billingEnabled){ inviteEl.style.display = ''; renderSubscriptionInfo(inviteEl); }
+        // Only self-serve patients (they picked a plan) see billing; invited
+        // patients are covered by their therapist's seat.
+        if(billingEnabled && state.patient && state.patient.plan){ inviteEl.style.display = ''; renderSubscriptionInfo(inviteEl); }
         else inviteEl.style.display = 'none';
       }
       const resetBtn = document.getElementById('btwResetAccess');
@@ -2703,11 +2838,7 @@
     inviteEl.style.display = '';
     const resetBtn0 = document.getElementById('btwResetAccess');
     if(resetBtn0) resetBtn0.style.display = '';
-    if(p.invite_status === 'accepted'){
-      inviteEl.innerHTML = '<strong>' + esc(t('Patient app: connected')) + '</strong>' + (p.email ? ' (' + esc(p.email) + ')' : '') + '.';
-    } else {
-      inviteEl.innerHTML = '<strong>' + esc(t('Patient app invite code:')) + '</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(p.invite_code || '—') + '</span> · <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span><br>' + esc(t('Share this code so they can set up the Between app on their phone. It stops working once used.'));
-    }
+    renderTherapistInvite(inviteEl, p);
     syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
@@ -2740,9 +2871,8 @@
     try{
       const updated = await api('POST', '/api/patients/' + p.id + '/reset-access');
       await loadPatients();
-      alert('Access reset.\n\nNew invite code: ' + updated.invite_code + '\n\nShare it with ' + updated.display_name + ' — the old login no longer works.');
-      const inviteEl = document.getElementById('btwInviteInfo');
-      inviteEl.innerHTML = '<strong>' + esc(t('Patient app invite code:')) + '</strong> <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(updated.invite_code) + '</span> · <span style="font-family:var(--font-mono);color:var(--moss);">' + esc(location.origin) + '/app</span><br>' + esc(t('Share this code so they can set up the Between app on their phone. It stops working once used.'));
+      alert('Access reset. The old login no longer works — use "Copy invite" to send ' + updated.display_name + ' a fresh link.');
+      renderTherapistInvite(document.getElementById('btwInviteInfo'), updated);
     }catch(err){ alert(err.message); }
   });
 
@@ -2841,7 +2971,7 @@
         state.selectedPatientId = patient.id;
         await loadPatients();
         if(patient.invite_code){
-          alert(t('Add patient') + '\n\n' + t('Patient app invite code:') + ' ' + patient.invite_code + '\n\n' + location.origin + '/app');
+          alert(t('Patient added. Open their card and tap "View patient data & AI settings" → "Copy invite message" to send them a sign-up link.'));
         }
       }catch(err){ alert(err.message); }
     });
