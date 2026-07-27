@@ -2576,6 +2576,23 @@
     });
   }
 
+  // Shareable deep-links: ?for=patient / ?for=therapist open the matching
+  // signup, and ?login=patient / ?login=therapist open login with that role.
+  // One site, but a link that drops each audience where they belong. Ignored
+  // if someone's already signed in.
+  function handleDeepLinks(){
+    if(state.me || state.patient) return;
+    const params = new URLSearchParams(location.search);
+    const forWho = (params.get('for') || '').toLowerCase();
+    const loginWho = (params.get('login') || '').toLowerCase();
+    let acted = true;
+    if(loginWho === 'patient' || loginWho === 'therapist') openLogin(loginWho);
+    else if(forWho === 'patient') window.btwOpenPatientSignup('patient_monthly');
+    else if(forWho === 'therapist') window.btwOpenSignup('solo_monthly');
+    else acted = false;
+    if(acted) history.replaceState(null, '', location.pathname);
+  }
+
   // Handle the redirect back from Stripe Checkout (?checkout=success|cancel).
   async function handleCheckoutReturn(){
     const params = new URLSearchParams(location.search);
@@ -3030,6 +3047,6 @@
   renderAll();
   loadSession()
     .catch(err=>console.error('Failed to load session:', err))
-    .finally(()=> handleCheckoutReturn().catch(()=>{}));
+    .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
 })();
 </script>
