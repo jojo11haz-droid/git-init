@@ -507,7 +507,7 @@ app.post('/api/auth/password/reset-confirm', requireDb, async (req, res) => {
 // to that clinician server-side — client-supplied patient IDs are never
 // trusted (backend-spec.md §2).
 
-app.post('/api/patients', requireDb, requireAuth, async (req, res) => {
+app.post('/api/patients', requireDb, requireAuth, requireClinicianSubscription, async (req, res) => {
   try {
     const { displayName } = req.body || {};
     if (!displayName || !displayName.trim()) {
@@ -639,7 +639,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
   return checkIn;
 }
 
-app.post('/api/patients/:id/check-ins', requireDb, requireAuth, checkInLimiter, async (req, res) => {
+app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
     const { moodScore, manualTags, text } = req.body || {};
 
@@ -807,6 +807,33 @@ async function startClinicianCheckout(clinician, plan, origin) {
 
 function siteOrigin(req) {
   return process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+// --- Subscription gating ---
+// A paid subscription is required to use the app once Stripe is configured.
+// 'canceling' still grants access (they keep the period they paid for) until
+// the webhook flips it to 'canceled'. Invited patients (no self-serve plan)
+// are covered by their therapist's seat and are never gated.
+function subActive(status) {
+  return status === 'active' || status === 'trialing' || status === 'canceling';
+}
+function patientNeedsSub(p) {
+  return stripeConfigured() && !!p.plan && !subActive(p.subscription_status);
+}
+function clinicianNeedsSub(c) {
+  return stripeConfigured() && !subActive(c.subscription_status);
+}
+function requirePatientSubscription(req, res, next) {
+  if (patientNeedsSub(req.patient)) {
+    return res.status(402).json({ error: 'A subscription is needed to continue — subscribe from your settings.', code: 'subscription_required' });
+  }
+  next();
+}
+function requireClinicianSubscription(req, res, next) {
+  if (clinicianNeedsSub(req.clinician)) {
+    return res.status(402).json({ error: 'An active subscription is needed to continue — open Billing to subscribe.', code: 'subscription_required' });
+  }
+  next();
 }
 
 const inviteLimiter = rateLimit({
@@ -1064,7 +1091,7 @@ app.put('/api/patient/audio-upload/:token',
     }
   });
 
-app.post('/api/patient/check-ins', requireDb, requirePatientAuth, patientCheckInLimiter, async (req, res) => {
+app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatientSubscription, patientCheckInLimiter, async (req, res) => {
   try {
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
