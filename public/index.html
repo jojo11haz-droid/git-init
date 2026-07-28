@@ -1951,6 +1951,10 @@
       "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription.",
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
+    "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
+    "Subscription: cancels at the end of your billing period":"Abonnement : se termine à la fin de votre période de facturation",
+    "Cancel your subscription? You keep access until the end of your billing period.":
+      "Annuler votre abonnement? Vous gardez l'accès jusqu'à la fin de votre période de facturation.",
     "Your 14-day free trial is on; your card is charged when it ends unless you cancel.":
       "Votre essai gratuit de 14 jours est actif; votre carte est débitée à la fin, sauf annulation.",
     "Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.":
@@ -2395,12 +2399,30 @@
     const action = document.getElementById('btwBillingAction');
     if(st === 'active' || st === 'trialing'){
       body.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.<br>'
-        + esc(t('Your 14-day free trial is on; your card is charged when it ends unless you cancel.'));
+        + esc(t('Your 14-day free trial is on; your card is charged when it ends unless you cancel.')) + '<br>'
+        + '<button id="btwClinCancel" style="margin-top:8px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
       action.textContent = t('Change plan');
+      action.style.display = '';
+    } else if(st === 'canceling'){
+      body.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '.<br>'
+        + '<button id="btwClinReactivate" style="margin-top:8px;' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
+      action.style.display = 'none';
     } else {
       body.innerHTML = esc(t('Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.'));
       action.textContent = t('Start subscription');
+      action.style.display = '';
     }
+    const cancel = body.querySelector('#btwClinCancel');
+    if(cancel) cancel.addEventListener('click', async ()=>{
+      if(!confirm(t('Cancel your subscription? You keep access until the end of your billing period.'))) return;
+      try{ const r = await api('POST', '/api/auth/subscription/cancel'); state.me = {...state.me, ...r.clinician}; openBilling(); }
+      catch(e){ alert(e.message); }
+    });
+    const react = body.querySelector('#btwClinReactivate');
+    if(react) react.addEventListener('click', async ()=>{
+      try{ const r = await api('POST', '/api/auth/subscription/cancel', { reactivate: true }); state.me = {...state.me, ...r.clinician}; openBilling(); }
+      catch(e){ alert(e.message); }
+    });
     billingOverlay.style.display = 'flex';
   }
   document.getElementById('btwBillingBtn').addEventListener('click', openBilling);
@@ -2541,11 +2563,12 @@
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
       billingEnabled = !!data.billingEnabled;
+      // With billing on, go straight to Stripe to put a card on file for the
+      // trial (nothing charged for 14 days); the dashboard renders when they
+      // return. Otherwise render it now and show the trial-started screen.
+      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
       renderAuthState();
       await loadPatients();
-      // With billing on, put a card on file for the trial via Stripe; nothing
-      // is charged for 14 days. Otherwise show the plain trial-started screen.
-      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
       document.getElementById('btwDoneEmail').textContent = state.me.email;
       showStep('btwStepDone');
     }catch(e){
@@ -2744,22 +2767,37 @@
   }
   // Subscription status + a subscribe/complete-payment action, shown in the
   // patient's data & settings when billing is enabled on the server.
+  const LINK_BTN = 'background:none;border:none;padding:0;font-size:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;';
+  const LINK_BTN_CLAY = 'background:none;border:none;padding:0;font-size:inherit;color:var(--clay,#B5654F);text-decoration:underline;cursor:pointer;';
   function renderSubscriptionInfo(el){
     const st = state.patient && state.patient.subscription_status;
     const planName = (state.patient && state.patient.plan === 'patient_annual') ? t('Personal Annual') : t('Personal');
-    if(st === 'active'){
-      el.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.';
-      return;
+    const active = (st === 'active' || st === 'trialing');
+    if(active){
+      el.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '. '
+        + '<button id="btwSubCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
+    } else if(st === 'canceling'){
+      el.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '. '
+        + '<button id="btwSubReactivate" style="' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
+    } else {
+      el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong> — '
+        + '<button id="btwSubscribeBtn" style="' + LINK_BTN + '">' + esc(t('Subscribe now')) + '</button>';
     }
-    el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong> — '
-      + '<button id="btwSubscribeBtn" style="background:none;border:none;padding:0;font-size:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;">'
-      + esc(t('Subscribe now')) + '</button>';
-    const b = document.getElementById('btwSubscribeBtn');
-    if(b) b.addEventListener('click', async ()=>{
+    const wire = (id, fn)=>{ const b = el.querySelector('#'+id); if(b) b.addEventListener('click', fn); };
+    wire('btwSubscribeBtn', async ()=>{
       try{
         const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly' });
         if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
       }catch(e){ alert(e.message); }
+    });
+    wire('btwSubCancel', async ()=>{
+      if(!confirm(t('Cancel your subscription? You keep access until the end of your billing period.'))) return;
+      try{ const r = await pApi('POST', '/api/patient/subscription/cancel'); state.patient = {...state.patient, ...r.patient}; renderSubscriptionInfo(el); }
+      catch(e){ alert(e.message); }
+    });
+    wire('btwSubReactivate', async ()=>{
+      try{ const r = await pApi('POST', '/api/patient/subscription/cancel', { reactivate: true }); state.patient = {...state.patient, ...r.patient}; renderSubscriptionInfo(el); }
+      catch(e){ alert(e.message); }
     });
   }
 

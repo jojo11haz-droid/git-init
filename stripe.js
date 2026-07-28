@@ -71,6 +71,14 @@ export async function retrieveCheckoutSession(id) {
   return stripeRequest('GET', '/v1/checkout/sessions/' + encodeURIComponent(id));
 }
 
+// Cancel-at-period-end (kind cancel: keep access through the paid period) or
+// undo it. Pass cancel=false to reactivate a subscription set to cancel.
+export async function setSubscriptionCancelAtPeriodEnd(subscriptionId, cancel) {
+  return stripeRequest('POST', '/v1/subscriptions/' + encodeURIComponent(subscriptionId), {
+    cancel_at_period_end: cancel ? 'true' : 'false'
+  });
+}
+
 // Verifies a Stripe webhook signature (the Stripe-Signature header) against the
 // raw request body using the webhook signing secret. Returns the parsed event,
 // or throws if the signature is missing/stale/invalid.
