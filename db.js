@@ -185,6 +185,14 @@ export async function updateClinicianSubscription(clinicianId, { status, plan, c
   return rows[0] || null;
 }
 
+export async function getClinicianStripe(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT stripe_subscription_id, stripe_customer_id, subscription_status FROM clinicians WHERE id = $1`,
+    [clinicianId]
+  );
+  return rows[0] || null;
+}
+
 export async function getClinicianByStripeSubscription(subscriptionId) {
   const { rows } = await pool.query(
     `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians WHERE stripe_subscription_id = $1`,
@@ -429,6 +437,14 @@ export async function updatePatientSubscription(patientId, { status, plan, custo
 export async function getPatientById(patientId) {
   const { rows } = await pool.query(
     `SELECT ${PATIENT_ROW_COLS} FROM patients WHERE id = $1`,
+    [patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function getPatientStripe(patientId) {
+  const { rows } = await pool.query(
+    `SELECT stripe_subscription_id, stripe_customer_id, subscription_status FROM patients WHERE id = $1`,
     [patientId]
   );
   return rows[0] || null;

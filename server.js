@@ -7,7 +7,7 @@ import {
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
-  updatePatientSubscription, getPatientById, getPatientByStripeSubscription,
+  updatePatientSubscription, getPatientById, getPatientByStripeSubscription, getPatientStripe, getClinicianStripe,
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
@@ -31,7 +31,7 @@ import {
 import { rateLimit } from './rate-limit.js';
 import {
   stripeConfigured, priceForPlan, createSubscriptionCheckout,
-  retrieveCheckoutSession, constructWebhookEvent
+  retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd
 } from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,7 +63,9 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) =
         await updatePatientSubscription(meta.patient_id || obj.client_reference_id, fields);
       }
     } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
-      const status = event.type === 'customer.subscription.deleted' ? 'canceled' : obj.status;
+      const status = event.type === 'customer.subscription.deleted'
+        ? 'canceled'
+        : (obj.cancel_at_period_end ? 'canceling' : obj.status);
       if (meta.clinician_id) await updateClinicianSubscription(meta.clinician_id, { status });
       else if (meta.patient_id) await updatePatientSubscription(meta.patient_id, { status });
       else {
@@ -424,6 +426,21 @@ app.post('/api/auth/checkout/verify', requireDb, requireAuth, async (req, res) =
   } catch (err) {
     console.error('Error verifying clinician checkout:', err);
     res.status(500).json({ error: 'Could not verify your subscription.' });
+  }
+});
+
+app.post('/api/auth/subscription/cancel', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const reactivate = !!(req.body && req.body.reactivate);
+    const s = await getClinicianStripe(req.clinician.id);
+    if (!s || !s.stripe_subscription_id) return res.status(400).json({ error: 'No subscription on file.' });
+    await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, !reactivate);
+    const updated = await updateClinicianSubscription(req.clinician.id, { status: reactivate ? 'active' : 'canceling' });
+    res.json({ clinician: updated || req.clinician });
+  } catch (err) {
+    console.error('Error changing clinician subscription:', err);
+    res.status(500).json({ error: 'Could not update your subscription.' });
   }
 });
 
@@ -920,6 +937,23 @@ app.post('/api/patient/checkout/verify', requireDb, requirePatientAuth, async (r
   } catch (err) {
     console.error('Error verifying checkout:', err);
     res.status(500).json({ error: 'Could not verify your payment.' });
+  }
+});
+
+// Cancel at period end (keep access through the paid period) or undo a
+// pending cancel. Body { reactivate: true } flips it back on.
+app.post('/api/patient/subscription/cancel', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const reactivate = !!(req.body && req.body.reactivate);
+    const s = await getPatientStripe(req.patient.id);
+    if (!s || !s.stripe_subscription_id) return res.status(400).json({ error: 'No subscription on file.' });
+    await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, !reactivate);
+    const updated = await updatePatientSubscription(req.patient.id, { status: reactivate ? 'active' : 'canceling' });
+    res.json({ patient: publicPatient(updated || req.patient) });
+  } catch (err) {
+    console.error('Error changing patient subscription:', err);
+    res.status(500).json({ error: 'Could not update your subscription.' });
   }
 });
 
