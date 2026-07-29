@@ -1715,6 +1715,14 @@
       </div>
     </div>
   </div>
+
+  <footer style="max-width:1200px;margin:40px auto 0;padding:20px 24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:12.5px;color:var(--ink-soft);">
+    <span>© <span id="btwFooterYear">2026</span> Between</span>
+    <a href="/terms.html" style="color:var(--moss);text-decoration:none;">Terms</a>
+    <a href="/privacy.html" style="color:var(--moss);text-decoration:none;">Privacy</a>
+    <span style="flex:1;"></span>
+    <span id="btwFooterCrisis" style="color:var(--ink-soft);">Not a crisis service — in an emergency call 988 or 911.</span>
+  </footer>
 </div>
 
 <script>
@@ -2005,6 +2013,8 @@
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
+    "Terms":"Conditions","Privacy":"Confidentialité",
+    "Not a crisis service — in an emergency call 988 or 911.":"Pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
     "Group practice enquiry":"Demande — cabinet de groupe",
     "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":
       "Parlez-nous de votre cabinet et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
@@ -3409,6 +3419,7 @@
     const stored = localStorage.getItem('btw_lang');
     _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
   } catch(e){}
+  try { document.getElementById('btwFooterYear').textContent = new Date().getFullYear(); } catch(e){}
   setLang(_startLang, {initial:true});
 
   renderAuthState();
