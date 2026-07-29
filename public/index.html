@@ -1481,7 +1481,7 @@
             <li>Admin/practice-manager role</li>
             <li>Practice-level data agreement</li>
           </ul>
-          <button class="btw-price-cta secondary" onclick="window.sendPrompt && window.sendPrompt('Talk to sales about a group practice plan')">Talk to us</button>
+          <button class="btw-price-cta secondary" id="btwTalkToUs">Talk to us</button>
         </div>
       </div>
 
@@ -2098,6 +2098,14 @@
   document.getElementById('btwHeroDemo').addEventListener('click', ()=> goToView(navProduct, viewProduct));
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
+
+  // "Talk to us" (group practice) opens a pre-addressed email.
+  const talkBtn = document.getElementById('btwTalkToUs');
+  if(talkBtn) talkBtn.addEventListener('click', ()=>{
+    const subject = encodeURIComponent('Between — group practice plan enquiry');
+    const body = encodeURIComponent("Hi,\n\nI'd like to talk about a group practice plan for Between.\n\nPractice name:\nNumber of clinicians:\n\nThanks!");
+    window.location.href = 'mailto:jojo11haz@gmail.com?subject=' + subject + '&body=' + body;
+  });
 
   // --- hero waveform animation ---
   (function animateHeroWave(){
