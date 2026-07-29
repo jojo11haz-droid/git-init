@@ -256,7 +256,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
     try { checkoutUrl = await startClinicianCheckout(clinician, plan, siteOrigin(req)); }
     catch (e) { console.error('Could not start clinician checkout:', e.message); }
 
-    res.status(201).json({ clinician, checkoutUrl, billingEnabled: stripeConfigured() });
+    res.status(201).json({ clinician, checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email) });
   } catch (err) {
     if (err && err.code === '23505') { // unique_violation — signup raced the pre-check
       return res.status(409).json({ error: 'An account with this email already exists.' });
@@ -291,7 +291,7 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
 
     await startSession(res, req, clinician.id);
     const { password_hash, mfa_secret, ...publicClinician } = clinician;
-    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured() });
+    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(publicClinician.email) });
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -316,7 +316,7 @@ app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
     await deleteMfaChallenge(challenge.token_hash);
     await startSession(res, req, challenge.clinician_id);
     const clinician = await getClinicianById(challenge.clinician_id);
-    res.json({ clinician, billingEnabled: stripeConfigured() });
+    res.json({ clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email) });
   } catch (err) {
     console.error('Error in MFA login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -383,7 +383,7 @@ app.post('/api/auth/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
-  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured() });
+  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email) });
 });
 
 // Start (or restart) clinician checkout — used after a cancel, or to add a card
@@ -817,11 +817,19 @@ function siteOrigin(req) {
 function subActive(status) {
   return status === 'active' || status === 'trialing' || status === 'canceling';
 }
+// Owner/comp accounts that always get in free (e.g. the site owner using their
+// own site). Set FREE_ACCESS_EMAILS to a comma-separated list; defaults to the
+// owner's address.
+const FREE_ACCESS_EMAILS = (process.env.FREE_ACCESS_EMAILS || 'jojo11haz@gmail.com')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+function isFreeAccess(email) {
+  return !!email && FREE_ACCESS_EMAILS.includes(String(email).toLowerCase());
+}
 function patientNeedsSub(p) {
-  return stripeConfigured() && !!p.plan && !subActive(p.subscription_status);
+  return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
 }
 function clinicianNeedsSub(c) {
-  return stripeConfigured() && !subActive(c.subscription_status);
+  return stripeConfigured() && !isFreeAccess(c.email) && !subActive(c.subscription_status);
 }
 function requirePatientSubscription(req, res, next) {
   if (patientNeedsSub(req.patient)) {
@@ -876,7 +884,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
     if (!patient) return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
 
     const token = await startPatientSession(patient.id);
-    res.status(201).json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured() });
+    res.status(201).json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
@@ -915,7 +923,7 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
     try { checkoutUrl = await startPatientCheckout(patient, plan, siteOrigin(req)); }
     catch (e) { console.error('Could not start checkout:', e.message); }
 
-    res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured() });
+    res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
@@ -998,7 +1006,7 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
     }
 
     const token = await startPatientSession(patient.id);
-    res.json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured() });
+    res.json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     console.error('Error in patient login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -1017,7 +1025,7 @@ app.post('/api/patient/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
-  res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured() });
+  res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.patient.email) });
 });
 
 app.get('/api/patient/consent', requireDb, requirePatientAuth, (req, res) => {
