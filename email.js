@@ -10,18 +10,20 @@ export function emailConfigured() {
   return !!RESEND_API_KEY;
 }
 
-export async function sendEmail({ to, subject, text }) {
+export async function sendEmail({ to, subject, text, replyTo }) {
   if (!RESEND_API_KEY) {
-    console.log(`📧 [email not configured — would send]\nTo: ${to}\nSubject: ${subject}\n${text}\n`);
+    console.log(`📧 [email not configured — would send]\nTo: ${to}\nSubject: ${subject}\n${replyTo ? 'Reply-To: ' + replyTo + '\n' : ''}${text}\n`);
     return { delivered: false };
   }
+  const payload = { from: EMAIL_FROM, to: [to], subject, text };
+  if (replyTo) payload.reply_to = replyTo;
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${RESEND_API_KEY}`
     },
-    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, text })
+    body: JSON.stringify(payload)
   });
   if (!response.ok) {
     console.error('Email delivery failed:', response.status, await response.text());

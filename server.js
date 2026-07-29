@@ -1201,6 +1201,37 @@ app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatient
   }
 });
 
+// --- Contact form ---
+// Public "Talk to us" form. Emails the message to the site owner so any
+// visitor can reach them without needing their own mail app. Reply-To is set
+// to the sender so the owner can just hit reply. Needs RESEND_API_KEY to
+// actually deliver; without it the message is logged (see email.js).
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'jojo11haz@gmail.com';
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 8,
+  message: 'Too many messages — please wait a little while and try again.'
+});
+app.post('/api/contact', contactLimiter, async (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Please include your name.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'Please include a valid email so we can reply.' });
+    if (!message || !message.trim()) return res.status(400).json({ error: 'Please include a message.' });
+    if (message.length > 5000) return res.status(400).json({ error: 'That message is too long.' });
+
+    const { delivered } = await sendEmail({
+      to: CONTACT_EMAIL,
+      replyTo: email.trim(),
+      subject: `Between — message from ${name.trim()}`,
+      text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`
+    });
+    res.json({ ok: true, delivered });
+  } catch (err) {
+    console.error('Error handling contact form:', err);
+    res.status(500).json({ error: 'Could not send your message — please try again.' });
+  }
+});
+
 // Simple health check — useful for most hosting platforms' uptime checks
 app.get('/health', (req, res) => res.json({ ok: true }));
 
