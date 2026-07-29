@@ -1757,11 +1757,13 @@
   function isPatient(){ return state.role === 'patient'; }
   function isTherapist(){ return state.role === 'therapist'; }
   let billingEnabled = false; // set from the server: is Stripe configured?
+  let ownerFreeAccess = false; // server says this account is on the comp list
   function subActive(s){ return s === 'active' || s === 'trialing' || s === 'canceling'; }
   // Hard paywall: once billing is on, a self-serve patient (has a plan) or any
   // clinician must have a live subscription. Invited patients (no plan) are
-  // covered by their therapist and never gated.
+  // covered by their therapist and never gated. Owner/comp accounts never gate.
   function isGated(){
+    if(ownerFreeAccess) return false;
     if(!billingEnabled) return false;
     if(isTherapist()) return !subActive(state.me && state.me.subscription_status);
     if(isPatient()) return !!(state.patient && state.patient.plan) && !subActive(state.patient.subscription_status);
@@ -2275,7 +2277,7 @@
       try{
         const data = await pApi('GET', '/api/patient/me');
         state.patient = data.patient; state.role = 'patient'; state.me = null;
-        billingEnabled = !!data.billingEnabled;
+        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
         renderAuthState();
         await loadPatientCheckIns();
         goToView(navProduct, viewProduct); // land a signed-in user in their dashboard
@@ -2286,7 +2288,7 @@
     }
     try{
       const data = await api('GET', '/api/auth/me');
-      state.me = data.clinician; state.role = 'therapist'; billingEnabled = !!data.billingEnabled;
+      state.me = data.clinician; state.role = 'therapist'; billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
     }catch(err){
       state.me = null; state.role = null; // 401 = signed out; 503 = no DB configured
     }
@@ -2446,11 +2448,12 @@
     document.getElementById('btwResetConfError').textContent = '';
     showResetStep('btwResetConfirmStep');
   }
-  async function finishLogin(clinician, biEnabled){
+  async function finishLogin(clinician, biEnabled, freeAcc){
     // Clear any patient session in this browser so the two roles never mix.
     setPToken(null); state.patient = null;
     state.me = clinician; state.role = 'therapist';
     if(biEnabled !== undefined) billingEnabled = !!biEnabled;
+    ownerFreeAccess = !!freeAcc;
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
     document.getElementById('btwLoginMfaCode').value = '';
@@ -2463,7 +2466,7 @@
   async function finishPatientLogin(data){
     setPToken(data.token);
     state.patient = data.patient; state.role = 'patient'; state.me = null;
-    billingEnabled = !!data.billingEnabled;
+    billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
     renderAuthState();
@@ -2485,7 +2488,7 @@
         const code = document.getElementById('btwLoginMfaCode').value.trim();
         if(!code){ loginError.textContent = 'Enter the 6-digit code from your authenticator app.'; return; }
         const data = await api('POST', '/api/auth/login/mfa', { mfaToken: pendingMfaToken, code });
-        await finishLogin(data.clinician, data.billingEnabled);
+        await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
         return;
       }
       if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
@@ -2497,7 +2500,7 @@
         document.getElementById('btwLoginMfaCode').focus();
         return;
       }
-      await finishLogin(data.clinician, data.billingEnabled);
+      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
     }catch(err){
       loginError.textContent = err.message;
     }
@@ -2690,7 +2693,7 @@
       });
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
-      billingEnabled = !!data.billingEnabled;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
       // With billing on, go straight to Stripe to put a card on file for the
       // trial (nothing charged for 14 days); the dashboard renders when they
       // return. Otherwise render it now and show the trial-started screen.
@@ -2741,7 +2744,7 @@
       const data = await pApi('POST', '/api/patient/signup', { name, email, password: pw, plan: patientPlan });
       setPToken(data.token);
       state.patient = data.patient; state.role = 'patient'; state.me = null;
-      billingEnabled = !!data.billingEnabled;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
       // Record a baseline consent decision (AI off) so check-ins are unblocked;
       // the agree checkbox above is that explicit, opt-in-off consent moment.
       try{
@@ -2792,7 +2795,7 @@
       const data = await pApi('POST', '/api/patient/accept-invite', { inviteCode, email, password: pw });
       setPToken(data.token);
       state.patient = data.patient; state.role = 'patient'; state.me = null;
-      billingEnabled = !!data.billingEnabled;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
       try{
         const r = await pApi('POST', '/api/patient/consent', { enabled: false });
         state.patient = {...state.patient, ...r.patient};
@@ -3164,7 +3167,11 @@
     recognition.onend = ()=>{ recognizing = false; micBtn.classList.remove('recording'); };
     micBtn.addEventListener('click', ()=>{
       if(recognizing){ recognition.stop(); recognizing=false; micBtn.classList.remove('recording'); }
-      else { textEl.value=''; recognition.start(); recognizing=true; micBtn.classList.add('recording'); }
+      else {
+        // Transcribe in whichever language the EN/FR slider is set to.
+        recognition.lang = (curLang === 'fr') ? 'fr-CA' : 'en-US';
+        textEl.value=''; recognition.start(); recognizing=true; micBtn.classList.add('recording');
+      }
     });
   }
 
