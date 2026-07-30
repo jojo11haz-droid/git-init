@@ -588,6 +588,34 @@
   .btw-role-patient #btwAlertFeed{display:none !important;}
   .btw-view{display:none;}
   .btw-view.active{display:block;}
+  /* ---- animated "see it in action" demo ---- */
+  .btw-demo{margin:8px 0 8px;text-align:center;}
+  .btw-demo-lead{max-width:620px;margin:6px auto 20px;color:var(--ink-soft);font-size:15px;line-height:1.6;}
+  .btw-demo-stage{position:relative;max-width:420px;height:210px;margin:0 auto;}
+  .btw-demo-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;pointer-events:none;}
+  .btw-demo-frame.active{opacity:1;transform:none;pointer-events:auto;}
+  .btw-demo-phone{width:300px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(76,107,88,0.10);text-align:left;}
+  .btw-demo-bubble{background:var(--moss);color:#fff;border-radius:14px 14px 14px 4px;padding:11px 14px;font-size:14px;line-height:1.45;display:inline-block;max-width:92%;}
+  .btw-demo-inputrow{display:flex;align-items:center;gap:8px;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;}
+  .btw-demo-mic{font-size:16px;}
+  .btw-demo-inputhint{color:var(--ink-soft);font-size:13px;}
+  .btw-demo-card{width:300px;background:#DCE6DE;border:1px solid var(--moss);border-radius:16px;padding:16px 18px;text-align:left;}
+  .btw-demo-cardlabel{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--moss);margin-bottom:10px;}
+  .btw-demo-line{height:8px;border-radius:4px;background:rgba(76,107,88,0.35);margin-bottom:9px;}
+  .btw-demo-tags{margin-top:12px;display:flex;gap:6px;}
+  .btw-demo-tags span{background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px 10px;font-size:12px;color:var(--ink-soft);}
+  .btw-demo-caseload{width:300px;display:flex;flex-direction:column;gap:8px;}
+  .btw-demo-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;text-align:left;}
+  .btw-demo-row.flagged{border-color:var(--amber);box-shadow:0 4px 14px rgba(201,122,44,0.14);}
+  .btw-demo-row.quiet{opacity:0.55;}
+  .btw-demo-dot-flag{width:9px;height:9px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+  .btw-demo-name{font-weight:600;font-size:14px;flex:1;}
+  .btw-demo-badge{background:var(--moss);color:#fff;border-radius:9px;padding:2px 9px;font-size:11.5px;}
+  .btw-demo-muted{color:var(--ink-soft);font-size:12px;}
+  .btw-demo-caption{margin:16px auto 4px;font-size:14px;font-weight:600;color:var(--ink);min-height:20px;}
+  .btw-demo-dots{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+  .btw-demo-dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:background .3s;}
+  .btw-demo-dot.active{background:var(--moss);}
   /* ---- pricing ---- */
   .btw-pricing-wrap{
     max-width:1200px;
@@ -1273,6 +1301,44 @@
         </div>
       </section>
 
+      <section class="btw-demo">
+        <div class="btw-section-label">See it in action</div>
+        <p class="btw-demo-lead">Quick and easy — for you and your patients. A check-in takes under a minute, and your whole caseload is one glance, not thirty clicks.</p>
+        <div class="btw-demo-stage" id="btwDemoStage" role="group" aria-label="How Between works">
+          <!-- Frame 1: patient checks in -->
+          <div class="btw-demo-frame active" data-frame="0">
+            <div class="btw-demo-phone">
+              <div class="btw-demo-bubble">Rough week — work stress kept me up again. 😞</div>
+              <div class="btw-demo-inputrow"><span class="btw-demo-mic">🎙</span><span class="btw-demo-inputhint">Type or tap to record…</span></div>
+            </div>
+          </div>
+          <!-- Frame 2: AI summarizes -->
+          <div class="btw-demo-frame" data-frame="1">
+            <div class="btw-demo-card">
+              <div class="btw-demo-cardlabel">AI summary</div>
+              <div class="btw-demo-line" style="width:90%;"></div>
+              <div class="btw-demo-line" style="width:75%;"></div>
+              <div class="btw-demo-line" style="width:60%;"></div>
+              <div class="btw-demo-tags"><span>Work</span><span>Sleep</span></div>
+            </div>
+          </div>
+          <!-- Frame 3: therapist sees the pattern -->
+          <div class="btw-demo-frame" data-frame="2">
+            <div class="btw-demo-caseload">
+              <div class="btw-demo-row flagged"><span class="btw-demo-dot-flag"></span><span class="btw-demo-name">Amy</span><span class="btw-demo-badge">2 new</span></div>
+              <div class="btw-demo-row"><span class="btw-demo-name">Ben</span><span class="btw-demo-badge">1 new</span></div>
+              <div class="btw-demo-row quiet"><span class="btw-demo-name">Cara</span><span class="btw-demo-muted">quiet</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="btw-demo-caption" id="btwDemoCaption">A patient checks in — in seconds</div>
+        <div class="btw-demo-dots" id="btwDemoDots">
+          <button class="btw-demo-dot active" data-go="0" aria-label="Step 1"></button>
+          <button class="btw-demo-dot" data-go="1" aria-label="Step 2"></button>
+          <button class="btw-demo-dot" data-go="2" aria-label="Step 3"></button>
+        </div>
+      </section>
+
       <section class="btw-features">
         <div class="btw-section-label">Built for real practice</div>
         <div class="btw-feature-grid">
@@ -1298,8 +1364,8 @@
           </div>
           <div class="btw-feature">
             <div class="btw-feature-icon"></div>
-            <h4>Multi-patient dashboard</h4>
-            <p>Your whole caseload, at-a-glance, with flags for anything that needs a closer look.</p>
+            <h4>Quick to scan</h4>
+            <p>Flagged and new check-ins rise to the top, so a big caseload is a glance — see who needs you in seconds, not clicks.</p>
           </div>
           <div class="btw-feature">
             <div class="btw-feature-icon"></div>
@@ -1823,6 +1889,19 @@
       "Tendances d'humeur, thèmes récurrents et un résumé « depuis la dernière séance » vous attendent dans votre tableau de bord avant chaque rendez-vous.",
     // features
     "Built for real practice":"Conçu pour la pratique réelle",
+    // see-it-in-action demo
+    "See it in action":"Voyez-le en action",
+    "Quick and easy — for you and your patients. A check-in takes under a minute, and your whole caseload is one glance, not thirty clicks.":
+      "Simple et rapide — pour vous et vos patients. Un suivi prend moins d'une minute, et toute votre clientèle tient en un coup d'œil, pas trente clics.",
+    "Rough week — work stress kept me up again. 😞":"Semaine difficile — le stress du travail m'a encore empêché de dormir. 😞",
+    "Type or tap to record…":"Écrivez ou touchez pour enregistrer…",
+    "AI summary":"Résumé IA","quiet":"calme",
+    "A patient checks in — in seconds":"Un patient fait un suivi — en quelques secondes",
+    "AI turns it into a short summary":"L'IA en fait un court résumé",
+    "You see who needs you — at a glance":"Vous voyez qui a besoin de vous — d'un coup d'œil",
+    "Quick to scan":"Rapide à parcourir",
+    "Flagged and new check-ins rise to the top, so a big caseload is a glance — see who needs you in seconds, not clicks.":
+      "Les suivis signalés et nouveaux remontent en haut : une grande clientèle tient en un coup d'œil — voyez qui a besoin de vous en quelques secondes, pas en clics.",
     "Voice or text":"Voix ou texte",
     "Patients check in however's easiest in the moment.":"Les patients font leur suivi de la façon la plus simple sur le moment.",
     "Mood & theme trends":"Tendances d'humeur et de thèmes",
@@ -2101,6 +2180,7 @@
     document.documentElement.lang = curLang;
     document.querySelectorAll('.btw-lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang === curLang));
     translateStatic();
+    if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -2220,6 +2300,33 @@
         line.setAttribute('y2', y2.toFixed(1));
       });
     }, 90);
+  })();
+
+  // --- animated "see it in action" demo (auto-cycles the 3 steps) ---
+  (function animateDemo(){
+    const stage = document.getElementById('btwDemoStage');
+    if(!stage) return;
+    const frames = [...stage.querySelectorAll('.btw-demo-frame')];
+    const dots = [...document.querySelectorAll('#btwDemoDots .btw-demo-dot')];
+    const caption = document.getElementById('btwDemoCaption');
+    const caps = [
+      ()=>t('A patient checks in — in seconds'),
+      ()=>t('AI turns it into a short summary'),
+      ()=>t('You see who needs you — at a glance')
+    ];
+    let i = 0, timer = null;
+    function show(n){
+      i = (n + frames.length) % frames.length;
+      frames.forEach((f,idx)=>f.classList.toggle('active', idx===i));
+      dots.forEach((d,idx)=>d.classList.toggle('active', idx===i));
+      if(caption) caption.textContent = caps[i]();
+    }
+    function start(){ stop(); timer = setInterval(()=>show(i+1), 3000); }
+    function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+    dots.forEach(d=> d.addEventListener('click', ()=>{ show(parseInt(d.dataset.go,10)); start(); }));
+    // Re-render the current caption when the language changes.
+    window.__btwDemoRefresh = ()=>{ if(caption) caption.textContent = caps[i](); };
+    show(0); start();
   })();
 
   // --- auth state / header ---
