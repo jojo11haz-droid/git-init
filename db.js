@@ -370,15 +370,29 @@ export async function getPatient(clinicianId, patientId) {
 }
 
 export async function listPatients(clinicianId) {
+  // Triage-oriented: per patient we return recent activity so the caseload can
+  // surface who needs attention without the clinician opening each profile.
+  // Ordered flagged-first, then most-recent check-in, so the top of the list
+  // is always "who to look at now".
   const { rows } = await pool.query(
     `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')},
        count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS check_in_count,
-       coalesce(bool_or(c.risk_flag AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '48 hours'), false) AS has_recent_risk
+       count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > now() - interval '7 days')::int AS recent_check_in_count,
+       max(c.submitted_at) FILTER (WHERE c.deleted_at IS NULL) AS last_check_in_at,
+       coalesce(bool_or(c.risk_flag AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '48 hours'), false) AS has_recent_risk,
+       last.mood_score AS last_mood
      FROM patients p
      LEFT JOIN check_ins c ON c.patient_id = p.id
+     LEFT JOIN LATERAL (
+       SELECT mood_score FROM check_ins
+       WHERE patient_id = p.id AND deleted_at IS NULL
+       ORDER BY submitted_at DESC LIMIT 1
+     ) last ON true
      WHERE p.clinician_id = $1
-     GROUP BY p.id
-     ORDER BY p.created_at DESC`,
+     GROUP BY p.id, last.mood_score
+     ORDER BY has_recent_risk DESC,
+       max(c.submitted_at) FILTER (WHERE c.deleted_at IS NULL) DESC NULLS LAST,
+       p.created_at DESC`,
     [clinicianId]
   );
   return rows;

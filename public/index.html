@@ -583,6 +583,7 @@
   }
   /* Patient dashboard: hide the therapist-only caseload controls. */
   .btw-role-patient #btwPatientList,
+  .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwAlertFeed{display:none !important;}
   .btw-view{display:none;}
@@ -1400,6 +1401,14 @@
       <h3 id="btwCaseloadTitle">Caseload</h3>
       <div class="btw-pane-desc" id="btwCaseloadDesc">Auto-updating as check-ins come in. Select a patient to see their timeline and trends.</div>
 
+      <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+        <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
+        <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
+          <button type="button" class="btw-role-btn active" data-filter="attention" style="font-size:11.5px;padding:5px 9px;">Needs attention</button>
+          <button type="button" class="btw-role-btn" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
+        </div>
+      </div>
+
       <div class="btw-patient-list" id="btwPatientList"></div>
 
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern — reviewed above patient's usual pattern.</div>
@@ -2013,6 +2022,9 @@
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
+    "Needs attention":"À examiner","All":"Tous","this week":"cette semaine","flagged":"signalé(s)",
+    "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
+    "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service — in an emergency call 988 or 911.":"Pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
     "Group practice enquiry":"Demande — cabinet de groupe",
@@ -2146,6 +2158,15 @@
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
 
   document.getElementById('btwHeroDemo').addEventListener('click', ()=> goToView(navProduct, viewProduct));
+
+  // Caseload triage filter: needs-attention vs all.
+  document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      caseloadFilter = b.dataset.filter === 'all' ? 'all' : 'attention';
+      document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(x=>x.classList.toggle('active', x===b));
+      renderPatientList();
+    });
+  });
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
 
@@ -3194,17 +3215,64 @@
     ];
   }
 
+  let caseloadFilter = 'attention'; // 'attention' | 'all'
+  function needsAttention(p){ return p.has_recent_risk || (p.recent_check_in_count||0) > 0; }
+  // Compact, localized "time ago" for the caseload cards.
+  function agoLabel(ts){
+    if(!ts) return '';
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime())/60000));
+    if(mins < 1) return curLang==='fr' ? "à l'instant" : 'just now';
+    if(mins < 60) return curLang==='fr' ? ('il y a '+mins+' min') : (mins+'m ago');
+    const hrs = Math.floor(mins/60);
+    if(hrs < 24) return curLang==='fr' ? ('il y a '+hrs+' h') : (hrs+'h ago');
+    const days = Math.floor(hrs/24);
+    if(days < 7) return curLang==='fr' ? ('il y a '+days+' j') : (days+'d ago');
+    return curLang==='fr' ? ('il y a '+Math.floor(days/7)+' sem') : (Math.floor(days/7)+'w ago');
+  }
+  function patientCardMeta(p){
+    if(!p.last_check_in_at) return esc(t('No check-ins yet'));
+    const bits = [ esc(agoLabel(p.last_check_in_at)) ];
+    if((p.recent_check_in_count||0) > 0) bits.push(esc(p.recent_check_in_count + ' ' + t('this week')));
+    if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + p.last_mood + '/10'));
+    return bits.join(' · ');
+  }
+  function renderCaseloadSummary(){
+    const controls = document.getElementById('btwCaseloadControls');
+    const el = document.getElementById('btwCaseloadSummary');
+    if(!controls || !el) return;
+    if(!state.patients.length){ controls.style.display = 'none'; return; }
+    controls.style.display = 'flex';
+    const flagged = state.patients.filter(p=>p.has_recent_risk).length;
+    const active = state.patients.filter(p=>(p.recent_check_in_count||0)>0);
+    const totalRecent = active.reduce((s,p)=>s+(p.recent_check_in_count||0),0);
+    const bits = [];
+    if(flagged>0) bits.push('<strong style="color:var(--amber);">'+flagged+' '+esc(t('flagged'))+'</strong>');
+    bits.push('<strong>'+totalRecent+'</strong> '+esc((totalRecent===1?t('check-in'):t('check-ins'))+' '+t('this week'))
+      + (active.length ? ' ('+esc(t('across')+' '+active.length+' '+(active.length===1?t('patient'):t('patients')))+')' : ''));
+    el.innerHTML = bits.join(' · ');
+  }
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
-    el.innerHTML = state.patients.map(p=>{
+    renderCaseloadSummary();
+    // "Needs attention" hides quiet patients (but keeps the selected one so the
+    // timeline pane still lines up); "All" shows everyone, flagged/recent first.
+    let list = state.patients;
+    if(caseloadFilter === 'attention'){
+      list = state.patients.filter(p=> needsAttention(p) || p.id === state.selectedPatientId);
+    }
+    let cards = list.map(p=>{
       const active = p.id === state.selectedPatientId;
       return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
         ${p.has_recent_risk?'<span class="btw-patient-flag"></span>':''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${esc(p.display_name)}</div>
-        <div class="btw-patient-meta">${p.check_in_count||0} ${esc((p.check_in_count===1)?t('check-in'):t('check-ins'))}</div>
+        <div class="btw-patient-meta">${patientCardMeta(p)}</div>
       </div>`;
-    }).join('') + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
+    }).join('');
+    if(caseloadFilter === 'attention' && list.length === 0){
+      cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>';
+    }
+    el.innerHTML = cards + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
       card.addEventListener('click', ()=>{
         state.selectedPatientId = card.dataset.pid;
