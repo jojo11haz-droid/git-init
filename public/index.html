@@ -2023,6 +2023,7 @@
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Needs attention":"À examiner","All":"Tous","this week":"cette semaine","flagged":"signalé(s)",
+    "new":"nouveaux","All caught up — nothing new.":"Tout est à jour — rien de nouveau.",
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "Terms":"Conditions","Privacy":"Confidentialité",
@@ -2379,6 +2380,10 @@
     if(state.selectedPatientId){
       const rows = await api('GET', '/api/patients/' + state.selectedPatientId + '/check-ins');
       state.checkIns = rows.map(mapCheckIn);
+      // Opening a patient marks them reviewed server-side; clear the "new"
+      // badge locally so it updates right away without a full reload.
+      const sel = state.patients.find(p=>p.id===state.selectedPatientId);
+      if(sel) sel.new_check_in_count = 0;
     } else {
       state.checkIns = [];
     }
@@ -3216,7 +3221,7 @@
   }
 
   let caseloadFilter = 'attention'; // 'attention' | 'all'
-  function needsAttention(p){ return p.has_recent_risk || (p.recent_check_in_count||0) > 0; }
+  function needsAttention(p){ return p.has_recent_risk || (p.new_check_in_count||0) > 0; }
   // Compact, localized "time ago" for the caseload cards.
   function agoLabel(ts){
     if(!ts) return '';
@@ -3232,7 +3237,7 @@
   function patientCardMeta(p){
     if(!p.last_check_in_at) return esc(t('No check-ins yet'));
     const bits = [ esc(agoLabel(p.last_check_in_at)) ];
-    if((p.recent_check_in_count||0) > 0) bits.push(esc(p.recent_check_in_count + ' ' + t('this week')));
+    if((p.new_check_in_count||0) > 0) bits.push('<strong style="color:var(--moss);">' + esc(p.new_check_in_count + ' ' + t('new')) + '</strong>');
     if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + p.last_mood + '/10'));
     return bits.join(' · ');
   }
@@ -3243,12 +3248,16 @@
     if(!state.patients.length){ controls.style.display = 'none'; return; }
     controls.style.display = 'flex';
     const flagged = state.patients.filter(p=>p.has_recent_risk).length;
-    const active = state.patients.filter(p=>(p.recent_check_in_count||0)>0);
-    const totalRecent = active.reduce((s,p)=>s+(p.recent_check_in_count||0),0);
+    const active = state.patients.filter(p=>(p.new_check_in_count||0)>0);
+    const totalNew = active.reduce((s,p)=>s+(p.new_check_in_count||0),0);
     const bits = [];
     if(flagged>0) bits.push('<strong style="color:var(--amber);">'+flagged+' '+esc(t('flagged'))+'</strong>');
-    bits.push('<strong>'+totalRecent+'</strong> '+esc((totalRecent===1?t('check-in'):t('check-ins'))+' '+t('this week'))
-      + (active.length ? ' ('+esc(t('across')+' '+active.length+' '+(active.length===1?t('patient'):t('patients')))+')' : ''));
+    if(totalNew>0){
+      bits.push('<strong>'+totalNew+'</strong> '+esc(t('new')+' '+(totalNew===1?t('check-in'):t('check-ins'))
+        +' ('+t('across')+' '+active.length+' '+(active.length===1?t('patient'):t('patients'))+')'));
+    } else if(flagged===0){
+      bits.push(esc(t('All caught up — nothing new.')));
+    }
     el.innerHTML = bits.join(' · ');
   }
   function renderPatientList(){

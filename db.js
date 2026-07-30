@@ -142,6 +142,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -361,6 +362,15 @@ export async function setPatientConsent(clinicianId, patientId, enabled, consent
   return rows[0] || null;
 }
 
+// Records that the clinician has looked at this patient, so the caseload can
+// show "new since you last looked" counts. Scoped by clinician_id.
+export async function markPatientReviewed(clinicianId, patientId) {
+  await pool.query(
+    `UPDATE patients SET last_reviewed_at = now() WHERE id = $1 AND clinician_id = $2`,
+    [patientId, clinicianId]
+  );
+}
+
 export async function getPatient(clinicianId, patientId) {
   const { rows } = await pool.query(
     `SELECT ${PATIENT_ROW_COLS} FROM patients WHERE id = $1 AND clinician_id = $2`,
@@ -378,6 +388,7 @@ export async function listPatients(clinicianId) {
     `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')},
        count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS check_in_count,
        count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > now() - interval '7 days')::int AS recent_check_in_count,
+       count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > coalesce(p.last_reviewed_at, '-infinity'::timestamptz))::int AS new_check_in_count,
        max(c.submitted_at) FILTER (WHERE c.deleted_at IS NULL) AS last_check_in_at,
        coalesce(bool_or(c.risk_flag AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '48 hours'), false) AS has_recent_risk,
        last.mood_score AS last_mood

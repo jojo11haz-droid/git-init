@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
-  dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients,
+  dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -658,7 +658,10 @@ app.get('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) 
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    res.json(await listCheckIns(patient.id));
+    const checkIns = await listCheckIns(patient.id);
+    // Opening a patient counts as reviewing them — clears their "new" badge.
+    markPatientReviewed(req.clinician.id, patient.id).catch(() => {});
+    res.json(checkIns);
   } catch (err) {
     console.error('Error listing check-ins:', err);
     res.status(500).json({ error: 'Could not list check-ins.' });
