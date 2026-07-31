@@ -265,11 +265,20 @@
   .btw-patient-name{font-size:11.5px;font-weight:600;color:var(--ink);}
   .btw-patient-meta{font-size:10px;color:var(--ink-soft);font-family:var(--font-mono);margin-top:2px;}
   .btw-patient-flag{
-    position:absolute;top:8px;right:8px;
+    position:absolute;top:10px;right:28px;
     width:8px;height:8px;
     border-radius:50%;
     background:var(--amber);
   }
+  .btw-patient-del{
+    position:absolute;top:3px;right:4px;
+    width:21px;height:21px;padding:0;
+    border:none;background:transparent;
+    color:var(--ink-soft);font-size:15px;line-height:1;
+    border-radius:50%;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .btw-patient-del:hover{background:var(--clay);color:#fff;}
   .btw-digest{
     background:var(--paper);
     border:1px solid var(--line);
@@ -2102,7 +2111,12 @@
     "avg so far — more check-ins reveal the trend":"moyenne jusqu'ici — d'autres suivis révéleront la tendance",
     "vs earlier check-ins":"vs suivis précédents",
     "Mood range":"Amplitude de l'humeur","most recent":"le plus récent",
-    "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier",
+    "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier","several a day":"plusieurs par jour",
+    "Delete patient":"Supprimer le patient","Permanently delete":"Supprimer définitivement","Delete":"Supprimer",
+    "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
+    "To confirm, type the patient name exactly:":"Pour confirmer, tapez le nom du patient exactement :",
+    "That did not match — the patient was not deleted.":"Cela ne correspond pas — le patient n'a pas été supprimé.",
+    "They have no check-ins yet — this removes the patient.":"Ils n'ont encore aucun suivi — cela supprime le patient.",
     "Last check-in":"Dernier suivi","on file":"au dossier",
     "Recurring themes":"Thèmes récurrents","also":"aussi",
     "Safety flags":"Signaux de sécurité","in the last 14 days":"au cours des 14 derniers jours",
@@ -3444,23 +3458,28 @@
   });
 
   // Delete the whole patient record (and everything tied to it). Therapist-only.
-  document.getElementById('btwDeletePatient').addEventListener('click', async ()=>{
-    const p = selectedPatient();
+  // A patient with no check-ins deletes with one confirm; one with history also
+  // has to have its name typed, so real data can't be lost to a stray tap.
+  async function deletePatientFlow(p){
     if(!p) return;
-    if(!confirm('Permanently delete ' + p.display_name + '? This removes the patient and all of their check-ins, summaries, voice memos, and alerts. This cannot be undone.')) return;
-    // Require typing the name to confirm such a destructive action.
-    const typed = prompt('To confirm, type the patient\'s name exactly: ' + p.display_name);
-    if(typed == null) return;
-    if(typed.trim() !== p.display_name){ alert('That didn\'t match — the patient was not deleted.'); return; }
+    const hasData = !!p.last_check_in_at;
+    if(hasData){
+      if(!confirm(t('Permanently delete') + ' ' + p.display_name + '? ' + t('This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.'))) return;
+      const typed = prompt(t('To confirm, type the patient name exactly:') + ' ' + p.display_name);
+      if(typed == null) return;
+      if(typed.trim() !== p.display_name){ alert(t('That did not match — the patient was not deleted.')); return; }
+    } else {
+      if(!confirm(t('Delete') + ' ' + p.display_name + '? ' + t('They have no check-ins yet — this removes the patient.'))) return;
+    }
     try{
       await api('DELETE', '/api/patients/' + p.id);
-      state.selectedPatientId = null;
-      state.checkIns = [];
-      dataOverlay.style.display = 'none';
+      if(state.selectedPatientId === p.id){ state.selectedPatientId = null; state.checkIns = []; }
+      const ov = document.getElementById('btwDataOverlay'); if(ov) ov.style.display = 'none';
       await loadPatients();
       renderAll();
     }catch(err){ alert(err.message); }
-  });
+  }
+  document.getElementById('btwDeletePatient').addEventListener('click', ()=>{ deletePatientFlow(selectedPatient()); });
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#B5654F', Craving:'#C97A2C',
@@ -3568,6 +3587,7 @@
     let cards = list.map(p=>{
       const active = p.id === state.selectedPatientId;
       return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
+        <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
         ${p.has_recent_risk?'<span class="btw-patient-flag"></span>':''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${esc(p.display_name)}</div>
@@ -3582,6 +3602,13 @@
       card.addEventListener('click', ()=>{
         state.selectedPatientId = card.dataset.pid;
         loadCheckIns().catch(err=>alert(err.message));
+      });
+    });
+    el.querySelectorAll('.btw-patient-del').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation(); // don't select the patient, just delete
+        const p = state.patients.find(x=>x.id === btn.dataset.del);
+        if(p) deletePatientFlow(p);
       });
     });
     document.getElementById('btwAddPatient').addEventListener('click', async ()=>{
@@ -3716,8 +3743,9 @@
     if(timed.length){ out.lastTime = timed[timed.length-1].time; }
     if(timed.length >= 2){
       const spanDays = (timed[timed.length-1].time - timed[0].time)/86400000;
+      out.spanDays = spanDays;
       out.perWeek = spanDays > 0 ? (timed.length-1)/(spanDays/7) : null;
-      out.avgGapDays = spanDays/(timed.length-1);
+      out.avgGapDays = spanDays > 0 ? spanDays/(timed.length-1) : null;
     }
     const counts = {};
     list.forEach(c=>c.tags.forEach(tg=>counts[tg]=(counts[tg]||0)+1));
@@ -3755,10 +3783,14 @@
     if(ins.low != null){
       cards.push(card(t('Mood range'), ins.low + '–' + ins.high + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>', t('most recent') + ': ' + ins.latest + '/10'));
     }
-    if(ins.perWeek != null){
-      const rhythm = ins.perWeek >= 1
-        ? (Math.round(ins.perWeek*10)/10) + '×/' + t('week')
-        : '~' + Math.max(1, Math.round(ins.avgGapDays)) + ' ' + t('days apart');
+    // Only talk about a rate once there's enough of a time window to mean
+    // something — otherwise a couple of check-ins made minutes apart would
+    // extrapolate to an absurd per-week number. Under that, just show the count.
+    if(ins.spanDays != null && ins.spanDays >= 3 && ins.avgGapDays != null){
+      let rhythm;
+      if(ins.avgGapDays < 1) rhythm = t('several a day');
+      else if(ins.avgGapDays <= 7) rhythm = (Math.round(ins.perWeek*10)/10) + '×/' + t('week');
+      else rhythm = '~' + Math.round(ins.avgGapDays) + ' ' + t('days apart');
       cards.push(card(t('Check-in rhythm'), rhythm, ins.lastTime ? t('last') + ' ' + agoLabel(ins.lastTime) : ''));
     } else if(ins.lastTime){
       cards.push(card(t('Last check-in'), agoLabel(ins.lastTime), ins.n + ' ' + t('on file')));
