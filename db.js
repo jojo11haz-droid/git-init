@@ -143,6 +143,8 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -160,16 +162,39 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_verified, province, practice_name, mfa_enabled, plan, subscription_status, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, mfa_enabled, plan, subscription_status, created_at';
 
-export async function createClinician({ name, email, passwordHash, licenceNumber, province, practiceName, plan }) {
+export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
-    `INSERT INTO clinicians (name, email, password_hash, licence_number, province, practice_name, plan)
-     VALUES ($1, lower($2), $3, $4, $5, $6, $7)
+    `INSERT INTO clinicians (name, email, password_hash, licence_number, licence_order, province, practice_name, plan)
+     VALUES ($1, lower($2), $3, $4, $5, $6, $7, $8)
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
-    [name, email, passwordHash, licenceNumber, province || null, practiceName || null, plan || null]
+    [name, email, passwordHash, licenceNumber, licenceOrder || null, province || null, practiceName || null, plan || null]
   );
   return rows[0];
+}
+
+// --- Licence verification (manual, owner-reviewed) ---
+// New clinicians start unverified and can't reach patient data until the owner
+// checks their name/number against the public professional-order registry and
+// approves them. There's no public API for those registries, so this is a
+// human review step, not an automated lookup.
+export async function listCliniciansForReview() {
+  const { rows } = await pool.query(
+    `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians
+     ORDER BY licence_verified ASC, licence_reviewed_at IS NOT NULL ASC, created_at DESC`
+  );
+  return rows;
+}
+
+export async function setClinicianLicenceVerified(clinicianId, verified) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians
+     SET licence_verified = $1, licence_reviewed_at = now()
+     WHERE id = $2 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [!!verified, clinicianId]
+  );
+  return rows[0] || null;
 }
 
 // Stripe subscription state for a clinician (mirrors the patient helper).

@@ -5,6 +5,7 @@ import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
+  listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
   updatePatientSubscription, getPatientById, getPatientByStripeSubscription, getPatientStripe, getClinicianStripe,
@@ -224,14 +225,16 @@ const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
 
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
-    const { name, email, password, licenceNumber, province, practiceName } = req.body || {};
+    const { name, email, password, licenceNumber, licenceOrder, province, practiceName } = req.body || {};
     const plan = THERAPIST_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'solo_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
-    // Licence number is required at signup per backend-spec.md — verification
-    // against the provincial order registry is stubbed for now (licence_verified
-    // stays false until that exists).
+    // A licence/order number is required at signup. It isn't trusted on its own:
+    // the account stays unverified (no access to patient data, no billing) until
+    // the owner checks the name + number against the professional order's public
+    // registry and approves it. There's no public API for those registries, so
+    // this is a manual review step, not an automated lookup.
     if (!licenceNumber || !licenceNumber.trim()) return res.status(400).json({ error: 'A professional licence/order number is required.' });
 
     if (await getClinicianByEmail(email.trim())) {
@@ -243,20 +246,23 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       email: email.trim(),
       passwordHash: await hashPassword(password),
       licenceNumber: licenceNumber.trim(),
+      licenceOrder: typeof licenceOrder === 'string' ? licenceOrder.trim() : null,
       province: typeof province === 'string' ? province.trim() : null,
       practiceName: typeof practiceName === 'string' ? practiceName.trim() : null,
       plan
     });
     await startSession(res, req, clinician.id);
 
-    // Send them to Stripe to put a card on file for the 14-day trial. Nothing
-    // is charged today; if Stripe isn't configured, checkoutUrl is null and the
-    // trial just runs without a card (as before).
-    let checkoutUrl = null;
-    try { checkoutUrl = await startClinicianCheckout(clinician, plan, siteOrigin(req)); }
-    catch (e) { console.error('Could not start clinician checkout:', e.message); }
-
-    res.status(201).json({ clinician, checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email) });
+    // No Stripe checkout yet: an unverified account shouldn't put a card on file
+    // or start a trial clock, so billing waits until the licence is approved
+    // (the owner's free-access account skips verification and never pays).
+    const owner = isFreeAccess(clinician.email);
+    res.status(201).json({
+      clinician,
+      verificationRequired: !owner && !clinician.licence_verified,
+      billingEnabled: stripeConfigured(),
+      freeAccess: owner
+    });
   } catch (err) {
     if (err && err.code === '23505') { // unique_violation — signup raced the pre-check
       return res.status(409).json({ error: 'An account with this email already exists.' });
@@ -386,6 +392,31 @@ app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
   res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email) });
 });
 
+// --- Owner: clinician licence review ---
+// Manual verification: the owner sees each clinician's submitted name, order,
+// and licence number and confirms it against the professional order's public
+// registry before approving. Only then can the clinician reach patient data.
+app.get('/api/admin/clinicians', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await listCliniciansForReview());
+  } catch (err) {
+    console.error('Error listing clinicians for review:', err);
+    res.status(500).json({ error: 'Could not load clinicians.' });
+  }
+});
+
+app.post('/api/admin/clinicians/:id/verify', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    const verified = !(req.body && req.body.verified === false); // default true
+    const updated = await setClinicianLicenceVerified(req.params.id, verified);
+    if (!updated) return res.status(404).json({ error: 'Clinician not found.' });
+    res.json({ clinician: updated });
+  } catch (err) {
+    console.error('Error updating clinician verification:', err);
+    res.status(500).json({ error: 'Could not update verification.' });
+  }
+});
+
 // Start (or restart) clinician checkout — used after a cancel, or to add a card
 // during/after the trial.
 app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) => {
@@ -507,7 +538,7 @@ app.post('/api/auth/password/reset-confirm', requireDb, async (req, res) => {
 // to that clinician server-side — client-supplied patient IDs are never
 // trusted (backend-spec.md §2).
 
-app.post('/api/patients', requireDb, requireAuth, requireClinicianSubscription, async (req, res) => {
+app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, async (req, res) => {
   try {
     const { displayName } = req.body || {};
     if (!displayName || !displayName.trim()) {
@@ -521,7 +552,7 @@ app.post('/api/patients', requireDb, requireAuth, requireClinicianSubscription, 
   }
 });
 
-app.get('/api/patients', requireDb, requireAuth, async (req, res) => {
+app.get('/api/patients', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     res.json(await listPatients(req.clinician.id));
   } catch (err) {
@@ -530,7 +561,7 @@ app.get('/api/patients', requireDb, requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) => {
+app.post('/api/patients/:id/consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const { enabled } = req.body || {};
     const patient = await setPatientConsent(req.clinician.id, req.params.id, !!enabled, 'v1-clinician-recorded');
@@ -546,7 +577,7 @@ app.post('/api/patients/:id/consent', requireDb, requireAuth, async (req, res) =
 // their password, and signs them out everywhere. This is the patient
 // "password reset" — mediated by the therapist, so no patient email
 // infrastructure is needed. History and consent are untouched.
-app.post('/api/patients/:id/reset-access', requireDb, requireAuth, async (req, res) => {
+app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await resetPatientAccess(req.clinician.id, req.params.id, generateInviteCode());
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
@@ -559,7 +590,7 @@ app.post('/api/patients/:id/reset-access', requireDb, requireAuth, async (req, r
 
 // --- Alerts (risk-flag feed for the signed-in clinician) ---
 
-app.get('/api/alerts', requireDb, requireAuth, async (req, res) => {
+app.get('/api/alerts', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     res.json(await listAlerts(req.clinician.id));
   } catch (err) {
@@ -568,7 +599,7 @@ app.get('/api/alerts', requireDb, requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/alerts/:id/mark-viewed', requireDb, requireAuth, async (req, res) => {
+app.post('/api/alerts/:id/mark-viewed', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const alert = await markAlertViewed(req.params.id, req.clinician.id);
     if (!alert) return res.status(404).json({ error: 'Alert not found.' });
@@ -639,7 +670,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
   return checkIn;
 }
 
-app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireClinicianSubscription, checkInLimiter, async (req, res) => {
+app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
     const { moodScore, manualTags, text } = req.body || {};
 
@@ -654,7 +685,7 @@ app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireClinician
   }
 });
 
-app.get('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
+app.get('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
@@ -669,7 +700,7 @@ app.get('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) 
 });
 
 // Stream a check-in's voice memo to its treating clinician.
-app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, async (req, res) => {
+app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
@@ -686,7 +717,7 @@ app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, 
   }
 });
 
-app.delete('/api/patients/:id/check-ins/:checkInId', requireDb, requireAuth, async (req, res) => {
+app.delete('/api/patients/:id/check-ins/:checkInId', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
@@ -699,7 +730,7 @@ app.delete('/api/patients/:id/check-ins/:checkInId', requireDb, requireAuth, asy
   }
 });
 
-app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, async (req, res) => {
+app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
@@ -843,6 +874,29 @@ function requirePatientSubscription(req, res, next) {
 function requireClinicianSubscription(req, res, next) {
   if (clinicianNeedsSub(req.clinician)) {
     return res.status(402).json({ error: 'An active subscription is needed to continue — open Billing to subscribe.', code: 'subscription_required' });
+  }
+  next();
+}
+// A clinician account can only reach patient data once its professional licence
+// has been confirmed by the owner. The owner's own (free-access) account is
+// treated as verified so they can always use and administer the site.
+function clinicianVerified(c) {
+  return !!c && (isFreeAccess(c.email) || !!c.licence_verified);
+}
+function requireVerifiedClinician(req, res, next) {
+  if (!clinicianVerified(req.clinician)) {
+    return res.status(403).json({
+      error: 'Your account is pending licence verification. You will get access once your professional licence is confirmed.',
+      code: 'verification_required'
+    });
+  }
+  next();
+}
+// Owner-only routes (licence review). Gated to the free-access/comp list so a
+// regular clinician can never reach another clinician's account.
+function requireOwner(req, res, next) {
+  if (!req.clinician || !isFreeAccess(req.clinician.email)) {
+    return res.status(403).json({ error: 'Owner access required.' });
   }
   next();
 }
