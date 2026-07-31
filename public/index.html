@@ -281,6 +281,30 @@
     margin-bottom:16px;
   }
   .btw-digest strong{color:var(--moss);}
+  .btw-insights{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .btw-insight{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:11px 13px;
+  }
+  .btw-insight-label{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .btw-insight-value{font-size:15px;font-weight:600;color:var(--ink);line-height:1.35;}
+  .btw-insight-value .up{color:var(--moss);}
+  .btw-insight-value .down{color:var(--clay);}
+  .btw-insight-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.4;}
   .btw-alert-banner{
     display:none;
     background:var(--amber-bg);
@@ -1499,6 +1523,8 @@
 
       <div class="btw-digest" id="btwDigest"></div>
 
+      <div class="btw-insights" id="btwInsights" style="display:none;"></div>
+
       <div class="btw-charts">
         <div class="btw-chart-box">
           <div class="btw-chart-title">Mood trend</div>
@@ -2070,6 +2096,14 @@
     "No check-ins yet for":"Aucun suivi pour l'instant pour",
     "check-in":"suivi","check-ins":"suivis",
     "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
+    "Mood direction":"Direction de l'humeur","improving":"en hausse","declining":"en baisse","holding steady":"stable",
+    "avg so far — more check-ins reveal the trend":"moyenne jusqu'ici — d'autres suivis révéleront la tendance",
+    "vs earlier check-ins":"vs suivis précédents",
+    "Mood range":"Amplitude de l'humeur","most recent":"le plus récent",
+    "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier",
+    "Last check-in":"Dernier suivi","on file":"au dossier",
+    "Recurring themes":"Thèmes récurrents","also":"aussi",
+    "Safety flags":"Signaux de sécurité","in the last 14 days":"au cours des 14 derniers jours",
     "Add patient":"Ajouter un patient",
     "Patient app: connected":"App patient : connectée","Patient app invite code:":"Code d'invitation de l'app patient :",
     "Share this code so they can set up the Between app on their phone. It stops working once used.":"Partagez ce code pour qu'il configure l'app Between sur son téléphone. Il cesse de fonctionner une fois utilisé.",
@@ -3633,6 +3667,89 @@
     }).join('');
   }
 
+  // Derive extra signal from what's already been submitted — mood direction,
+  // range, check-in rhythm, recurring themes — with no AI needed, so every
+  // check-in adds to the picture whether or not summaries are on.
+  function computeInsights(list){
+    const out = { n: list.length };
+    const rated = list.filter(c=>c.mood!=null).sort((a,b)=>a.time-b.time);
+    if(rated.length){
+      out.avg = rated.reduce((s,c)=>s+c.mood,0)/rated.length;
+      out.low = Math.min(...rated.map(c=>c.mood));
+      out.high = Math.max(...rated.map(c=>c.mood));
+      out.latest = rated[rated.length-1].mood;
+      if(rated.length >= 4){
+        const half = Math.floor(rated.length/2);
+        const ea = rated.slice(0,half);
+        const ra = rated.slice(rated.length-half);
+        out.delta = (ra.reduce((s,c)=>s+c.mood,0)/ra.length) - (ea.reduce((s,c)=>s+c.mood,0)/ea.length);
+      } else if(rated.length >= 2){
+        out.delta = rated[rated.length-1].mood - rated[0].mood;
+      }
+    }
+    const timed = list.filter(c=>c.time).sort((a,b)=>a.time-b.time);
+    if(timed.length){ out.lastTime = timed[timed.length-1].time; }
+    if(timed.length >= 2){
+      const spanDays = (timed[timed.length-1].time - timed[0].time)/86400000;
+      out.perWeek = spanDays > 0 ? (timed.length-1)/(spanDays/7) : null;
+      out.avgGapDays = spanDays/(timed.length-1);
+    }
+    const counts = {};
+    list.forEach(c=>c.tags.forEach(tg=>counts[tg]=(counts[tg]||0)+1));
+    out.topThemes = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const cutoff = Date.now() - 14*86400000;
+    out.recentRisk = list.filter(c=>c.risk && c.time>=cutoff).length;
+    return out;
+  }
+  function themeName(tag){ return curLang==='fr' ? (FR[tag]||tag) : tag; }
+  function renderInsights(){
+    const el = document.getElementById('btwInsights');
+    if(!el) return;
+    const list = state.checkIns || [];
+    if(list.length === 0){ el.style.display='none'; el.innerHTML=''; return; }
+    const ins = computeInsights(list);
+    const card = (label,value,sub)=> `<div class="btw-insight"><div class="btw-insight-label">${esc(label)}</div><div class="btw-insight-value">${value}</div>${sub?`<div class="btw-insight-sub">${esc(sub)}</div>`:''}</div>`;
+    const cards = [];
+    if(ins.avg != null){
+      let value, sub;
+      if(ins.delta == null){
+        value = ins.avg.toFixed(1) + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>';
+        sub = t('avg so far — more check-ins reveal the trend');
+      } else if(ins.delta > 0.5){
+        value = '<span class="up">↑ ' + esc(t('improving')) + '</span>';
+        sub = '+' + ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
+      } else if(ins.delta < -0.5){
+        value = '<span class="down">↓ ' + esc(t('declining')) + '</span>';
+        sub = ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
+      } else {
+        value = esc(t('holding steady'));
+        sub = t('avg mood') + ' ' + ins.avg.toFixed(1) + '/10';
+      }
+      cards.push(card(t('Mood direction'), value, sub));
+    }
+    if(ins.low != null){
+      cards.push(card(t('Mood range'), ins.low + '–' + ins.high + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>', t('most recent') + ': ' + ins.latest + '/10'));
+    }
+    if(ins.perWeek != null){
+      const rhythm = ins.perWeek >= 1
+        ? (Math.round(ins.perWeek*10)/10) + '×/' + t('week')
+        : '~' + Math.max(1, Math.round(ins.avgGapDays)) + ' ' + t('days apart');
+      cards.push(card(t('Check-in rhythm'), rhythm, ins.lastTime ? t('last') + ' ' + agoLabel(ins.lastTime) : ''));
+    } else if(ins.lastTime){
+      cards.push(card(t('Last check-in'), agoLabel(ins.lastTime), ins.n + ' ' + t('on file')));
+    }
+    if(ins.topThemes.length){
+      const top = ins.topThemes[0];
+      const rest = ins.topThemes.slice(1).map(([tag])=>themeName(tag)).join(' · ');
+      cards.push(card(t('Recurring themes'), esc(themeName(top[0])) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + top[1] + '×)</span>', rest ? t('also') + ': ' + rest : ''));
+    }
+    if(ins.recentRisk > 0 && !isPatient()){
+      cards.push(card(t('Safety flags'), String(ins.recentRisk), t('in the last 14 days')));
+    }
+    el.innerHTML = cards.join('');
+    el.style.display = cards.length ? 'grid' : 'none';
+  }
+
   function renderAlertBanner(){
     const cutoff = Date.now() - 1000*60*60*48;
     const recentRisk = state.checkIns.some(c=>c.risk && c.time>=cutoff);
@@ -3645,6 +3762,7 @@
       document.getElementById('btwSend').disabled = false;
       syncConsentUi();
       renderDigestSelf();
+      renderInsights();
       renderTimeline();
       renderMoodChart();
       renderPie();
@@ -3653,6 +3771,7 @@
     renderPatientList();
     renderPatientPane();
     renderDigest();
+    renderInsights();
     renderTimeline();
     renderMoodChart();
     renderPie();
