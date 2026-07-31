@@ -1234,6 +1234,7 @@
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
+      <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
       <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
       <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
       <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
@@ -1415,6 +1416,13 @@
     </div>
     <div id="btwPaywallCrisis" style="margin-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
       This isn't a crisis service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Suicide &amp; Crisis Lifeline) or your local emergency number — this is always available, subscription or not.
+    </div>
+  </div>
+  <div class="btw-signedout-box" id="btwVerifyPending" style="display:none;">
+    <h3>Your account is pending verification</h3>
+    <p>We're confirming your professional licence against your order's public registry. As soon as it's approved — usually within a day or two — your dashboard opens and your 14-day free trial begins. We'll email <strong id="btwVerifyEmail"></strong> when you're in. Nothing is charged in the meantime.</p>
+    <div style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
+      If you need this sooner, reply to your confirmation email or reach us from the contact form and we'll prioritize your review.
     </div>
   </div>
   <div class="btw-grid" id="btwDashGrid" style="display:none;">
@@ -1663,10 +1671,21 @@
             </select>
           </div>
           <div class="btw-form-field">
+            <label>Professional order / college</label>
+            <select id="btwSuOrder">
+              <option value="OPQ">Ordre des psychologues du Québec (OPQ)</option>
+              <option value="OTSTCFQ">OTSTCFQ — social work, couple &amp; family therapy</option>
+              <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
+              <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
+              <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
+              <option value="other">Other regulated order / college</option>
+            </select>
+          </div>
+          <div class="btw-form-field">
             <label>Professional licence / order number</label>
             <input type="text" id="btwSuLicence" placeholder="e.g. OPQ number">
           </div>
-          <div class="btw-form-note">We ask for this to confirm you're a licensed clinician — Between is for professional use with your own patients, not general wellness tracking.</div>
+          <div class="btw-form-note">We verify this against your order's public registry before your account is activated — Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
           <div class="btw-form-error" id="btwStep2Error"></div>
           <div class="btw-form-row">
             <button class="btw-modal-continue secondary" id="btwStep2Back">Back</button>
@@ -1676,7 +1695,7 @@
 
         <div class="btw-signup-step" id="btwStep3" style="display:none;">
           <div class="btw-modal-eyebrow">Step 3 of 3 · Confirm</div>
-          <h2>Review &amp; start your trial</h2>
+          <h2>Review &amp; submit for verification</h2>
           <div class="btw-review-box" id="btwReviewBox"></div>
           <label class="btw-modal-agree">
             <input type="checkbox" id="btwSuAgreeTerms">
@@ -1685,15 +1704,15 @@
           <div class="btw-form-error" id="btwStep3Error"></div>
           <div class="btw-form-row">
             <button class="btw-modal-continue secondary" id="btwStep3Back">Back</button>
-            <button class="btw-modal-continue" id="btwStep3Submit" disabled>Start 14-day free trial</button>
+            <button class="btw-modal-continue" id="btwStep3Submit" disabled>Create account &amp; submit</button>
           </div>
         </div>
 
         <div class="btw-signup-step" id="btwStepDone" style="display:none;">
-          <div class="btw-modal-eyebrow">You're in</div>
-          <h2>Trial started</h2>
-          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Your 14-day trial is active — no card required. You're signed in as <strong id="btwDoneEmail"></strong>. Next, add your first patient and send a check-in.</div>
-          <button class="btw-modal-continue" id="btwSignupClose">Go to my dashboard</button>
+          <div class="btw-modal-eyebrow">Account created</div>
+          <h2>We're verifying your licence</h2>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Thanks — your account (<strong id="btwDoneEmail"></strong>) is created and pending verification. We check your licence against your order's public registry, usually within a day or two, and email you when it's approved. You'll start your 14-day free trial then — nothing is charged in the meantime.</div>
+          <button class="btw-modal-continue" id="btwSignupClose">Got it</button>
         </div>
 
       </div>
@@ -1727,6 +1746,17 @@
         <button class="btw-modal-continue" id="btwPsSubmit" disabled>Create my account</button>
         <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">Already have an account? <button id="btwPsToLogin" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Log in</button></div>
       </div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwAdminOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:640px;">
+      <button class="btw-modal-close" data-close="btwAdminOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Owner · Licence review</div>
+      <h2>Verify therapists</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
+      <div class="btw-form-error" id="btwAdminError"></div>
+      <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
     </div>
   </div>
 
@@ -1859,6 +1889,14 @@
     if(isTherapist()) return !subActive(state.me && state.me.subscription_status);
     if(isPatient()) return !!(state.patient && state.patient.plan) && !subActive(state.patient.subscription_status);
     return false;
+  }
+  // A clinician can't reach the dashboard until the owner has confirmed their
+  // professional licence. Takes precedence over the subscription paywall — an
+  // unverified clinician isn't asked to pay. The owner is verified implicitly.
+  function needsVerification(){
+    if(ownerFreeAccess) return false;
+    if(!isTherapist()) return false;
+    return !!(state.me && !state.me.licence_verified);
   }
   // Everything rendered below comes from the server (i.e. from stored patient
   // text), so it must be escaped before touching innerHTML.
@@ -2013,11 +2051,15 @@
     "Step 1 of 3 · Account":"Étape 1 de 3 · Compte","Create your account":"Créez votre compte","Full name":"Nom complet","Work email":"Courriel professionnel",
     "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province",
     "Quebec":"Québec","Ontario":"Ontario","British Columbia":"Colombie-Britannique","Alberta":"Alberta","Other":"Autre",
+    "Professional order / college":"Ordre ou collège professionnel",
     "Professional licence / order number":"Numéro de permis / d'ordre professionnel",
-    "We ask for this to confirm you're a licensed clinician — Between is for professional use with your own patients, not general wellness tracking.":"Nous le demandons pour confirmer que vous êtes un clinicien autorisé — Between est destiné à un usage professionnel avec vos propres patients, pas au suivi de bien-être général.",
-    "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & start your trial":"Vérifiez et commencez votre essai",
+    "We verify this against your order's public registry before your account is activated — Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre avant d'activer votre compte — Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres patients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
+    "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & submit for verification":"Vérifiez et soumettez pour validation",
     "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
-    "You're in":"Vous y êtes","Trial started":"Essai commencé","Go to my dashboard":"Aller à mon tableau de bord",
+    "Create account & submit":"Créer le compte et soumettre",
+    "Account created":"Compte créé","We're verifying your licence":"Nous validons votre permis","Got it":"Compris",
+    "Verify therapists":"Valider les thérapeutes",
+    "Your account is pending verification":"Votre compte est en attente de validation",
     // dynamic (built in JS)
     "Signed in as":"Connecté en tant que",
     "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries: —":"Résumés IA : —",
@@ -2355,16 +2397,24 @@
     authUserEl.innerHTML = signedIn ? `${esc(t('Signed in as'))} <strong>${esc(name)}</strong>` : '';
     loginBtn.style.display = signedIn ? 'none' : '';
     // Two-factor is a clinician feature for now.
-    document.getElementById('btwSecurityBtn').style.display = asTherapist ? '' : 'none';
-    document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled) ? '' : 'none';
+    const pendingVerify = asTherapist && needsVerification();
+    document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
+    document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
+    const adminBtn = document.getElementById('btwAdminBtn');
+    if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
-    const gated = signedIn && isGated();
+    const gated = signedIn && !pendingVerify && isGated();
     signedOutBox.style.display = signedIn ? 'none' : '';
-    dashGrid.style.display = (signedIn && !gated) ? '' : 'none';
+    dashGrid.style.display = (signedIn && !gated && !pendingVerify) ? '' : 'none';
     const paywall = document.getElementById('btwPaywall');
     if(paywall){
       paywall.style.display = gated ? '' : 'none';
       if(gated) renderPaywall();
+    }
+    const vbox = document.getElementById('btwVerifyPending');
+    if(vbox){
+      vbox.style.display = pendingVerify ? '' : 'none';
+      if(pendingVerify){ const ve = document.getElementById('btwVerifyEmail'); if(ve) ve.textContent = state.me.email; }
     }
     dashGrid.classList.toggle('btw-role-patient', asPatient);
     dashGrid.classList.toggle('btw-role-therapist', asTherapist);
@@ -2444,7 +2494,12 @@
       state.me = null; state.role = null; // 401 = signed out; 503 = no DB configured
     }
     renderAuthState();
-    if(state.me){ await loadPatients(); goToView(navProduct, viewProduct); }
+    if(state.me){
+      // A pending (unverified) clinician can't load patient data yet — just land
+      // them on the dashboard view, where the pending-verification box shows.
+      if(!needsVerification()){ await loadPatients(); }
+      goToView(navProduct, viewProduct);
+    }
   }
 
   async function loadPatientCheckIns(){
@@ -2614,7 +2669,8 @@
     document.getElementById('btwLoginMfaCode').value = '';
     pendingMfaToken = null;
     renderAuthState();
-    await loadPatients();
+    // A pending (unverified) clinician has no patient-data access yet.
+    if(!needsVerification()){ await loadPatients(); }
     goToView(navProduct, viewProduct);
   }
 
@@ -2712,6 +2768,61 @@
     billingOverlay.style.display = 'flex';
   }
   document.getElementById('btwBillingBtn').addEventListener('click', openBilling);
+
+  // --- Owner: verify therapists (licence review) ---
+  const adminOverlay = document.getElementById('btwAdminOverlay');
+  const adminRegistry = {
+    OPQ:'https://www.ordrepsy.qc.ca/trouver-de-l-aide',
+    OTSTCFQ:'https://www.otstcfq.org/protection-du-public/verifier-un-permis/',
+    OCCOQ:'https://www.orientation.qc.ca/trouver-un-professionnel',
+    OIIQ:'https://www.oiiq.org/en/trouver-un-professionnel',
+    CRPO:'https://www.crpo.ca/public-register/'
+  };
+  async function openAdmin(){
+    const err = document.getElementById('btwAdminError');
+    const list = document.getElementById('btwAdminList');
+    err.textContent = '';
+    list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
+    adminOverlay.style.display = 'flex';
+    try{ renderAdminList(await api('GET', '/api/admin/clinicians')); }
+    catch(e){ err.textContent = e.message; list.innerHTML = ''; }
+  }
+  function renderAdminList(rows){
+    const list = document.getElementById('btwAdminList');
+    if(!rows || !rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No clinician accounts yet.</div>'; return; }
+    list.innerHTML = rows.map(c=>{
+      const verified = !!c.licence_verified;
+      const reviewed = !!c.licence_reviewed_at;
+      const status = verified
+        ? '<span style="color:var(--moss);font-weight:600;">✓ Approved</span>'
+        : (reviewed ? '<span style="color:var(--clay);font-weight:600;">Not approved</span>'
+                    : '<span style="color:var(--amber);font-weight:600;">Pending review</span>');
+      const reg = adminRegistry[c.licence_order];
+      const regLink = reg ? ` · <a href="${esc(reg)}" target="_blank" rel="noopener" style="color:var(--moss);">check registry ↗</a>` : '';
+      return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper);">
+        <div style="font-weight:600;">${esc(c.name)} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">· ${esc(c.email)}</span></div>
+        <div style="font-size:12.5px;color:var(--ink-soft);margin:3px 0 9px;">${esc(c.licence_order||'—')} · #${esc(c.licence_number||'—')} · ${esc(c.province||'—')}${regLink}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:12px;">${status}</span>
+          ${verified
+            ? `<button class="btw-nav-btn" data-revoke="${esc(c.id)}" style="font-size:12px;">Revoke access</button>`
+            : `<button class="btw-modal-continue" data-approve="${esc(c.id)}" style="width:auto;padding:6px 14px;font-size:12px;">Approve</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-approve]').forEach(b=> b.addEventListener('click', ()=> setVerify(b.getAttribute('data-approve'), true)));
+    list.querySelectorAll('[data-revoke]').forEach(b=> b.addEventListener('click', ()=> setVerify(b.getAttribute('data-revoke'), false)));
+  }
+  async function setVerify(id, verified){
+    const err = document.getElementById('btwAdminError');
+    err.textContent = '';
+    try{
+      await api('POST', '/api/admin/clinicians/' + id + '/verify', { verified });
+      renderAdminList(await api('GET', '/api/admin/clinicians'));
+    }catch(e){ err.textContent = e.message; }
+  }
+  document.getElementById('btwAdminBtn').addEventListener('click', openAdmin);
+
   document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
     try{
       const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly' });
@@ -2816,14 +2927,16 @@
     const email = document.getElementById('btwSuEmail').value.trim();
     const practice = document.getElementById('btwSuPractice').value.trim() || 'Solo practice';
     const province = document.getElementById('btwSuProvince').value;
+    const order = document.getElementById('btwSuOrder').value;
+    const licence = document.getElementById('btwSuLicence').value.trim();
     const provinceNames = {QC:'Quebec',ON:'Ontario',BC:'British Columbia',AB:'Alberta',other:'Other'};
     document.getElementById('btwReviewBox').innerHTML = `
       <div><span class="label">Name:</span> <strong>${esc(name)}</strong></div>
       <div><span class="label">Email:</span> <strong>${esc(email)}</strong></div>
       <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
       <div><span class="label">Province:</span> <strong>${esc(provinceNames[province]||province)}</strong></div>
-      <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong></div>
-      <div><span class="label">Trial:</span> <strong>14-day free trial</strong></div>
+      <div><span class="label">Order:</span> <strong>${esc(order)}</strong> · <strong>${esc(licence)}</strong></div>
+      <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong> · starts after verification</div>
     `;
   }
 
@@ -2842,6 +2955,7 @@
         email: document.getElementById('btwSuEmail').value.trim(),
         password: document.getElementById('btwSuPassword').value,
         licenceNumber: document.getElementById('btwSuLicence').value.trim(),
+        licenceOrder: document.getElementById('btwSuOrder').value,
         province: document.getElementById('btwSuProvince').value,
         practiceName: document.getElementById('btwSuPractice').value.trim() || null,
         plan: selectedPlan
@@ -2849,14 +2963,18 @@
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
       billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
-      // With billing on, go straight to Stripe to put a card on file for the
-      // trial (nothing charged for 14 days); the dashboard renders when they
-      // return. Otherwise render it now and show the trial-started screen.
-      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
+      // New accounts are pending licence verification: no Stripe, no dashboard
+      // yet. Render the (gated) state behind them and show the pending screen.
+      // The owner's free-access account is verified on creation and skips this.
       renderAuthState();
-      await loadPatients();
-      document.getElementById('btwDoneEmail').textContent = state.me.email;
-      showStep('btwStepDone');
+      if(data.verificationRequired){
+        document.getElementById('btwDoneEmail').textContent = state.me.email;
+        showStep('btwStepDone');
+      } else {
+        await loadPatients();
+        document.getElementById('btwDoneEmail').textContent = state.me.email;
+        showStep('btwStepDone');
+      }
     }catch(e){
       err.textContent = e.message;
     }finally{
