@@ -575,6 +575,17 @@ export async function resetPatientAccess(clinicianId, patientId, newInviteCode) 
   }
 }
 
+// Permanently delete a patient and everything tied to them. Scoped to the
+// owning clinician so no one can delete another clinician's patient. Foreign
+// keys cascade to check-ins (and their alerts), audio, and sessions.
+export async function deletePatient(clinicianId, patientId) {
+  const { rows } = await pool.query(
+    `DELETE FROM patients WHERE id = $1 AND clinician_id = $2 RETURNING id`,
+    [patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
 // --- Audio uploads (voice memos) ---
 // Stored as bytea for the MVP so no object-storage account is needed.
 // TODO before real scale: move to S3/R2-style object storage and keep only
