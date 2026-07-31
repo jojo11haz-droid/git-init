@@ -1237,6 +1237,7 @@
 
       <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
+      <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Delete this patient permanently</button>
       <button id="btwCloseData" class="btw-modal-continue">Close</button>
     </div>
   </div>
@@ -2073,6 +2074,7 @@
     "Every check-in on file for this patient, and any AI-generated summary or tags attached to it. Patients have the right to see, correct, or delete this at any time.":"Chaque suivi au dossier de ce patient, ainsi que tout résumé ou étiquette générés par IA qui y sont rattachés. Les patients ont le droit de les consulter, corriger ou supprimer en tout temps.",
     "AI summaries & trend charts":"Résumés IA et graphiques de tendances","Change your choice anytime.":"Modifiez votre choix en tout temps.",
     "Reset app access (new invite code)":"Réinitialiser l'accès à l'app (nouveau code)","Request deletion of my check-in history":"Demander la suppression de mon historique de suivis",
+    "Delete this patient permanently":"Supprimer ce patient définitivement",
     // signup modal
     "Step 1 of 3 · Account":"Étape 1 de 3 · Compte","Create your account":"Créez votre compte","Full name":"Nom complet","Work email":"Courriel professionnel",
     "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province",
@@ -3367,6 +3369,8 @@
       }
       const resetBtn = document.getElementById('btwResetAccess');
       if(resetBtn) resetBtn.style.display = 'none';
+      const delBtn = document.getElementById('btwDeletePatient');
+      if(delBtn) delBtn.style.display = 'none'; // patients delete their history, not a "patient" record
       syncConsentUi();
       renderDataList();
       dataOverlay.style.display = 'flex';
@@ -3379,6 +3383,8 @@
     inviteEl.style.display = '';
     const resetBtn0 = document.getElementById('btwResetAccess');
     if(resetBtn0) resetBtn0.style.display = '';
+    const delBtn0 = document.getElementById('btwDeletePatient');
+    if(delBtn0) delBtn0.style.display = '';
     renderTherapistInvite(inviteEl, p);
     syncConsentUi();
     renderDataList();
@@ -3434,6 +3440,25 @@
       await api('DELETE', '/api/patients/' + p.id + '/check-ins');
       await loadPatients();
       renderDataList();
+    }catch(err){ alert(err.message); }
+  });
+
+  // Delete the whole patient record (and everything tied to it). Therapist-only.
+  document.getElementById('btwDeletePatient').addEventListener('click', async ()=>{
+    const p = selectedPatient();
+    if(!p) return;
+    if(!confirm('Permanently delete ' + p.display_name + '? This removes the patient and all of their check-ins, summaries, voice memos, and alerts. This cannot be undone.')) return;
+    // Require typing the name to confirm such a destructive action.
+    const typed = prompt('To confirm, type the patient\'s name exactly: ' + p.display_name);
+    if(typed == null) return;
+    if(typed.trim() !== p.display_name){ alert('That didn\'t match — the patient was not deleted.'); return; }
+    try{
+      await api('DELETE', '/api/patients/' + p.id);
+      state.selectedPatientId = null;
+      state.checkIns = [];
+      dataOverlay.style.display = 'none';
+      await loadPatients();
+      renderAll();
     }catch(err){ alert(err.message); }
   });
 

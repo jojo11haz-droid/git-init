@@ -12,7 +12,7 @@ import {
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
-  resetPatientAccess,
+  resetPatientAccess, deletePatient,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
   createAlert, listAlerts, markAlertViewed
@@ -585,6 +585,19 @@ app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifi
   } catch (err) {
     console.error('Error resetting patient access:', err);
     res.status(500).json({ error: 'Could not reset access.' });
+  }
+});
+
+// Permanently delete a patient and all of their data (check-ins, summaries,
+// voice memos, alerts). Scoped to the signed-in clinician; irreversible.
+app.delete('/api/patients/:id', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const deleted = await deletePatient(req.clinician.id, req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting patient:', err);
+    res.status(500).json({ error: 'Could not delete the patient.' });
   }
 });
 
