@@ -1478,6 +1478,10 @@
         <span style="font-size:11px;color:var(--ink-soft)">High</span>
         <span class="btw-mood-val" id="btwMoodVal">5</span>
       </div>
+      <div style="margin:-6px 0 12px;font-size:11px;">
+        <button type="button" id="btwMoodSkip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Not sure? Let AI estimate it</button>
+        <span id="btwMoodSkipNote" style="display:none;color:var(--ink-soft);"></span>
+      </div>
 
       <div class="btw-field-label">What's going on? (tap any that fit)</div>
       <div class="btw-tags" id="btwTagPicker">
@@ -2101,6 +2105,9 @@
     "Signed in as":"Connecté en tant que",
     "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries: —":"Résumés IA : —",
     "No check-ins on file.":"Aucun suivi au dossier.","safety flag":"signal de sécurité","mood":"humeur",
+    "Not sure? Let AI estimate it":"Pas certain ? Laissez l'IA l'estimer",
+    "AI will estimate your mood from your note.":"L'IA estimera votre humeur à partir de votre note.",
+    "No mood will be recorded.":"Aucune humeur ne sera enregistrée.","set it myself":"le définir moi-même","AI est.":"est. IA",
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet — add your first patient to start receiving check-ins.":"Aucun patient pour l'instant — ajoutez votre premier patient pour commencer à recevoir des suivis.",
@@ -2312,7 +2319,8 @@
       id: row.id,
       time: new Date(row.submitted_at).getTime(),
       mood: row.mood_score,
-      tags: [...(row.manual_tags||[]), ...(row.auto_tags||[])],
+      moodInferred: !!row.mood_inferred,
+      tags: [...new Set([...(row.manual_tags||[]), ...(row.auto_tags||[])])],
       summary: row.summary_text || row.raw_text || (row.audio_upload_id ? 'Voice memo (no transcript yet).' : 'Check-in received (no notes).'),
       risk: !!row.risk_flag,
       hasAudio: !!row.audio_upload_id
@@ -3490,7 +3498,31 @@
 
   const moodEl = document.getElementById('btwMood');
   const moodValEl = document.getElementById('btwMoodVal');
-  moodEl.addEventListener('input', ()=> moodValEl.textContent = moodEl.value);
+  // Patients can skip the slider and let the AI estimate their mood from what
+  // they wrote (only if AI summaries are on). Skipped sends mood as null.
+  let moodSkipped = false;
+  function setMoodSkipped(v){
+    moodSkipped = v;
+    const skipBtn = document.getElementById('btwMoodSkip');
+    const note = document.getElementById('btwMoodSkipNote');
+    moodEl.disabled = v;
+    if(v){
+      moodValEl.textContent = '—';
+      if(skipBtn) skipBtn.style.display = 'none';
+      const aiOn = !!(state.patient && state.patient.ai_consent_enabled);
+      note.style.display = '';
+      note.innerHTML = esc(aiOn ? t('AI will estimate your mood from your note.') : t('No mood will be recorded.')) +
+        ' <button type="button" id="btwMoodUnskip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">' + esc(t('set it myself')) + '</button>';
+      const un = document.getElementById('btwMoodUnskip');
+      if(un) un.addEventListener('click', ()=> setMoodSkipped(false));
+    } else {
+      moodValEl.textContent = moodEl.value;
+      if(skipBtn) skipBtn.style.display = '';
+      note.style.display = 'none';
+    }
+  }
+  moodEl.addEventListener('input', ()=>{ if(moodSkipped) moodSkipped = false; moodValEl.textContent = moodEl.value; });
+  document.getElementById('btwMoodSkip').addEventListener('click', ()=> setMoodSkipped(true));
 
   document.querySelectorAll('.btw-tag').forEach(el=>{
     el.addEventListener('click', ()=>{
@@ -3675,7 +3707,7 @@
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
-          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10</div>
+          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
@@ -3696,7 +3728,14 @@
       return [x,y];
     });
     const path = pts.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-    const dots = pts.map((p,i)=> `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${sorted[i].risk?'#C97A2C':'#4C6B58'}"/>`).join('');
+    // Estimated moods (AI-filled when the patient skipped the slider) are drawn
+    // as hollow dots so they're visibly distinct from self-reported ones.
+    const dots = pts.map((p,i)=>{
+      const color = sorted[i].risk ? '#C97A2C' : '#4C6B58';
+      return sorted[i].moodInferred
+        ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#F4F2EC" stroke="${color}" stroke-width="1.5"/>`
+        : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${color}"/>`;
+    }).join('');
     svg.innerHTML = `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#D9DED2" stroke-width="1"/>
       <path d="${path}" fill="none" stroke="#4C6B58" stroke-width="2"/>
       ${dots}`;
@@ -3895,7 +3934,7 @@
     const p = selectedPatient();
     if(!isPatient() && !p) return;
     const text = textEl.value.trim();
-    const mood = parseInt(moodEl.value,10);
+    const mood = moodSkipped ? null : parseInt(moodEl.value,10);
     const manualTags = [...state.selectedTags];
     if(!text && manualTags.length===0){
       textEl.placeholder = t('Say a bit about what happened before sending…');
@@ -3926,7 +3965,7 @@
       textEl.value = '';
       state.selectedTags.clear();
       document.querySelectorAll('.btw-tag.active').forEach(el=>el.classList.remove('active'));
-      moodEl.value = 5; moodValEl.textContent = '5';
+      moodEl.value = 5; setMoodSkipped(false);
 
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();

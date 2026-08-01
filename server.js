@@ -101,7 +101,7 @@ async function summarizeCheckIn(text) {
   const prompt = `A patient sent this between-session check-in to their therapist: "${text.replace(/"/g, '\\"')}"
 
 Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly this shape:
-{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation. Write the summary in the SAME language the patient wrote in (e.g. French if they wrote in French).", "auto_tags": ["choose 0-3 from these exact English keys regardless of the patient's language: Sleep, Work, Conflict, Craving, Panic, Family, Health, Win, Social, Other"], "risk_flag": true or false (true ONLY if there is language, in any language, suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
+{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation. Write the summary in the SAME language the patient wrote in (e.g. French if they wrote in French).", "auto_tags": ["choose 0-3 from these exact English keys regardless of the patient's language: Sleep, Work, Conflict, Craving, Panic, Family, Health, Win, Social, Other"], "mood_estimate": an integer from 1 (very low) to 10 (very good) estimating the patient's current mood from what they wrote, or null if there is genuinely not enough emotional content to estimate, "risk_flag": true or false (true ONLY if there is language, in any language, suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -135,9 +135,18 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
     throw new Error('AI returned an unexpected format.');
   }
 
+  // An estimated mood, only when the model returned a whole number in 1..10.
+  let moodEstimate = null;
+  const me = parsed.mood_estimate;
+  if (typeof me === 'number' && Number.isFinite(me)) {
+    const r = Math.round(me);
+    if (r >= 1 && r <= 10) moodEstimate = r;
+  }
+
   return {
     summary: typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : 'Check-in received.',
     auto_tags: Array.isArray(parsed.auto_tags) ? parsed.auto_tags.filter(t => VALID_TAGS.includes(t)).slice(0, 3) : [],
+    mood_estimate: moodEstimate,
     risk_flag: parsed.risk_flag === true
   };
 }
@@ -657,6 +666,13 @@ async function raiseRiskAlert(patient, checkIn) {
 async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
+  // Whether the patient left the mood unset (they can skip the slider). Only
+  // then may the AI fill one in, and we record that it was estimated so it's
+  // never shown as if the patient rated it themselves.
+  const moodProvided = moodScore != null;
+  let finalMood = moodProvided ? moodScore : null;
+  let moodInferred = false;
+
   // Only call the AI if this patient has actually opted in — mirrors the
   // privacy-by-default rule from the consent flow, enforced server-side too.
   if (patient.ai_consent_enabled && text && text.trim()) {
@@ -666,6 +682,10 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
       autoTags = result.auto_tags;
       riskFlag = result.risk_flag;
       modelVersion = MODEL_VERSION;
+      if (!moodProvided && result.mood_estimate != null) {
+        finalMood = result.mood_estimate;
+        moodInferred = true;
+      }
     } catch (aiErr) {
       // Don't lose the check-in because the AI call failed — store it raw.
       console.error('AI summarization failed, storing check-in without summary:', aiErr);
@@ -676,7 +696,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
   }
 
   const checkIn = await createCheckIn({
-    patientId: patient.id, moodScore, manualTags, rawText: text || null,
+    patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
     summaryText, autoTags, riskFlag, modelVersion, audioUploadId
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
