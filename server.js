@@ -11,6 +11,7 @@ import {
   updatePatientSubscription, getPatientById, getPatientByStripeSubscription, getPatientStripe, getClinicianStripe,
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
+  createFutureNote, listFutureNotes, deleteFutureNote,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
   resetPatientAccess, deletePatient,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
@@ -1235,6 +1236,41 @@ app.get('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res
   } catch (err) {
     console.error('Error listing patient check-ins:', err);
     res.status(500).json({ error: 'Could not load your history.' });
+  }
+});
+
+// --- Future-self notes ---
+// A private note a patient leaves for a harder day; the app surfaces it back to
+// them when their mood is low. Patient-scoped only; never visible to a clinician.
+app.get('/api/patient/future-notes', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    res.json(await listFutureNotes(req.patient.id));
+  } catch (err) {
+    console.error('Error listing future notes:', err);
+    res.status(500).json({ error: 'Could not load your notes.' });
+  }
+});
+
+app.post('/api/patient/future-notes', requireDb, requirePatientAuth, requirePatientSubscription, async (req, res) => {
+  try {
+    const body = (req.body && typeof req.body.body === 'string') ? req.body.body.trim() : '';
+    if (!body) return res.status(400).json({ error: 'Write a few words first.' });
+    if (body.length > 1000) return res.status(400).json({ error: 'That note is a bit long — keep it under 1000 characters.' });
+    res.status(201).json(await createFutureNote(req.patient.id, body));
+  } catch (err) {
+    console.error('Error creating future note:', err);
+    res.status(500).json({ error: 'Could not save your note.' });
+  }
+});
+
+app.delete('/api/patient/future-notes/:id', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const deleted = await deleteFutureNote(req.params.id, req.patient.id);
+    if (!deleted) return res.status(404).json({ error: 'Note not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting future note:', err);
+    res.status(500).json({ error: 'Could not delete the note.' });
   }
 });
 

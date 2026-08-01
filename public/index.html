@@ -1471,6 +1471,12 @@
       </div>
 
       <div id="btwComposeArea">
+      <div id="btwFutureCard" style="display:none;background:#FBF7E9;border:1px solid #E6D8A8;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.05em;text-transform:uppercase;color:#8a6d1f;margin-bottom:6px;">A note you left for a harder day</div>
+        <div id="btwFutureCardBody" style="font-size:14px;line-height:1.55;color:#5a4a1a;white-space:pre-wrap;"></div>
+        <div id="btwFutureCardDate" style="font-size:11px;color:#8a7a4a;margin-top:8px;"></div>
+        <button type="button" id="btwFutureCardDismiss" style="background:none;border:none;padding:0;margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Thanks, close this</button>
+      </div>
       <div class="btw-field-label">Mood right now</div>
       <div class="btw-mood-row">
         <span style="font-size:11px;color:var(--ink-soft)">Low</span>
@@ -1507,6 +1513,11 @@
       </div>
       <div id="btwCrisis" class="btw-crisis" style="display:none;">
         This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.
+      </div>
+
+      <div style="margin:14px 0 4px;">
+        <button type="button" id="btwOpenFuture" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--moss);text-decoration:underline;cursor:pointer;">✍ Leave a note for a harder day</button>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you — your therapist never sees these.</div>
       </div>
 
       <div class="btw-disclaimer">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
@@ -1797,6 +1808,19 @@
       <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwFutureOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:460px;">
+      <button class="btw-modal-close" data-close="btwFutureOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Just for you</div>
+      <h2>A note for a harder day</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">On a good day, leave a few words for your future self — what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.</div>
+      <textarea id="btwFutureText" class="btw-textarea" placeholder="You've gotten through this before. Remember that a walk and a good night's sleep usually turn things around…" style="min-height:90px;"></textarea>
+      <div class="btw-form-error" id="btwFutureError"></div>
+      <button class="btw-modal-continue" id="btwFutureSave">Save this note</button>
+      <div id="btwFutureList" style="margin-top:16px;display:flex;flex-direction:column;gap:8px;max-height:34vh;overflow-y:auto;"></div>
     </div>
   </div>
 
@@ -2108,6 +2132,16 @@
     "Not sure? Let AI estimate it":"Pas certain ? Laissez l'IA l'estimer",
     "AI will estimate your mood from your note.":"L'IA estimera votre humeur à partir de votre note.",
     "No mood will be recorded.":"Aucune humeur ne sera enregistrée.","set it myself":"le définir moi-même","AI est.":"est. IA",
+    "You left this for yourself":"Vous avez écrit ceci pour vous-même",
+    "No notes yet. The one you write will wait here for a harder day.":"Aucune note pour l'instant. Celle que vous écrivez vous attendra ici pour un jour plus difficile.",
+    "Write a few words first.":"Écrivez d'abord quelques mots.",
+    "✍ Leave a note for a harder day":"✍ Laissez une note pour un jour plus difficile",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you — your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé — votre thérapeute ne les voit jamais.",
+    "A note you left for a harder day":"Une note que vous avez laissée pour un jour plus difficile",
+    "Thanks, close this":"Merci, fermer",
+    "Just for you":"Rien que pour vous","A note for a harder day":"Une note pour un jour plus difficile",
+    "On a good day, leave a few words for your future self — what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous — ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre thérapeute ne les voit jamais.",
+    "Save this note":"Enregistrer cette note",
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet — add your first patient to start receiving check-ins.":"Aucun patient pour l'instant — ajoutez votre premier patient pour commencer à recevoir des suivis.",
@@ -2565,8 +2599,76 @@
   async function loadPatientCheckIns(){
     const rows = await pApi('GET', '/api/patient/check-ins');
     state.checkIns = rows.map(mapCheckIn);
+    await loadFutureNotes();
     renderAll();
   }
+
+  // --- Future-self notes: private encouragement, surfaced on a low day ---
+  async function loadFutureNotes(){
+    try { state.futureNotes = await pApi('GET', '/api/patient/future-notes'); }
+    catch(e){ state.futureNotes = []; }
+  }
+  function latestRatedMood(){
+    const rated = (state.checkIns||[]).filter(c=>c.mood!=null).sort((a,b)=>b.time-a.time);
+    return rated.length ? rated[0].mood : null;
+  }
+  let _futureCardDismissed = false;
+  function renderFutureCard(){
+    const card = document.getElementById('btwFutureCard');
+    if(!card) return;
+    const notes = state.futureNotes || [];
+    const lm = latestRatedMood();
+    if(!(isPatient() && !_futureCardDismissed && notes.length > 0 && lm != null && lm <= 4)){
+      card.style.display = 'none';
+      return;
+    }
+    const note = notes[0]; // most recent
+    document.getElementById('btwFutureCardBody').textContent = note.body;
+    document.getElementById('btwFutureCardDate').textContent = t('You left this for yourself') + ' · ' + agoLabel(note.created_at);
+    card.style.display = '';
+  }
+  function renderFutureList(){
+    const el = document.getElementById('btwFutureList');
+    const notes = state.futureNotes || [];
+    if(!notes.length){ el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);">'+esc(t('No notes yet. The one you write will wait here for a harder day.'))+'</div>'; return; }
+    el.innerHTML = notes.map(n=>`<div style="border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--paper);">
+      <div style="font-size:13px;line-height:1.5;white-space:pre-wrap;color:var(--ink);">${esc(n.body)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span style="font-size:10.5px;color:var(--ink-soft);">${esc(agoLabel(n.created_at))}</span>
+        <button type="button" data-delnote="${esc(n.id)}" style="background:none;border:none;padding:0;font-size:11px;color:var(--clay);text-decoration:underline;cursor:pointer;">${esc(t('Delete'))}</button>
+      </div>
+    </div>`).join('');
+    el.querySelectorAll('[data-delnote]').forEach(b=> b.addEventListener('click', async ()=>{
+      try{ await pApi('DELETE', '/api/patient/future-notes/'+b.dataset.delnote); await loadFutureNotes(); renderFutureList(); renderFutureCard(); }
+      catch(e){ alert(e.message); }
+    }));
+  }
+  const futureOverlay = document.getElementById('btwFutureOverlay');
+  document.getElementById('btwOpenFuture').addEventListener('click', async ()=>{
+    document.getElementById('btwFutureError').textContent = '';
+    document.getElementById('btwFutureText').value = '';
+    await loadFutureNotes();
+    renderFutureList();
+    futureOverlay.style.display = 'flex';
+    document.getElementById('btwFutureText').focus();
+  });
+  document.getElementById('btwFutureSave').addEventListener('click', async ()=>{
+    const err = document.getElementById('btwFutureError');
+    const body = document.getElementById('btwFutureText').value.trim();
+    if(!body){ err.textContent = t('Write a few words first.'); return; }
+    err.textContent = '';
+    try{
+      await pApi('POST', '/api/patient/future-notes', { body });
+      document.getElementById('btwFutureText').value = '';
+      await loadFutureNotes();
+      renderFutureList();
+    }catch(e){ err.textContent = e.message; }
+  });
+  document.getElementById('btwFutureCardDismiss').addEventListener('click', ()=>{
+    _futureCardDismissed = true;
+    document.getElementById('btwFutureCard').style.display = 'none';
+  });
+  futureOverlay.addEventListener('click', (e)=>{ if(e.target === futureOverlay) futureOverlay.style.display = 'none'; });
 
   async function loadPatients(){
     state.patients = await api('GET', '/api/patients');
@@ -3891,6 +3993,7 @@
       syncConsentUi();
       renderDigestSelf();
       renderInsights();
+      renderFutureCard();
       renderTimeline();
       renderMoodChart();
       renderPie();

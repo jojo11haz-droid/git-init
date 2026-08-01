@@ -100,6 +100,13 @@ CREATE TABLE IF NOT EXISTS check_ins (
   deleted_at TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS future_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS password_resets (
   token_hash TEXT PRIMARY KEY,
   clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
@@ -720,4 +727,31 @@ export async function softDeleteCheckIn(checkInId, patientId) {
 
 export async function deleteAllCheckIns(patientId) {
   await pool.query(`UPDATE check_ins SET deleted_at = now() WHERE patient_id = $1`, [patientId]);
+}
+
+// --- Future-self notes ---
+// A patient's private encouragement to themselves, surfaced back to them on a
+// hard day. Private to the patient — never exposed on the clinician side.
+export async function createFutureNote(patientId, body) {
+  const { rows } = await pool.query(
+    `INSERT INTO future_notes (patient_id, body) VALUES ($1, $2) RETURNING id, body, created_at`,
+    [patientId, body]
+  );
+  return rows[0];
+}
+
+export async function listFutureNotes(patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, body, created_at FROM future_notes WHERE patient_id = $1 ORDER BY created_at DESC`,
+    [patientId]
+  );
+  return rows;
+}
+
+export async function deleteFutureNote(id, patientId) {
+  const { rows } = await pool.query(
+    `DELETE FROM future_notes WHERE id = $1 AND patient_id = $2 RETURNING id`,
+    [id, patientId]
+  );
+  return rows[0] || null;
 }
