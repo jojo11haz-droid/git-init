@@ -655,6 +655,33 @@
   .btw-demo-dots{display:flex;gap:8px;justify-content:center;margin-top:8px;}
   .btw-demo-dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:background .3s;}
   .btw-demo-dot.active{background:var(--moss);}
+  /* Static interface previews ("see both sides") */
+  .btw-shots{margin:44px 0 8px;text-align:center;}
+  .btw-shots-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:960px;margin:22px auto 0;}
+  @media (max-width:820px){.btw-shots-grid{grid-template-columns:1fr;}}
+  .btw-shot{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 12px 32px rgba(76,107,88,0.12);}
+  .btw-shot-bar{display:flex;align-items:center;gap:6px;padding:9px 13px;background:var(--paper);border-bottom:1px solid var(--line);}
+  .btw-shot-bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block;}
+  .btw-shot-tag{margin-left:9px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-shot-body{padding:16px 16px 18px;text-align:left;}
+  .btw-shot-cap{text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;}
+  .btw-shot-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:4px;}
+  .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:9px 0 4px;}
+  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--moss);}
+  .btw-mk-slider .knob{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--moss);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:11px;padding:3px 11px;font-size:12px;color:var(--ink-soft);margin:0 5px 5px 0;}
+  .btw-mk-chip.on{background:var(--moss);color:#fff;border-color:var(--moss);}
+  .btw-mk-send{background:var(--moss);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;width:100%;margin-top:12px;}
+  .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
+  .btw-mk-row.flag{border-color:var(--amber);}
+  .btw-mk-avatar{width:24px;height:24px;border-radius:50%;background:var(--moss);color:#fff;font-family:var(--font-mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .btw-mk-name{font-size:12.5px;font-weight:600;flex:1;}
+  .btw-mk-badge{background:var(--moss);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;}
+  .btw-mk-flagdot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+  .btw-mk-insights{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px;}
+  .btw-mk-ins{border:1px solid var(--line);border-radius:9px;padding:8px 10px;}
+  .btw-mk-ins .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-mk-ins .v{font-size:13px;font-weight:600;color:var(--ink);margin-top:2px;}
   /* ---- pricing ---- */
   .btw-pricing-wrap{
     max-width:1200px;
@@ -1377,6 +1404,47 @@
           <button class="btw-demo-dot active" data-go="0" aria-label="Step 1"></button>
           <button class="btw-demo-dot" data-go="1" aria-label="Step 2"></button>
           <button class="btw-demo-dot" data-go="2" aria-label="Step 3"></button>
+        </div>
+      </section>
+
+      <section class="btw-shots">
+        <div class="btw-section-label">See both sides</div>
+        <p class="btw-demo-lead">The same tool, two views. Patients check in in seconds; you see the whole picture before a session.</p>
+        <div class="btw-shots-grid">
+          <div>
+            <div class="btw-shot">
+              <div class="btw-shot-bar"><i></i><i></i><i></i><span class="btw-shot-tag">Patient view</span></div>
+              <div class="btw-shot-body">
+                <div class="btw-shot-label">Your check-in</div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:11px;">How are things right now?</div>
+                <div style="font-size:11px;color:var(--ink-soft);">Mood right now</div>
+                <div class="btw-mk-slider"><div class="fill" style="width:38%;"></div><div class="knob" style="left:38%;"></div></div>
+                <div style="font-size:11px;color:var(--ink-soft);margin-bottom:11px;">4 / 10</div>
+                <div style="font-size:11px;color:var(--ink-soft);margin-bottom:7px;">What's going on?</div>
+                <div><span class="btw-mk-chip on">Work</span><span class="btw-mk-chip on">Sleep</span><span class="btw-mk-chip">Family</span><span class="btw-mk-chip">Win</span></div>
+                <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:11px;line-height:1.5;">Rough week, work stress kept me up again.</div>
+                <button class="btw-mk-send" type="button" tabindex="-1">Send check-in</button>
+              </div>
+            </div>
+            <div class="btw-shot-cap">What a patient sees: a check-in in under a minute, by text or voice.</div>
+          </div>
+          <div>
+            <div class="btw-shot">
+              <div class="btw-shot-bar"><i></i><i></i><i></i><span class="btw-shot-tag">Therapist view</span></div>
+              <div class="btw-shot-body">
+                <div class="btw-shot-label">Caseload</div>
+                <div class="btw-mk-row flag"><span class="btw-mk-flagdot"></span><span class="btw-mk-avatar">A</span><span class="btw-mk-name">Amy</span><span class="btw-mk-badge">2 new</span></div>
+                <div class="btw-mk-row"><span class="btw-mk-avatar">B</span><span class="btw-mk-name">Ben</span><span class="btw-mk-badge">1 new</span></div>
+                <div class="btw-mk-row" style="opacity:.6;"><span class="btw-mk-avatar">C</span><span class="btw-mk-name">Cara</span><span style="font-size:11px;color:var(--ink-soft);">quiet</span></div>
+                <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#D9DED2"></line><path d="M8,42 L70,38 L132,29 L194,19 L246,13" fill="none" stroke="#4C6B58" stroke-width="2"></path><circle cx="8" cy="42" r="3" fill="#4C6B58"></circle><circle cx="70" cy="38" r="3" fill="#4C6B58"></circle><circle cx="132" cy="29" r="3" fill="#C97A2C"></circle><circle cx="194" cy="19" r="3" fill="#4C6B58"></circle><circle cx="246" cy="13" r="3" fill="#4C6B58"></circle></svg>
+                <div class="btw-mk-insights">
+                  <div class="btw-mk-ins"><div class="l">Mood direction</div><div class="v" style="color:var(--moss);">↑ improving</div></div>
+                  <div class="btw-mk-ins"><div class="l">Tied to lower mood</div><div class="v">Work</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="btw-shot-cap">What you see: the whole caseload at a glance, and each patient's trends before a session.</div>
+          </div>
         </div>
       </section>
 
@@ -2142,6 +2210,13 @@
     "Just for you":"Rien que pour vous","A note for a harder day":"Une note pour un jour plus difficile",
     "On a good day, leave a few words for your future self — what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous — ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre thérapeute ne les voit jamais.",
     "Save this note":"Enregistrer cette note",
+    "See both sides":"Les deux côtés",
+    "The same tool, two views. Patients check in in seconds; you see the whole picture before a session.":"Le même outil, deux vues. Les patients font un suivi en quelques secondes ; vous voyez le portrait complet avant une séance.",
+    "How are things right now?":"Comment ça va en ce moment ?","Mood right now":"Humeur en ce moment","What's going on?":"Qu'est-ce qui se passe ?",
+    "Rough week, work stress kept me up again.":"Semaine difficile, le stress au travail m'a encore empêché de dormir.",
+    "quiet":"calme","2 new":"2 nouv.","1 new":"1 nouv.","↑ improving":"↑ en hausse",
+    "What a patient sees: a check-in in under a minute, by text or voice.":"Ce que voit un patient : un suivi en moins d'une minute, par texte ou par mémo vocal.",
+    "What you see: the whole caseload at a glance, and each patient's trends before a session.":"Ce que vous voyez : tout votre suivi d'un coup d'œil, et les tendances de chaque patient avant une séance.",
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet — add your first patient to start receiving check-ins.":"Aucun patient pour l'instant — ajoutez votre premier patient pour commencer à recevoir des suivis.",
