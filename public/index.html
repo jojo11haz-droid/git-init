@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -627,6 +629,19 @@
   @media (max-width:820px){ .btw-grid.btw-role-therapist{grid-template-columns:1fr;} }
   .btw-view{display:none;}
   .btw-view.active{display:block;}
+  /* Scroll-reveal + hover motion for the landing page. Elements only get the
+     reveal class from JS, so if JS is off nothing is hidden. */
+  .btw-reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,.61,.36,1),transform .6s cubic-bezier(.22,.61,.36,1);}
+  .btw-reveal.in{opacity:1;transform:none;}
+  .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
+  .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(76,107,88,0.16);}
+  .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send{transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease;}
+  .btw-hero-btn:hover{transform:translateY(-2px);}
+  .btw-hero-btn:active,.btw-nav-btn:active{transform:translateY(1px);}
+  @media (prefers-reduced-motion: reduce){
+    .btw-reveal{opacity:1;transform:none;transition:none;}
+    .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover,.btw-hero-btn:hover{transform:none;box-shadow:none;}
+  }
   /* ---- animated "see it in action" demo ---- */
   .btw-demo{margin:8px 0 8px;text-align:center;}
   .btw-demo-lead{max-width:620px;margin:6px auto 20px;color:var(--ink-soft);font-size:15px;line-height:1.6;}
@@ -4166,6 +4181,33 @@
 
   renderAuthState();
   renderAll();
+
+  // Landing-page scroll reveal: sections fade and rise as they enter view.
+  // Uses getBoundingClientRect on scroll (works everywhere) and only adds the
+  // reveal class from JS, so nothing is ever hidden if this doesn't run. Skips
+  // entirely when the visitor prefers reduced motion.
+  (function(){
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const els = [].slice.call(document.querySelectorAll('#btwViewHome .btw-section-label, #btwViewHome .btw-step, #btwViewHome .btw-demo-stage, #btwViewHome .btw-shot, #btwViewHome .btw-shot-cap, #btwViewHome .btw-feature, #btwViewHome .btw-demo-lead'));
+    if(!els.length) return;
+    els.forEach(function(el,i){ el.classList.add('btw-reveal'); el.style.transitionDelay = ((i%4)*70)+'ms'; });
+    let ticking = false;
+    function check(){
+      ticking = false;
+      const h = window.innerHeight || document.documentElement.clientHeight;
+      for(const el of els){
+        if(el.classList.contains('in')) continue;
+        const r = el.getBoundingClientRect();
+        if(r.top < h - 40 && r.bottom > 0) el.classList.add('in');
+      }
+    }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(check); } }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', onScroll);
+    check();                     // reveal whatever's already on screen
+    setTimeout(check, 400);      // and again after layout/fonts settle
+  })();
+
   loadSession()
     .catch(err=>console.error('Failed to load session:', err))
     .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
