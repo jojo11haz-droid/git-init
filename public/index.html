@@ -1042,27 +1042,37 @@
   .btw-feature-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:18px;
+    gap:10px;
   }
   @media (max-width:820px){.btw-feature-grid{grid-template-columns:1fr 1fr;}}
   @media (max-width:520px){.btw-feature-grid{grid-template-columns:1fr;}}
   .btw-feature{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:18px;
+    background:transparent;
+    border:none;
+    border-radius:16px;
+    padding:22px 20px;
   }
-  .btw-feature-icon{width:26px;height:3px;border-radius:2px;background:var(--moss);margin-bottom:14px;}
+  .btw-feature:hover{background:var(--panel);}
+  .btw-feature-icon{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--moss-light);color:var(--moss);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:16px;
+    transition:background .3s ease,color .3s ease,transform .3s ease;
+  }
+  .btw-feature-icon svg{width:21px;height:21px;display:block;}
+  .btw-feature:hover .btw-feature-icon{background:var(--moss);color:#fff;}
   .btw-feature h4{
     font-family:var(--font-body);
-    font-size:13.5px;
+    font-size:15px;
     font-weight:700;
-    margin:0 0 6px;
+    letter-spacing:-.01em;
+    margin:0 0 7px;
   }
   .btw-feature p{
-    font-size:12px;
+    font-size:13px;
     color:var(--ink-soft);
-    line-height:1.55;
+    line-height:1.6;
     margin:0;
   }
   .btw-trust{
@@ -1509,32 +1519,32 @@
         <div class="btw-section-label">Built for real practice</div>
         <div class="btw-feature-grid">
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></div>
             <h4>Voice or text</h4>
             <p>Patients check in however's easiest in the moment.</p>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline><polyline points="15 6 21 6 21 12"></polyline></svg></div>
             <h4>Mood &amp; theme trends</h4>
             <p>Real charts from real check-ins — not a guess at what happened this week.</p>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="6"></rect><circle cx="8" cy="12" r="2.6"></circle></svg></div>
             <h4>Privacy by default</h4>
             <p>AI analysis is opt-in and off by default. Patients see and control their own data.</p>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
             <h4>Privacy by design</h4>
             <p>Built with Quebec's Law 25 and provincial privacy rules in mind from day one.</p>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
             <h4>Quick to scan</h4>
             <p>Flagged and new check-ins rise to the top, so a big caseload is a glance — see who needs you in seconds, not clicks.</p>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"></div>
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"></line><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"></line><line x1="14.8" y1="9.2" x2="19.1" y2="4.9"></line><line x1="4.9" y1="19.1" x2="9.2" y2="14.8"></line></svg></div>
             <h4>Built-in safety net</h4>
             <p>Crisis resources shown to patients instantly if risk language is detected — never waiting on anyone.</p>
           </div>
