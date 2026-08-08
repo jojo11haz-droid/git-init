@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -15,7 +15,7 @@
     --amber:#B8701F;
     --amber-bg:#FBEEDD;
     --line:#E4E3DD;
-    --font-display:'Fraunces', Georgia, serif;
+    --font-display:'Newsreader', Georgia, serif;
     --font-body:'Inter', system-ui, sans-serif;
     --font-mono:'IBM Plex Mono', monospace;
   }
@@ -632,8 +632,13 @@
   .btw-view.active{display:block;}
   /* Scroll-reveal + hover motion for the landing page. Elements only get the
      reveal class from JS, so if JS is off nothing is hidden. */
-  .btw-reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,.61,.36,1),transform .6s cubic-bezier(.22,.61,.36,1);}
-  .btw-reveal.in{opacity:1;transform:none;}
+  /* Apple-style reveal: fade + rise + slight scale + a soft blur that clears,
+     on a long expo ease. */
+  .btw-reveal{opacity:0;transform:translateY(34px) scale(.985);filter:blur(6px);
+    transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .9s cubic-bezier(.16,1,.3,1);
+    will-change:opacity,transform,filter;}
+  .btw-reveal.in{opacity:1;transform:none;filter:none;}
+  .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(76,107,88,0.16);}
   .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send{transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease;}
@@ -4196,10 +4201,16 @@
   (function(){
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const els = [].slice.call(document.querySelectorAll('#btwViewHome .btw-section-label, #btwViewHome .btw-step, #btwViewHome .btw-demo-stage, #btwViewHome .btw-shot, #btwViewHome .btw-shot-cap, #btwViewHome .btw-feature, #btwViewHome .btw-demo-lead'));
-    if(!els.length) return;
-    els.forEach(function(el,i){ el.classList.add('btw-reveal'); el.style.transitionDelay = ((i%4)*70)+'ms'; });
+    // Stagger reveals within each grid so cards cascade in one after another.
+    const seen = new Map();
+    els.forEach(function(el){
+      el.classList.add('btw-reveal');
+      const p = el.parentElement; const n = seen.get(p) || 0; seen.set(p, n+1);
+      el.style.transitionDelay = Math.min(n,5)*80 + 'ms';
+    });
+    const heroVisual = document.querySelector('#btwViewHome .btw-hero-visual');
     let ticking = false;
-    function check(){
+    function frame(){
       ticking = false;
       const h = window.innerHeight || document.documentElement.clientHeight;
       for(const el of els){
@@ -4207,12 +4218,17 @@
         const r = el.getBoundingClientRect();
         if(r.top < h - 40 && r.bottom > 0) el.classList.add('in');
       }
+      // Subtle hero parallax: the visual drifts slower than the page (Apple-ish).
+      if(heroVisual){
+        const y = window.pageYOffset || document.documentElement.scrollTop || 0;
+        if(y < 1000) heroVisual.style.transform = 'translateY(' + (y * 0.08).toFixed(1) + 'px)';
+      }
     }
-    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(check); } }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', onScroll);
-    check();                     // reveal whatever's already on screen
-    setTimeout(check, 400);      // and again after layout/fonts settle
+    frame();                     // reveal whatever's already on screen
+    setTimeout(frame, 400);      // and again after layout/fonts settle
   })();
 
   loadSession()
