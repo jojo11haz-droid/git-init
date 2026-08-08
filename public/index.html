@@ -175,17 +175,18 @@
   .btw-mic[disabled]{opacity:.35;cursor:not-allowed;}
   .btw-send{
     flex:1;
-    background:var(--ink);
+    background:var(--moss);
     color:#fff;
     border:none;
-    border-radius:9px;
-    padding:10px 16px;
+    border-radius:100px;
+    padding:12px 18px;
     font-family:var(--font-body);
     font-weight:600;
-    font-size:13.5px;
+    font-size:13px;
+    letter-spacing:.02em;
     cursor:pointer;
   }
-  .btw-send:hover{background:var(--moss);}
+  .btw-send:hover{background:var(--ink);}
   .btw-send[disabled]{opacity:.5;cursor:wait;}
   .btw-wave{
     display:flex;
@@ -534,18 +535,18 @@
   .btw-modal-agree input{margin-top:2px;flex-shrink:0;}
   .btw-modal-continue{
     width:100%;
-    background:var(--ink);
+    background:var(--moss);
     color:#fff;
     border:none;
-    border-radius:9px;
-    padding:11px 16px;
+    border-radius:100px;
+    padding:13px 16px;
     font-family:var(--font-body);
     font-weight:600;
-    font-size:13.5px;
+    font-size:13px;
     cursor:pointer;
   }
   .btw-modal-continue[disabled]{opacity:.4;cursor:not-allowed;}
-  .btw-modal-continue:not([disabled]):hover{background:var(--moss);}
+  .btw-modal-continue:not([disabled]):hover{background:var(--ink);}
   .btw-root{position:relative;}
   .btw-app-hidden{filter:blur(2px);pointer-events:none;user-select:none;}
   /* ---- nav ---- */
@@ -558,13 +559,14 @@
     font-family:var(--font-body);
     font-size:12.5px;
     font-weight:600;
-    padding:7px 14px;
-    border-radius:20px;
+    padding:8px 16px;
+    border-radius:100px;
     border:1px solid var(--line);
     background:var(--panel);
     color:var(--ink-soft);
     cursor:pointer;
   }
+  .btw-nav-btn:hover{border-color:var(--ink);color:var(--ink);}
   .btw-nav-btn.active{
     background:var(--ink);
     border-color:var(--ink);
@@ -641,9 +643,8 @@
   .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(76,107,88,0.16);}
-  .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send{transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease;}
-  .btw-hero-btn:hover{transform:translateY(-2px);}
-  .btw-hero-btn:active,.btw-nav-btn:active{transform:translateY(1px);}
+  .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send,.btw-send,.btw-price-cta,.btw-modal-continue{transition:background .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease;}
+  .btw-hero-btn:active,.btw-nav-btn:active,.btw-price-cta:active{transform:translateY(1px);}
   @media (prefers-reduced-motion: reduce){
     .btw-reveal{opacity:1;transform:none;transition:none;}
     .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover,.btw-hero-btn:hover{transform:none;box-shadow:none;}
@@ -692,7 +693,7 @@
   .btw-mk-slider .knob{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--moss);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2);}
   .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:11px;padding:3px 11px;font-size:12px;color:var(--ink-soft);margin:0 5px 5px 0;}
   .btw-mk-chip.on{background:var(--moss);color:#fff;border-color:var(--moss);}
-  .btw-mk-send{background:var(--moss);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;width:100%;margin-top:12px;}
+  .btw-mk-send{background:var(--moss);color:#fff;border:none;border-radius:100px;padding:11px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;width:100%;margin-top:12px;}
   .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
   .btw-mk-row.flag{border-color:var(--amber);}
   .btw-mk-avatar{width:24px;height:24px;border-radius:50%;background:var(--moss);color:#fff;font-family:var(--font-mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -822,24 +823,27 @@
   }
   .btw-price-cta{
     width:100%;
-    background:var(--ink);
+    background:var(--moss);
     color:#fff;
-    border:none;
-    border-radius:9px;
-    padding:11px 16px;
+    border:1px solid var(--moss);
+    border-radius:100px;
+    padding:13px 18px;
     font-family:var(--font-body);
     font-weight:600;
-    font-size:13.5px;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
     cursor:pointer;
     text-align:center;
   }
-  .btw-price-card.featured .btw-price-cta{background:var(--moss);}
-  .btw-price-cta:hover{opacity:0.9;}
+  .btw-price-card.featured .btw-price-cta{background:var(--ink);border-color:var(--ink);}
+  .btw-price-cta:hover{background:var(--ink);border-color:var(--ink);}
   .btw-price-cta.secondary{
     background:var(--panel);
     color:var(--ink);
     border:1px solid var(--line);
   }
+  .btw-price-cta.secondary:hover{background:var(--ink);border-color:var(--ink);color:#fff;}
   .btw-pricing-faq{
     border-top:1px solid var(--line);
     padding-top:20px;
@@ -968,16 +972,18 @@
   .btw-hero-btn{
     font-family:var(--font-body);
     font-weight:600;
-    font-size:13.5px;
-    padding:12px 22px;
-    border-radius:9px;
+    font-size:12px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    padding:14px 30px;
+    border-radius:100px;
     cursor:pointer;
-    border:none;
+    border:1px solid transparent;
   }
-  .btw-hero-btn.primary{background:var(--ink);color:#fff;}
-  .btw-hero-btn.primary:hover{background:var(--moss);}
-  .btw-hero-btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line);}
-  .btw-hero-btn.secondary:hover{border-color:var(--moss);color:var(--moss);}
+  .btw-hero-btn.primary{background:var(--moss);color:#fff;}
+  .btw-hero-btn.primary:hover{background:var(--ink);}
+  .btw-hero-btn.secondary{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btw-hero-btn.secondary:hover{border-color:var(--ink);background:var(--ink);color:#fff;}
   .btw-hero-meta{
     font-family:var(--font-mono);
     font-size:10.5px;
