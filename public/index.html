@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -627,6 +629,19 @@
   @media (max-width:820px){ .btw-grid.btw-role-therapist{grid-template-columns:1fr;} }
   .btw-view{display:none;}
   .btw-view.active{display:block;}
+  /* Scroll-reveal + hover motion for the landing page. Elements only get the
+     reveal class from JS, so if JS is off nothing is hidden. */
+  .btw-reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,.61,.36,1),transform .6s cubic-bezier(.22,.61,.36,1);}
+  .btw-reveal.in{opacity:1;transform:none;}
+  .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
+  .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(76,107,88,0.16);}
+  .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send{transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease;}
+  .btw-hero-btn:hover{transform:translateY(-2px);}
+  .btw-hero-btn:active,.btw-nav-btn:active{transform:translateY(1px);}
+  @media (prefers-reduced-motion: reduce){
+    .btw-reveal{opacity:1;transform:none;transition:none;}
+    .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover,.btw-hero-btn:hover{transform:none;box-shadow:none;}
+  }
   /* ---- animated "see it in action" demo ---- */
   .btw-demo{margin:8px 0 8px;text-align:center;}
   .btw-demo-lead{max-width:620px;margin:6px auto 20px;color:var(--ink-soft);font-size:15px;line-height:1.6;}
@@ -1314,7 +1329,7 @@
             <button class="btw-hero-btn primary" id="btwHeroTrial">Start 14-day free trial</button>
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
-          <div class="btw-hero-meta">14-day free trial · Canadian data residency · Not a crisis service</div>
+          <div class="btw-hero-meta">14-day free trial · Private &amp; consent-first · Not a crisis service</div>
         </div>
         <div class="btw-hero-visual" aria-hidden="true">
           <svg viewBox="0 0 320 300" width="100%" height="100%">
@@ -1468,7 +1483,7 @@
           </div>
           <div class="btw-feature">
             <div class="btw-feature-icon"></div>
-            <h4>Canadian data residency</h4>
+            <h4>Privacy by design</h4>
             <p>Built with Quebec's Law 25 and provincial privacy rules in mind from day one.</p>
           </div>
           <div class="btw-feature">
@@ -1660,7 +1675,7 @@
             <li>AI summaries &amp; theme tagging</li>
             <li>Mood trend &amp; theme charts</li>
             <li>In-app crisis resources for patients</li>
-            <li>Canadian data residency</li>
+            <li>Consent-first data controls</li>
           </ul>
           <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_monthly')">Start 14-day free trial</button>
         </div>
@@ -1741,8 +1756,8 @@
           <p>No — Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.</p>
         </div>
         <div class="btw-faq-item">
-          <h4>Is my patients' data stored in Canada?</h4>
-          <p>Yes. Check-in data and AI processing are kept within Canadian data residency, consistent with Quebec's Law 25 and other provincial privacy requirements.</p>
+          <h4>Where is my patients' data stored?</h4>
+          <p>Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. See the Privacy Policy for details.</p>
         </div>
       </div>
     </div>
@@ -2051,8 +2066,8 @@
       "Les patients envoient une courte note vocale ou un texto dès que quelque chose arrive. L'IA en fait un résumé et dégage des tendances — vous entrez à chaque séance en connaissant déjà l'allure de la semaine.",
     "Start 14-day free trial":"Commencer l'essai gratuit de 14 jours",
     "See how it works ↓":"Voir comment ça marche ↓",
-    "No credit card required · Canadian data residency · Not a crisis service":
-      "Aucune carte de crédit requise · Données hébergées au Canada · Pas un service de crise",
+    "No credit card required · Private & consent-first · Not a crisis service":
+      "Aucune carte de crédit requise · Privé et axé sur le consentement · Pas un service de crise",
     "check-in received":"suivi reçu","AI SUMMARY":"RÉSUMÉ IA",
     // how it works
     "How it works":"Comment ça marche",
@@ -2086,7 +2101,7 @@
     "Real charts from real check-ins — not a guess at what happened this week.":"De vrais graphiques à partir de vrais suivis — pas une supposition de ce qui s'est passé cette semaine.",
     "Privacy by default":"Confidentialité par défaut",
     "AI analysis is opt-in and off by default. Patients see and control their own data.":"L'analyse par IA est optionnelle et désactivée par défaut. Les patients voient et contrôlent leurs propres données.",
-    "Canadian data residency":"Données hébergées au Canada",
+    "Privacy by design":"Confidentialité dès la conception","Consent-first data controls":"Contrôles axés sur le consentement",
     "Built with Quebec's Law 25 and provincial privacy rules in mind from day one.":"Conçu dès le départ en tenant compte de la loi 25 du Québec et des règles provinciales de protection des renseignements personnels.",
     "Multi-patient dashboard":"Tableau de bord multipatient",
     "Your whole caseload, at-a-glance, with flags for anything that needs a closer look.":"Toute votre clientèle d'un coup d'œil, avec des indicateurs pour ce qui mérite un examen plus attentif.",
@@ -2146,8 +2161,8 @@
     "You add a card to start your 14-day trial, but nothing is charged for 14 days. We'll remind you before it ends, and you can cancel anytime before then to avoid being charged.":"Vous ajoutez une carte pour commencer votre essai de 14 jours, mais rien n'est facturé pendant 14 jours. Nous vous le rappellerons avant la fin, et vous pouvez annuler en tout temps d'ici là pour éviter d'être facturé.",
     "Is this a replacement for my EHR?":"Est-ce un remplacement de mon DME?",
     "No — Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"Non — Between se concentre précisément sur les suivis entre les séances. Il est conçu pour fonctionner avec le logiciel de gestion ou de notes que vous utilisez déjà.",
-    "Is my patients' data stored in Canada?":"Les données de mes patients sont-elles hébergées au Canada?",
-    "Yes. Check-in data and AI processing are kept within Canadian data residency, consistent with Quebec's Law 25 and other provincial privacy requirements.":"Oui. Les données de suivi et le traitement par IA sont conservés au Canada, conformément à la loi 25 du Québec et aux autres exigences provinciales de confidentialité.",
+    "Where is my patients' data stored?":"Où sont stockées les données de mes patients ?",
+    "Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. See the Privacy Policy for details.":"Between fonctionne sur une infrastructure infonuagique tierce (actuellement Render) et peut stocker des données aux États-Unis. Lorsque des renseignements sont transférés hors du Québec, nous les traitons en tenant compte de la loi 25 du Québec. Consultez la politique de confidentialité pour les détails.",
     // buttons / common
     "Continue":"Continuer","Back":"Retour","Cancel":"Annuler","Close":"Fermer","Email":"Courriel","Password":"Mot de passe",
     // consent modal
@@ -2349,8 +2364,8 @@
       "Tout est prêt — votre essai gratuit de 14 jours a commencé. Aucun frais avant la fin.",
     "Thanks! Your subscription is still processing — check back shortly.":
       "Merci! Votre abonnement est en cours de traitement — revenez sous peu.",
-    "14-day free trial · Canadian data residency · Not a crisis service":
-      "Essai gratuit de 14 jours · Données hébergées au Canada · Pas un service de crise"
+    "14-day free trial · Private & consent-first · Not a crisis service":
+      "Essai gratuit de 14 jours · Privé et axé sur le consentement · Pas un service de crise"
   };
 
   let curLang = 'en';
@@ -4166,6 +4181,33 @@
 
   renderAuthState();
   renderAll();
+
+  // Landing-page scroll reveal: sections fade and rise as they enter view.
+  // Uses getBoundingClientRect on scroll (works everywhere) and only adds the
+  // reveal class from JS, so nothing is ever hidden if this doesn't run. Skips
+  // entirely when the visitor prefers reduced motion.
+  (function(){
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const els = [].slice.call(document.querySelectorAll('#btwViewHome .btw-section-label, #btwViewHome .btw-step, #btwViewHome .btw-demo-stage, #btwViewHome .btw-shot, #btwViewHome .btw-shot-cap, #btwViewHome .btw-feature, #btwViewHome .btw-demo-lead'));
+    if(!els.length) return;
+    els.forEach(function(el,i){ el.classList.add('btw-reveal'); el.style.transitionDelay = ((i%4)*70)+'ms'; });
+    let ticking = false;
+    function check(){
+      ticking = false;
+      const h = window.innerHeight || document.documentElement.clientHeight;
+      for(const el of els){
+        if(el.classList.contains('in')) continue;
+        const r = el.getBoundingClientRect();
+        if(r.top < h - 40 && r.bottom > 0) el.classList.add('in');
+      }
+    }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(check); } }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', onScroll);
+    check();                     // reveal whatever's already on screen
+    setTimeout(check, 400);      // and again after layout/fonts settle
+  })();
+
   loadSession()
     .catch(err=>console.error('Failed to load session:', err))
     .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
