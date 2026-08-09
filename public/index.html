@@ -347,6 +347,40 @@
   .btw-insight-value .up{color:var(--moss);}
   .btw-insight-value .down{color:var(--clay);}
   .btw-insight-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.4;}
+  .btw-stats-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    margin:14px 0 4px;
+    background:transparent;color:var(--moss);
+    border:1px solid var(--line);border-radius:100px;
+    padding:9px 16px;font-family:var(--font-body);font-weight:600;font-size:12.5px;
+    cursor:pointer;transition:background .2s ease,border-color .2s ease;
+  }
+  .btw-stats-btn:hover{background:var(--moss-light);border-color:var(--moss);}
+  .btw-modal.wide{max-width:660px;}
+  .btw-stats-body{margin-top:4px;}
+  .btw-stats-section{margin-top:22px;}
+  .btw-stats-section:first-child{margin-top:8px;}
+  .btw-stats-h{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:11px;}
+  .btw-stats-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .btw-stats-tile{border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--paper);}
+  .btw-stats-tile .l{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-stats-tile .v{font-size:19px;font-weight:600;color:var(--ink);margin-top:3px;font-family:var(--font-display);}
+  .btw-stats-tile .s{font-size:11px;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
+  .btw-stats-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12.5px;}
+  .btw-stats-row .k{flex:0 0 68px;color:var(--ink-soft);font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;}
+  .btw-stats-track{flex:1;height:9px;border-radius:5px;background:var(--line);overflow:hidden;min-width:40px;}
+  .btw-stats-fill{height:100%;border-radius:5px;background:var(--moss);}
+  .btw-stats-row .val{flex:0 0 auto;color:var(--ink);font-weight:600;font-size:12px;white-space:nowrap;}
+  .btw-stats-row.best .val{color:var(--moss);}
+  .btw-stats-row.worst .val{color:var(--clay);}
+  .btw-stats-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .btw-stats-table th{text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:400;padding:0 8px 7px 0;border-bottom:1px solid var(--line);}
+  .btw-stats-table td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line);color:var(--ink);}
+  .btw-stats-table td.num{font-variant-numeric:tabular-nums;color:var(--ink-soft);}
+  .btw-stats-table .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+  .btw-stats-table .up{color:var(--moss);}
+  .btw-stats-table .down{color:var(--clay);}
+  .btw-stats-empty{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
   .btw-alert-banner{
     display:none;
     background:var(--amber-bg);
@@ -1759,6 +1793,11 @@
 
       <div class="btw-insights" id="btwInsights" style="display:none;"></div>
 
+      <button type="button" class="btw-stats-btn" id="btwStatsBtn" style="display:none;">
+        <span>View advanced stats</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      </button>
+
       <div class="btw-charts">
         <div class="btw-chart-box">
           <div class="btw-chart-title">Mood trend</div>
@@ -1777,6 +1816,15 @@
       </div>
     </div>
   </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwStatsOverlay" style="display:none;">
+    <div class="btw-modal wide">
+      <button class="btw-modal-close" id="btwStatsClose" aria-label="Close">&times;</button>
+      <div class="btw-modal-eyebrow">Advanced stats</div>
+      <h2 id="btwStatsTitle">The full picture</h2>
+      <div class="btw-stats-body" id="btwStatsBody"></div>
+    </div>
   </div>
 
   <div class="btw-view" id="btwViewPricing">
@@ -2392,6 +2440,14 @@
     "Tied to lower mood":"Associé à une humeur plus basse","Tied to better mood":"Associé à une meilleure humeur","vs":"vs","overall":"en général",
     "Mood stability":"Stabilité de l'humeur","steady":"stable","some ups and downs":"quelques hauts et bas","highly variable":"très variable","pts":"pts",
     "Safety flags":"Signaux de sécurité","in the last 14 days":"au cours des 14 derniers jours",
+    "Advanced stats":"Statistiques avancées","View advanced stats":"Voir les statistiques avancées","The full picture":"Le portrait complet",
+    "No check-ins yet, nothing to break down.":"Aucun suivi pour l'instant, rien à analyser.",
+    "Overview":"Aperçu","Total check-ins":"Total des suivis","with a mood":"avec une humeur","Tracking since":"Suivi depuis",
+    "month":"mois","months":"mois","Active weeks":"Semaines actives","Longest streak":"Plus longue série","weeks":"semaines","current":"actuelle",
+    "Mood by month":"Humeur par mois","Mood distribution":"Répartition de l'humeur","Mood by day of week":"Humeur par jour de la semaine",
+    "Themes in depth":"Thèmes en détail","Theme":"Thème","Count":"Nombre","Share":"Part","Avg mood":"Humeur moy.","vs overall":"vs global",
+    "better":"meilleure","lower":"plus basse","typical":"habituelle",
+    "Rhythm & safety":"Rythme et sécurité","Typical gap":"Écart habituel","Longest gap":"Plus long écart","days":"jours","all time":"depuis le début",
     "Add patient":"Ajouter un patient",
     "Patient app: connected":"App patient : connectée","Patient app invite code:":"Code d'invitation de l'app patient :",
     "Share this code so they can set up the Between app on their phone. It stops working once used.":"Partagez ce code pour qu'il configure l'app Between sur son téléphone. Il cesse de fonctionner une fois utilisé.",
@@ -4283,7 +4339,128 @@
     }
     el.innerHTML = cards.join('');
     el.style.display = cards.length ? 'grid' : 'none';
+    // The advanced-stats button appears once there's a check-in to dig into.
+    const sb = document.getElementById('btwStatsBtn');
+    if(sb) sb.style.display = list.length ? 'inline-flex' : 'none';
   }
+
+  // ---- Advanced stats: deeper, longer-range breakdowns from the same data ----
+  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS_FR = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  const WDAYS_EN = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const WDAYS_FR = ['lun.','mar.','mer.','jeu.','ven.','sam.','dim.'];
+  function monthName(i){ return curLang==='fr' ? MONTHS_FR[i] : MONTHS_EN[i]; }
+  function wdayName(i){ return curLang==='fr' ? WDAYS_FR[i] : WDAYS_EN[i]; } // i: 0=Mon..6=Sun
+  function computeAdvancedStats(list){
+    const s = { n: list.length };
+    const rated = list.filter(c=>c.mood!=null);
+    const timed = list.filter(c=>c.time).sort((a,b)=>a.time-b.time);
+    s.ratedN = rated.length;
+    s.avg = rated.length ? rated.reduce((a,c)=>a+c.mood,0)/rated.length : null;
+    if(timed.length){ s.first = timed[0].time; s.last = timed[timed.length-1].time; s.spanDays = (s.last-s.first)/86400000; }
+    // Monthly averages, most recent 12 months that have data.
+    const mMap = {};
+    rated.forEach(c=>{ const d=new Date(c.time); const k=d.getFullYear()+'-'+d.getMonth(); (mMap[k]=mMap[k]||{sum:0,n:0,y:d.getFullYear(),m:d.getMonth()}); mMap[k].sum+=c.mood; mMap[k].n++; });
+    s.months = Object.values(mMap).sort((a,b)=>(a.y-b.y)||(a.m-b.m)).slice(-12).map(o=>({y:o.y,m:o.m,avg:o.sum/o.n,n:o.n}));
+    // Mood distribution across the five word buckets.
+    const buckets = [ {lo:1,hi:2}, {lo:3,hi:4}, {lo:5,hi:6}, {lo:7,hi:8}, {lo:9,hi:10} ];
+    s.dist = buckets.map(b=>({ lo:b.lo, hi:b.hi, count: rated.filter(c=>c.mood>=b.lo&&c.mood<=b.hi).length }));
+    // By weekday (0=Mon..6=Sun).
+    const wd = Array.from({length:7},()=>({sum:0,n:0}));
+    rated.forEach(c=>{ const js=new Date(c.time).getDay(); const idx=(js+6)%7; wd[idx].sum+=c.mood; wd[idx].n++; });
+    s.weekdays = wd.map((o,i)=>({ i, avg: o.n?o.sum/o.n:null, n:o.n }));
+    const activeWd = s.weekdays.filter(w=>w.n>0);
+    if(activeWd.length){ s.bestWd = activeWd.reduce((a,b)=>b.avg>a.avg?b:a); s.worstWd = activeWd.reduce((a,b)=>b.avg<a.avg?b:a); }
+    // Themes in depth: count, share, average mood, delta vs overall.
+    const tc = {}, tm = {};
+    list.forEach(c=>c.tags.forEach(tg=>{ tc[tg]=(tc[tg]||0)+1; if(c.mood!=null){ (tm[tg]=tm[tg]||[]).push(c.mood); } }));
+    s.themes = Object.keys(tc).map(tg=>({ tag:tg, count:tc[tg], share:tc[tg]/list.length, avg: tm[tg]&&tm[tg].length? tm[tg].reduce((a,b)=>a+b,0)/tm[tg].length : null })).sort((a,b)=>b.count-a.count);
+    // Weekly streaks and consistency (absolute week index since epoch).
+    const weeks = timed.map(c=>Math.floor(c.time/604800000));
+    const wset = new Set(weeks);
+    s.activeWeeks = wset.size;
+    if(timed.length){ s.spanWeeks = Math.floor(s.last/604800000) - Math.floor(s.first/604800000) + 1; }
+    if(wset.size){
+      const sorted = [...wset].sort((a,b)=>a-b);
+      let longest=1, cur=1;
+      for(let i=1;i<sorted.length;i++){ if(sorted[i]===sorted[i-1]+1){ cur++; longest=Math.max(longest,cur); } else cur=1; }
+      s.longestStreak = longest;
+      // Current streak counts back from the most recent active week.
+      const nowW = Math.max(...sorted); let cs=0, w=nowW;
+      while(wset.has(w)){ cs++; w--; }
+      s.currentStreak = cs;
+    }
+    // Gaps between consecutive check-ins.
+    if(timed.length>=2){
+      let maxGap=0, sum=0;
+      for(let i=1;i<timed.length;i++){ const g=(timed[i].time-timed[i-1].time)/86400000; maxGap=Math.max(maxGap,g); sum+=g; }
+      s.avgGap = sum/(timed.length-1); s.longestGap = maxGap;
+    }
+    s.risk = list.filter(c=>c.risk).length;
+    return s;
+  }
+  function statBar(frac){ return '<div class="btw-stats-track"><div class="btw-stats-fill" style="width:'+Math.round(Math.max(0,Math.min(1,frac))*100)+'%"></div></div>'; }
+  function renderAdvancedStats(){
+    const body = document.getElementById('btwStatsBody');
+    const list = state.checkIns || [];
+    if(!list.length){ body.innerHTML = '<div class="btw-stats-empty">'+esc(t('No check-ins yet, nothing to break down.'))+'</div>'; return; }
+    const s = computeAdvancedStats(list);
+    const fmtDate = (ts)=> new Date(ts).toLocaleDateString(curLang==='fr'?'fr-CA':'en-CA', {year:'numeric',month:'short',day:'numeric'});
+    const out = [];
+    // Overview tiles.
+    const spanMonths = s.spanDays!=null ? Math.max(1, Math.round(s.spanDays/30)) : null;
+    out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Overview'))+'</div><div class="btw-stats-tiles">'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Total check-ins'))+'</div><div class="v">'+s.n+'</div>'+(s.ratedN<s.n?'<div class="s">'+s.ratedN+' '+esc(t('with a mood'))+'</div>':'')+'</div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Tracking since'))+'</div><div class="v" style="font-size:15px">'+(s.first?esc(fmtDate(s.first)):'—')+'</div>'+(spanMonths?'<div class="s">'+esc((spanMonths+' '+(spanMonths===1?t('month'):t('months'))))+'</div>':'')+'</div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Active weeks'))+'</div><div class="v">'+(s.activeWeeks||0)+(s.spanWeeks?'<span style="font-size:12px;color:var(--ink-soft);font-weight:400"> / '+s.spanWeeks+'</span>':'')+'</div></div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Longest streak'))+'</div><div class="v">'+(s.longestStreak||0)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(s.longestStreak===1?t('week'):t('weeks'))+'</span></div>'+(s.currentStreak?'<div class="s">'+esc(t('current'))+': '+s.currentStreak+' '+esc(s.currentStreak===1?t('week'):t('weeks'))+'</div>':'')+'</div>'
+      + '</div></div>');
+    // Mood by month.
+    if(s.months.length){
+      const rows = s.months.map(mo=>'<div class="btw-stats-row"><span class="k">'+esc(monthName(mo.m))+(String(mo.y).slice(2))+'</span>'+statBar(mo.avg/10)+'<span class="val">'+esc(moodWord(mo.avg))+' ('+mo.avg.toFixed(1)+')</span></div>').join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood by month'))+'</div>'+rows+'</div>');
+    }
+    // Mood distribution.
+    if(s.ratedN){
+      const maxC = Math.max(...s.dist.map(d=>d.count),1);
+      const rows = s.dist.map(d=>'<div class="btw-stats-row"><span class="k">'+esc(moodWord((d.lo+d.hi)/2))+'</span>'+statBar(d.count/maxC)+'<span class="val">'+d.count+'</span></div>').join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood distribution'))+'</div>'+rows+'</div>');
+    }
+    // By day of week.
+    const activeWd = s.weekdays.filter(w=>w.n>0);
+    if(activeWd.length){
+      const rows = s.weekdays.map(w=>{ if(!w.n) return ''; const cls = (s.bestWd&&w.i===s.bestWd.i)?' best':((s.worstWd&&w.i===s.worstWd.i&&s.bestWd.i!==s.worstWd.i)?' worst':''); return '<div class="btw-stats-row'+cls+'"><span class="k">'+esc(wdayName(w.i))+'</span>'+statBar(w.avg/10)+'<span class="val">'+esc(moodWord(w.avg))+' ('+w.avg.toFixed(1)+') · '+w.n+'</span></div>'; }).join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood by day of week'))+'</div>'+rows+'</div>');
+    }
+    // Themes in depth.
+    if(s.themes.length){
+      const rows = s.themes.map(th=>{
+        const color = tagColors[th.tag]||tagColors.Other;
+        let delta = '';
+        if(th.avg!=null && s.avg!=null){ const d=th.avg-s.avg; if(d>=0.5) delta='<span class="up">↑ '+esc(t('better'))+'</span>'; else if(d<=-0.5) delta='<span class="down">↓ '+esc(t('lower'))+'</span>'; else delta='<span style="color:var(--ink-soft)">'+esc(t('typical'))+'</span>'; }
+        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(moodWord(th.avg))+' ('+th.avg.toFixed(1)+')':'—')+'</td><td>'+delta+'</td></tr>';
+      }).join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Themes in depth'))+'</div><table class="btw-stats-table"><thead><tr><th>'+esc(t('Theme'))+'</th><th>'+esc(t('Count'))+'</th><th>'+esc(t('Share'))+'</th><th>'+esc(t('Avg mood'))+'</th><th>'+esc(t('vs overall'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
+    }
+    // Rhythm & safety.
+    const rhythmBits = [];
+    if(s.avgGap!=null) rhythmBits.push('<div class="btw-stats-tile"><div class="l">'+esc(t('Typical gap'))+'</div><div class="v">'+(Math.round(s.avgGap*10)/10)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(t('days'))+'</span></div></div>');
+    if(s.longestGap!=null) rhythmBits.push('<div class="btw-stats-tile"><div class="l">'+esc(t('Longest gap'))+'</div><div class="v">'+Math.round(s.longestGap)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(t('days'))+'</span></div></div>');
+    if(!isPatient()) rhythmBits.push('<div class="btw-stats-tile"><div class="l">'+esc(t('Safety flags'))+'</div><div class="v"'+(s.risk>0?' style="color:var(--clay)"':'')+'>'+s.risk+'</div><div class="s">'+esc(t('all time'))+'</div></div>');
+    if(rhythmBits.length) out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Rhythm & safety'))+'</div><div class="btw-stats-tiles">'+rhythmBits.join('')+'</div></div>');
+    body.innerHTML = out.join('');
+  }
+  (function wireStatsModal(){
+    const overlay = document.getElementById('btwStatsOverlay');
+    const btn = document.getElementById('btwStatsBtn');
+    if(!overlay || !btn) return;
+    const open = ()=>{ renderAdvancedStats(); overlay.style.display='flex'; };
+    const close = ()=>{ overlay.style.display='none'; };
+    btn.addEventListener('click', open);
+    document.getElementById('btwStatsClose').addEventListener('click', close);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && overlay.style.display==='flex') close(); });
+  })();
 
   function renderAlertBanner(){
     const cutoff = Date.now() - 1000*60*60*48;
