@@ -698,15 +698,31 @@
   .btw-shot-bar{display:flex;align-items:center;gap:6px;padding:9px 13px;background:var(--paper);border-bottom:1px solid var(--line);}
   .btw-shot-bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block;}
   .btw-shot-tag{margin-left:9px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);}
-  .btw-shot-body{padding:16px 16px 18px;text-align:left;}
+  .btw-shot-body{padding:18px 18px 20px;text-align:left;}
   .btw-shot-cap{text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;}
   .btw-shot-label{font-family:var(--font-body);font-weight:600;font-size:10.5px;letter-spacing:0.03em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
-  .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:9px 0 4px;}
-  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--moss);}
-  .btw-mk-slider .knob{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--moss);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2);}
-  .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:11px;padding:3px 11px;font-size:12px;color:var(--ink-soft);margin:0 5px 5px 0;}
-  .btw-mk-chip.on{background:var(--moss);color:#fff;border-color:var(--moss);}
-  .btw-mk-send{background:var(--moss);color:#fff;border:none;border-radius:100px;padding:11px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;width:100%;margin-top:12px;}
+  .btw-shot-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;}
+  .btw-shot-head .btw-shot-label{margin-bottom:0;}
+  .btw-mk-time{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.03em;color:var(--ink-soft);}
+  .btw-mk-q{font-family:var(--font-display);font-weight:500;font-size:20px;letter-spacing:-.01em;color:var(--ink);margin-bottom:17px;line-height:1.15;}
+  .btw-mk-moodhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;}
+  .btw-mk-mlabel{font-size:11px;color:var(--ink-soft);}
+  .btw-mk-moodpill{font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--moss);background:var(--moss-light);border-radius:100px;padding:3px 10px;}
+  .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:11px 0 7px;}
+  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));}
+  .btw-mk-slider .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--moss);transform:translate(-50%,-50%);box-shadow:0 2px 7px rgba(31,83,70,.28);}
+  .btw-mk-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);opacity:.75;margin-bottom:16px;}
+  .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
+  .btw-mk-chips{margin-bottom:15px;}
+  .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:100px;padding:4px 13px;font-size:12px;color:var(--ink-soft);margin:0 6px 6px 0;transition:transform .2s ease;}
+  .btw-mk-chip.on{background:var(--moss);color:#fff;border-color:var(--moss);box-shadow:0 3px 10px rgba(31,83,70,.2);}
+  .btw-mk-voice{display:flex;align-items:center;gap:11px;background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:9px 13px 9px 10px;}
+  .btw-mk-mic{width:30px;height:30px;border-radius:50%;background:var(--moss);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .btw-mk-mic svg{width:15px;height:15px;}
+  .btw-mk-wave{flex:1;height:22px;min-width:0;}
+  .btw-mk-dur{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);flex-shrink:0;}
+  .btw-mk-transcript{font-family:var(--font-display);font-style:italic;font-size:14px;line-height:1.5;color:var(--ink);margin-top:12px;padding-left:13px;border-left:2px solid var(--moss-light);}
+  .btw-mk-send{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--moss);color:#fff;border:none;border-radius:100px;padding:12px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;letter-spacing:.01em;width:100%;margin-top:16px;}
   .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
   .btw-mk-row.flag{border-color:var(--amber);}
   .btw-mk-avatar{width:24px;height:24px;border-radius:50%;background:var(--moss);color:#fff;font-family:var(--font-mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1495,14 +1511,22 @@
             <div class="btw-shot">
               <div class="btw-shot-bar"><i></i><i></i><i></i><span class="btw-shot-tag">Patient view</span></div>
               <div class="btw-shot-body">
-                <div class="btw-shot-label">Your check-in</div>
-                <div style="font-size:15px;font-weight:600;margin-bottom:11px;">How are things right now?</div>
-                <div style="font-size:11px;color:var(--ink-soft);">Mood right now</div>
+                <div class="btw-shot-head">
+                  <div class="btw-shot-label">Your check-in</div>
+                  <span class="btw-mk-time">Just now</span>
+                </div>
+                <div class="btw-mk-q">How are things right now?</div>
+                <div class="btw-mk-moodhead"><span class="btw-mk-mlabel">Mood right now</span><span class="btw-mk-moodpill">Low (4/10)</span></div>
                 <div class="btw-mk-slider"><div class="fill" style="width:38%;"></div><div class="knob" style="left:38%;"></div></div>
-                <div style="font-size:11px;color:var(--ink-soft);margin-bottom:11px;">Low (4/10)</div>
-                <div style="font-size:11px;color:var(--ink-soft);margin-bottom:7px;">What's going on?</div>
-                <div><span class="btw-mk-chip on">Work</span><span class="btw-mk-chip on">Sleep</span><span class="btw-mk-chip">Family</span><span class="btw-mk-chip">Win</span></div>
-                <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:11px;line-height:1.5;">Rough week, work stress kept me up again.</div>
+                <div class="btw-mk-scale"><span>Low</span><span>Great</span></div>
+                <div class="btw-mk-sub">What's going on?</div>
+                <div class="btw-mk-chips"><span class="btw-mk-chip on">Work</span><span class="btw-mk-chip on">Sleep</span><span class="btw-mk-chip">Family</span><span class="btw-mk-chip">Win</span></div>
+                <div class="btw-mk-voice">
+                  <span class="btw-mk-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
+                  <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1F5346" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
+                  <span class="btw-mk-dur">0:14</span>
+                </div>
+                <div class="btw-mk-transcript">Rough week, work stress kept me up again.</div>
                 <button class="btw-mk-send" type="button" tabindex="-1">Send check-in</button>
               </div>
             </div>
@@ -2314,6 +2338,7 @@
     "See both sides":"Les deux côtés",
     "The same tool, two views. Patients check in in seconds; you see the whole picture before a session.":"Le même outil, deux vues. Les patients font un suivi en quelques secondes ; vous voyez le portrait complet avant une séance.",
     "How are things right now?":"Comment ça va en ce moment ?","Mood right now":"Humeur en ce moment","What's going on?":"Qu'est-ce qui se passe ?",
+    "Just now":"À l'instant",
     "Rough week, work stress kept me up again.":"Semaine difficile, le stress au travail m'a encore empêché de dormir.",
     "quiet":"calme","2 new":"2 nouv.","1 new":"1 nouv.","↑ improving":"↑ en hausse",
     "What a patient sees: a check-in in under a minute, by text or voice.":"Ce que voit un patient : un suivi en moins d'une minute, par texte ou par mémo vocal.",
@@ -2622,6 +2647,21 @@
         line.setAttribute('y2', y2.toFixed(1));
       });
     }, 90);
+  })();
+
+  // --- patient-mockup voice waveform (mirrors the hero, smaller) ---
+  (function animateMkWave(){
+    const lines = document.querySelectorAll('#btwMkWave line');
+    if(!lines.length) return;
+    let t = 0;
+    setInterval(()=>{
+      t += 0.3;
+      lines.forEach((line, i)=>{
+        const h = 4 + Math.abs(Math.sin(t + i*0.7)) * 15;
+        line.setAttribute('y1', (11 - h/2).toFixed(1));
+        line.setAttribute('y2', (11 + h/2).toFixed(1));
+      });
+    }, 110);
   })();
 
   // --- animated "see it in action" demo (auto-cycles the 3 steps) ---
