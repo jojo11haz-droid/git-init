@@ -146,6 +146,24 @@
     border-color:var(--moss);
     color:#fff;
   }
+  .btw-tag-add{
+    border-style:dashed;
+    color:var(--moss);
+    background:transparent;
+  }
+  .btw-tag-add:hover{ border-color:var(--moss); }
+  .btw-tag-input{
+    font-family:var(--font-body);
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid var(--moss);
+    background:var(--panel);
+    color:var(--ink);
+    outline:none;
+    width:170px;
+    max-width:100%;
+  }
   .btw-textarea{
     width:100%;
     border:1px solid var(--line);
@@ -1684,6 +1702,12 @@
         <div class="btw-tag" data-tag="Family">Family</div>
         <div class="btw-tag" data-tag="Win">Win</div>
         <div class="btw-tag" data-tag="Social">Social</div>
+        <div class="btw-tag" data-tag="Health">Health</div>
+        <div class="btw-tag" data-tag="Money">Money</div>
+        <div class="btw-tag" data-tag="Loneliness">Loneliness</div>
+        <div class="btw-tag" data-tag="Anger">Anger</div>
+        <div class="btw-tag btw-tag-add" id="btwTagAdd">+ Something else</div>
+        <input class="btw-tag-input" id="btwTagInput" type="text" maxlength="24" autocomplete="off" placeholder="Type it and press enter" style="display:none;">
       </div>
 
       <div class="btw-field-label">Tell it like it happened</div>
@@ -2233,6 +2257,7 @@
     "Mood right now":"Humeur en ce moment","Low":"Bas","High":"Élevé","Low (4/10)":"Bas (4/10)",
     "What's going on? (tap any that fit)":"Qu'est-ce qui se passe? (touchez ce qui correspond)",
     "Sleep":"Sommeil","Work":"Travail","Conflict":"Conflit","Craving":"Envie","Panic":"Panique","Family":"Famille","Win":"Réussite","Social":"Social",
+    "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
@@ -2492,6 +2517,7 @@
     btwLoginPassword:'Votre mot de passe',
     btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
+    btwTagInput:'Écrivez-le et appuyez sur entrée',
     btwResetNewPw:'Au moins 10 caractères', btwSuPassword:'Au moins 10 caractères',
     btwSuPractice:"Une pratique solo, c'est parfait", btwSuLicence:'ex. numéro OPQ',
     btwPsName:'Un prénom suffit', btwPsEmail:'vous@courriel.com', btwPsPassword:'Au moins 10 caractères',
@@ -3814,7 +3840,8 @@
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#B0523B', Craving:'#B8701F',
-    Panic:'#9C4A4A', Family:'#8C7AA8', Win:'#1F5346', Social:'#5B8A72', Other:'#8A8A8A'
+    Panic:'#9C4A4A', Family:'#8C7AA8', Win:'#1F5346', Social:'#5B8A72',
+    Health:'#4C8C7A', Money:'#8A7B3B', Loneliness:'#6B7B9C', Anger:'#A23B3B', Other:'#8A8A8A'
   };
 
   const moodEl = document.getElementById('btwMood');
@@ -3845,13 +3872,49 @@
   moodEl.addEventListener('input', ()=>{ if(moodSkipped) moodSkipped = false; moodValEl.textContent = moodEl.value; });
   document.getElementById('btwMoodSkip').addEventListener('click', ()=> setMoodSkipped(true));
 
-  document.querySelectorAll('.btw-tag').forEach(el=>{
+  document.querySelectorAll('.btw-tag:not(.btw-tag-add)').forEach(el=>{
     el.addEventListener('click', ()=>{
       const t = el.dataset.tag;
       if(state.selectedTags.has(t)){ state.selectedTags.delete(t); el.classList.remove('active'); }
       else { state.selectedTags.add(t); el.classList.add('active'); }
     });
   });
+
+  // Free-text "Something else" tag: patients can name a theme the presets
+  // miss. Custom chips are removable (tap to delete) and cleared on send.
+  const tagAddBtn = document.getElementById('btwTagAdd');
+  const tagInput = document.getElementById('btwTagInput');
+  const presetTags = [...document.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
+  function showTagInput(show){
+    tagInput.style.display = show ? '' : 'none';
+    tagAddBtn.style.display = show ? 'none' : '';
+    if(show){ tagInput.value=''; tagInput.focus(); }
+  }
+  function addCustomTag(raw){
+    const label = raw.trim().replace(/\s+/g,' ').slice(0,24);
+    if(!label) return;
+    const lower = label.toLowerCase();
+    // Don't duplicate a preset or an already-added custom tag.
+    if(presetTags.includes(lower)){
+      const preset = [...document.querySelectorAll('.btw-tag[data-tag]')].find(el=>el.dataset.tag.toLowerCase()===lower);
+      if(preset && !state.selectedTags.has(preset.dataset.tag)){ state.selectedTags.add(preset.dataset.tag); preset.classList.add('active'); }
+      return;
+    }
+    for(const v of state.selectedTags){ if(v.toLowerCase()===lower) return; }
+    const chip = document.createElement('div');
+    chip.className = 'btw-tag btw-tag-custom active';
+    chip.textContent = label;
+    chip.title = t('Tap to remove');
+    chip.addEventListener('click', ()=>{ state.selectedTags.delete(label); chip.remove(); });
+    tagAddBtn.parentNode.insertBefore(chip, tagAddBtn);
+    state.selectedTags.add(label);
+  }
+  tagAddBtn.addEventListener('click', ()=> showTagInput(true));
+  tagInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); if(tagInput.value.trim()){ addCustomTag(tagInput.value); tagInput.value=''; showTagInput(false); } }
+    else if(e.key === 'Escape'){ showTagInput(false); }
+  });
+  tagInput.addEventListener('blur', ()=>{ if(!tagInput.value.trim()) showTagInput(false); });
 
   // --- voice input via Web Speech API (best-effort, Chrome-only) ---
   const micBtn = document.getElementById('btwMic');
@@ -4310,6 +4373,8 @@
       textEl.value = '';
       state.selectedTags.clear();
       document.querySelectorAll('.btw-tag.active').forEach(el=>el.classList.remove('active'));
+      document.querySelectorAll('.btw-tag-custom').forEach(el=>el.remove());
+      showTagInput(false);
       moodEl.value = 5; setMoodSkipped(false);
 
       if(isPatient()) await loadPatientCheckIns();
