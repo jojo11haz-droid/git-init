@@ -1436,10 +1436,10 @@
             <line x1="160" y1="144" x2="160" y2="172" stroke="#E4E3DD" stroke-width="2" stroke-dasharray="4 4"/>
             <path d="M150 172 L160 182 L170 172" stroke="#E4E3DD" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             <rect x="18" y="188" width="284" height="92" rx="16" fill="#DDE8E2" stroke="#1F5346"/>
-            <text x="42" y="216" font-family="IBM Plex Mono" font-size="9" fill="#1F5346" letter-spacing="0.06em">AI SUMMARY</text>
-            <rect x="42" y="228" width="240" height="7" rx="3.5" fill="#1F5346" opacity="0.35"/>
-            <rect x="42" y="242" width="200" height="7" rx="3.5" fill="#1F5346" opacity="0.35"/>
-            <rect x="42" y="256" width="160" height="7" rx="3.5" fill="#1F5346" opacity="0.35"/>
+            <text x="42" y="214" font-family="IBM Plex Mono" font-size="9" fill="#1F5346" letter-spacing="0.06em">AI SUMMARY</text>
+            <text x="42" y="234" font-family="Inter, sans-serif" font-size="10.5" fill="#1A1E1C">Rough week. Work stress kept her</text>
+            <text x="42" y="250" font-family="Inter, sans-serif" font-size="10.5" fill="#1A1E1C">up several nights. One good moment:</text>
+            <text x="42" y="266" font-family="Inter, sans-serif" font-size="10.5" fill="#1A1E1C">she saw an old friend on the weekend.</text>
           </svg>
         </div>
       </section>
@@ -2171,6 +2171,9 @@
     "No credit card required · Private & consent-first · Not a crisis service":
       "Aucune carte de crédit requise · Privé et axé sur le consentement · Pas un service de crise",
     "check-in received":"suivi reçu","AI SUMMARY":"RÉSUMÉ IA",
+    "Rough week. Work stress kept her":"Semaine difficile. Le stress au",
+    "up several nights. One good moment:":"travail l'a tenue éveillée. Un bon",
+    "she saw an old friend on the weekend.":"moment : elle a revu une amie.",
     // how it works
     "How it works":"Comment ça marche",
     "Patient sends a check-in":"Le patient envoie un suivi",
@@ -4030,7 +4033,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('since last session'))}` +
-      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${avgMood}/10</strong>` : '') +
+      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${esc(moodWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
@@ -4158,7 +4161,7 @@
     if(ins.avg != null){
       let value, sub;
       if(ins.delta == null){
-        value = ins.avg.toFixed(1) + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>';
+        value = esc(moodWord(ins.avg)) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.avg.toFixed(1) + '/10)</span>';
         sub = t('avg so far, more check-ins reveal the trend');
       } else if(ins.delta > 0.5){
         value = '<span class="up">↑ ' + esc(t('improving')) + '</span>';
@@ -4168,12 +4171,14 @@
         sub = ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
       } else {
         value = esc(t('holding steady'));
-        sub = t('avg mood') + ' ' + ins.avg.toFixed(1) + '/10';
+        sub = t('avg mood') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + '/10)';
       }
       cards.push(card(t('Mood direction'), value, sub));
     }
     if(ins.low != null){
-      cards.push(card(t('Mood range'), ins.low + '–' + ins.high + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>', t('most recent') + ': ' + ins.latest + '/10'));
+      const wLow = moodWord(ins.low), wHigh = moodWord(ins.high);
+      const rangeWord = wLow === wHigh ? wLow : wLow + '–' + wHigh;
+      cards.push(card(t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + '–' + ins.high + '/10)</span>', t('most recent') + ': ' + moodWord(ins.latest) + ' (' + ins.latest + '/10)'));
     }
     // Only talk about a rate once there's enough of a time window to mean
     // something, otherwise a couple of check-ins made minutes apart would
@@ -4197,12 +4202,12 @@
       const byMood = [...ins.themeMood].sort((a,b)=>a.avg-b.avg);
       const lowest = byMood[0];
       const highest = byMood[byMood.length-1];
-      const moodSpan = (v)=> ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">' + v.toFixed(1) + '/10</span>';
+      const moodSpan = (v)=> ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">' + esc(moodWord(v)) + ' (' + v.toFixed(1) + '/10)</span>';
       if(lowest && (ins.avg - lowest.avg) >= 0.8){
-        cards.push(card(t('Tied to lower mood'), '<span class="down">' + esc(themeName(lowest.tag)) + '</span>' + moodSpan(lowest.avg), t('vs') + ' ' + ins.avg.toFixed(1) + ' ' + t('overall')));
+        cards.push(card(t('Tied to lower mood'), '<span class="down">' + esc(themeName(lowest.tag)) + '</span>' + moodSpan(lowest.avg), t('vs') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
       }
       if(highest && highest.tag !== lowest.tag && (highest.avg - ins.avg) >= 0.8){
-        cards.push(card(t('Tied to better mood'), '<span class="up">' + esc(themeName(highest.tag)) + '</span>' + moodSpan(highest.avg), t('vs') + ' ' + ins.avg.toFixed(1) + ' ' + t('overall')));
+        cards.push(card(t('Tied to better mood'), '<span class="up">' + esc(themeName(highest.tag)) + '</span>' + moodSpan(highest.avg), t('vs') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
       }
     }
     // How steady the mood has been.
@@ -4260,7 +4265,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('so far'))}` +
-      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${avgMood}/10</strong>` : '') +
+      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${esc(moodWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
