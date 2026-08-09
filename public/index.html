@@ -268,6 +268,17 @@
   }
   .btw-patient-name{font-size:11.5px;font-weight:600;color:var(--ink);}
   .btw-patient-meta{font-size:10px;color:var(--ink-soft);font-family:var(--font-mono);margin-top:2px;}
+  /* Critical-situation marker next to a patient's name. */
+  .btw-risk-ico{color:var(--clay);vertical-align:-2px;flex:none;}
+  .btw-risk-tag{
+    display:inline-flex;align-items:center;gap:4px;
+    background:var(--clay);color:#fff;
+    border-radius:6px;padding:3px 9px;
+    font-family:var(--font-body);font-size:12px;font-weight:700;
+    letter-spacing:.02em;vertical-align:middle;
+  }
+  .btw-risk-tag .btw-risk-ico{color:#fff;}
+  .btw-patient-meta.risk{color:var(--clay);font-weight:700;}
   .btw-patient-flag{
     position:absolute;top:10px;right:28px;
     width:8px;height:8px;
@@ -2286,6 +2297,8 @@
     "Signed in as":"Connecté en tant que",
     "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries: —":"Résumés IA : —",
     "No check-ins on file.":"Aucun suivi au dossier.","safety flag":"signal de sécurité","mood":"humeur",
+    "Very low":"Très bas","Low":"Bas","Okay":"Correct","Good":"Bon","Great":"Excellent",
+    "Flagged for review":"Signalé à revoir","At risk":"À risque",
     "Not sure? Let AI estimate it":"Pas certain ? Laissez l'IA l'estimer",
     "AI will estimate your mood from your note.":"L'IA estimera votre humeur à partir de votre note.",
     "No mood will be recorded.":"Aucune humeur ne sera enregistrée.","set it myself":"le définir moi-même","AI est.":"est. IA",
@@ -3849,11 +3862,23 @@
     if(days < 7) return curLang==='fr' ? ('il y a '+days+' j') : (days+'d ago');
     return curLang==='fr' ? ('il y a '+Math.floor(days/7)+' sem') : (Math.floor(days/7)+'w ago');
   }
+  // A plain-language label for a 1–10 mood, so the caseload reads in words.
+  function moodWord(n){
+    if(n == null) return '';
+    if(n <= 2) return t('Very low');
+    if(n <= 4) return t('Low');
+    if(n <= 6) return t('Okay');
+    if(n <= 8) return t('Good');
+    return t('Great');
+  }
+  // Warning-triangle icon marking a patient in a critical situation.
+  const RISK_ICO = '<svg class="btw-risk-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
   function patientCardMeta(p){
+    if(p.has_recent_risk) return '<span class="btw-patient-meta-risk" style="color:var(--clay);font-weight:700;">' + esc(t('Flagged for review')) + '</span>';
     if(!p.last_check_in_at) return esc(t('No check-ins yet'));
     const bits = [ esc(agoLabel(p.last_check_in_at)) ];
     if((p.new_check_in_count||0) > 0) bits.push('<strong style="color:var(--moss);">' + esc(p.new_check_in_count + ' ' + t('new')) + '</strong>');
-    if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + p.last_mood + '/10'));
+    if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + moodWord(p.last_mood)));
     return bits.join(' · ');
   }
   function renderCaseloadSummary(){
@@ -3888,9 +3913,8 @@
       const active = p.id === state.selectedPatientId;
       return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
-        ${p.has_recent_risk?'<span class="btw-patient-flag"></span>':''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
-        <div class="btw-patient-name">${esc(p.display_name)}</div>
+        <div class="btw-patient-name">${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
         <div class="btw-patient-meta">${patientCardMeta(p)}</div>
       </div>`;
     }).join('');
@@ -3931,7 +3955,17 @@
     // composer), so label it by the patient rather than "Patient view".
     document.getElementById('btwPatientPaneEyebrow').textContent = t('Selected patient');
     const heading = document.getElementById('btwComposeHeading');
-    if(heading) heading.textContent = p ? p.display_name : t('No patient selected — pick one from your caseload');
+    if(heading){
+      if(p){
+        // Show the patient's name, with a clear "at risk" tag when a recent
+        // check-in was flagged for a possible safety concern.
+        heading.innerHTML = esc(p.display_name) + (p.has_recent_risk
+          ? ' <span class="btw-risk-tag">' + RISK_ICO + ' ' + esc(t('At risk')) + '</span>'
+          : '');
+      } else {
+        heading.textContent = t('No patient selected — pick one from your caseload');
+      }
+    }
     document.getElementById('btwSend').disabled = !p;
     syncConsentUi();
   }
@@ -3973,7 +4007,7 @@
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
-          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
+          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${c.mood!=null?esc(moodWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
