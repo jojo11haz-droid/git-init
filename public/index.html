@@ -1074,6 +1074,18 @@
     font-size:10.5px;
     color:var(--ink-soft);
   }
+  .btw-hero-solo-link{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:16px;padding:0;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--font-body);font-size:13.5px;font-weight:600;
+    color:var(--moss);
+    border-bottom:1px solid transparent;
+    transition:border-color .2s ease;
+  }
+  .btw-hero-solo-link:hover{border-bottom-color:var(--moss);}
+  .btw-hero-solo-link span{transition:transform .2s ease;}
+  .btw-hero-solo-link:hover span{transform:translateX(3px);}
   .btw-hero-visual{
     background:transparent;
     border:none;
@@ -1480,6 +1492,7 @@
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
           <div class="btw-hero-meta">14-day free trial · Private &amp; consent-first · Not a crisis service</div>
+          <button type="button" class="btw-hero-solo-link" onclick="document.querySelector('.btw-solo-section').scrollIntoView({behavior:'smooth',block:'start'})">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-visual" aria-hidden="true">
           <svg viewBox="0 0 320 300" width="100%" height="100%">
@@ -2312,6 +2325,7 @@
     "You start the session already knowing their week":"Vous commencez la séance en connaissant déjà leur semaine",
     "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":"Lors d'une semaine chargée, Between prend la place des courriels et des appels qui s'accumulent entre les séances. Vous passez moins de temps sur les messages et plus sur le travail qui compte.",
     "For individuals, too":"Pour les particuliers aussi",
+    "Not a therapist? You can use Between on your own":"Pas thérapeute ? Vous pouvez utiliser Between par vous-même",
     "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un thérapeute pour utiliser Between.",
     "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":"N'importe qui peut l'utiliser comme journal privé. Faites un suivi quand quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'un jour difficile il vous montre même un mot que vous vous êtes laissé lors d'une meilleure journée. Vos données restent privées avec ou sans thérapeute.",
     "Start my own check-ins":"Commencer mes propres suivis",
