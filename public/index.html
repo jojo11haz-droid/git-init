@@ -635,7 +635,7 @@
   .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwAlertFeed{display:none !important;}
-  /* Therapist dashboard: hide the patient check-in composer — a therapist
+  /* Therapist dashboard: hide the patient check-in composer, a therapist
      reviews, they don't type check-ins. The left pane becomes a compact
      per-patient control card; the caseload pane gets more room. */
   .btw-role-therapist #btwComposeArea{display:none !important;}
@@ -1209,14 +1209,14 @@
       <div class="btw-modal-eyebrow">Patient consent</div>
       <h2>Enable AI summaries for <span id="btwConsentPatientName"></span>?</h2>
       <ul>
-        <li>Your check-ins are shared with your therapist as short summaries — not always the raw recording.</li>
+        <li>Your check-ins are shared with your therapist as short summaries, not always the raw recording.</li>
         <li>If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). This counts as "profiling" of your health information.</li>
-        <li>You can turn this off and still send check-ins — they'll go to your therapist as you typed or recorded them, without AI analysis.</li>
+        <li>You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.</li>
         <li>You can see everything the app has inferred about your patterns at any time, and ask for it to be deleted.</li>
       </ul>
 
       <div class="btw-modal-crisis">
-        Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Canada Suicide Crisis Helpline) or <strong>911</strong> — don't wait on this app.
+        Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Canada Suicide Crisis Helpline) or <strong>911</strong>, don't wait on this app.
       </div>
 
       <label class="btw-modal-agree">
@@ -1611,12 +1611,12 @@
       <button class="btw-hero-btn primary" id="btwPaywallSubscribe">Subscribe now</button>
     </div>
     <div id="btwPaywallCrisis" style="margin-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
-      This isn't a crisis service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Suicide &amp; Crisis Lifeline) or your local emergency number — this is always available, subscription or not.
+      This isn't a crisis service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Suicide &amp; Crisis Lifeline) or your local emergency number. This is always available, subscription or not.
     </div>
   </div>
   <div class="btw-signedout-box" id="btwVerifyPending" style="display:none;">
     <h3>Your account is pending verification</h3>
-    <p>We're confirming your professional licence against your order's public registry. As soon as it's approved — usually within a day or two — your dashboard opens and your 14-day free trial begins. We'll email <strong id="btwVerifyEmail"></strong> when you're in. Nothing is charged in the meantime.</p>
+    <p>We're confirming your professional licence against your order's public registry. As soon as it's approved, usually within a day or two, your dashboard opens and your 14-day free trial begins. We'll email <strong id="btwVerifyEmail"></strong> when you're in. Nothing is charged in the meantime.</p>
     <div style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
       If you need this sooner, reply to your confirmation email or reach us from the contact form and we'll prioritize your review.
     </div>
@@ -1674,12 +1674,12 @@
         <div class="btw-processing-label">Summarizing for your therapist…</div>
       </div>
       <div id="btwCrisis" class="btw-crisis" style="display:none;">
-        This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.
+        This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.
       </div>
 
       <div style="margin:14px 0 4px;">
         <button type="button" id="btwOpenFuture" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--moss);text-decoration:underline;cursor:pointer;">Leave a note for a harder day
-        <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you — your therapist never sees these.</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.</div>
       </div>
 
       <div class="btw-disclaimer">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
@@ -1704,7 +1704,7 @@
 
       <div class="btw-patient-list" id="btwPatientList"></div>
 
-      <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern — reviewed above patient's usual pattern.</div>
+      <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
 
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
@@ -1764,7 +1764,7 @@
           <div class="btw-price-tier">Solo Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
           <div class="btw-price-amount"><span class="num">$79.99</span><span class="unit">CAD / clinician / month</span></div>
-          <div class="btw-price-note">Billed annually ($959.88/year) — save ~20%</div>
+          <div class="btw-price-note">Billed annually ($959.88/year), save ~20%</div>
           <ul class="btw-price-features">
             <li>Everything in Solo</li>
             <li>Priority email support</li>
@@ -1789,7 +1789,7 @@
         </div>
       </div>
 
-      <div class="btw-pricing-segment">For patients — use Between on your own</div>
+      <div class="btw-pricing-segment">For patients, use Between on your own</div>
       <div class="btw-pricing-cards">
         <div class="btw-price-card">
           <div class="btw-price-tier">Personal</div>
@@ -1799,7 +1799,7 @@
           <ul class="btw-price-features">
             <li>Unlimited voice &amp; text check-ins</li>
             <li>Your own mood &amp; theme trends</li>
-            <li>Private by default — AI is opt-in</li>
+            <li>Private by default, AI is opt-in</li>
             <li>Crisis resources always one tap away</li>
             <li>Delete your data anytime</li>
           </ul>
@@ -1811,7 +1811,7 @@
           <div class="btw-price-tier">Personal Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
           <div class="btw-price-amount"><span class="num">$9.99</span><span class="unit">CAD / month</span></div>
-          <div class="btw-price-note">Billed annually ($119.88/year) — save ~33%</div>
+          <div class="btw-price-note">Billed annually ($119.88/year), save ~33%</div>
           <ul class="btw-price-features">
             <li>Everything in Personal</li>
             <li>Locked-in rate for 12 months</li>
@@ -1832,7 +1832,7 @@
         </div>
         <div class="btw-faq-item">
           <h4>Is this a replacement for my EHR?</h4>
-          <p>No — Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.</p>
+          <p>No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.</p>
         </div>
         <div class="btw-faq-item">
           <h4>Where is my patients' data stored?</h4>
@@ -1887,7 +1887,7 @@
             <label>Professional order / college</label>
             <select id="btwSuOrder">
               <option value="OPQ">Ordre des psychologues du Québec (OPQ)</option>
-              <option value="OTSTCFQ">OTSTCFQ — social work, couple &amp; family therapy</option>
+              <option value="OTSTCFQ">OTSTCFQ, social work, couple &amp; family therapy</option>
               <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
               <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
               <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
@@ -1898,7 +1898,7 @@
             <label>Professional licence / order number</label>
             <input type="text" id="btwSuLicence" placeholder="e.g. OPQ number">
           </div>
-          <div class="btw-form-note">We verify this against your order's public registry before your account is activated — Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
+          <div class="btw-form-note">We verify this against your order's public registry before your account is activated, Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
           <div class="btw-form-error" id="btwStep2Error"></div>
           <div class="btw-form-row">
             <button class="btw-modal-continue secondary" id="btwStep2Back">Back</button>
@@ -1924,7 +1924,7 @@
         <div class="btw-signup-step" id="btwStepDone" style="display:none;">
           <div class="btw-modal-eyebrow">Account created</div>
           <h2>We're verifying your licence</h2>
-          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Thanks — your account (<strong id="btwDoneEmail"></strong>) is created and pending verification. We check your licence against your order's public registry, usually within a day or two, and email you when it's approved. You'll start your 14-day free trial then — nothing is charged in the meantime.</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Thanks, your account (<strong id="btwDoneEmail"></strong>) is created and pending verification. We check your licence against your order's public registry, usually within a day or two, and email you when it's approved. You'll start your 14-day free trial then, nothing is charged in the meantime.</div>
           <button class="btw-modal-continue" id="btwSignupClose">Got it</button>
         </div>
 
@@ -1938,7 +1938,7 @@
       <div id="btwPsForm">
         <div class="btw-modal-eyebrow">Create your account</div>
         <h2>Between, for you</h2>
-        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Check in whenever something comes up, and see your own patterns over time. Your data is private to you — AI summaries stay off unless you turn them on.</div>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Check in whenever something comes up, and see your own patterns over time. Your data is private to you, AI summaries stay off unless you turn them on.</div>
         <div class="btw-form-field">
           <label>Your name</label>
           <input type="text" id="btwPsName" placeholder="First name is fine">
@@ -1978,7 +1978,7 @@
       <button class="btw-modal-close" data-close="btwFutureOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Just for you</div>
       <h2>A note for a harder day</h2>
-      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">On a good day, leave a few words for your future self — what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.</div>
       <textarea id="btwFutureText" class="btw-textarea" placeholder="You've gotten through this before. Remember that a walk and a good night's sleep usually turn things around…" style="min-height:90px;"></textarea>
       <div class="btw-form-error" id="btwFutureError"></div>
       <button class="btw-modal-continue" id="btwFutureSave">Save this note</button>
@@ -2048,7 +2048,7 @@
       </div>
       <div id="btwContactDone" style="display:none;text-align:center;padding:8px 0;">
         <div class="btw-modal-eyebrow">Sent</div>
-        <h2>Thanks — message sent</h2>
+        <h2>Thanks, message sent</h2>
         <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">We got your message and will reply to the email you gave us.</div>
         <button class="btw-modal-continue" id="btwContactClose">Done</button>
       </div>
@@ -2060,7 +2060,7 @@
     <a href="/terms.html" style="color:var(--moss);text-decoration:none;">Terms</a>
     <a href="/privacy.html" style="color:var(--moss);text-decoration:none;">Privacy</a>
     <span style="flex:1;"></span>
-    <span id="btwFooterCrisis" style="color:var(--ink-soft);">Not a crisis service — in an emergency call 988 or 911.</span>
+    <span id="btwFooterCrisis" style="color:var(--ink-soft);">Not a crisis service, in an emergency call 988 or 911.</span>
   </footer>
 </div>
 
@@ -2117,7 +2117,7 @@
     return false;
   }
   // A clinician can't reach the dashboard until the owner has confirmed their
-  // professional licence. Takes precedence over the subscription paywall — an
+  // professional licence. Takes precedence over the subscription paywall, an
   // unverified clinician isn't asked to pay. The owner is verified implicitly.
   function needsVerification(){
     if(ownerFreeAccess) return false;
@@ -2210,8 +2210,8 @@
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
-    "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.":
-      "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise — si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local. Votre thérapeute a aussi été avisé.",
+    "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.":
+      "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local. Votre thérapeute a aussi été avisé.",
     "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
       "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
     // therapist pane
@@ -2219,21 +2219,21 @@
     "AI summary · Amy":"Résumé IA · Amy",
     "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Semaine difficile. Le stress au travail l'a empêchée de dormir plusieurs nuits. Un point positif : elle a renoué avec une vieille amie la fin de semaine. Aucun signal de sécurité.",
     "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Sélectionnez un patient pour voir sa chronologie et ses tendances.",
-    "New check-in flagged for possible safety concern — reviewed above patient's usual pattern.":"Nouveau suivi signalé pour un possible enjeu de sécurité — au-delà des habitudes du patient.",
+    "New check-in flagged for possible safety concern, reviewed above patient's usual pattern.":"Nouveau suivi signalé pour un possible enjeu de sécurité, au-delà des habitudes du patient.",
     "Mood trend":"Tendance de l'humeur","Theme frequency":"Fréquence des thèmes","Timeline":"Chronologie",
     // pricing
     "Simple, per-clinician pricing":"Tarification simple, par clinicien",
     "One price per clinician seat. Unlimited patients, unlimited check-ins. No setup fees, no per-patient charges. Between is built to sit alongside the EHR you already use, not replace it.":
       "Un seul prix par siège de clinicien. Patients illimités, suivis illimités. Aucuns frais d'installation, aucuns frais par patient. Between est conçu pour accompagner le DME que vous utilisez déjà, pas le remplacer.",
-    "Every plan includes AI-powered summaries and trend charts — the AI processing cost per check-in is small enough that we don't meter it. Use it as much as your patients need.":
-      "Chaque forfait inclut les résumés par IA et les graphiques de tendances — le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
+    "Every plan includes AI-powered summaries and trend charts, the AI processing cost per check-in is small enough that we don't meter it. Use it as much as your patients need.":
+      "Chaque forfait inclut les résumés par IA et les graphiques de tendances, le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
     "CAD / clinician / month":"CAD / clinicien / mois","Billed monthly. Cancel anytime.":"Facturé mensuellement. Annulable en tout temps.",
     "Unlimited patients & check-ins":"Patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
     "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
     "In-app crisis resources for patients":"Ressources de crise dans l'app pour les patients",
     "Most practices":"La plupart des cabinets","Solo Annual":"Solo annuel","Same plan, paid yearly":"Même forfait, payé annuellement",
-    "Billed annually ($288/year) — save ~17%":"Facturé annuellement (288 $/an) — économisez ~17 %",
+    "Billed annually ($288/year), save ~17%":"Facturé annuellement (288 $/an), économisez ~17 %",
     "Everything in Solo":"Tout ce qui est dans Solo","Priority email support":"Soutien prioritaire par courriel",
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
     "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
@@ -2241,22 +2241,22 @@
     "Admin/practice-manager role":"Rôle d'administrateur / gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
     "Talk to us":"Contactez-nous",
     "Do my patients pay anything?":"Mes patients paient-ils quelque chose?",
-    "No. Patients never see a bill — Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture — Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
+    "No. Patients never see a bill, Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture, Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
     "What happens after my trial?":"Que se passe-t-il après mon essai?",
     "You add a card to start your 14-day trial, but nothing is charged for 14 days. We'll remind you before it ends, and you can cancel anytime before then to avoid being charged.":"Vous ajoutez une carte pour commencer votre essai de 14 jours, mais rien n'est facturé pendant 14 jours. Nous vous le rappellerons avant la fin, et vous pouvez annuler en tout temps d'ici là pour éviter d'être facturé.",
     "Is this a replacement for my EHR?":"Est-ce un remplacement de mon DME?",
-    "No — Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"Non — Between se concentre précisément sur les suivis entre les séances. Il est conçu pour fonctionner avec le logiciel de gestion ou de notes que vous utilisez déjà.",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"Non, Between se concentre précisément sur les suivis entre les séances. Il est conçu pour fonctionner avec le logiciel de gestion ou de notes que vous utilisez déjà.",
     "Where is my patients' data stored?":"Où sont stockées les données de mes patients ?",
     "Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. See the Privacy Policy for details.":"Between fonctionne sur une infrastructure infonuagique tierce (actuellement Render) et peut stocker des données aux États-Unis. Lorsque des renseignements sont transférés hors du Québec, nous les traitons en tenant compte de la loi 25 du Québec. Consultez la politique de confidentialité pour les détails.",
     // buttons / common
     "Continue":"Continuer","Back":"Retour","Cancel":"Annuler","Close":"Fermer","Email":"Courriel","Password":"Mot de passe",
     // consent modal
     "Patient consent":"Consentement du patient","Enable AI summaries for":"Activer les résumés IA pour",
-    "Your check-ins are shared with your therapist as short summaries — not always the raw recording.":"Vos suivis sont partagés avec votre thérapeute sous forme de courts résumés — pas toujours l'enregistrement brut.",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Vos suivis sont partagés avec votre thérapeute sous forme de courts résumés, pas toujours l'enregistrement brut.",
     "If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). This counts as \"profiling\" of your health information.":"Si vous activez les résumés IA ci-dessous, un modèle d'IA analyse ce que vous envoyez pour rédiger le résumé et repérer des tendances dans le temps (humeur, thèmes, moments). Cela constitue du « profilage » de vos renseignements de santé.",
-    "You can turn this off and still send check-ins — they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis — ils iront à votre thérapeute tels que saisis ou enregistrés, sans analyse par IA.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis, ils iront à votre thérapeute tels que saisis ou enregistrés, sans analyse par IA.",
     "You can see everything the app has inferred about your patterns at any time, and ask for it to be deleted.":"Vous pouvez voir en tout temps tout ce que l'application a déduit de vos tendances, et en demander la suppression.",
-    "Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact 988 (Canada Suicide Crisis Helpline) or 911 — don't wait on this app.":"Between n'est pas un service de crise ou d'urgence. Si vous êtes en danger immédiat ou pensez au suicide, composez le 988 (Ligne d'aide en cas de crise suicidaire du Canada) ou le 911 — n'attendez pas après cette application.",
+    "Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact 988 (Canada Suicide Crisis Helpline) or 911, don't wait on this app.":"Between n'est pas un service de crise ou d'urgence. Si vous êtes en danger immédiat ou pensez au suicide, composez le 988 (Ligne d'aide en cas de crise suicidaire du Canada) ou le 911, n'attendez pas après cette application.",
     "I confirm this patient has been shown the above, understands how their check-ins are used and processed, and has consented to AI analysis (they can withdraw this anytime).":"Je confirme que ce patient a vu ce qui précède, comprend comment ses suivis sont utilisés et traités, et a consenti à l'analyse par IA (il peut se rétracter en tout temps).",
     "Enable AI summaries":"Activer les résumés IA",
     // login modal
@@ -2286,7 +2286,7 @@
     "Quebec":"Québec","Ontario":"Ontario","British Columbia":"Colombie-Britannique","Alberta":"Alberta","Other":"Autre",
     "Professional order / college":"Ordre ou collège professionnel",
     "Professional licence / order number":"Numéro de permis / d'ordre professionnel",
-    "We verify this against your order's public registry before your account is activated — Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre avant d'activer votre compte — Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres patients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
+    "We verify this against your order's public registry before your account is activated, Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre avant d'activer votre compte, Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres patients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
     "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & submit for verification":"Vérifiez et soumettez pour validation",
     "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
     "Create account & submit":"Créer le compte et soumettre",
@@ -2306,11 +2306,11 @@
     "No notes yet. The one you write will wait here for a harder day.":"Aucune note pour l'instant. Celle que vous écrivez vous attendra ici pour un jour plus difficile.",
     "Write a few words first.":"Écrivez d'abord quelques mots.",
     "Leave a note for a harder day":"Laissez une note pour un jour plus difficile",
-    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you — your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé — votre thérapeute ne les voit jamais.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, votre thérapeute ne les voit jamais.",
     "A note you left for a harder day":"Une note que vous avez laissée pour un jour plus difficile",
     "Thanks, close this":"Merci, fermer",
     "Just for you":"Rien que pour vous","A note for a harder day":"Une note pour un jour plus difficile",
-    "On a good day, leave a few words for your future self — what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous — ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre thérapeute ne les voit jamais.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre thérapeute ne les voit jamais.",
     "Save this note":"Enregistrer cette note",
     "See both sides":"Les deux côtés",
     "The same tool, two views. Patients check in in seconds; you see the whole picture before a session.":"Le même outil, deux vues. Les patients font un suivi en quelques secondes ; vous voyez le portrait complet avant une séance.",
@@ -2321,20 +2321,20 @@
     "What you see: the whole caseload at a glance, and each patient's trends before a session.":"Ce que vous voyez : tout votre suivi d'un coup d'œil, et les tendances de chaque patient avant une séance.",
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
-    "No patients yet — add your first patient to start receiving check-ins.":"Aucun patient pour l'instant — ajoutez votre premier patient pour commencer à recevoir des suivis.",
+    "No patients yet, add your first patient to start receiving check-ins.":"Aucun patient pour l'instant, ajoutez votre premier patient pour commencer à recevoir des suivis.",
     "No check-ins yet for":"Aucun suivi pour l'instant pour",
     "check-in":"suivi","check-ins":"suivis",
     "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
     "Mood direction":"Direction de l'humeur","improving":"en hausse","declining":"en baisse","holding steady":"stable",
-    "avg so far — more check-ins reveal the trend":"moyenne jusqu'ici — d'autres suivis révéleront la tendance",
+    "avg so far, more check-ins reveal the trend":"moyenne jusqu'ici, d'autres suivis révéleront la tendance",
     "vs earlier check-ins":"vs suivis précédents",
     "Mood range":"Amplitude de l'humeur","most recent":"le plus récent",
     "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier","several a day":"plusieurs par jour",
     "Delete patient":"Supprimer le patient","Permanently delete":"Supprimer définitivement","Delete":"Supprimer",
     "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
     "To confirm, type the patient name exactly:":"Pour confirmer, tapez le nom du patient exactement :",
-    "That did not match — the patient was not deleted.":"Cela ne correspond pas — le patient n'a pas été supprimé.",
-    "They have no check-ins yet — this removes the patient.":"Ils n'ont encore aucun suivi — cela supprime le patient.",
+    "That did not match, the patient was not deleted.":"Cela ne correspond pas, le patient n'a pas été supprimé.",
+    "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela supprime le patient.",
     "Last check-in":"Dernier suivi","on file":"au dossier",
     "Recurring themes":"Thèmes récurrents","also":"aussi",
     "Tied to lower mood":"Associé à une humeur plus basse","Tied to better mood":"Associé à une meilleure humeur","vs":"vs","overall":"en général",
@@ -2354,13 +2354,13 @@
     "Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.":
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances. Le coût IA par suivi est assez faible pour qu'on ne le facture pas à l'unité, alors utilisez-le autant que vous le souhaitez.",
     "For therapists & practices":"Pour thérapeutes et cabinets",
-    "For patients — use Between on your own":"Pour les patients — utilisez Between par vous-même",
-    "Billed annually ($959.88/year) — save ~20%":"Facturé annuellement (959,88 $/an) — économisez ~20 %",
-    "Billed annually ($119.88/year) — save ~33%":"Facturé annuellement (119,88 $/an) — économisez ~33 %",
+    "For patients, use Between on your own":"Pour les patients, utilisez Between par vous-même",
+    "Billed annually ($959.88/year), save ~20%":"Facturé annuellement (959,88 $/an), économisez ~20 %",
+    "Billed annually ($119.88/year), save ~33%":"Facturé annuellement (119,88 $/an), économisez ~33 %",
     "Personal":"Personnel","Check in for yourself":"Faites vos propres suivis","CAD / month":"CAD / mois",
     "Unlimited voice & text check-ins":"Suivis voix et texte illimités",
     "Your own mood & theme trends":"Vos propres tendances d'humeur et de thèmes",
-    "Private by default — AI is opt-in":"Privé par défaut — l'IA est optionnelle",
+    "Private by default, AI is opt-in":"Privé par défaut, l'IA est optionnelle",
     "Crisis resources always one tap away":"Ressources de crise toujours à portée de main",
     "Delete your data anytime":"Supprimez vos données en tout temps",
     "Create my account":"Créer mon compte","Best value":"Meilleure valeur","Personal Annual":"Personnel annuel",
@@ -2369,8 +2369,8 @@
       "Pas pour votre clientèle. Lorsque vous invitez un patient à titre de clinicien, Between est couvert par votre siège et il n'est jamais facturé. Les patients ne paient que s'ils choisissent un forfait Personnel et utilisent Between par eux-mêmes, indépendamment de tout thérapeute.",
     "I'm a therapist":"Je suis thérapeute","I'm a patient":"Je suis patient",
     "Between, for you":"Between, pour vous",
-    "Check in whenever something comes up, and see your own patterns over time. Your data is private to you — AI summaries stay off unless you turn them on.":
-      "Faites un suivi dès que quelque chose survient, et observez vos propres tendances au fil du temps. Vos données sont privées — les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Check in whenever something comes up, and see your own patterns over time. Your data is private to you, AI summaries stay off unless you turn them on.":
+      "Faites un suivi dès que quelque chose survient, et observez vos propres tendances au fil du temps. Vos données sont privées, les résumés IA restent désactivés à moins que vous ne les activiez.",
     "Your name":"Votre nom",
     "I understand Between is a personal check-in tool, not a crisis or emergency service, and that crisis resources are always shown to me directly.":
       "Je comprends que Between est un outil de suivi personnel, pas un service de crise ou d'urgence, et que les ressources de crise me sont toujours présentées directement.",
@@ -2381,7 +2381,7 @@
     "Your own history and trends, updating each time you check in.":"Votre propre historique et vos tendances, mis à jour à chaque suivi.",
     "View my data & AI settings":"Voir mes données et réglages IA",
     "Saving your check-in…":"Enregistrement de votre suivi…",
-    "No check-ins yet — send your first one on the left.":"Aucun suivi pour l'instant — envoyez votre premier à gauche.",
+    "No check-ins yet, send your first one on the left.":"Aucun suivi pour l'instant, envoyez votre premier à gauche.",
     "so far":"jusqu'à présent",
     "Turn off AI summaries? Future check-ins will be stored as written, with no AI analysis.":
       "Désactiver les résumés IA? Les prochains suivis seront enregistrés tels quels, sans analyse par IA.",
@@ -2399,9 +2399,9 @@
     "Voice memo":"Note vocale",
     "Subscription: active":"Abonnement : actif","Subscription: not active yet":"Abonnement : pas encore actif",
     "Subscribe now":"S'abonner maintenant",
-    "Payment received — your subscription is active. Welcome to Between.":"Paiement reçu — votre abonnement est actif. Bienvenue à Between.",
-    "Thanks! Your payment is still processing — check back shortly.":"Merci! Votre paiement est en cours de traitement — revenez sous peu.",
-    "Checkout canceled. Your account is ready — you can subscribe anytime from your settings.":"Paiement annulé. Votre compte est prêt — vous pouvez vous abonner en tout temps depuis vos réglages.",
+    "Payment received, your subscription is active. Welcome to Between.":"Paiement reçu, votre abonnement est actif. Bienvenue à Between.",
+    "Thanks! Your payment is still processing, check back shortly.":"Merci! Votre paiement est en cours de traitement, revenez sous peu.",
+    "Checkout canceled. Your account is ready, you can subscribe anytime from your settings.":"Paiement annulé. Votre compte est prêt, vous pouvez vous abonner en tout temps depuis vos réglages.",
     // --- invite redemption + therapist invite sharing ---
     "Invited by your therapist":"Invité par votre thérapeute","Set up your check-ins":"Configurez vos suivis",
     "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":
@@ -2409,31 +2409,31 @@
     "Invite code":"Code d'invitation","Set up my account":"Configurer mon compte","Already set up?":"Déjà configuré?",
     "Invited by your therapist?":"Invité par votre thérapeute?","Redeem your invite code":"Utiliser votre code d'invitation",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre thérapeute.",
-    "Invite this patient":"Invitez ce patient","Send them this link — their code is built in:":"Envoyez-lui ce lien — son code y est intégré :",
+    "Invite this patient":"Invitez ce patient","Send them this link, their code is built in:":"Envoyez-lui ce lien, son code y est intégré :",
     "Copy invite message":"Copier le message d'invitation","Copied!":"Copié!","code:":"code :",
     "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre patient :",
-    "Hi — I set up Between so we can check in between our sessions.":"Bonjour — j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances.",
+    "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances.",
     "Tap to get started:":"Touchez pour commencer :","Your invite code is":"Votre code d'invitation est",
     "(it's already in the link). You'll create your own password, and your check-ins stay private to you.":"(il est déjà dans le lien). Vous créerez votre propre mot de passe, et vos suivis vous restent privés.",
-    "Between isn't a crisis service — in an emergency, call 988 or 911.":"Between n'est pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
+    "Between isn't a crisis service, in an emergency, call 988 or 911.":"Between n'est pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Patient added. Open their card and tap \"View patient data & AI settings\" → \"Copy invite message\" to send them a sign-up link.":
       "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription.",
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
-    "Selected patient":"Patient sélectionné","No patient selected — pick one from your caseload":"Aucun patient sélectionné — choisissez-en un dans votre clientèle",
+    "Selected patient":"Patient sélectionné","No patient selected, pick one from your caseload":"Aucun patient sélectionné, choisissez-en un dans votre clientèle",
     "Manage this patient's AI consent, invite code, and stored data.":"Gérez le consentement IA, le code d'invitation et les données enregistrées de ce patient.",
     "Needs attention":"À examiner","All":"Tous","this week":"cette semaine","flagged":"signalé(s)",
-    "new":"nouveaux","All caught up — nothing new.":"Tout est à jour — rien de nouveau.",
+    "new":"nouveaux","All caught up, nothing new.":"Tout est à jour, rien de nouveau.",
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "Terms":"Conditions","Privacy":"Confidentialité",
-    "Not a crisis service — in an emergency call 988 or 911.":"Pas un service de crise — en cas d'urgence, composez le 988 ou le 911.",
-    "Group practice enquiry":"Demande — cabinet de groupe",
+    "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
+    "Group practice enquiry":"Demande, cabinet de groupe",
     "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":
       "Parlez-nous de votre cabinet et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "Email (so we can reply)":"Courriel (pour vous répondre)","Message":"Message","Send message":"Envoyer le message",
-    "Sent":"Envoyé","Thanks — message sent":"Merci — message envoyé","Done":"Terminé",
+    "Sent":"Envoyé","Thanks, message sent":"Merci, message envoyé","Done":"Terminé",
     "We got your message and will reply to the email you gave us.":"Nous avons reçu votre message et vous répondrons au courriel indiqué.",
     "Subscribe to keep using Between":"Abonnez-vous pour continuer à utiliser Between",
     "Your trial or subscription isn't active. Start it to keep using your dashboard.":
@@ -2445,12 +2445,12 @@
       "Annuler votre abonnement? Vous gardez l'accès jusqu'à la fin de votre période de facturation.",
     "Your 14-day free trial is on; your card is charged when it ends unless you cancel.":
       "Votre essai gratuit de 14 jours est actif; votre carte est débitée à la fin, sauf annulation.",
-    "Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.":
-      "Commencez votre essai gratuit de 14 jours. Ajoutez une carte maintenant — rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps d'ici là.",
-    "You're all set — your 14-day free trial has started. No charge until it ends.":
-      "Tout est prêt — votre essai gratuit de 14 jours a commencé. Aucun frais avant la fin.",
-    "Thanks! Your subscription is still processing — check back shortly.":
-      "Merci! Votre abonnement est en cours de traitement — revenez sous peu.",
+    "Start your 14-day free trial. Add a card now, nothing is charged for 14 days, and you can cancel anytime before then.":
+      "Commencez votre essai gratuit de 14 jours. Ajoutez une carte maintenant, rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps d'ici là.",
+    "You're all set, your 14-day free trial has started. No charge until it ends.":
+      "Tout est prêt, votre essai gratuit de 14 jours a commencé. Aucun frais avant la fin.",
+    "Thanks! Your subscription is still processing, check back shortly.":
+      "Merci! Votre abonnement est en cours de traitement, revenez sous peu.",
     "14-day free trial · Private & consent-first · Not a crisis service":
       "Essai gratuit de 14 jours · Privé et axé sur le consentement · Pas un service de crise"
   };
@@ -2694,7 +2694,7 @@
     applyRoleLabels();
   }
 
-  // Relabel the shared dashboard for whoever's signed in — a therapist sees a
+  // Relabel the shared dashboard for whoever's signed in, a therapist sees a
   // caseload, a patient sees their own check-ins.
   function applyRoleLabels(){
     const patient = isPatient();
@@ -2713,8 +2713,8 @@
     const crisisBox = document.getElementById('btwCrisis');
     if(crisisBox){
       crisisBox.innerHTML = patient
-        ? "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number."
-        : "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.";
+        ? "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number."
+        : "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.";
     }
   }
 
@@ -2743,7 +2743,7 @@
   });
 
   async function loadSession(){
-    // A stored patient token takes precedence — it's how self-serve patients
+    // A stored patient token takes precedence, it's how self-serve patients
     // stay signed in (clinicians use an httpOnly cookie instead).
     if(pToken()){
       try{
@@ -2766,7 +2766,7 @@
     }
     renderAuthState();
     if(state.me){
-      // A pending (unverified) clinician can't load patient data yet — just land
+      // A pending (unverified) clinician can't load patient data yet, just land
       // them on the dashboard view, where the pending-verification box shows.
       if(!needsVerification()){ await loadPatients(); }
       goToView(navProduct, viewProduct);
@@ -2868,7 +2868,7 @@
       const loc = curLang === 'fr' ? 'fr-CA' : undefined;
       const when = d.toLocaleDateString(loc,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(loc,{hour:'numeric',minute:'2-digit'});
       return `<div style="background:var(--amber-bg);border:1px solid var(--amber);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:8px;display:flex;gap:10px;align-items:center;">
-        <div style="flex:1;"><strong>${esc(a.patient_name)}</strong> — ${esc(t('flagged for possible safety concern'))} (${when}).</div>
+        <div style="flex:1;"><strong>${esc(a.patient_name)}</strong>, ${esc(t('flagged for possible safety concern'))} (${when}).</div>
         <button data-alert="${esc(a.id)}" data-pid="${esc(a.patient_id)}" class="btw-alert-view" style="background:none;border:1px solid var(--amber);border-radius:7px;color:#7A4A19;font-size:11.5px;padding:4px 9px;cursor:pointer;flex-shrink:0;">${esc(t('View'))}</button>
         <button data-alert="${esc(a.id)}" class="btw-alert-dismiss" style="background:none;border:none;color:#7A4A19;font-size:11.5px;text-decoration:underline;cursor:pointer;flex-shrink:0;">${esc(t('Mark reviewed'))}</button>
       </div>`;
@@ -2974,7 +2974,7 @@
       const resp = await api('POST', '/api/auth/password/reset-request', { email });
       document.getElementById('btwResetSentMsg').textContent = resp.emailConfigured
         ? 'If an account exists for that address, a reset link is on its way. The link works for 60 minutes.'
-        : 'Email delivery isn\'t configured on this server yet — the reset link was printed to the server logs (ask whoever runs the server).';
+        : 'Email delivery isn\'t configured on this server yet, the reset link was printed to the server logs (ask whoever runs the server).';
       showResetStep('btwResetSentStep');
     }catch(e){ err.textContent = e.message; }
   });
@@ -3089,7 +3089,7 @@
         + '<button id="btwClinReactivate" style="margin-top:8px;' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
       action.style.display = 'none';
     } else {
-      body.innerHTML = esc(t('Start your 14-day free trial. Add a card now — nothing is charged for 14 days, and you can cancel anytime before then.'));
+      body.innerHTML = esc(t('Start your 14-day free trial. Add a card now, nothing is charged for 14 days, and you can cancel anytime before then.'));
       action.textContent = t('Start subscription');
       action.style.display = '';
     }
@@ -3198,7 +3198,7 @@
 
   // --- signup flow ---
   const signupOverlay = document.getElementById('btwSignupOverlay');
-  const planLabels = {solo_monthly:'Solo — $99.99 CAD/month', solo_annual:'Solo Annual — $79.99 CAD/month (billed yearly)'};
+  const planLabels = {solo_monthly:'Solo, $99.99 CAD/month', solo_annual:'Solo Annual, $79.99 CAD/month (billed yearly)'};
   let selectedPlan = 'solo_monthly';
 
   function showStep(id){
@@ -3430,10 +3430,10 @@
   // --- therapist-side invite sharing (magic link + copyable message) ---
   function inviteLink(code){ return location.origin + '/?invite=' + encodeURIComponent(code); }
   function composeInviteMessage(code){
-    return t('Hi — I set up Between so we can check in between our sessions.') + '\n\n'
+    return t('Hi, I set up Between so we can check in between our sessions.') + '\n\n'
       + t('Tap to get started:') + ' ' + inviteLink(code) + '\n\n'
       + t('Your invite code is') + ' ' + code + ' ' + t("(it's already in the link). You'll create your own password, and your check-ins stay private to you.") + '\n\n'
-      + t("Between isn't a crisis service — in an emergency, call 988 or 911.");
+      + t("Between isn't a crisis service, in an emergency, call 988 or 911.");
   }
   async function copyInvite(code, btn){
     const msg = composeInviteMessage(code);
@@ -3452,7 +3452,7 @@
     }
     const link = inviteLink(p.invite_code || '');
     el.innerHTML = '<strong>' + esc(t('Invite this patient')) + '</strong><br>'
-      + esc(t('Send them this link — their code is built in:')) + '<br>'
+      + esc(t('Send them this link, their code is built in:')) + '<br>'
       + '<span style="font-family:var(--font-mono);color:var(--moss);word-break:break-all;font-size:11px;">' + esc(link) + '</span><br>'
       + '<button id="btwCopyInvite" data-code="' + esc(p.invite_code || '') + '" style="margin-top:8px;background:var(--moss);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-family:var(--font-body);font-size:12px;cursor:pointer;">' + esc(t('Copy invite message')) + '</button>'
       + ' <span style="font-size:11px;color:var(--ink-soft);">' + esc(t('code:')) + ' <span style="font-family:var(--font-mono);">' + esc(p.invite_code || '—') + '</span></span>';
@@ -3523,7 +3523,7 @@
       el.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '. '
         + '<button id="btwSubReactivate" style="' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
     } else {
-      el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong> — '
+      el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong>, '
         + '<button id="btwSubscribeBtn" style="' + LINK_BTN + '">' + esc(t('Subscribe now')) + '</button>';
     }
     const wire = (id, fn)=>{ const b = el.querySelector('#'+id); if(b) b.addEventListener('click', fn); };
@@ -3574,8 +3574,8 @@
         state.patient = {...state.patient, ...r.patient};
         renderAuthState(); renderAll();
         goToView(navProduct, viewProduct);
-        alert(r.paid ? t('Payment received — your subscription is active. Welcome to Between.')
-                     : t('Thanks! Your payment is still processing — check back shortly.'));
+        alert(r.paid ? t('Payment received, your subscription is active. Welcome to Between.')
+                     : t('Thanks! Your payment is still processing, check back shortly.'));
       }catch(e){ /* leave the account usable regardless */ }
     } else if(co === 'success' && isTherapist()){
       try{
@@ -3583,12 +3583,12 @@
         state.me = {...state.me, ...r.clinician};
         renderAuthState();
         goToView(navProduct, viewProduct);
-        alert(r.active ? t('You\'re all set — your 14-day free trial has started. No charge until it ends.')
-                       : t('Thanks! Your subscription is still processing — check back shortly.'));
+        alert(r.active ? t('You\'re all set, your 14-day free trial has started. No charge until it ends.')
+                       : t('Thanks! Your subscription is still processing, check back shortly.'));
       }catch(e){ /* leave the account usable regardless */ }
     } else if(co === 'cancel'){
       if(isPatient()) goToView(navProduct, viewProduct);
-      alert(t('Checkout canceled. Your account is ready — you can subscribe anytime from your settings.'));
+      alert(t('Checkout canceled. Your account is ready, you can subscribe anytime from your settings.'));
     }
     history.replaceState(null, '', location.pathname); // drop ?checkout=… from the URL
   }
@@ -3721,7 +3721,7 @@
     try{
       const updated = await api('POST', '/api/patients/' + p.id + '/reset-access');
       await loadPatients();
-      alert('Access reset. The old login no longer works — use "Copy invite" to send ' + updated.display_name + ' a fresh link.');
+      alert('Access reset. The old login no longer works, use "Copy invite" to send ' + updated.display_name + ' a fresh link.');
       renderTherapistInvite(document.getElementById('btwInviteInfo'), updated);
     }catch(err){ alert(err.message); }
   });
@@ -3756,9 +3756,9 @@
       if(!confirm(t('Permanently delete') + ' ' + p.display_name + '? ' + t('This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.'))) return;
       const typed = prompt(t('To confirm, type the patient name exactly:') + ' ' + p.display_name);
       if(typed == null) return;
-      if(typed.trim() !== p.display_name){ alert(t('That did not match — the patient was not deleted.')); return; }
+      if(typed.trim() !== p.display_name){ alert(t('That did not match, the patient was not deleted.')); return; }
     } else {
-      if(!confirm(t('Delete') + ' ' + p.display_name + '? ' + t('They have no check-ins yet — this removes the patient.'))) return;
+      if(!confirm(t('Delete') + ' ' + p.display_name + '? ' + t('They have no check-ins yet, this removes the patient.'))) return;
     }
     try{
       await api('DELETE', '/api/patients/' + p.id);
@@ -3818,7 +3818,7 @@
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SpeechRec){
     micBtn.disabled = true;
-    micBtn.title = 'Voice recording not supported in this browser — type instead';
+    micBtn.title = 'Voice recording not supported in this browser, type instead';
   } else {
     recognition = new SpeechRec();
     recognition.continuous = true;
@@ -3896,7 +3896,7 @@
       bits.push('<strong>'+totalNew+'</strong> '+esc(t('new')+' '+(totalNew===1?t('check-in'):t('check-ins'))
         +' ('+t('across')+' '+active.length+' '+(active.length===1?t('patient'):t('patients'))+')'));
     } else if(flagged===0){
-      bits.push(esc(t('All caught up — nothing new.')));
+      bits.push(esc(t('All caught up, nothing new.')));
     }
     el.innerHTML = bits.join(' · ');
   }
@@ -3963,7 +3963,7 @@
           ? ' <span class="btw-risk-tag">' + RISK_ICO + ' ' + esc(t('At risk')) + '</span>'
           : '');
       } else {
-        heading.textContent = t('No patient selected — pick one from your caseload');
+        heading.textContent = t('No patient selected, pick one from your caseload');
       }
     }
     document.getElementById('btwSend').disabled = !p;
@@ -3977,7 +3977,7 @@
     const list = state.checkIns;
     if(titleEl) titleEl.textContent = t('Timeline') + (patient ? ' · ' + patient.display_name : '');
     if(!patient){
-      el.innerHTML = esc(t('No patients yet — add your first patient to start receiving check-ins.'));
+      el.innerHTML = esc(t('No patients yet, add your first patient to start receiving check-ins.'));
       return;
     }
     if(list.length===0){
@@ -4060,8 +4060,8 @@
     }).join('');
   }
 
-  // Derive extra signal from what's already been submitted — mood direction,
-  // range, check-in rhythm, recurring themes — with no AI needed, so every
+  // Derive extra signal from what's already been submitted, mood direction,
+  // range, check-in rhythm, recurring themes, with no AI needed, so every
   // check-in adds to the picture whether or not summaries are on.
   function computeInsights(list){
     const out = { n: list.length };
@@ -4096,7 +4096,7 @@
       const variance = rated.reduce((s,c)=>s+Math.pow(c.mood-out.avg,2),0)/rated.length;
       out.moodSd = Math.sqrt(variance);
     }
-    // Which themes line up with higher/lower moods — average mood on the
+    // Which themes line up with higher/lower moods, average mood on the
     // check-ins that carry each theme (only themes seen on 2+ rated check-ins).
     const themeAgg = {};
     list.forEach(c=>{ if(c.mood!=null) c.tags.forEach(tg=>{ (themeAgg[tg]=themeAgg[tg]||[]).push(c.mood); }); });
@@ -4120,7 +4120,7 @@
       let value, sub;
       if(ins.delta == null){
         value = ins.avg.toFixed(1) + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>';
-        sub = t('avg so far — more check-ins reveal the trend');
+        sub = t('avg so far, more check-ins reveal the trend');
       } else if(ins.delta > 0.5){
         value = '<span class="up">↑ ' + esc(t('improving')) + '</span>';
         sub = '+' + ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
@@ -4137,7 +4137,7 @@
       cards.push(card(t('Mood range'), ins.low + '–' + ins.high + '<span style="font-size:11px;font-weight:400;color:var(--ink-soft)">/10</span>', t('most recent') + ': ' + ins.latest + '/10'));
     }
     // Only talk about a rate once there's enough of a time window to mean
-    // something — otherwise a couple of check-ins made minutes apart would
+    // something, otherwise a couple of check-ins made minutes apart would
     // extrapolate to an absurd per-week number. Under that, just show the count.
     if(ins.spanDays != null && ins.spanDays >= 3 && ins.avgGapDays != null){
       let rhythm;
@@ -4213,7 +4213,7 @@
     const titleEl = document.getElementById('btwTimelineTitle');
     const list = state.checkIns;
     if(titleEl) titleEl.textContent = t('Timeline');
-    if(list.length===0){ el.innerHTML = esc(t('No check-ins yet — send your first one on the left.')); return; }
+    if(list.length===0){ el.innerHTML = esc(t('No check-ins yet, send your first one on the left.')); return; }
     const rated = list.filter(c=>c.mood!=null);
     const avgMood = rated.length ? (rated.reduce((s,c)=>s+c.mood,0)/rated.length).toFixed(1) : null;
     const counts = {};
