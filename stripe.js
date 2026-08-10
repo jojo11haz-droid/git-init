@@ -17,7 +17,10 @@ export function priceForPlan(plan) {
     patient_monthly: process.env.STRIPE_PRICE_PATIENT_MONTHLY,
     patient_annual: process.env.STRIPE_PRICE_PATIENT_ANNUAL,
     solo_monthly: process.env.STRIPE_PRICE_THERAPIST_MONTHLY,
-    solo_annual: process.env.STRIPE_PRICE_THERAPIST_ANNUAL
+    solo_annual: process.env.STRIPE_PRICE_THERAPIST_ANNUAL,
+    team_monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY,
+    team_annual: process.env.STRIPE_PRICE_TEAM_ANNUAL,
+    team_premium: process.env.STRIPE_PRICE_TEAM_PREMIUM
   };
   return map[plan] || null;
 }
