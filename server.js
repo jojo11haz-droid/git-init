@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
-  createClinician, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
+  createClinician, createCoach, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
@@ -232,6 +232,7 @@ async function startSession(res, req, clinicianId) {
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
+const TEAM_PLANS = ['team_monthly', 'team_annual', 'team_premium'];
 
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
@@ -278,6 +279,46 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
     console.error('Error in signup:', err);
+    res.status(500).json({ error: 'Could not create account.' });
+  }
+});
+
+// Coach signup: a coach is a clinician account with account_type='coach'.
+// No professional licence and no verification step — a coach can use the
+// roster and check-in tools immediately. Team billing isn't wired up yet, so
+// no card is taken here; the chosen plan is stored for when it is.
+app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
+  try {
+    const { name, email, password, teamName } = req.body || {};
+    const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+
+    if (await getClinicianByEmail(email.trim())) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+
+    const coach = await createCoach({
+      name: name.trim(),
+      email: email.trim(),
+      passwordHash: await hashPassword(password),
+      teamName: typeof teamName === 'string' ? teamName.trim() : null,
+      plan
+    });
+    await startSession(res, req, coach.id);
+
+    res.status(201).json({
+      clinician: coach,
+      verificationRequired: false,
+      billingEnabled: false, // team billing not live yet
+      freeAccess: isFreeAccess(coach.email)
+    });
+  } catch (err) {
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+    console.error('Error in coach signup:', err);
     res.status(500).json({ error: 'Could not create account.' });
   }
 });
@@ -554,7 +595,8 @@ app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requ
     if (!displayName || !displayName.trim()) {
       return res.status(400).json({ error: 'displayName is required.' });
     }
-    const patient = await createPatient(req.clinician.id, displayName.trim(), generateInviteCode());
+    const accountType = req.clinician.account_type === 'coach' ? 'player' : 'patient';
+    const patient = await createPatient(req.clinician.id, displayName.trim(), generateInviteCode(), accountType);
     res.status(201).json(patient);
   } catch (err) {
     console.error('Error creating patient:', err);
@@ -897,6 +939,7 @@ function patientNeedsSub(p) {
   return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
 }
 function clinicianNeedsSub(c) {
+  if (c && c.account_type === 'coach') return false; // team billing isn't wired up yet
   return stripeConfigured() && !isFreeAccess(c.email) && !subActive(c.subscription_status);
 }
 function requirePatientSubscription(req, res, next) {
@@ -915,7 +958,7 @@ function requireClinicianSubscription(req, res, next) {
 // has been confirmed by the owner. The owner's own (free-access) account is
 // treated as verified so they can always use and administer the site.
 function clinicianVerified(c) {
-  return !!c && (isFreeAccess(c.email) || !!c.licence_verified);
+  return !!c && (isFreeAccess(c.email) || c.account_type === 'coach' || !!c.licence_verified);
 }
 function requireVerifiedClinician(req, res, next) {
   if (!clinicianVerified(req.clinician)) {
