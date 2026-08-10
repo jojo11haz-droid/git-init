@@ -11,6 +11,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://betweenpsych.com/guides/what-to-talk-about-in-therapy.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://betweenpsych.com/privacy.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
