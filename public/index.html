@@ -5040,8 +5040,18 @@
     _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
   } catch(e){}
   try { document.getElementById('btwFooterYear').textContent = new Date().getFullYear(); } catch(e){}
-  // Restore the saved use-case (therapy default) before the first render.
-  try { curAudience = (localStorage.getItem('btw_audience') === 'sports') ? 'sports' : 'therapy'; } catch(e){}
+  // Pick the starting use-case. A ?for=sports (or ?for=therapy) deep link wins
+  // and is remembered, so an outreach link opens straight in the right view;
+  // otherwise fall back to the saved choice, then the therapy default.
+  let _startAud = null;
+  try {
+    const forParam = (new URLSearchParams(location.search).get('for') || '').toLowerCase();
+    if (['sports','sport','coach','team','teams'].includes(forParam)) _startAud = 'sports';
+    else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
+  } catch(e){}
+  try { if (_startAud === null) _startAud = (localStorage.getItem('btw_audience') === 'sports') ? 'sports' : 'therapy'; } catch(e){}
+  curAudience = (_startAud === 'sports') ? 'sports' : 'therapy';
+  try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   setLang(_startLang, {initial:true});
 
