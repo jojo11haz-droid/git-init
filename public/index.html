@@ -2705,6 +2705,13 @@
     btwContactEmail:'vous@votrecabinet.ca', btwContactMessage:"Combien de cliniciens? Ce que vous aimeriez savoir?"
   };
   const _phEn = {};
+  // Placeholders that change in Sports mode, keyed by element id.
+  const PH_SPORTS = {
+    btwSuName: {en:'Coach Jamie Rivera', fr:'Coach Jamie Rivera'},
+    btwSuEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
+    btwResetEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
+    btwContactEmail: {en:'you@yourteam.ca', fr:'vous@votreequipe.ca'}
+  };
 
   function t(en){
     if(curAudience === 'sports'){
@@ -2725,6 +2732,8 @@
     "I'm a therapist":"I'm a coach",
     "I'm a patient":"I'm a player",
     "Invited by your therapist?":"Invited by your coach?",
+    "Your dashboard lives here.":"Your team dashboard lives here.",
+    "Log in to see your caseload, or start a free trial to create your clinician account. Patient data is only visible to the clinician it belongs to.":"Log in to see your roster. Or start a free trial to create your coach account. Player data is only visible to the coach it belongs to.",
     "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
       "Your players check in between practices and games with a quick voice memo or text. They do it the moment something happens. Between turns it into a short summary and a simple readiness read. You walk into the next practice or game already knowing their week.",
     "14-day free trial · Private & consent-first · Not a crisis service":"Free for 14 days. Private and consent first. Built for teams.",
@@ -2820,6 +2829,8 @@
     "I'm a therapist":"Je suis entraîneur",
     "I'm a patient":"Je suis joueur",
     "Invited by your therapist?":"Invité par votre entraîneur?",
+    "Your dashboard lives here.":"Votre tableau de bord d'équipe est ici.",
+    "Log in to see your caseload, or start a free trial to create your clinician account. Patient data is only visible to the clinician it belongs to.":"Connectez-vous pour voir votre équipe. Ou commencez un essai gratuit pour créer votre compte d'entraîneur. Les données des joueurs ne sont visibles que par l'entraîneur à qui elles appartiennent.",
     "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
       "Vos joueurs font un suivi entre les entraînements et les matchs avec une note vocale ou un texto. Ils le font sur le vif. Between en fait un court résumé et un aperçu de leur forme. Vous arrivez au prochain entraînement ou match en connaissant déjà leur semaine.",
     "14-day free trial · Private & consent-first · Not a crisis service":"Gratuit pendant 14 jours. Privé et fondé sur le consentement. Conçu pour les équipes.",
@@ -2941,6 +2952,12 @@
       const el = document.getElementById(id); if(!el) continue;
       if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
       el.setAttribute('placeholder', curLang === 'fr' ? PH_FR[id] : _phEn[id]);
+    }
+    for(const id in PH_SPORTS){
+      const el = document.getElementById(id); if(!el) continue;
+      if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
+      const base = (curLang === 'fr' && PH_FR[id]) ? PH_FR[id] : _phEn[id];
+      el.setAttribute('placeholder', curAudience === 'sports' ? (curLang === 'fr' ? PH_SPORTS[id].fr : PH_SPORTS[id].en) : base);
     }
     const mic = document.getElementById('btwMic');
     if(mic){ const l = curLang === 'fr' ? 'Enregistrer une note vocale' : 'Record voice memo'; mic.title = l; mic.setAttribute('aria-label', l); }
@@ -3400,7 +3417,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : 'jamie@yourpractice.ca';
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
