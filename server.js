@@ -311,7 +311,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     res.status(201).json({
       clinician: coach,
       verificationRequired: false,
-      billingEnabled: false, // team billing not live yet
+      billingEnabled: stripeConfigured() && !!priceForPlan(plan),
       freeAccess: isFreeAccess(coach.email)
     });
   } catch (err) {
@@ -473,7 +473,9 @@ app.post('/api/admin/clinicians/:id/verify', requireDb, requireAuth, requireOwne
 app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) => {
   try {
     if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
-    const plan = THERAPIST_PLANS.includes((req.body || {}).plan) ? req.body.plan : (req.clinician.plan || 'solo_monthly');
+    const isCoach = req.clinician.account_type === 'coach';
+    const allowedPlans = isCoach ? TEAM_PLANS : THERAPIST_PLANS;
+    const plan = allowedPlans.includes((req.body || {}).plan) ? req.body.plan : (req.clinician.plan || (isCoach ? 'team_monthly' : 'solo_monthly'));
     const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
     if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
     if (plan !== req.clinician.plan) await updateClinicianSubscription(req.clinician.id, { plan });
@@ -939,7 +941,12 @@ function patientNeedsSub(p) {
   return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
 }
 function clinicianNeedsSub(c) {
-  if (c && c.account_type === 'coach') return false; // team billing isn't wired up yet
+  if (c && c.account_type === 'coach') {
+    // Coaches only owe a subscription once the team plans are configured in
+    // Stripe; until then they use the product free.
+    if (!stripeConfigured() || !priceForPlan(c.plan || 'team_monthly')) return false;
+    return !isFreeAccess(c.email) && !subActive(c.subscription_status);
+  }
   return stripeConfigured() && !isFreeAccess(c.email) && !subActive(c.subscription_status);
 }
 function requirePatientSubscription(req, res, next) {

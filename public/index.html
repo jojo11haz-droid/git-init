@@ -3832,7 +3832,7 @@
         });
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
-        billingEnabled = false; ownerFreeAccess = !!data.freeAccess;
+        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
         renderAuthState();
         await loadPatients();
         closeSignup();
