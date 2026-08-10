@@ -2706,7 +2706,13 @@
   };
   const _phEn = {};
 
-  function t(en){ return curLang === 'fr' ? (FR[en] || en) : en; }
+  function t(en){
+    if(curAudience === 'sports'){
+      if(curLang === 'fr' && SPORTS_FR[en]) return SPORTS_FR[en];
+      if(SPORTS_EN[en]) return SPORTS_EN[en];
+    }
+    return curLang === 'fr' ? (FR[en] || en) : en;
+  }
 
   // --- audience: therapy (default) / sports ------------------------------
   // Sports mode swaps the marketing copy only. Each entry is keyed by the
@@ -2754,7 +2760,48 @@
     "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
       "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a coach.",
     "See what's happening between sessions.":"See what's happening between practices.",
-    "Pricing for therapists and patients":"Pricing for coaches and teams"
+    "Pricing for therapists and patients":"Pricing for coaches and teams",
+    // demo captions + example summaries
+    "A patient checks in within seconds":"A player checks in within seconds",
+    "Rough week. Work stress kept me up again.":"Tough week. Legs still sore from Tuesday.",
+    "Rough week, work stress kept me up again.":"Tough week, legs still sore from Tuesday.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":
+      "Tough week. Sore legs and short sleep after heavy training. One bright spot: she hit a sprint best on the weekend. No concerns flagged.",
+    "Rough week. Work stress kept her":"Heavy load. Sore legs kept her",
+    "up several nights. One good moment:":"out of full training. One bright spot:",
+    "she saw an old friend on the weekend.":"she set a sprint best on Friday.",
+    // pricing
+    "Clinicians pay per seat and invite their patients in for free. Patients can also buy Between on their own, to check in and track their own patterns, with or without a therapist.":
+      "Coaches pay per team and invite their players in for free. Players can also buy Between on their own, to check in and track their own patterns, with or without a coach.",
+    "For therapists & practices":"For coaches & teams",
+    "Solo":"Team",
+    "For individual practitioners":"Up to 30 players",
+    "$99.99":"$149.99",
+    "CAD / clinician / month":"CAD / team / month",
+    "Unlimited patients & check-ins":"Up to 30 players, unlimited check-ins",
+    "In-app crisis resources for patients":"In-app support resources for players",
+    "Most practices":"Most teams",
+    "Solo Annual":"Team Annual",
+    "$79.99":"$119.99",
+    "Billed annually ($959.88/year), save ~20%":"Billed annually ($1,439.88/year), save ~20%",
+    "Everything in Solo":"Everything in Team",
+    "Group practice":"Premium",
+    "For 2+ clinicians":"For squads over 30 players",
+    "Custom":"$249.99",
+    "Volume pricing per seat":"For teams over 30 players · billed monthly",
+    "Everything in Solo, per seat":"Everything in Team, for 30+ players",
+    "Shared practice billing":"Club-level billing",
+    "Admin/practice-manager role":"Multiple coach & admin roles",
+    "Practice-level data agreement":"Club-level data agreement",
+    "For patients, use Between on your own":"For players, use Between on your own",
+    // pricing FAQ
+    "Do my patients pay anything?":"Do my players pay anything?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
+      "Not on your team plan. When you add a player to your team, they're covered by your plan and never billed. Players only pay if they choose to buy a Personal plan and use Between on their own, independent of any coach.",
+    "Is this a replacement for my EHR?":"Does this replace my team-management app?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":
+      "No, Between focuses specifically on between-practice check-ins. It's designed to run alongside whatever team or scheduling software you already use.",
+    "Where is my patients' data stored?":"Where is my players' data stored?"
   };
   const SPORTS_FR = {
     "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
@@ -2798,7 +2845,48 @@
     "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi quand quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'une journée difficile, il vous montre même une note laissée un meilleur jour. Vos données restent privées, que vous ayez un entraîneur ou non.",
     "See what's happening between sessions.":"Voyez ce qui se passe entre les entraînements.",
-    "Pricing for therapists and patients":"Tarifs pour entraîneurs et équipes"
+    "Pricing for therapists and patients":"Tarifs pour entraîneurs et équipes",
+    // demo captions + example summaries
+    "A patient checks in within seconds":"Un joueur fait un suivi en quelques secondes",
+    "Rough week. Work stress kept me up again.":"Semaine difficile. Jambes encore endolories depuis mardi.",
+    "Rough week, work stress kept me up again.":"Semaine difficile, jambes encore endolories depuis mardi.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":
+      "Semaine difficile. Jambes endolories et sommeil court après un gros entraînement. Point positif : elle a battu son record de sprint la fin de semaine. Aucune préoccupation signalée.",
+    "Rough week. Work stress kept her":"Grosse charge. Jambes endolories l'ont",
+    "up several nights. One good moment:":"freinée à l'entraînement. Point positif :",
+    "she saw an old friend on the weekend.":"record de sprint vendredi.",
+    // pricing
+    "Clinicians pay per seat and invite their patients in for free. Patients can also buy Between on their own, to check in and track their own patterns, with or without a therapist.":
+      "Les entraîneurs paient par équipe et invitent leurs joueurs gratuitement. Les joueurs peuvent aussi acheter Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans entraîneur.",
+    "For therapists & practices":"Pour entraîneurs et équipes",
+    "Solo":"Équipe",
+    "For individual practitioners":"Jusqu'à 30 joueurs",
+    "$99.99":"149,99 $",
+    "CAD / clinician / month":"CAD / équipe / mois",
+    "Unlimited patients & check-ins":"Jusqu'à 30 joueurs, suivis illimités",
+    "In-app crisis resources for patients":"Ressources d'aide intégrées pour les joueurs",
+    "Most practices":"La plupart des équipes",
+    "Solo Annual":"Équipe annuel",
+    "$79.99":"119,99 $",
+    "Billed annually ($959.88/year), save ~20%":"Facturé annuellement (1 439,88 $/an), économisez ~20 %",
+    "Everything in Solo":"Tout ce qu'inclut Équipe",
+    "Group practice":"Premium",
+    "For 2+ clinicians":"Pour les groupes de plus de 30 joueurs",
+    "Custom":"249,99 $",
+    "Volume pricing per seat":"Pour les équipes de plus de 30 joueurs · facturé mensuellement",
+    "Everything in Solo, per seat":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
+    "Shared practice billing":"Facturation au niveau du club",
+    "Admin/practice-manager role":"Plusieurs rôles d'entraîneur et d'admin",
+    "Practice-level data agreement":"Entente de données au niveau du club",
+    "For patients, use Between on your own":"Pour les joueurs, utilisez Between par vous-même",
+    // pricing FAQ
+    "Do my patients pay anything?":"Est-ce que mes joueurs paient quelque chose?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
+      "Pas sur votre forfait d'équipe. Quand vous ajoutez un joueur à votre équipe, il est couvert par votre forfait et n'est jamais facturé. Les joueurs ne paient que s'ils choisissent un forfait Personnel pour utiliser Between par eux-mêmes, indépendamment de tout entraîneur.",
+    "Is this a replacement for my EHR?":"Est-ce que ça remplace mon appli de gestion d'équipe?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":
+      "Non, Between se concentre uniquement sur les suivis entre les entraînements. Il est conçu pour fonctionner avec le logiciel d'équipe ou d'horaire que vous utilisez déjà.",
+    "Where is my patients' data stored?":"Où sont stockées les données de mes joueurs?"
   };
   // Resolve the display string for a key given the current audience + language.
   // Returns null to mean "leave the original therapy English text".
