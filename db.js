@@ -24,8 +24,9 @@ CREATE TABLE IF NOT EXISTS clinicians (
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  licence_number TEXT NOT NULL,
+  licence_number TEXT,
   licence_verified BOOLEAN NOT NULL DEFAULT false,
+  account_type TEXT NOT NULL DEFAULT 'therapist',
   province TEXT,
   practice_name TEXT,
   mfa_secret TEXT,
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS patients (
   password_hash TEXT,
   invite_code TEXT,
   invite_status TEXT NOT NULL DEFAULT 'pending',
+  account_type TEXT NOT NULL DEFAULT 'patient',
   ai_consent_enabled BOOLEAN NOT NULL DEFAULT false,
   consent_recorded_at TIMESTAMPTZ,
   consent_version TEXT,
@@ -153,6 +155,9 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
+ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'patient';
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -170,7 +175,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, mfa_enabled, plan, subscription_status, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, mfa_enabled, plan, subscription_status, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -178,6 +183,20 @@ export async function createClinician({ name, email, passwordHash, licenceNumber
      VALUES ($1, lower($2), $3, $4, $5, $6, $7, $8)
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
     [name, email, passwordHash, licenceNumber, licenceOrder || null, province || null, practiceName || null, plan || null]
+  );
+  return rows[0];
+}
+
+// A coach account is a clinician row with account_type='coach'. Coaches don't
+// hold a professional licence, so there's nothing to review: the account is
+// created already verified and can use the roster/check-in tools immediately.
+// The team name is stored in practice_name, reusing the existing column.
+export async function createCoach({ name, email, passwordHash, teamName, plan }) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, practice_name, plan)
+     VALUES ($1, lower($2), $3, 'coach', true, $4, $5)
+     RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [name, email, passwordHash, teamName || null, plan || null]
   );
   return rows[0];
 }
@@ -375,13 +394,13 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, ai_consent_enabled, consent_recorded_at, consent_version, plan, subscription_status, created_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, plan, subscription_status, created_at';
 
-export async function createPatient(clinicianId, displayName, inviteCode) {
+export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
-    `INSERT INTO patients (clinician_id, display_name, invite_code) VALUES ($1, $2, $3)
+    `INSERT INTO patients (clinician_id, display_name, invite_code, account_type) VALUES ($1, $2, $3, $4)
      RETURNING ${PATIENT_ROW_COLS}`,
-    [clinicianId, displayName, inviteCode]
+    [clinicianId, displayName, inviteCode, accountType === 'player' ? 'player' : 'patient']
   );
   return rows[0];
 }
