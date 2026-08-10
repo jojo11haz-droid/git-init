@@ -682,6 +682,28 @@
     background:var(--moss);
     color:#fff;
   }
+  .btw-aud{
+    display:inline-flex;
+    padding:2px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:var(--panel);
+  }
+  .btw-aud-btn{
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:12px;
+    padding:5px 11px;
+    border-radius:16px;
+    cursor:pointer;
+  }
+  .btw-aud-btn.active{
+    background:var(--moss);
+    color:#fff;
+  }
   .btw-role-toggle{
     display:flex;
     gap:4px;
@@ -1492,6 +1514,10 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
+      <div class="btw-aud" role="group" aria-label="Use case">
+        <button type="button" class="btw-aud-btn active" data-aud="therapy">Therapy</button>
+        <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
+      </div>
       <div class="btw-lang" role="group" aria-label="Language / Langue">
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
@@ -2315,6 +2341,7 @@
     "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
       "Des suivis entre les séances pour la thérapie. Les clients envoient une note sur le vif, l'IA la résume, et vous voyez la tendance avant votre prochaine séance.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
+    "Therapy":"Thérapie",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion",
     // hero
     "For therapists & counsellors":"Pour thérapeutes et conseillers",
@@ -2658,10 +2685,13 @@
   };
 
   let curLang = 'en';
+  let curAudience = 'therapy';        // 'therapy' | 'sports' — marketing copy only
   const _orig = new WeakMap();
   const heroH1 = document.getElementById('btwHeroH1');
   const heroEn = heroH1 ? heroH1.innerHTML : '';
   const heroFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
+  const heroSportsEn = 'What happens<br><em>between</em> practices<br>doesn\'t have to<br>stay a mystery.';
+  const heroSportsFr = 'Ce qui se passe<br><em>entre</em> les entraînements<br>ne devrait pas<br>rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwLoginPassword:'Votre mot de passe',
@@ -2678,6 +2708,111 @@
 
   function t(en){ return curLang === 'fr' ? (FR[en] || en) : en; }
 
+  // --- audience: therapy (default) / sports ------------------------------
+  // Sports mode swaps the marketing copy only. Each entry is keyed by the
+  // exact therapy English string and provides the sports rewrite. The app
+  // itself (dashboards, auth, stored data) is never touched.
+  const SPORTS_EN = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Between-practice check-ins for sports teams. Players send a quick note in the moment, AI summarizes it, and you see the pattern before your next practice.",
+    "For therapists & counsellors":"For coaches & sports teams",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Your players check in between practices with a quick voice memo or text the moment something happens. Between turns it into a short summary and readiness pattern. You walk into the next practice already knowing their week and spend less time guessing.",
+    "14-day free trial · Private & consent-first · Not a crisis service":"14-day free trial · Private & consent-first · Built for teams",
+    "Not a therapist? You can use Between on your own":"Not a coach? You can use Between on your own",
+    "Patient sends a check-in":"Player sends a check-in",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Sore, drained, or feeling on top of it. A quick voice memo or text the moment it happens. Not days later at practice.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the player's explicit opt-in consent.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Mood and readiness trends, recurring themes and a since-last-practice digest waiting in your dashboard before every session.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Quick and easy for you and your players. A check-in takes under a minute. Your whole roster is one glance instead of thirty clicks.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "The same tool seen from both sides. Players check in in seconds and you get the whole picture before a practice.",
+    "What a patient sees: a check-in in under a minute by text or voice.":"What a player sees: a check-in in under a minute by text or voice.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":
+      "What you see: the whole roster at a glance with each player's trends before a practice.",
+    "Patient view":"Player view",
+    "Therapist view":"Coach view",
+    "Clients put it in Between the moment something happens":"Players put it in Between the moment something happens",
+    "You start the session already knowing their week":"You start practice already knowing their week",
+    "Voicemails and phone tag between sessions":"Voicemails and phone tag between practices",
+    "The first ten minutes of each session spent catching up":"The first ten minutes of each practice spent catching up",
+    "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":
+      "On a busy week Between takes the place of the emails and calls that pile up between practices. You spend less time on messages and more on coaching.",
+    "Built for real practice":"Built for real teams",
+    "Patients check in however's easiest in the moment.":"Players check in however's easiest in the moment.",
+    "AI analysis is opt-in and off by default. Patients see and control their own data.":
+      "AI analysis is opt-in and off by default. Players see and control their own data.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":
+      "Flagged and new check-ins rise to the top so a big roster is one glance. See who needs you in seconds instead of clicks.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":
+      "Crisis resources are shown to players instantly if risk language is detected. They never wait on anyone.",
+    "You don't need a therapist to use Between.":"You don't need a coach to use Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a coach.",
+    "See what's happening between sessions.":"See what's happening between practices.",
+    "Pricing for therapists and patients":"Pricing for coaches and teams"
+  };
+  const SPORTS_FR = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Des suivis entre les entraînements pour les équipes sportives. Les joueurs envoient une note sur le vif, l'IA la résume, et vous voyez la tendance avant votre prochain entraînement.",
+    "For therapists & counsellors":"Pour entraîneurs et équipes sportives",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Vos joueurs font un suivi entre les entraînements avec une note vocale ou un texto sur le vif. Between le transforme en un court résumé et une tendance de forme. Vous arrivez au prochain entraînement en connaissant déjà leur semaine et perdez moins de temps à deviner.",
+    "14-day free trial · Private & consent-first · Not a crisis service":"Essai gratuit de 14 jours · Privé et fondé sur le consentement · Conçu pour les équipes",
+    "Not a therapist? You can use Between on your own":"Pas un entraîneur? Vous pouvez utiliser Between par vous-même",
+    "Patient sends a check-in":"Le joueur envoie un suivi",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Courbaturé, vidé ou en pleine forme. Une note vocale ou un texto sur le vif. Pas des jours plus tard à l'entraînement.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "Un résumé court et neutre avec des thèmes. Jamais de diagnostic ni d'interprétation. Ne s'active qu'avec le consentement explicite du joueur.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Tendances d'humeur et de forme, thèmes récurrents et un résumé depuis le dernier entraînement, prêts dans votre tableau de bord avant chaque séance.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Simple et rapide pour vous et vos joueurs. Un suivi prend moins d'une minute. Toute votre équipe en un coup d'œil au lieu de trente clics.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "Le même outil vu des deux côtés. Les joueurs font un suivi en quelques secondes et vous avez le portrait complet avant un entraînement.",
+    "What a patient sees: a check-in in under a minute by text or voice.":"Ce que voit un joueur : un suivi en moins d'une minute, par texto ou par la voix.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":
+      "Ce que vous voyez : toute l'équipe en un coup d'œil, avec les tendances de chaque joueur avant un entraînement.",
+    "Patient view":"Vue joueur",
+    "Therapist view":"Vue entraîneur",
+    "Clients put it in Between the moment something happens":"Les joueurs le notent dans Between dès que quelque chose se passe",
+    "You start the session already knowing their week":"Vous commencez l'entraînement en connaissant déjà leur semaine",
+    "Voicemails and phone tag between sessions":"Messages vocaux et appels manqués entre les entraînements",
+    "The first ten minutes of each session spent catching up":"Les dix premières minutes de chaque entraînement à faire le point",
+    "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":
+      "Dans une semaine chargée, Between remplace les courriels et les appels qui s'accumulent entre les entraînements. Vous passez moins de temps sur les messages et plus de temps à entraîner.",
+    "Built for real practice":"Conçu pour de vraies équipes",
+    "Patients check in however's easiest in the moment.":"Les joueurs font un suivi comme c'est le plus simple sur le moment.",
+    "AI analysis is opt-in and off by default. Patients see and control their own data.":
+      "L'analyse par IA est optionnelle et désactivée par défaut. Les joueurs voient et contrôlent leurs propres données.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":
+      "Les suivis signalés et nouveaux remontent en haut : une grande équipe en un coup d'œil. Voyez qui a besoin de vous en quelques secondes.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":
+      "Des ressources d'aide s'affichent aussitôt pour les joueurs si un langage à risque est détecté. Ils n'attendent après personne.",
+    "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un entraîneur pour utiliser Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser comme journal privé. Faites un suivi quand quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'une journée difficile, il vous montre même une note laissée un meilleur jour. Vos données restent privées, que vous ayez un entraîneur ou non.",
+    "See what's happening between sessions.":"Voyez ce qui se passe entre les entraînements.",
+    "Pricing for therapists and patients":"Tarifs pour entraîneurs et équipes"
+  };
+  // Resolve the display string for a key given the current audience + language.
+  // Returns null to mean "leave the original therapy English text".
+  function pickCopy(key){
+    if(curAudience === 'sports'){
+      if(curLang === 'fr' && SPORTS_FR[key]) return SPORTS_FR[key];
+      if(SPORTS_EN[key]) return SPORTS_EN[key];
+      if(curLang === 'fr' && FR[key]) return FR[key]; // no sports variant: fall back to therapy FR wording
+      return null;
+    }
+    if(curLang === 'fr' && FR[key]) return FR[key];
+    return null;
+  }
+
   function translateStatic(){
     const walker = document.createTreeWalker(btwRoot, NodeFilter.SHOW_TEXT, null);
     const nodes = [];
@@ -2686,10 +2821,14 @@
       if(!_orig.has(n)){ if(!n.nodeValue.trim()) continue; _orig.set(n, n.nodeValue); }
       const original = _orig.get(n); if(original === undefined) continue;
       const key = original.trim();
-      if(curLang === 'fr' && FR[key]) n.nodeValue = original.replace(key, FR[key]);
-      else n.nodeValue = original;
+      const repl = pickCopy(key);
+      n.nodeValue = repl != null ? original.replace(key, repl) : original;
     }
-    if(heroH1) heroH1.innerHTML = curLang === 'fr' ? heroFr : heroEn;
+    if(heroH1){
+      heroH1.innerHTML = curAudience === 'sports'
+        ? (curLang === 'fr' ? heroSportsFr : heroSportsEn)
+        : (curLang === 'fr' ? heroFr : heroEn);
+    }
     for(const id in PH_FR){
       const el = document.getElementById(id); if(!el) continue;
       if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
@@ -2710,6 +2849,17 @@
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
     b.addEventListener('click', ()=> setLang(b.dataset.lang));
+  });
+
+  function setAudience(a){
+    curAudience = (a === 'sports') ? 'sports' : 'therapy';
+    try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
+    document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+    translateStatic();
+    if(window.__btwDemoRefresh) window.__btwDemoRefresh();
+  }
+  document.querySelectorAll('.btw-aud-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
 
   // --- app state: all server-backed, no demo data ---
@@ -4665,6 +4815,9 @@
     _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
   } catch(e){}
   try { document.getElementById('btwFooterYear').textContent = new Date().getFullYear(); } catch(e){}
+  // Restore the saved use-case (therapy default) before the first render.
+  try { curAudience = (localStorage.getItem('btw_audience') === 'sports') ? 'sports' : 'therapy'; } catch(e){}
+  document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   setLang(_startLang, {initial:true});
 
   renderAuthState();
