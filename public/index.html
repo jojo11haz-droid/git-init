@@ -1116,6 +1116,10 @@
   .btw-hero-btn.primary:hover{background:var(--ink);}
   .btw-hero-btn.secondary{background:transparent;color:var(--ink);border-color:var(--line);}
   .btw-hero-btn.secondary:hover{border-color:var(--ink);background:var(--ink);color:#fff;}
+  .btw-hero-btn.tertiary{background:var(--moss-light);color:var(--moss);border-color:transparent;}
+  .btw-hero-btn.tertiary:hover{background:#CFE0D7;}
+  .btw-hero-btn.tertiary span{margin-left:2px;transition:transform .2s ease;}
+  .btw-hero-btn.tertiary:hover span{transform:translateX(3px);}
   .btw-hero-meta{
     font-family:var(--font-mono);
     font-size:10.5px;
@@ -1546,6 +1550,7 @@
           <div class="btw-hero-cta">
             <button class="btw-hero-btn primary" id="btwHeroTrial">Start 14-day free trial</button>
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
+            <button type="button" class="btw-hero-btn tertiary" onclick="document.querySelector('.btw-solo-section').scrollIntoView({behavior:'smooth',block:'start'})">Use it on your own <span aria-hidden="true">→</span></button>
           </div>
           <div class="btw-hero-meta">14-day free trial · Private &amp; consent-first · Not a crisis service</div>
           <button type="button" class="btw-hero-solo-link" onclick="document.querySelector('.btw-solo-section').scrollIntoView({behavior:'smooth',block:'start'})">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
