@@ -1526,6 +1526,7 @@
       <div class="btw-aud" role="group" aria-label="Use case">
         <button type="button" class="btw-aud-btn active" data-aud="therapy">Therapy</button>
         <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
+        <button type="button" class="btw-aud-btn" data-aud="recovery">Recovery</button>
       </div>
       <div class="btw-lang" role="group" aria-label="Language / Langue">
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
@@ -2355,7 +2356,7 @@
     "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
       "Des suivis entre les séances pour la thérapie. Les clients envoient une note sur le vif, l'IA la résume, et vous voyez la tendance avant votre prochaine séance.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie",
+    "Therapy":"Thérapie","Recovery":"Rétablissement",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -2729,10 +2730,17 @@
     btwContactEmail: {en:'you@yourteam.ca', fr:'vous@votreequipe.ca'}
   };
 
+  // The active audience's [EN, FR] override dictionaries, or null for therapy.
+  function audDicts(){
+    if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
+    if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
+    return null;
+  }
   function t(en){
-    if(curAudience === 'sports'){
-      if(curLang === 'fr' && SPORTS_FR[en]) return SPORTS_FR[en];
-      if(SPORTS_EN[en]) return SPORTS_EN[en];
+    const d = audDicts();
+    if(d){
+      if(curLang === 'fr' && d[1][en]) return d[1][en];
+      if(d[0][en]) return d[0][en];
     }
     return curLang === 'fr' ? (FR[en] || en) : en;
   }
@@ -2991,11 +2999,76 @@
   };
   // Resolve the display string for a key given the current audience + language.
   // Returns null to mean "leave the original therapy English text".
+  // --- audience: recovery (addiction, with a mentor) --------------------
+  // Marketing copy only, same mechanism as Sports. Keyed by the therapy
+  // English string; maps therapist->mentor, client/patient->the person.
+  const RECOVERY_EN = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Between-session check-ins for recovery. The person you mentor sends a quick note in the moment, AI summarizes it, and you see the pattern before your next session.",
+    "For therapists, counsellors & anyone on their own":"For mentors, recovery coaches & anyone on their own",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "The person you mentor checks in between sessions with a quick voice memo or text the moment a craving or a hard moment hits. Between turns it into a short summary and mood pattern. You start the next session already knowing their week.",
+    "14-day free trial · Private & consent-first · Not a crisis service":"Free for 14 days. Private and consent first. Not a crisis service.",
+    "Not a therapist? You can use Between on your own":"Not a mentor? You can use Between on your own",
+    "Patient sends a check-in":"They send a check-in",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "A craving, a hard moment, or a win worth marking. A quick voice memo or text the moment it happens. Not a week later.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with their explicit opt-in consent.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Mood trends, recurring triggers and a since-last-session digest waiting in your dashboard before every session.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Quick and easy for you and the people you mentor. A check-in takes under a minute. Everyone you support is one glance instead of thirty clicks.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "The same tool seen from both sides. They check in within seconds and you get the whole picture before a session.",
+    "Patient view":"Their view",
+    "Therapist view":"Mentor view",
+    "Less admin, more time":"Less admin, more support",
+    "Built for real practice":"Built for real support",
+    "You don't need a therapist to use Between.":"You don't need a mentor to use Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it as a private diary. Check in whenever a craving or a feeling comes up and watch your own mood and triggers over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a mentor.",
+    "Pricing for therapists and patients":"Pricing for mentors and members",
+    "For therapists & practices":"For mentors & programs",
+    "For patients, use Between on your own":"For members, use Between on your own"
+  };
+  const RECOVERY_FR = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Des suivis entre les séances pour le rétablissement. La personne que vous accompagnez envoie une note sur le vif, l'IA la résume, et vous voyez la tendance avant votre prochaine séance.",
+    "For therapists, counsellors & anyone on their own":"Pour mentors, intervenants et les particuliers",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "La personne que vous accompagnez fait un suivi entre les séances avec une note vocale ou un texto dès qu'une envie ou un moment difficile survient. Between en fait un court résumé et une tendance d'humeur. Vous arrivez à la prochaine séance en connaissant déjà sa semaine.",
+    "14-day free trial · Private & consent-first · Not a crisis service":"Gratuit pendant 14 jours. Privé et fondé sur le consentement. Pas un service de crise.",
+    "Not a therapist? You can use Between on your own":"Pas un mentor? Vous pouvez utiliser Between par vous-même",
+    "Patient sends a check-in":"La personne envoie un suivi",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Une envie, un moment difficile ou une victoire à souligner. Une note vocale ou un texto sur le vif. Pas une semaine plus tard.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "Un résumé court et neutre avec des thèmes. Jamais de diagnostic ni d'interprétation. Ne s'active qu'avec son consentement explicite.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Tendances d'humeur, déclencheurs récurrents et un résumé depuis la dernière séance, prêts dans votre tableau de bord avant chaque séance.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Simple et rapide pour vous et les personnes que vous accompagnez. Un suivi prend moins d'une minute. Toutes vos personnes en un coup d'œil au lieu de trente clics.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "Le même outil vu des deux côtés. La personne fait un suivi en quelques secondes et vous avez le portrait complet avant une séance.",
+    "Patient view":"Vue de la personne",
+    "Therapist view":"Vue du mentor",
+    "Less admin, more time":"Moins d'administratif, plus de soutien",
+    "Built for real practice":"Conçu pour un vrai accompagnement",
+    "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un mentor pour utiliser Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès qu'une envie ou une émotion survient et observez votre humeur et vos déclencheurs au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un mentor ou non.",
+    "Pricing for therapists and patients":"Tarifs pour mentors et membres",
+    "For therapists & practices":"Pour mentors et programmes",
+    "For patients, use Between on your own":"Pour les membres, utilisez Between par vous-même"
+  };
+
   function pickCopy(key){
-    if(curAudience === 'sports'){
-      if(curLang === 'fr' && SPORTS_FR[key]) return SPORTS_FR[key];
-      if(SPORTS_EN[key]) return SPORTS_EN[key];
-      if(curLang === 'fr' && FR[key]) return FR[key]; // no sports variant: fall back to therapy FR wording
+    const d = audDicts();
+    if(d){
+      if(curLang === 'fr' && d[1][key]) return d[1][key];
+      if(d[0][key]) return d[0][key];
+      if(curLang === 'fr' && FR[key]) return FR[key]; // no audience variant: fall back to therapy FR
       return null;
     }
     if(curLang === 'fr' && FR[key]) return FR[key];
@@ -3047,7 +3120,7 @@
   });
 
   function setAudience(a){
-    curAudience = (a === 'sports') ? 'sports' : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     translateStatic();
@@ -5090,10 +5163,11 @@
   try {
     const forParam = (new URLSearchParams(location.search).get('for') || '').toLowerCase();
     if (['sports','sport','coach','team','teams'].includes(forParam)) _startAud = 'sports';
+    else if (['recovery','addiction','mentor','sobriety'].includes(forParam)) _startAud = 'recovery';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null) _startAud = (localStorage.getItem('btw_audience') === 'sports') ? 'sports' : 'therapy'; } catch(e){}
-  curAudience = (_startAud === 'sports') ? 'sports' : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   setLang(_startLang, {initial:true});
