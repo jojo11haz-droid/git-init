@@ -2469,6 +2469,7 @@
     "Admin/practice-manager role":"Rôle d'administrateur / gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
     "Talk to us":"Contactez-nous",
     "Needs attention now":"À contacter dès que possible","Doing okay":"Ça va","Doing well":"Va bien",
+    "Team billing is not enabled yet.":"La facturation d'équipe n'est pas encore activée.",
     "Do my patients pay anything?":"Mes patients paient-ils quelque chose?",
     "No. Patients never see a bill, Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture, Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
     "What happens after my trial?":"Que se passe-t-il après mon essai?",
@@ -2817,7 +2818,7 @@
     "Group practice":"Premium",
     "For 2+ clinicians":"For squads over 30 players",
     "Custom":"$199",
-    "Talk to us":"Start 14-day free trial",
+    "Talk to us":"Get Premium",
     "Volume pricing per seat":"For squads over 30 players. Billed monthly.",
     "Everything in Solo, per seat":"Everything in Team, for 30+ players",
     "Shared practice billing":"Club-level billing",
@@ -2941,7 +2942,7 @@
     "Group practice":"Premium",
     "For 2+ clinicians":"Pour les groupes de plus de 30 joueurs",
     "Custom":"199 $",
-    "Talk to us":"Essai gratuit de 14 jours",
+    "Talk to us":"Obtenir Premium",
     "Volume pricing per seat":"Pour les équipes de plus de 30 joueurs. Facturé chaque mois.",
     "Everything in Solo, per seat":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
     "Shared practice billing":"Facturation au niveau du club",
@@ -3131,11 +3132,22 @@
     contactOverlay.style.display = 'flex';
     document.getElementById('btwContactName').focus();
   }
+  // Send a coach to Stripe checkout for the Premium (team_premium) plan. Used to
+  // upgrade an existing, signed-in coach — the plan is stored and they pay there.
+  async function startCoachPremiumCheckout(){
+    try{
+      const r = await api('POST', '/api/auth/checkout/start', { plan: 'team_premium' });
+      if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
+      alert(t('Team billing is not enabled yet.'));
+    }catch(e){ alert(e.message); }
+  }
   // Therapy: the group-practice card opens a contact form. Sports: the Premium
-  // (30+ players) card is self-serve, so it starts a coach trial like the others.
+  // (30+ players) card is fully self-serve — an existing coach upgrades and pays,
+  // anyone else makes an account (or logs in) first.
   if(talkBtn) talkBtn.addEventListener('click', ()=>{
-    if(curAudience === 'sports' && window.btwOpenSignup) window.btwOpenSignup('team_premium');
-    else openContact();
+    if(curAudience !== 'sports'){ openContact(); return; }
+    if(state.me && state.me.account_type === 'coach') startCoachPremiumCheckout();
+    else if(window.btwOpenSignup) window.btwOpenSignup('team_premium');
   });
   contactOverlay.addEventListener('click', (e)=>{ if(e.target === contactOverlay) contactOverlay.style.display = 'none'; });
   document.getElementById('btwContactClose').addEventListener('click', ()=>{ contactOverlay.style.display = 'none'; });
