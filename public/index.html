@@ -3257,9 +3257,11 @@
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
-  // A signed-in coach always sees the sports wording, whatever the toggle said.
+  // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
   function maybeCoachAudience(){
-    if(state.me && state.me.account_type === 'coach' && curAudience !== 'sports') setAudience('sports');
+    if(!state.me) return;
+    if(state.me.account_type === 'coach' && curAudience !== 'sports') setAudience('sports');
+    else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
   }
 
   // --- app state: all server-backed, no demo data ---
@@ -3986,8 +3988,9 @@
   const signupOverlay = document.getElementById('btwSignupOverlay');
   const planLabels = {solo_monthly:'Solo, $99.99 CAD/month', solo_annual:'Solo Annual, $79.99 CAD/month (billed yearly)'};
   let selectedPlan = 'solo_monthly';
-  let coachSignup = false; // Sports mode signs up a coach, not a therapist
+  let proSignup = null; // 'coach' (sports) | 'mentor' (recovery) | null (therapist)
   const COACH_PLAN_FROM = {solo_monthly:'team_monthly', solo_annual:'team_annual'};
+  const MENTOR_PLAN_FROM = {solo_monthly:'mentor_monthly', solo_annual:'mentor_annual'};
 
   function showStep(id){
     ['btwStep1','btwStep2','btwStep3','btwStepDone'].forEach(s=>{
@@ -3996,16 +3999,22 @@
   }
 
   window.btwOpenSignup = function(plan){
-    coachSignup = (curAudience === 'sports');
+    proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
-    if(coachSignup){
+    if(proSignup === 'coach'){
       // Coaches sign up in one step: no licence, no verification.
       selectedPlan = COACH_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('team_') === 0 ? plan : 'team_monthly');
       teamField.style.display = '';
       nextBtn.textContent = 'Create account';
       if(eyebrow) eyebrow.textContent = 'Your coach account';
+    } else if(proSignup === 'mentor'){
+      // Mentors sign up in one step too: no licence, no verification.
+      selectedPlan = MENTOR_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('mentor_') === 0 ? plan : 'mentor_monthly');
+      teamField.style.display = 'none';
+      nextBtn.textContent = 'Create account';
+      if(eyebrow) eyebrow.textContent = 'Your mentor account';
     } else {
       selectedPlan = plan || 'solo_monthly';
       teamField.style.display = 'none';
@@ -4051,16 +4060,15 @@
     if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = 'That email address looks incomplete.'; return; }
     if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
     err.textContent = '';
-    if(coachSignup){
-      // One-step coach signup: create the account and go straight to the dashboard.
+    if(proSignup){
+      // One-step coach/mentor signup: create the account and go to the dashboard.
       const btn = document.getElementById('btwStep1Next');
       btn.disabled = true;
       try{
-        const data = await api('POST', '/api/auth/coach/signup', {
-          name, email, password: pw,
-          teamName: document.getElementById('btwSuTeam').value.trim() || null,
-          plan: selectedPlan
-        });
+        const body = { name, email, password: pw, plan: selectedPlan };
+        if(proSignup === 'coach') body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
+        const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : '/api/auth/mentor/signup';
+        const data = await api('POST', endpoint, body);
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
         billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;

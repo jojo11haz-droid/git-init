@@ -201,6 +201,19 @@ export async function createCoach({ name, email, passwordHash, teamName, plan })
   return rows[0];
 }
 
+// A mentor account (addiction recovery) is a clinician row with
+// account_type='mentor'. Like a coach, there's no licence to review, so it's
+// created already verified and usable immediately.
+export async function createMentor({ name, email, passwordHash, plan }) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, plan)
+     VALUES ($1, lower($2), $3, 'mentor', true, $4)
+     RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [name, email, passwordHash, plan || null]
+  );
+  return rows[0];
+}
+
 // --- Licence verification (manual, owner-reviewed) ---
 // New clinicians start unverified and can't reach patient data until the owner
 // checks their name/number against the public professional-order registry and
@@ -400,7 +413,7 @@ export async function createPatient(clinicianId, displayName, inviteCode, accoun
   const { rows } = await pool.query(
     `INSERT INTO patients (clinician_id, display_name, invite_code, account_type) VALUES ($1, $2, $3, $4)
      RETURNING ${PATIENT_ROW_COLS}`,
-    [clinicianId, displayName, inviteCode, accountType === 'player' ? 'player' : 'patient']
+    [clinicianId, displayName, inviteCode, ['player', 'member'].includes(accountType) ? accountType : 'patient']
   );
   return rows[0];
 }
