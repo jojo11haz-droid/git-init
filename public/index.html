@@ -1122,17 +1122,22 @@
     color:var(--ink-soft);
   }
   .btw-hero-solo-link{
-    display:inline-flex;align-items:center;gap:6px;
-    margin-top:16px;padding:0;
-    background:none;border:none;cursor:pointer;
-    font-family:var(--font-body);font-size:13.5px;font-weight:600;
-    color:var(--moss);
-    border-bottom:1px solid transparent;
-    transition:border-color .2s ease;
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:18px;padding:12px 20px;
+    background:var(--moss-light);border:1px solid transparent;border-radius:100px;cursor:pointer;
+    font-family:var(--font-body);font-size:15.5px;font-weight:600;
+    color:var(--moss);line-height:1.35;text-align:left;
+    transition:background .2s ease, transform .2s ease;
   }
-  .btw-hero-solo-link:hover{border-bottom-color:var(--moss);}
+  .btw-hero-solo-link:hover{background:#CFE0D7;transform:translateY(-1px);}
   .btw-hero-solo-link span{transition:transform .2s ease;}
   .btw-hero-solo-link:hover span{transform:translateX(3px);}
+  /* Caseload status ping — green: doing well, orange: middle, red: needs attention now. */
+  .btw-ping{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block;vertical-align:middle;margin-right:6px;}
+  .btw-ping.good{background:#3BA55D;}
+  .btw-ping.mid{background:#E0902A;}
+  .btw-ping.high{background:#D64545;}
+  .btw-ping.none{background:var(--line);}
   .btw-hero-visual{
     background:transparent;
     border:none;
@@ -2463,6 +2468,7 @@
     "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
     "Admin/practice-manager role":"Rôle d'administrateur / gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
     "Talk to us":"Contactez-nous",
+    "Needs attention now":"À contacter dès que possible","Doing okay":"Ça va","Doing well":"Va bien",
     "Do my patients pay anything?":"Mes patients paient-ils quelque chose?",
     "No. Patients never see a bill, Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture, Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
     "What happens after my trial?":"Que se passe-t-il après mon essai?",
@@ -2811,6 +2817,7 @@
     "Group practice":"Premium",
     "For 2+ clinicians":"For squads over 30 players",
     "Custom":"$199",
+    "Talk to us":"Start 14-day free trial",
     "Volume pricing per seat":"For squads over 30 players. Billed monthly.",
     "Everything in Solo, per seat":"Everything in Team, for 30+ players",
     "Shared practice billing":"Club-level billing",
@@ -2934,6 +2941,7 @@
     "Group practice":"Premium",
     "For 2+ clinicians":"Pour les groupes de plus de 30 joueurs",
     "Custom":"199 $",
+    "Talk to us":"Essai gratuit de 14 jours",
     "Volume pricing per seat":"Pour les équipes de plus de 30 joueurs. Facturé chaque mois.",
     "Everything in Solo, per seat":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
     "Shared practice billing":"Facturation au niveau du club",
@@ -3123,7 +3131,12 @@
     contactOverlay.style.display = 'flex';
     document.getElementById('btwContactName').focus();
   }
-  if(talkBtn) talkBtn.addEventListener('click', openContact);
+  // Therapy: the group-practice card opens a contact form. Sports: the Premium
+  // (30+ players) card is self-serve, so it starts a coach trial like the others.
+  if(talkBtn) talkBtn.addEventListener('click', ()=>{
+    if(curAudience === 'sports' && window.btwOpenSignup) window.btwOpenSignup('team_premium');
+    else openContact();
+  });
   contactOverlay.addEventListener('click', (e)=>{ if(e.target === contactOverlay) contactOverlay.style.display = 'none'; });
   document.getElementById('btwContactClose').addEventListener('click', ()=>{ contactOverlay.style.display = 'none'; });
   document.getElementById('btwContactSubmit').addEventListener('click', async ()=>{
@@ -3771,7 +3784,7 @@
     const eyebrow = document.getElementById('btwStep1Eyebrow');
     if(coachSignup){
       // Coaches sign up in one step: no licence, no verification.
-      selectedPlan = COACH_PLAN_FROM[plan] || 'team_monthly';
+      selectedPlan = COACH_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('team_') === 0 ? plan : 'team_monthly');
       teamField.style.display = '';
       nextBtn.textContent = 'Create account';
       if(eyebrow) eyebrow.textContent = 'Your coach account';
@@ -4503,6 +4516,19 @@
   }
   // Warning-triangle icon marking a patient in a critical situation.
   const RISK_ICO = '<svg class="btw-risk-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+  // Traffic-light status dot from the latest mood and any safety flag.
+  // Green: doing well (7+). Orange: middle (4-6). Red: needs attention now
+  // (a safety flag, or a very low mood) — reach out as soon as you can.
+  function statusPing(p){
+    let cls = 'none', label = t('No check-ins yet');
+    if(p.has_recent_risk){ cls = 'high'; label = t('Needs attention now'); }
+    else if(p.last_mood != null){
+      if(p.last_mood <= 3){ cls = 'high'; label = t('Needs attention now'); }
+      else if(p.last_mood <= 6){ cls = 'mid'; label = t('Doing okay'); }
+      else { cls = 'good'; label = t('Doing well'); }
+    }
+    return '<span class="btw-ping ' + cls + '" title="' + esc(label) + '" aria-label="' + esc(label) + '"></span>';
+  }
   function patientCardMeta(p){
     if(p.has_recent_risk) return '<span class="btw-patient-meta-risk" style="color:var(--clay);font-weight:700;">' + esc(t('Flagged for review')) + '</span>';
     if(!p.last_check_in_at) return esc(t('No check-ins yet'));
@@ -4544,7 +4570,7 @@
       return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
-        <div class="btw-patient-name">${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
+        <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
         <div class="btw-patient-meta">${patientCardMeta(p)}</div>
       </div>`;
     }).join('');
