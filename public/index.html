@@ -2093,31 +2093,53 @@
             <input type="text" id="btwSuPractice" placeholder="Solo practice is fine">
           </div>
           <div class="btw-form-field">
-            <label>Province</label>
+            <label>Province / State</label>
             <select id="btwSuProvince">
-              <option value="QC">Quebec</option>
-              <option value="ON">Ontario</option>
-              <option value="BC">British Columbia</option>
-              <option value="AB">Alberta</option>
-              <option value="other">Other</option>
+              <optgroup label="Canada">
+                <option value="Alberta">Alberta</option>
+                <option value="British Columbia">British Columbia</option>
+                <option value="Manitoba">Manitoba</option>
+                <option value="New Brunswick">New Brunswick</option>
+                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                <option value="Nova Scotia">Nova Scotia</option>
+                <option value="Ontario">Ontario</option>
+                <option value="Prince Edward Island">Prince Edward Island</option>
+                <option value="Quebec" selected>Quebec</option>
+                <option value="Saskatchewan">Saskatchewan</option>
+                <option value="Northwest Territories">Northwest Territories</option>
+                <option value="Nunavut">Nunavut</option>
+                <option value="Yukon">Yukon</option>
+              </optgroup>
+              <optgroup label="United States">
+                <option value="Alabama">Alabama</option><option value="Alaska">Alaska</option><option value="Arizona">Arizona</option><option value="Arkansas">Arkansas</option><option value="California">California</option><option value="Colorado">Colorado</option><option value="Connecticut">Connecticut</option><option value="Delaware">Delaware</option><option value="District of Columbia">District of Columbia</option><option value="Florida">Florida</option><option value="Georgia">Georgia</option><option value="Hawaii">Hawaii</option><option value="Idaho">Idaho</option><option value="Illinois">Illinois</option><option value="Indiana">Indiana</option><option value="Iowa">Iowa</option><option value="Kansas">Kansas</option><option value="Kentucky">Kentucky</option><option value="Louisiana">Louisiana</option><option value="Maine">Maine</option><option value="Maryland">Maryland</option><option value="Massachusetts">Massachusetts</option><option value="Michigan">Michigan</option><option value="Minnesota">Minnesota</option><option value="Mississippi">Mississippi</option><option value="Missouri">Missouri</option><option value="Montana">Montana</option><option value="Nebraska">Nebraska</option><option value="Nevada">Nevada</option><option value="New Hampshire">New Hampshire</option><option value="New Jersey">New Jersey</option><option value="New Mexico">New Mexico</option><option value="New York">New York</option><option value="North Carolina">North Carolina</option><option value="North Dakota">North Dakota</option><option value="Ohio">Ohio</option><option value="Oklahoma">Oklahoma</option><option value="Oregon">Oregon</option><option value="Pennsylvania">Pennsylvania</option><option value="Rhode Island">Rhode Island</option><option value="South Carolina">South Carolina</option><option value="South Dakota">South Dakota</option><option value="Tennessee">Tennessee</option><option value="Texas">Texas</option><option value="Utah">Utah</option><option value="Vermont">Vermont</option><option value="Virginia">Virginia</option><option value="Washington">Washington</option><option value="West Virginia">West Virginia</option><option value="Wisconsin">Wisconsin</option><option value="Wyoming">Wyoming</option>
+              </optgroup>
             </select>
           </div>
           <div class="btw-form-field">
-            <label>Professional order / college</label>
+            <label>Professional order, college, or state board</label>
             <select id="btwSuOrder">
-              <option value="OPQ">Ordre des psychologues du Québec (OPQ)</option>
-              <option value="OTSTCFQ">OTSTCFQ, social work, couple &amp; family therapy</option>
-              <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
-              <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
-              <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
-              <option value="other">Other regulated order / college</option>
+              <optgroup label="Canada">
+                <option value="OPQ">Ordre des psychologues du Québec (OPQ)</option>
+                <option value="OTSTCFQ">OTSTCFQ, social work, couple &amp; family therapy</option>
+                <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
+                <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
+                <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
+              </optgroup>
+              <optgroup label="United States">
+                <option value="US-Psychologist">Licensed Psychologist (state board)</option>
+                <option value="US-LCSW">Licensed Clinical Social Worker (LCSW)</option>
+                <option value="US-LPC">Licensed Professional Counselor (LPC)</option>
+                <option value="US-LMFT">Licensed Marriage &amp; Family Therapist (LMFT)</option>
+                <option value="US-LMHC">Licensed Mental Health Counselor (LMHC)</option>
+              </optgroup>
+              <option value="other">Other regulated licence / board</option>
             </select>
           </div>
           <div class="btw-form-field">
             <label>Professional licence / order number</label>
-            <input type="text" id="btwSuLicence" placeholder="e.g. OPQ number">
+            <input type="text" id="btwSuLicence" placeholder="e.g. licence or order number">
           </div>
-          <div class="btw-form-note">We verify this against your order's public registry before your account is activated, Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
+          <div class="btw-form-note">We verify this against your licensing board's public registry before your account is activated. Between is for licensed clinicians using it with their own clients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
           <div class="btw-form-error" id="btwStep2Error"></div>
           <div class="btw-form-row">
             <button class="btw-modal-continue secondary" id="btwStep2Back">Back</button>
@@ -2521,11 +2543,11 @@
     "Delete this patient permanently":"Supprimer ce patient définitivement",
     // signup modal
     "Step 1 of 3 · Account":"Étape 1 de 3 · Compte","Create your account":"Créez votre compte","Full name":"Nom complet","Work email":"Courriel professionnel",
-    "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province",
+    "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province","Province / State":"Province / État",
     "Quebec":"Québec","Ontario":"Ontario","British Columbia":"Colombie-Britannique","Alberta":"Alberta","Other":"Autre",
-    "Professional order / college":"Ordre ou collège professionnel",
+    "Professional order, college, or state board":"Ordre, collège ou conseil professionnel",
     "Professional licence / order number":"Numéro de permis / d'ordre professionnel",
-    "We verify this against your order's public registry before your account is activated, Between is for licensed clinicians using it with their own patients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre avant d'activer votre compte, Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres patients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
+    "We verify this against your licensing board's public registry before your account is activated. Between is for licensed clinicians using it with their own clients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre professionnel avant d'activer votre compte. Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres clients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
     "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & submit for verification":"Vérifiez et soumettez pour validation",
     "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
     "Create account & submit":"Créer le compte et soumettre",
@@ -4100,16 +4122,17 @@
     const name = document.getElementById('btwSuName').value.trim();
     const email = document.getElementById('btwSuEmail').value.trim();
     const practice = document.getElementById('btwSuPractice').value.trim() || 'Solo practice';
-    const province = document.getElementById('btwSuProvince').value;
-    const order = document.getElementById('btwSuOrder').value;
+    const provSel = document.getElementById('btwSuProvince');
+    const orderSel = document.getElementById('btwSuOrder');
+    const province = provSel.value;
+    const orderText = orderSel.selectedOptions[0] ? orderSel.selectedOptions[0].text : orderSel.value;
     const licence = document.getElementById('btwSuLicence').value.trim();
-    const provinceNames = {QC:'Quebec',ON:'Ontario',BC:'British Columbia',AB:'Alberta',other:'Other'};
     document.getElementById('btwReviewBox').innerHTML = `
       <div><span class="label">Name:</span> <strong>${esc(name)}</strong></div>
       <div><span class="label">Email:</span> <strong>${esc(email)}</strong></div>
       <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
-      <div><span class="label">Province:</span> <strong>${esc(provinceNames[province]||province)}</strong></div>
-      <div><span class="label">Order:</span> <strong>${esc(order)}</strong> · <strong>${esc(licence)}</strong></div>
+      <div><span class="label">Province / State:</span> <strong>${esc(province)}</strong></div>
+      <div><span class="label">Licence:</span> <strong>${esc(orderText)}</strong> · <strong>${esc(licence)}</strong></div>
       <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong> · starts after verification</div>
     `;
   }
