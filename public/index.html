@@ -1,5 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Between — Between-session check-ins for therapy</title>
 <meta name="description" content="Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.">
@@ -39,6 +42,9 @@
     --font-mono:'IBM Plex Mono', monospace;
   }
   *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;}
+  body{background:var(--paper);overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;}
   .btw-root{
     background:var(--paper);
     color:var(--ink);
@@ -1357,6 +1363,8 @@
     float:right;
   }
 </style>
+</head>
+<body>
 
 <div class="btw-root">
   <div class="btw-modal-overlay" id="btwConsentOverlay" style="display:none;">
@@ -5383,3 +5391,5 @@
     .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
 })();
 </script>
+</body>
+</html>
