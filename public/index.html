@@ -1087,16 +1087,16 @@
     padding:16px 0 40px;
   }
   .btw-hero-top{display:flex;align-items:center;justify-content:space-between;gap:40px;}
-  .btw-hero-copy{max-width:600px;}
+  .btw-hero-copy{max-width:540px;}
   .btw-hero-aside{flex:0 0 auto;opacity:0;animation:btwHeroFade .8s ease .2s both;}
-  .btw-cap{width:290px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;box-shadow:0 22px 46px rgba(31,45,40,.10);}
-  .btw-cap-top{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:14px;}
-  .btw-cap-rec{width:8px;height:8px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 4px rgba(176,82,59,.14);}
-  .btw-cap-wave{display:flex;align-items:center;gap:3px;height:34px;margin-bottom:14px;}
-  .btw-cap-wave span{width:3px;border-radius:2px;background:var(--moss);}
-  .btw-cap-q{font-family:var(--font-display);font-size:17px;line-height:1.35;color:var(--ink);margin-bottom:10px;}
-  .btw-cap-foot{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
-  @media (max-width:900px){.btw-hero-top{display:block;} .btw-hero-aside{display:none;}}
+  .btw-cap{width:462px;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:36px 36px 32px;box-shadow:0 30px 62px rgba(31,45,40,.14);}
+  .btw-cap-top{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:14.5px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:30px;}
+  .btw-cap-rec{width:13px;height:13px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 6px rgba(176,82,59,.13);}
+  .btw-cap-wave{display:flex;align-items:center;gap:4px;height:84px;margin-bottom:30px;}
+  .btw-cap-wave span{width:5px;border-radius:3px;background:var(--moss);}
+  .btw-cap-q{font-family:var(--font-display);font-size:31px;line-height:1.26;color:var(--ink);margin-bottom:20px;}
+  .btw-cap-foot{font-family:var(--font-mono);font-size:13.5px;color:var(--ink-soft);}
+  @media (max-width:1000px){.btw-hero-top{display:block;} .btw-hero-aside{display:none;}}
   /* ---- hero: session-to-session thread ---- */
   .btw-hero-thread{margin:36px 0 0;opacity:0;animation:btwHeroFade .8s ease .15s both;}
   .btw-ht-rail{position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:10px;padding:0 8px;}
@@ -3347,7 +3347,7 @@
     var _aside = document.getElementById('btwHeroAside');
     if(_aside){
       var _v = d.checkins.filter(function(c){return c.voice;})[0] || d.checkins[0];
-      var _bars = [6,11,18,9,22,14,26,12,20,8,16,24,10,18,7,14,21,11,15,6].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('');
+      var _bars = [10,20,34,16,46,26,60,22,42,14,32,52,18,40,12,30,50,16,36,12,28,48,20,38,14,32,56,18,34,10,26,44,16,28].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('');
       _aside.innerHTML = '<div class="btw-cap"><div class="btw-cap-top"><span class="btw-cap-rec"></span>REC · 0:12</div>'+
         '<div class="btw-cap-wave" aria-hidden="true">'+_bars+'</div>'+
         '<div class="btw-cap-q">'+esc(_v.text)+'</div>'+
