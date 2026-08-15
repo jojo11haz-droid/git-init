@@ -1224,17 +1224,17 @@
   .btw-feature-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:10px;
+    gap:14px;
   }
   @media (max-width:820px){.btw-feature-grid{grid-template-columns:1fr 1fr;}}
   @media (max-width:520px){.btw-feature-grid{grid-template-columns:1fr;}}
   .btw-feature{
-    background:transparent;
-    border:none;
+    background:var(--panel);
+    border:1px solid var(--line);
     border-radius:16px;
     padding:22px 20px;
+    box-shadow:0 10px 26px rgba(31,45,40,.05);
   }
-  .btw-feature:hover{background:var(--panel);}
   .btw-feature-icon{
     width:46px;height:46px;border-radius:50%;
     background:var(--moss-light);color:var(--moss);
