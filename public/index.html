@@ -1086,7 +1086,17 @@
     display:block;
     padding:16px 0 40px;
   }
-  .btw-hero-copy{max-width:660px;}
+  .btw-hero-top{display:flex;align-items:center;justify-content:space-between;gap:40px;}
+  .btw-hero-copy{max-width:600px;}
+  .btw-hero-aside{flex:0 0 auto;opacity:0;animation:btwHeroFade .8s ease .2s both;}
+  .btw-cap{width:290px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;box-shadow:0 22px 46px rgba(31,45,40,.10);}
+  .btw-cap-top{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:14px;}
+  .btw-cap-rec{width:8px;height:8px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 4px rgba(176,82,59,.14);}
+  .btw-cap-wave{display:flex;align-items:center;gap:3px;height:34px;margin-bottom:14px;}
+  .btw-cap-wave span{width:3px;border-radius:2px;background:var(--moss);}
+  .btw-cap-q{font-family:var(--font-display);font-size:17px;line-height:1.35;color:var(--ink);margin-bottom:10px;}
+  .btw-cap-foot{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  @media (max-width:900px){.btw-hero-top{display:block;} .btw-hero-aside{display:none;}}
   /* ---- hero: session-to-session thread ---- */
   .btw-hero-thread{margin:36px 0 0;opacity:0;animation:btwHeroFade .8s ease .15s both;}
   .btw-ht-rail{position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:10px;padding:0 8px;}
@@ -1620,6 +1630,7 @@
     <div class="btw-home">
 
       <section class="btw-hero">
+        <div class="btw-hero-top">
         <div class="btw-hero-copy">
           <div class="btw-hero-eyebrow">For therapists, counsellors &amp; anyone on their own</div>
           <h1 id="btwHeroH1">What happens<br><em>between</em> sessions<br>doesn't have to<br>stay a mystery.</h1>
@@ -1630,6 +1641,8 @@
           </div>
           <div class="btw-hero-meta">14-day free trial · Private &amp; consent-first · Not a crisis service</div>
           <button type="button" class="btw-hero-solo-link" onclick="document.querySelector('.btw-solo-section').scrollIntoView({behavior:'smooth',block:'start'})">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
         </div>
         <div class="btw-hero-thread" id="btwHeroThread"></div>
       </section>
@@ -3331,6 +3344,15 @@
         '<div class="ptext">'+esc(d.summary)+'</div>'+
         '<div class="pflag">◆ '+esc(d.flag)+'</div>'+
       '</div>';
+    var _aside = document.getElementById('btwHeroAside');
+    if(_aside){
+      var _v = d.checkins.filter(function(c){return c.voice;})[0] || d.checkins[0];
+      var _bars = [6,11,18,9,22,14,26,12,20,8,16,24,10,18,7,14,21,11,15,6].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('');
+      _aside.innerHTML = '<div class="btw-cap"><div class="btw-cap-top"><span class="btw-cap-rec"></span>REC · 0:12</div>'+
+        '<div class="btw-cap-wave" aria-hidden="true">'+_bars+'</div>'+
+        '<div class="btw-cap-q">'+esc(_v.text)+'</div>'+
+        '<div class="btw-cap-foot">'+esc(_v.when)+'</div></div>';
+    }
   }
   function translateStatic(){
     const walker = document.createTreeWalker(btwRoot, NodeFilter.SHOW_TEXT, null);
