@@ -3275,36 +3275,36 @@
   // into #btwHeroThread from translateStatic() so it swaps on every toggle.
   const HERO_THREAD = {
     therapy:{
-      en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
+      en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
         {cls:"good",when:"Wed · 7:12a",text:"Slept better than I have in a while."},
         {cls:"rough",voice:true,when:"Thu · 11:40p",text:"Couldn't switch off after work."},
         {cls:"good",when:"Sat · 3:20p",text:"Saw an old friend. Felt lighter."},
         {cls:"mid",when:"Mon · 8:05a",text:"Anxious about the week ahead."}]},
-      fr:{last:"Dernière séance",next:"Prochaine séance",day:"Mar",day2:"Mar",since:"Depuis la dernière séance",waiting:"En attente avant mar.",flag:"1 signalé",summary:"Semaine difficile. Stress au travail et mauvais sommeil. Un bon moment : elle a vu un vieil ami la fin de semaine.",aria:"Une semaine d'une séance à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
+      fr:{last:"Dernière séance",next:"Prochaine séance",day:"Mar",day2:"Mar",ai:"Résumé IA",since:"Depuis la dernière séance",waiting:"En attente avant mar.",flag:"1 signalé",summary:"Semaine difficile. Stress au travail et mauvais sommeil. Un bon moment : elle a vu un vieil ami la fin de semaine.",aria:"Une semaine d'une séance à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
         {cls:"good",when:"Mer · 7:12",text:"Mieux dormi que depuis longtemps."},
         {cls:"rough",voice:true,when:"Jeu · 23:40",text:"Impossible de décrocher après le travail."},
         {cls:"good",when:"Sam · 15:20",text:"Vu un vieil ami. Je me sens plus légère."},
         {cls:"mid",when:"Lun · 8:05",text:"Anxieuse à l'idée de la semaine."}]}
     },
     sports:{
-      en:{last:"Last practice",next:"Next game",day:"Wed",day2:"Sat",since:"Since last practice",waiting:"Waiting before Sat",flag:"1 to check on",summary:"Fit but tense. Nerves building before the game. One high: a sharp session on Friday.",aria:"A week from last practice to next game, with four check-ins that gather into a short read.",checkins:[
+      en:{last:"Last practice",next:"Next game",day:"Wed",day2:"Sat",ai:"AI summary",since:"Since last practice",waiting:"Waiting before Sat",flag:"1 to check on",summary:"Fit but tense. Nerves building before the game. One high: a sharp session on Friday.",aria:"A week from last practice to next game, with four check-ins that gather into a short read.",checkins:[
         {cls:"good",when:"Wed · 6:40a",text:"Legs feel fresh again after the rest day."},
         {cls:"rough",voice:true,when:"Thu · 9:15p",text:"Head not in it. The pressure before the game is getting to me."},
         {cls:"good",when:"Fri · 4:10p",text:"Best session in weeks. Really clicked with the team."},
         {cls:"mid",when:"Sat · 8:00a",text:"Nervous about starting today."}]},
-      fr:{last:"Dernier entraînement",next:"Prochain match",day:"Mer",day2:"Sam",since:"Depuis le dernier entraînement",waiting:"En attente avant sam.",flag:"1 à surveiller",summary:"En forme mais tendu. La nervosité monte avant le match. Un bon moment : une séance vive vendredi.",aria:"Une semaine du dernier entraînement au prochain match, avec quatre suivis qui forment un court aperçu.",checkins:[
+      fr:{last:"Dernier entraînement",next:"Prochain match",day:"Mer",day2:"Sam",ai:"Résumé IA",since:"Depuis le dernier entraînement",waiting:"En attente avant sam.",flag:"1 à surveiller",summary:"En forme mais tendu. La nervosité monte avant le match. Un bon moment : une séance vive vendredi.",aria:"Une semaine du dernier entraînement au prochain match, avec quatre suivis qui forment un court aperçu.",checkins:[
         {cls:"good",when:"Mer · 6:40",text:"Les jambes sont fraîches après la journée de repos."},
         {cls:"rough",voice:true,when:"Jeu · 21:15",text:"La tête n'y est pas. La pression avant le match me pèse."},
         {cls:"good",when:"Ven · 16:10",text:"Meilleure séance depuis des semaines. Bien connecté avec l'équipe."},
         {cls:"mid",when:"Sam · 8:00",text:"Nerveux à l'idée de commencer aujourd'hui."}]}
     },
     recovery:{
-      en:{last:"Last meeting",next:"Next meeting",day:"Thu",day2:"Thu",since:"Since last meeting",waiting:"Waiting before Thu",flag:"1 flagged",summary:"Hard week but held on. A strong craving Thursday, and a good call for support on Saturday.",aria:"A week from last meeting to next meeting, with four check-ins that gather into a short summary.",checkins:[
+      en:{last:"Last meeting",next:"Next meeting",day:"Thu",day2:"Thu",ai:"AI summary",since:"Since last meeting",waiting:"Waiting before Thu",flag:"1 flagged",summary:"Hard week but held on. A strong craving Thursday, and a good call for support on Saturday.",aria:"A week from last meeting to next meeting, with four check-ins that gather into a short summary.",checkins:[
         {cls:"good",when:"Wed · 7:30a",text:"Woke up clear. Made it to the gym."},
         {cls:"rough",voice:true,when:"Thu · 11:50p",text:"Craving hit hard tonight. Sitting with it instead of acting."},
         {cls:"good",when:"Sat · 2:00p",text:"Called my sponsor before it got bad. Glad I did."},
         {cls:"mid",when:"Mon · 8:20a",text:"Shaky start. One hour at a time."}]},
-      fr:{last:"Dernière rencontre",next:"Prochaine rencontre",day:"Jeu",day2:"Jeu",since:"Depuis la dernière rencontre",waiting:"En attente avant jeu.",flag:"1 signalé",summary:"Semaine difficile mais tenue. Une forte envie jeudi, et un bon appel à l'aide samedi.",aria:"Une semaine d'une rencontre à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
+      fr:{last:"Dernière rencontre",next:"Prochaine rencontre",day:"Jeu",day2:"Jeu",ai:"Résumé IA",since:"Depuis la dernière rencontre",waiting:"En attente avant jeu.",flag:"1 signalé",summary:"Semaine difficile mais tenue. Une forte envie jeudi, et un bon appel à l'aide samedi.",aria:"Une semaine d'une rencontre à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
         {cls:"good",when:"Mer · 7:30",text:"Réveil clair. Je suis allé au gym."},
         {cls:"rough",voice:true,when:"Jeu · 23:50",text:"Grosse envie ce soir. Je reste avec, sans agir."},
         {cls:"good",when:"Sam · 14:00",text:"Appelé mon parrain avant que ça dérape. Content de l'avoir fait."},
@@ -3326,7 +3326,7 @@
         '<div class="btw-ht-blk end"><span class="btw-ht-nd"></span><span class="btw-ht-lab"><span class="t">'+esc(d.next)+'</span><span class="d">'+esc(d.day2||d.day)+'</span></span></div>'+
       '</div>'+
       '<div class="btw-ht-payoff">'+
-        '<div class="pl">'+esc(d.since)+'<b>'+esc(d.waiting)+'</b></div>'+
+        '<div class="pl">'+esc(d.ai)+'<b>'+esc(d.since)+'</b></div>'+
         '<svg class="spark" viewBox="0 0 92 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="3,9 25,8 48,22 66,19 89,13" fill="none" stroke="#1F5346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="48" cy="22" r="3" fill="#B0523B"/></svg>'+
         '<div class="ptext">'+esc(d.summary)+'</div>'+
         '<div class="pflag">◆ '+esc(d.flag)+'</div>'+
