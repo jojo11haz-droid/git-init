@@ -39,6 +39,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.set('trust proxy', 1); // honor x-forwarded-proto behind Render/Railway/Fly
+app.disable('x-powered-by'); // don't advertise the framework/version
 
 // Force HTTPS and set baseline security headers. Behind Render's TLS-terminating
 // proxy, the original scheme arrives as x-forwarded-proto. We only redirect when
@@ -57,6 +58,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Turn off browser features the app doesn't use. Microphone stays on (self)
+  // for voice-memo check-ins.
+  res.setHeader('Permissions-Policy', 'camera=(), geolocation=(), payment=(), microphone=(self)');
   // Content-Security-Policy. The app's only external resource is Google Fonts;
   // everything else is same-origin. Inline <style>/<script> and onclick handlers
   // need 'unsafe-inline'; the rest is locked down (no plugins, no framing, no
@@ -76,6 +80,17 @@ app.use((req, res, next) => {
     "upgrade-insecure-requests"
   ].join('; '));
   next();
+});
+
+// Vulnerability disclosure contact (RFC 9116). Served explicitly because
+// express.static ignores dotfile paths like /.well-known by default.
+app.get('/.well-known/security.txt', (req, res) => {
+  res.type('text/plain').send(
+    `Contact: mailto:${CONTACT_EMAIL}\n` +
+    `Expires: 2027-01-01T00:00:00.000Z\n` +
+    `Preferred-Languages: en, fr\n` +
+    `Canonical: https://betweenpsych.com/.well-known/security.txt\n`
+  );
 });
 
 // Stripe webhook must see the RAW body to verify the signature, so it's mounted
