@@ -147,6 +147,7 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS clinician_note TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
@@ -437,9 +438,21 @@ export async function markPatientReviewed(clinicianId, patientId) {
 }
 
 export async function getPatient(clinicianId, patientId) {
+  // clinician_note is included here (clinician-scoped read only) — it is a
+  // private note for the clinician and must never reach the patient scope.
   const { rows } = await pool.query(
-    `SELECT ${PATIENT_ROW_COLS} FROM patients WHERE id = $1 AND clinician_id = $2`,
+    `SELECT ${PATIENT_ROW_COLS}, clinician_note FROM patients WHERE id = $1 AND clinician_id = $2`,
     [patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// Update the clinician's private note/reminders for one of their patients.
+// Ownership is enforced in the WHERE clause; a patient can never call this.
+export async function updatePatientNote(clinicianId, patientId, note) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET clinician_note = $1 WHERE id = $2 AND clinician_id = $3 RETURNING id`,
+    [note, patientId, clinicianId]
   );
   return rows[0] || null;
 }
@@ -450,7 +463,7 @@ export async function listPatients(clinicianId) {
   // Ordered flagged-first, then most-recent check-in, so the top of the list
   // is always "who to look at now".
   const { rows } = await pool.query(
-    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')},
+    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, p.clinician_note,
        count(c.id) FILTER (WHERE c.deleted_at IS NULL)::int AS check_in_count,
        count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > now() - interval '7 days')::int AS recent_check_in_count,
        count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > coalesce(p.last_reviewed_at, '-infinity'::timestamptz))::int AS new_check_in_count,
