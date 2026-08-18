@@ -338,6 +338,13 @@
     border-radius:50%;
     background:var(--amber);
   }
+  /* Marks a patient the clinician has kept private notes on. */
+  .btw-patient-note{
+    position:absolute;bottom:8px;right:8px;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--moss);
+  }
   .btw-patient-del{
     position:absolute;top:3px;right:4px;
     width:21px;height:21px;padding:0;
@@ -2518,6 +2525,7 @@
     "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":"Lors d'une semaine chargée, Between prend la place des courriels et des appels qui s'accumulent entre les séances. Vous passez moins de temps sur les messages et plus sur le travail qui compte.",
     "For individuals, too":"Pour les particuliers aussi",
     "Notes and follow-ups":"Notes et suivis",
+    "Has notes":"Contient des notes",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -5008,6 +5016,7 @@
       const active = p.id === state.selectedPatientId;
       return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
+        ${p.clinician_note ? `<span class="btw-patient-note" title="${esc(t('Has notes'))}" aria-label="${esc(t('Has notes'))}"></span>` : ''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
         <div class="btw-patient-meta">${patientCardMeta(p)}</div>
