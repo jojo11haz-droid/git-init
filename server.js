@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
-  dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed,
+  dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, createCoach, createMentor, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
@@ -706,6 +706,24 @@ app.get('/api/patients', requireDb, requireAuth, requireVerifiedClinician, async
   } catch (err) {
     console.error('Error listing patients:', err);
     res.status(500).json({ error: 'Could not list patients.' });
+  }
+});
+
+// The clinician's private note / follow-up reminders for one patient. Only the
+// owning clinician can read (via getPatient/listPatients) or write it; it is
+// never exposed to the patient scope.
+app.put('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    let { note } = req.body || {};
+    if (note == null) note = '';
+    if (typeof note !== 'string') return res.status(400).json({ error: 'Note must be text.' });
+    if (note.length > 5000) return res.status(400).json({ error: 'That note is too long (5000 characters max).' });
+    const updated = await updatePatientNote(req.clinician.id, req.params.id, note.trim() ? note : null);
+    if (!updated) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error saving patient note:', err);
+    res.status(500).json({ error: 'Could not save the note.' });
   }
 });
 
