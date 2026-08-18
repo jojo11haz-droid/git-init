@@ -57,6 +57,24 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Content-Security-Policy. The app's only external resource is Google Fonts;
+  // everything else is same-origin. Inline <style>/<script> and onclick handlers
+  // need 'unsafe-inline'; the rest is locked down (no plugins, no framing, no
+  // foreign origins), and any http subresource is upgraded to https.
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "form-action 'self'",
+    "img-src 'self' data:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "script-src 'self' 'unsafe-inline'",
+    "connect-src 'self'",
+    "media-src 'self' blob:",
+    "upgrade-insecure-requests"
+  ].join('; '));
   next();
 });
 
