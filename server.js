@@ -40,6 +40,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.set('trust proxy', 1); // honor x-forwarded-proto behind Render/Railway/Fly
 
+// Force HTTPS and set baseline security headers. Behind Render's TLS-terminating
+// proxy, the original scheme arrives as x-forwarded-proto. We only redirect when
+// that header says "http" (i.e. in production behind the proxy), so local dev
+// over plain http keeps working. HSTS is only sent over HTTPS, per spec.
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  const xfp = req.headers['x-forwarded-proto'];
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.0.0.1');
+  if (xfp && xfp !== 'https' && !isLocal) {
+    return res.redirect(301, 'https://' + host + req.originalUrl);
+  }
+  if (xfp === 'https' || req.secure) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // Stripe webhook must see the RAW body to verify the signature, so it's mounted
 // before express.json() consumes it. Best-effort: activation also happens on
 // the checkout return, so the app is correct even if webhooks aren't set up.
