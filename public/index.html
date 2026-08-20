@@ -721,6 +721,31 @@
     background:var(--moss);
     color:#fff;
   }
+  /* Sub-mode slider shown only inside the Schools audience */
+  .btw-submode{
+    display:none;
+    align-items:center;
+    padding:2px;
+    border:1px solid var(--moss-light);
+    border-radius:20px;
+    background:var(--moss-light);
+  }
+  .btw-submode.on{ display:inline-flex; }
+  .btw-submode-btn{
+    border:none;
+    background:transparent;
+    color:var(--moss);
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:12px;
+    padding:5px 11px;
+    border-radius:16px;
+    cursor:pointer;
+  }
+  .btw-submode-btn.active{
+    background:var(--moss);
+    color:#fff;
+  }
   .btw-role-toggle{
     display:flex;
     gap:4px;
@@ -1635,6 +1660,10 @@
         <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
         <button type="button" class="btw-aud-btn" data-aud="recovery">Addiction</button>
         <button type="button" class="btw-aud-btn" data-aud="schools">Schools</button>
+      </div>
+      <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
+        <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
+        <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
       </div>
       <div class="btw-lang" role="group" aria-label="Language / Langue">
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
@@ -2846,7 +2875,8 @@
   };
 
   let curLang = 'en';
-  let curAudience = 'therapy';        // 'therapy' | 'sports' — marketing copy only
+  let curAudience = 'therapy';        // 'therapy' | 'sports' | 'recovery' | 'schools' — marketing copy only
+  let curSchoolMode = 'guidance';     // within Schools: 'guidance' (counsellor) | 'classroom' (teacher)
   const _orig = new WeakMap();
   const heroH1 = document.getElementById('btwHeroH1');
   const heroEn = heroH1 ? heroH1.innerHTML : '';
@@ -2855,6 +2885,8 @@
   const heroSportsFr = 'Ce qui se passe<br><em>entre</em> les entraînements<br>et les matchs ne devrait<br>pas rester un mystère.';
   const heroSchoolsEn = 'What happens<br><em>between</em> check-ins<br>doesn\'t have to<br>stay a mystery.';
   const heroSchoolsFr = 'Ce qui se passe<br><em>entre</em> les suivis<br>ne devrait pas<br>rester un mystère.';
+  const heroSchoolsClassEn = 'What happens<br><em>between</em> classes<br>doesn\'t have to<br>stay a mystery.';
+  const heroSchoolsClassFr = 'Ce qui se passe<br><em>entre</em> les cours<br>ne devrait pas<br>rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwLoginPassword:'Votre mot de passe',
@@ -2881,7 +2913,7 @@
   function audDicts(){
     if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
     if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
-    if(curAudience === 'schools') return [SCHOOLS_EN, SCHOOLS_FR];
+    if(curAudience === 'schools') return curSchoolMode === 'classroom' ? [SCHOOLS_CLASS_EN, SCHOOLS_CLASS_FR] : [SCHOOLS_EN, SCHOOLS_FR];
     return null;
   }
   function t(en){
@@ -3550,6 +3582,93 @@
     "Delete this patient permanently":"Supprimer cet élève définitivement",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos rencontres."
   };
+  // Classroom mode = the teacher's view inside Schools. It layers homework /
+  // workload wording on top of the guidance (counsellor) schools dict, so every
+  // student-facing string is inherited and only the teacher-facing ones change.
+  const SCHOOLS_CLASS_EN = Object.assign({}, SCHOOLS_EN, {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Between-class check-ins for teachers. A student sends a quick note when they're stuck or stressed about the work, AI summarizes it, and you see where the class is struggling before you teach.",
+    "For therapists, counsellors & anyone on their own":"For teachers, classrooms & anyone on their own",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Your students send a quick note between classes when they're stuck or stressed about the work. Between turns it into a short read on how the class is coping and where they're getting stuck. You start the next class already knowing who needs a hand.",
+    "I'm a therapist":"I'm a teacher",
+    "Invited by your therapist?":"Invited by your teacher?",
+    "Enter the invite code from your therapist.":"Enter the invite code from your teacher.",
+    "Therapist view":"Teacher view",
+    "The important part happens between sessions.":"The important part happens between classes.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each student, so you start the next class already knowing who's stuck. Log in, or start a free trial. A student's data is only ever visible to you.",
+    "Less admin, more time":"Less guessing, more support",
+    "Built for real practice":"Built for real classrooms",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Stuck on a problem, behind on the reading, or finally got it. A quick voice memo or text the moment it happens. Not a week later.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Trends, recurring sticking points and a recap of the days since you last taught, waiting in your dashboard.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Quick and easy for you and your students. A check-in takes under a minute. Your whole class is one glance instead of thirty clicks.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "The same tool seen from both sides. Students check in within seconds and you get the whole picture before you teach.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":"What you see: your whole class at a glance with each student's trends before you teach.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":"Flagged and new check-ins rise to the top so a big class is one glance. See who needs you in seconds instead of clicks.",
+    "Rough week. Work stress kept me up again.":"Rough week. Stuck on the essay and behind on the reading.",
+    "Rough week, work stress kept me up again.":"Rough week, stuck on the essay and behind on the reading.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Tough stretch. Stuck on the essay and behind on the reading. One win: the math finally clicked. No safety concerns flagged.",
+    "Rough week. Work stress kept her":"Tough stretch. The essay kept her",
+    "up several nights. One good moment:":"stuck for days. One win:",
+    "she saw an old friend on the weekend.":"the math finally clicked.",
+    "Work":"Homework",
+    "Family":"Class",
+    "For therapists & practices":"For schools & teachers",
+    "Solo":"Teacher",
+    "For individual practitioners":"For one teacher",
+    "CAD / clinician / month":"CAD / teacher / month",
+    "Solo Annual":"Teacher Annual",
+    "Everything in Solo":"Everything in Teacher",
+    "For 2+ clinicians":"For 2+ teachers",
+    "Everything in Solo, per seat":"Everything in Teacher, per seat",
+    "Is this a replacement for my EHR?":"Is this a replacement for our gradebook?"
+  });
+  const SCHOOLS_CLASS_FR = Object.assign({}, SCHOOLS_FR, {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Des suivis entre les cours pour les enseignants. Un élève envoie une note quand il est bloqué ou stressé par le travail, l'IA la résume, et vous voyez où la classe accroche avant d'enseigner.",
+    "For therapists, counsellors & anyone on their own":"Pour enseignants, classes et les particuliers",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Vos élèves envoient une note entre les cours quand ils sont bloqués ou stressés par le travail. Between en fait un court aperçu de comment la classe s'en sort et où elle accroche. Vous commencez le prochain cours en sachant déjà qui a besoin d'un coup de main.",
+    "I'm a therapist":"Je suis enseignant",
+    "Invited by your therapist?":"Invité par votre enseignant?",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre enseignant.",
+    "Therapist view":"Vue de l'enseignant",
+    "The important part happens between sessions.":"Le plus important se passe entre les cours.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque élève, pour que vous commenciez le prochain cours en sachant déjà qui est bloqué. Connectez-vous, ou commencez un essai gratuit. Les données d'un élève ne sont visibles que par vous.",
+    "Less admin, more time":"Moins de devinettes, plus de soutien",
+    "Built for real practice":"Conçu pour de vraies classes",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Bloqué sur un problème, en retard dans les lectures, ou enfin compris. Une note vocale ou un texto sur le vif. Pas une semaine plus tard.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Tendances, points d'accrochage récurrents et un résumé des jours depuis votre dernier cours, prêts dans votre tableau de bord.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Simple et rapide pour vous et vos élèves. Un suivi prend moins d'une minute. Toute votre classe en un coup d'œil au lieu de trente clics.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "Le même outil vu des deux côtés. Les élèves font un suivi en quelques secondes et vous avez le portrait complet avant d'enseigner.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":"Ce que vous voyez : toute votre classe en un coup d'œil, avec les tendances de chaque élève avant d'enseigner.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":"Les suivis signalés et nouveaux remontent en haut : une grande classe en un coup d'œil. Voyez qui a besoin de vous en quelques secondes.",
+    "Rough week. Work stress kept me up again.":"Semaine difficile. Bloqué sur la dissertation et en retard dans les lectures.",
+    "Rough week, work stress kept me up again.":"Semaine difficile, bloqué sur la dissertation et en retard dans les lectures.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Passage difficile. Bloquée sur la dissertation et en retard dans les lectures. Une réussite : les maths ont enfin cliqué. Aucune préoccupation signalée.",
+    "Rough week. Work stress kept her":"Passage difficile. La dissertation l'a",
+    "up several nights. One good moment:":"gardée bloquée des jours. Une réussite :",
+    "she saw an old friend on the weekend.":"les maths ont enfin cliqué.",
+    "Work":"Devoirs",
+    "Family":"Cours",
+    "For therapists & practices":"Pour écoles et enseignants",
+    "Solo":"Enseignant",
+    "For individual practitioners":"Pour un enseignant",
+    "CAD / clinician / month":"CAD / enseignant / mois",
+    "Solo Annual":"Enseignant annuel",
+    "Everything in Solo":"Tout ce qu'inclut Enseignant",
+    "For 2+ clinicians":"Pour 2 enseignants et plus",
+    "Everything in Solo, per seat":"Tout ce qu'inclut Enseignant, par place",
+    "Is this a replacement for my EHR?":"Est-ce que ça remplace notre carnet de notes?"
+  });
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -3598,11 +3717,24 @@
         {cls:"rough",voice:true,when:"Mer · 21:30",text:"Les examens s'accumulent. Je me sens en retard et anxieux."},
         {cls:"good",when:"Jeu · 13:15",text:"La présentation s'est bien mieux passée que prévu."},
         {cls:"mid",when:"Ven · 8:00",text:"Nerveux pour l'examen de maths aujourd'hui."}]}
+    },
+    schools_classroom:{
+      en:{last:"Last class",next:"Next class",day:"Mon",day2:"Thu",ai:"AI summary",since:"Since last class",waiting:"Waiting before Thu",flag:"1 to check on",summary:"Keeping up but stretched. Stuck on the essay and feeling the deadline. One win: the math finally clicked.",aria:"A week from one class to the next, with four notes that gather into a short summary.",checkins:[
+        {cls:"good",when:"Tue · 4:20p",text:"Finally finished the math set. It clicked."},
+        {cls:"mid",when:"Wed · 7:30a",text:"Behind on the reading. Not sure I'll catch up."},
+        {cls:"rough",voice:true,when:"Wed · 9:10p",text:"Stuck on the essay intro. Kind of panicking about Thursday."},
+        {cls:"good",when:"Thu · 8:00a",text:"Asked for help and it made sense. Feeling better."}]},
+      fr:{last:"Dernier cours",next:"Prochain cours",day:"Lun",day2:"Jeu",ai:"Résumé IA",since:"Depuis le dernier cours",waiting:"En attente avant jeu.",flag:"1 à surveiller",summary:"Suit le rythme mais étiré. Bloqué sur la dissertation et la date approche. Une réussite : les maths ont enfin cliqué.",aria:"Une semaine d'un cours à l'autre, avec quatre notes qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mar · 16:20",text:"Enfin fini la série de maths. Ça a cliqué."},
+        {cls:"mid",when:"Mer · 7:30",text:"En retard dans les lectures. Pas sûr de rattraper."},
+        {cls:"rough",voice:true,when:"Mer · 21:10",text:"Bloqué sur l'intro de la dissertation. Un peu la panique pour jeudi."},
+        {cls:"good",when:"Jeu · 8:00",text:"J'ai demandé de l'aide et ça a fait du sens. Ça va mieux."}]}
     }
   };
   function renderHeroThread(){
     const host = document.getElementById('btwHeroThread'); if(!host) return;
-    const A = HERO_THREAD[curAudience] || HERO_THREAD.therapy;
+    const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom' : curAudience;
+    const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
     const d = A[curLang] || A.en;
     const cards = d.checkins.map(function(c){
       const wave = c.voice ? ('<span class="btw-ht-wave" aria-hidden="true">'+[4,7,10,6,9,5].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('')+'</span>') : '';
@@ -3648,7 +3780,9 @@
       heroH1.innerHTML = curAudience === 'sports'
         ? (curLang === 'fr' ? heroSportsFr : heroSportsEn)
         : curAudience === 'schools'
-        ? (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn)
+        ? (curSchoolMode === 'classroom'
+            ? (curLang === 'fr' ? heroSchoolsClassFr : heroSchoolsClassEn)
+            : (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn))
         : (curLang === 'fr' ? heroFr : heroEn);
     }
     for(const id in PH_FR){
@@ -3680,15 +3814,34 @@
     b.addEventListener('click', ()=> setLang(b.dataset.lang));
   });
 
+  // The Schools sub-slider is only meaningful inside the Schools audience.
+  function updateSchoolModeUI(){
+    const slider = document.getElementById('btwSchoolMode');
+    if(slider) slider.classList.toggle('on', curAudience === 'schools');
+    document.querySelectorAll('.btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === curSchoolMode));
+  }
+
   function setAudience(a){
     curAudience = (a === 'sports' || a === 'recovery' || a === 'schools') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+    updateSchoolModeUI();
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
+  });
+
+  function setSchoolMode(m){
+    curSchoolMode = (m === 'classroom') ? 'classroom' : 'guidance';
+    try { localStorage.setItem('btw_school_mode', curSchoolMode); } catch(e){}
+    updateSchoolModeUI();
+    translateStatic();
+    if(window.__btwDemoRefresh) window.__btwDemoRefresh();
+  }
+  document.querySelectorAll('.btw-submode-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setSchoolMode(b.dataset.mode));
   });
   // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
   function maybeCoachAudience(){
@@ -5781,6 +5934,13 @@
   curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+  try {
+    const modeParam = (new URLSearchParams(location.search).get('mode') || '').toLowerCase();
+    if(['classroom','teacher','class'].includes(modeParam)) curSchoolMode = 'classroom';
+    else if(['guidance','counsellor','counselor','wellbeing'].includes(modeParam)) curSchoolMode = 'guidance';
+    else { const sm = localStorage.getItem('btw_school_mode'); if(sm === 'classroom' || sm === 'guidance') curSchoolMode = sm; }
+  } catch(e){}
+  updateSchoolModeUI();
   setLang(_startLang, {initial:true});
 
   renderAuthState();
