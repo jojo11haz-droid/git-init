@@ -1634,6 +1634,7 @@
         <button type="button" class="btw-aud-btn active" data-aud="therapy">Therapy</button>
         <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
         <button type="button" class="btw-aud-btn" data-aud="recovery">Addiction</button>
+        <button type="button" class="btw-aud-btn" data-aud="schools">Schools</button>
       </div>
       <div class="btw-lang" role="group" aria-label="Language / Langue">
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
@@ -2852,6 +2853,8 @@
   const heroFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
   const heroSportsEn = 'What happens<br><em>between</em> practices<br>and games doesn\'t<br>have to stay a mystery.';
   const heroSportsFr = 'Ce qui se passe<br><em>entre</em> les entraînements<br>et les matchs ne devrait<br>pas rester un mystère.';
+  const heroSchoolsEn = 'What happens<br><em>between</em> check-ins<br>doesn\'t have to<br>stay a mystery.';
+  const heroSchoolsFr = 'Ce qui se passe<br><em>entre</em> les suivis<br>ne devrait pas<br>rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwLoginPassword:'Votre mot de passe',
@@ -2878,6 +2881,7 @@
   function audDicts(){
     if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
     if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
+    if(curAudience === 'schools') return [SCHOOLS_EN, SCHOOLS_FR];
     return null;
   }
   function t(en){
@@ -3351,6 +3355,201 @@
 
   // Hero "session-to-session" thread: content per audience + language, rendered
   // into #btwHeroThread from translateStatic() so it swaps on every toggle.
+  const SCHOOLS_EN = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Between-check-in notes for schools. A student sends a quick note in the moment, AI summarizes it, and you see the pattern before you next sit down together.",
+    "For therapists, counsellors & anyone on their own":"For schools, counsellors & anyone on their own",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Your students send a quick voice memo or text between check-ins, the moment something happens. Between turns it into a short read on how they're actually doing. You reach the next check-in already knowing who is doing okay and who needs a word.",
+    "14-day free trial · Private, secure & consent-first · Not a crisis service":"Free for 14 days. Private, secure and consent first. Not a crisis service.",
+    "Not a therapist? You can use Between on your own":"Not school staff? You can use Between on your own",
+    "Patient sends a check-in":"A student sends a check-in",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "A rough day, exam nerves, or a real win. A quick voice memo or text the moment it happens. Not a week later.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the student's explicit opt-in consent.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Mood trends, recurring themes and a recap of the days since you last checked in, waiting in your dashboard.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Quick and easy for you and your students. A check-in takes under a minute. Your whole group is one glance instead of thirty clicks.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "The same tool seen from both sides. Students check in within seconds and you get the whole picture before you sit down.",
+    "Patient view":"Student view",
+    "Therapist view":"Staff view",
+    "Less admin, more time":"Less chasing, more support",
+    "Built for real practice":"Built for real schools",
+    "You don't need a therapist to use Between.":"You don't need a school to use Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not your school uses Between.",
+    "Pricing for therapists and patients":"Pricing for schools and students",
+    "For therapists & practices":"For schools & staff",
+    "For patients, use Between on your own":"For students, use Between on your own",
+    "I'm a therapist":"I'm staff",
+    "I'm a patient":"I'm a student",
+    "Invited by your therapist?":"Invited by your school?",
+    "The important part happens between sessions.":"The important part happens between check-ins.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each student, so you reach the next check-in already knowing their week. Log in, or start a free trial. A student's data is only ever visible to you.",
+    "Enter the invite code from your therapist.":"Enter the invite code from your school.",
+    "What a patient sees: a check-in in under a minute by text or voice.":"What a student sees: a check-in in under a minute by text or voice.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":"What you see: all your students at a glance with each one's trends before you check in.",
+    "Clients put it in Between the moment something happens":"Students put it in Between the moment something happens",
+    "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":"On a busy week Between takes the place of the check-ins that slip through the cracks. You spend less time chasing and more time with the student in front of you.",
+    "Patients check in however's easiest in the moment.":"Students check in however's easiest in the moment.",
+    "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":"Private and secure by default. Students see and control their own data, and AI analysis is opt-in and off.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":"Flagged and new check-ins rise to the top so a big group is one glance. See who needs you in seconds instead of clicks.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":"Crisis resources are shown to students instantly if risk language is detected. They never wait on anyone.",
+    "A patient checks in within seconds":"A student checks in within seconds",
+    "Rough week. Work stress kept me up again.":"Rough week. Exams have me stressed and not sleeping.",
+    "Rough week, work stress kept me up again.":"Rough week, exams have me stressed and not sleeping.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Rough week. Exam stress and poor sleep. One bright spot: she felt good after presenting in class. No safety concerns flagged.",
+    "Rough week. Work stress kept her":"Rough week. Exam stress kept her",
+    "up several nights. One good moment:":"up several nights. One bright spot:",
+    "she saw an old friend on the weekend.":"class went better than she feared.",
+    "Work":"School",
+    "Family":"Home",
+    "Clinicians pay per seat and invite their patients in for free. Patients can also buy Between on their own, to check in and track their own patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
+    "Solo":"Staff",
+    "For individual practitioners":"For one staff member",
+    "CAD / clinician / month":"CAD / staff / month",
+    "Unlimited patients & check-ins":"Unlimited students & check-ins",
+    "In-app crisis resources for patients":"In-app crisis resources for students",
+    "Most practices":"Most schools",
+    "Solo Annual":"Staff Annual",
+    "Everything in Solo":"Everything in Staff",
+    "Group practice":"Whole school",
+    "For 2+ clinicians":"For 2+ staff",
+    "Volume pricing per seat":"Volume pricing per staff seat",
+    "Everything in Solo, per seat":"Everything in Staff, per seat",
+    "Shared practice billing":"School-level billing",
+    "Admin/practice-manager role":"Admin/coordinator role",
+    "Practice-level data agreement":"School-level data agreement",
+    "Do my patients pay anything?":"Do my students pay anything?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not for your students. When you invite a student in through your school, Between is covered by your seat and they're never billed. A student only pays if they choose a Personal plan and use Between on their own, independent of any school.",
+    "Is this a replacement for my EHR?":"Is this a replacement for our student information system?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"No, Between focuses specifically on between-check-in notes. It's designed to run alongside whatever tools your school already uses.",
+    "Where is my patients' data stored?":"Where is my students' data stored?",
+    "Caseload":"Students",
+    "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Auto-updating as check-ins come in. Select a student to see their timeline and trends.",
+    "Selected patient":"Selected student",
+    "No patient selected, pick one from your caseload":"No student selected, pick one from your students",
+    "No patients yet, add your first patient to start receiving check-ins.":"No students yet, add your first student to start receiving check-ins.",
+    "Add patient":"Add student",
+    "Delete patient":"Delete student",
+    "Add a patient first.":"Add a student first.",
+    "patient":"student",
+    "patients":"students",
+    "since last session":"since last check-in",
+    "Patient app: connected":"Student app: connected",
+    "Invite this patient":"Invite this student",
+    "View patient data & AI settings":"View student data & AI settings",
+    "Copy this message and send it to your patient:":"Copy this message and send it to your student:",
+    "Patient added. Open their card and tap \"View patient data & AI settings\" → \"Copy invite message\" to send them a sign-up link.":"Student added. Open their card and tap \"View student data & AI settings\" → \"Copy invite message\" to send them a sign-up link.",
+    "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"This removes the student and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.",
+    "To confirm, type the patient name exactly:":"To confirm, type the student name exactly:",
+    "That did not match, the patient was not deleted.":"That did not match, the student was not deleted.",
+    "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the student.",
+    "Patient consent":"Student consent",
+    "Patient data":"Student data",
+    "Delete this patient permanently":"Delete this student permanently",
+    "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our check-ins."
+  };
+  const SCHOOLS_FR = {
+    "Between-session check-ins for therapy. Clients send a quick note in the moment, AI summarizes it, and you see the pattern before your next session.":
+      "Des suivis entre les rencontres pour les écoles. Un élève envoie une note sur le vif, l'IA la résume, et vous voyez la tendance avant votre prochaine rencontre.",
+    "For therapists, counsellors & anyone on their own":"Pour écoles, intervenants et les particuliers",
+    "Your clients check in between sessions with a quick voice memo or text the moment something happens. Between turns it into a short summary and mood pattern. You walk into the next session already knowing their week and spend less time catching up.":
+      "Vos élèves font un suivi entre les rencontres avec une note vocale ou un texto, sur le vif. Between en fait un court aperçu de comment ça va vraiment. Vous arrivez à la prochaine rencontre en sachant déjà qui va bien et qui a besoin d'un mot.",
+    "14-day free trial · Private, secure & consent-first · Not a crisis service":"Gratuit pendant 14 jours. Privé, sécurisé et fondé sur le consentement. Pas un service de crise.",
+    "Not a therapist? You can use Between on your own":"Pas membre du personnel? Vous pouvez utiliser Between par vous-même",
+    "Patient sends a check-in":"Un élève envoie un suivi",
+    "Stressed, anxious, or just had a win. A quick voice memo or text the moment it happens. Not a week later at intake.":
+      "Une journée difficile, le stress d'un examen, ou une vraie victoire. Une note vocale ou un texto sur le vif. Pas une semaine plus tard.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "Un résumé court et neutre avec des thèmes. Jamais de diagnostic ni d'interprétation. Ne s'active qu'avec le consentement explicite de l'élève.",
+    "Mood trends, recurring themes and a since-last-session digest waiting in your dashboard before every appointment.":
+      "Tendances d'humeur, thèmes récurrents et un résumé des jours depuis votre dernier suivi, prêts dans votre tableau de bord.",
+    "Quick and easy for you and your patients. A check-in takes under a minute. Your whole caseload is one glance instead of thirty clicks.":
+      "Simple et rapide pour vous et vos élèves. Un suivi prend moins d'une minute. Tout votre groupe en un coup d'œil au lieu de trente clics.",
+    "The same tool seen from both sides. Patients check in in seconds and you get the whole picture before a session.":
+      "Le même outil vu des deux côtés. Les élèves font un suivi en quelques secondes et vous avez le portrait complet avant de vous asseoir avec eux.",
+    "Patient view":"Vue de l'élève",
+    "Therapist view":"Vue du personnel",
+    "Less admin, more time":"Moins de courses, plus de soutien",
+    "Built for real practice":"Conçu pour de vraies écoles",
+    "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'une école pour utiliser Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que votre école utilise Between ou non.",
+    "Pricing for therapists and patients":"Tarifs pour écoles et élèves",
+    "For therapists & practices":"Pour écoles et personnel",
+    "For patients, use Between on your own":"Pour les élèves, utilisez Between par vous-même",
+    "I'm a therapist":"Je fais partie du personnel",
+    "I'm a patient":"Je suis un élève",
+    "Invited by your therapist?":"Invité par votre école?",
+    "The important part happens between sessions.":"Le plus important se passe entre les suivis.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque élève, pour que vous arriviez au prochain suivi en connaissant déjà sa semaine. Connectez-vous, ou commencez un essai gratuit. Les données d'un élève ne sont visibles que par vous.",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre école.",
+    "What a patient sees: a check-in in under a minute by text or voice.":"Ce que voit un élève : un suivi en moins d'une minute, par texto ou par la voix.",
+    "What you see: the whole caseload at a glance with each patient's trends before a session.":"Ce que vous voyez : tous vos élèves en un coup d'œil, avec les tendances de chacun avant de faire un suivi.",
+    "Clients put it in Between the moment something happens":"Les élèves le notent dans Between dès que quelque chose se passe",
+    "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":"Dans une semaine chargée, Between remplace les suivis qui passent entre les mailles. Vous passez moins de temps à courir après et plus de temps avec l'élève devant vous.",
+    "Patients check in however's easiest in the moment.":"Les élèves font un suivi comme c'est le plus simple sur le moment.",
+    "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":"Privé et sécurisé par défaut. Les élèves voient et contrôlent leurs propres données, et l'analyse par IA reste optionnelle et désactivée.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":"Les suivis signalés et nouveaux remontent en haut : un grand groupe en un coup d'œil. Voyez qui a besoin de vous en quelques secondes.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":"Des ressources d'aide s'affichent aussitôt pour l'élève si un langage à risque est détecté. Il n'attend après personne.",
+    "A patient checks in within seconds":"Un élève fait un suivi en quelques secondes",
+    "Rough week. Work stress kept me up again.":"Semaine difficile. Les examens me stressent et je dors mal.",
+    "Rough week, work stress kept me up again.":"Semaine difficile, les examens me stressent et je dors mal.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Semaine difficile. Stress des examens et mauvais sommeil. Point positif : elle s'est sentie bien après une présentation en classe. Aucune préoccupation signalée.",
+    "Rough week. Work stress kept her":"Semaine difficile. Le stress des examens l'a",
+    "up several nights. One good moment:":"gardée éveillée plusieurs nuits. Point positif :",
+    "she saw an old friend on the weekend.":"la classe s'est mieux passée que prévu.",
+    "Work":"École",
+    "Family":"Maison",
+    "Clinicians pay per seat and invite their patients in for free. Patients can also buy Between on their own, to check in and track their own patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
+    "Solo":"Personnel",
+    "For individual practitioners":"Pour un membre du personnel",
+    "CAD / clinician / month":"CAD / membre / mois",
+    "Unlimited patients & check-ins":"Élèves et suivis illimités",
+    "In-app crisis resources for patients":"Ressources d'aide intégrées pour les élèves",
+    "Most practices":"La plupart des écoles",
+    "Solo Annual":"Personnel annuel",
+    "Everything in Solo":"Tout ce qu'inclut Personnel",
+    "Group practice":"École entière",
+    "For 2+ clinicians":"Pour 2 membres et plus",
+    "Volume pricing per seat":"Tarif de volume par place",
+    "Everything in Solo, per seat":"Tout ce qu'inclut Personnel, par place",
+    "Shared practice billing":"Facturation au niveau de l'école",
+    "Admin/practice-manager role":"Rôle de coordination",
+    "Practice-level data agreement":"Entente de données au niveau de l'école",
+    "Do my patients pay anything?":"Est-ce que mes élèves paient quelque chose?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas vos élèves. Quand vous invitez un élève par l'entremise de votre école, Between est couvert par votre place et il n'est jamais facturé. Un élève ne paie que s'il choisit un forfait Personnel et utilise Between par lui-même, indépendamment de toute école.",
+    "Is this a replacement for my EHR?":"Est-ce que ça remplace notre système de dossiers élèves?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":"Non, Between se concentre uniquement sur les suivis entre les rencontres. Il est conçu pour fonctionner avec les outils que votre école utilise déjà.",
+    "Where is my patients' data stored?":"Où sont stockées les données de mes élèves?",
+    "Caseload":"Élèves",
+    "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Choisissez un élève pour voir son historique et ses tendances.",
+    "Selected patient":"Élève sélectionné",
+    "No patient selected, pick one from your caseload":"Aucun élève sélectionné, choisissez-en un dans vos élèves",
+    "No patients yet, add your first patient to start receiving check-ins.":"Aucun élève pour l'instant, ajoutez votre premier élève pour commencer à recevoir des suivis.",
+    "Add patient":"Ajouter un élève",
+    "Delete patient":"Supprimer l'élève",
+    "Add a patient first.":"Ajoutez d'abord un élève.",
+    "patient":"élève",
+    "patients":"élèves",
+    "since last session":"depuis le dernier suivi",
+    "Patient app: connected":"Appli élève : connectée",
+    "Invite this patient":"Invitez cet élève",
+    "View patient data & AI settings":"Voir les données de l'élève et réglages IA",
+    "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre élève :",
+    "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime l'élève et tous ses suivis, résumés, notes vocales et alertes. Cette action est irréversible.",
+    "To confirm, type the patient name exactly:":"Pour confirmer, tapez le nom de l'élève exactement :",
+    "That did not match, the patient was not deleted.":"Cela ne correspond pas, l'élève n'a pas été supprimé.",
+    "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime l'élève.",
+    "Patient consent":"Consentement de l'élève",
+    "Patient data":"Données de l'élève",
+    "Delete this patient permanently":"Supprimer cet élève définitivement",
+    "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos rencontres."
+  };
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -3387,6 +3586,18 @@
         {cls:"rough",voice:true,when:"Jeu · 23:50",text:"Grosse envie ce soir. Je reste avec, sans agir."},
         {cls:"good",when:"Sam · 14:00",text:"Appelé mon parrain avant que ça dérape. Content de l'avoir fait."},
         {cls:"mid",when:"Lun · 8:20",text:"Départ fragile. Une heure à la fois."}]}
+    },
+    schools:{
+      en:{last:"Last check-in",next:"Next check-in",day:"Mon",day2:"Fri",ai:"AI summary",since:"Since last check-in",waiting:"Waiting before Fri",flag:"1 to check on",summary:"Stressed but coping. Exam pressure and short sleep. One bright spot: a presentation went well.",aria:"A week from one check-in to the next, with four notes that gather into a short summary.",checkins:[
+        {cls:"good",when:"Tue · 8:10a",text:"Slept okay for once. Ready for the day."},
+        {cls:"rough",voice:true,when:"Wed · 9:30p",text:"Exams are piling up. Feeling behind and anxious."},
+        {cls:"good",when:"Thu · 1:15p",text:"Presentation went way better than I thought."},
+        {cls:"mid",when:"Fri · 8:00a",text:"Nervous about the math test today."}]},
+      fr:{last:"Dernier suivi",next:"Prochain suivi",day:"Lun",day2:"Ven",ai:"Résumé IA",since:"Depuis le dernier suivi",waiting:"En attente avant ven.",flag:"1 à surveiller",summary:"Stressé mais tient le coup. Pression des examens et sommeil court. Un point positif : une présentation bien réussie.",aria:"Une semaine d'un suivi à l'autre, avec quatre notes qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mar · 8:10",text:"Bien dormi pour une fois. Prêt pour la journée."},
+        {cls:"rough",voice:true,when:"Mer · 21:30",text:"Les examens s'accumulent. Je me sens en retard et anxieux."},
+        {cls:"good",when:"Jeu · 13:15",text:"La présentation s'est bien mieux passée que prévu."},
+        {cls:"mid",when:"Ven · 8:00",text:"Nerveux pour l'examen de maths aujourd'hui."}]}
     }
   };
   function renderHeroThread(){
@@ -3436,6 +3647,8 @@
     if(heroH1){
       heroH1.innerHTML = curAudience === 'sports'
         ? (curLang === 'fr' ? heroSportsFr : heroSportsEn)
+        : curAudience === 'schools'
+        ? (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn)
         : (curLang === 'fr' ? heroFr : heroEn);
     }
     for(const id in PH_FR){
@@ -3468,7 +3681,7 @@
   });
 
   function setAudience(a){
-    curAudience = (a === 'sports' || a === 'recovery') ? a : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     translateStatic();
@@ -3482,6 +3695,7 @@
     if(!state.me) return;
     if(state.me.account_type === 'coach' && curAudience !== 'sports') setAudience('sports');
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
+    else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
   }
 
   // --- app state: all server-backed, no demo data ---
@@ -4208,9 +4422,10 @@
   const signupOverlay = document.getElementById('btwSignupOverlay');
   const planLabels = {solo_monthly:'Solo, $99.99 CAD/month', solo_annual:'Solo Annual, $79.99 CAD/month (billed yearly)'};
   let selectedPlan = 'solo_monthly';
-  let proSignup = null; // 'coach' (sports) | 'mentor' (recovery) | null (therapist)
+  let proSignup = null; // 'coach' (sports) | 'mentor' (recovery) | 'school' (schools) | null (therapist)
   const COACH_PLAN_FROM = {solo_monthly:'team_monthly', solo_annual:'team_annual'};
   const MENTOR_PLAN_FROM = {solo_monthly:'mentor_monthly', solo_annual:'mentor_annual'};
+  const SCHOOL_PLAN_FROM = {solo_monthly:'school_monthly', solo_annual:'school_annual'};
 
   function showStep(id){
     ['btwStep1','btwStep2','btwStep3','btwStepDone'].forEach(s=>{
@@ -4219,7 +4434,7 @@
   }
 
   window.btwOpenSignup = function(plan){
-    proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : null;
+    proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -4235,6 +4450,12 @@
       teamField.style.display = 'none';
       nextBtn.textContent = 'Create account';
       if(eyebrow) eyebrow.textContent = 'Your mentor account';
+    } else if(proSignup === 'school'){
+      // School staff sign up in one step too: no licence, no verification.
+      selectedPlan = SCHOOL_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('school_') === 0 ? plan : 'school_monthly');
+      teamField.style.display = 'none';
+      nextBtn.textContent = 'Create account';
+      if(eyebrow) eyebrow.textContent = 'Your school account';
     } else {
       selectedPlan = plan || 'solo_monthly';
       teamField.style.display = 'none';
@@ -4287,7 +4508,7 @@
       try{
         const body = { name, email, password: pw, plan: selectedPlan };
         if(proSignup === 'coach') body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
-        const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : '/api/auth/mentor/signup';
+        const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
@@ -5553,10 +5774,11 @@
     const forParam = (new URLSearchParams(location.search).get('for') || '').toLowerCase();
     if (['sports','sport','coach','team','teams'].includes(forParam)) _startAud = 'sports';
     else if (['recovery','addiction','mentor','sobriety'].includes(forParam)) _startAud = 'recovery';
+    else if (['schools','school','student','students','staff'].includes(forParam)) _startAud = 'schools';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   setLang(_startLang, {initial:true});
