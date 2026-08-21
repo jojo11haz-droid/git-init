@@ -340,8 +340,8 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 
 // Coach signup: a coach is a clinician account with account_type='coach'.
 // No professional licence and no verification step — a coach can use the
-// roster and check-in tools immediately. Team billing isn't wired up yet, so
-// no card is taken here; the chosen plan is stored for when it is.
+// roster and check-in tools immediately. Like every plan, the 14-day trial
+// takes a card up front when Stripe is configured (checkoutUrl below).
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, teamName } = req.body || {};
@@ -363,8 +363,15 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     });
     await startSession(res, req, coach.id);
 
+    // Start the 14-day trial with a card on file, same as every other plan.
+    // Null when Stripe or this plan's price isn't configured (dev/no-Stripe).
+    let checkoutUrl = null;
+    try { checkoutUrl = await startClinicianCheckout(coach, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start checkout:', e.message); }
+
     res.status(201).json({
       clinician: coach,
+      checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
       freeAccess: isFreeAccess(coach.email)
@@ -380,7 +387,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
 
 // Mentor signup (addiction recovery): a mentor is a clinician account with
 // account_type='mentor'. No licence and no verification — usable immediately.
-// Billing isn't taken here; the chosen plan is stored for when it's configured.
+// The 14-day trial takes a card up front when Stripe is configured.
 app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
@@ -401,8 +408,13 @@ app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) =
     });
     await startSession(res, req, mentor.id);
 
+    let checkoutUrl = null;
+    try { checkoutUrl = await startClinicianCheckout(mentor, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start checkout:', e.message); }
+
     res.status(201).json({
       clinician: mentor,
+      checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
       freeAccess: isFreeAccess(mentor.email)
@@ -418,7 +430,7 @@ app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) =
 
 // School signup: a school staff account is a clinician account with
 // account_type='school'. No licence and no verification — usable immediately.
-// Billing isn't taken here; the chosen plan is stored for when it's configured.
+// The 14-day trial takes a card up front when Stripe is configured.
 app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
@@ -439,8 +451,13 @@ app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) =
     });
     await startSession(res, req, school.id);
 
+    let checkoutUrl = null;
+    try { checkoutUrl = await startClinicianCheckout(school, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start checkout:', e.message); }
+
     res.status(201).json({
       clinician: school,
+      checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
       freeAccess: isFreeAccess(school.email)
