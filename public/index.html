@@ -2912,12 +2912,35 @@
   };
   const _phEn = {};
   // Placeholders that change in Sports mode, keyed by element id.
-  const PH_SPORTS = {
-    btwSuName: {en:'Coach Jamie Rivera', fr:'Coach Jamie Rivera'},
-    btwSuEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
-    btwResetEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
-    btwContactEmail: {en:'you@yourteam.ca', fr:'vous@votreequipe.ca'}
+  // Per-audience placeholder overrides. Keeps professional-facing examples in
+  // the right vocabulary (no "Dr." or "practice" for a coach, school, or program).
+  const PH_AUD = {
+    sports: {
+      btwSuName: {en:'Coach Jamie Rivera', fr:'Coach Jamie Rivera'},
+      btwContactName: {en:'Coach Jamie Rivera', fr:'Coach Jamie Rivera'},
+      btwSuEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
+      btwResetEmail: {en:'jamie@yourteam.ca', fr:'jamie@yourteam.ca'},
+      btwContactEmail: {en:'you@yourteam.ca', fr:'vous@votreequipe.ca'},
+      btwContactMessage: {en:"How many coaches? Anything you'd like to know?", fr:"Combien d'entraîneurs? Quelque chose à savoir?"}
+    },
+    schools: {
+      btwSuName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwContactName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwSuEmail: {en:'jamie@yourschool.ca', fr:'jamie@yourschool.ca'},
+      btwResetEmail: {en:'jamie@yourschool.ca', fr:'jamie@yourschool.ca'},
+      btwContactEmail: {en:'you@yourschool.ca', fr:'vous@votreecole.ca'},
+      btwContactMessage: {en:"How many staff? Anything you'd like to know?", fr:"Combien de membres du personnel? Quelque chose à savoir?"}
+    },
+    recovery: {
+      btwSuName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwContactName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwSuEmail: {en:'jamie@yourprogram.ca', fr:'jamie@yourprogram.ca'},
+      btwResetEmail: {en:'jamie@yourprogram.ca', fr:'jamie@yourprogram.ca'},
+      btwContactEmail: {en:'you@yourprogram.ca', fr:'vous@votreprogramme.ca'},
+      btwContactMessage: {en:"How many mentors? Anything you'd like to know?", fr:"Combien de mentors? Quelque chose à savoir?"}
+    }
   };
+  const PH_AUD_IDS = ['btwSuName','btwContactName','btwSuEmail','btwResetEmail','btwContactEmail','btwContactMessage'];
 
   // The active audience's [EN, FR] override dictionaries, or null for therapy.
   function audDicts(){
@@ -3425,6 +3448,8 @@
       "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not your school uses Between.",
     "Pricing for therapists and patients":"Pricing for schools and students",
     "For therapists & practices":"For schools & staff",
+    "Group practice enquiry":"School enquiry",
+    "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":"Tell us about your school and we'll get back to you. Everything goes straight to our inbox.",
     "For patients, use Between on your own":"For students, use Between on your own",
     "I'm a therapist":"I'm staff",
     "I'm a patient":"I'm a student",
@@ -3525,6 +3550,8 @@
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que votre école utilise Between ou non.",
     "Pricing for therapists and patients":"Tarifs pour écoles et élèves",
     "For therapists & practices":"Pour écoles et personnel",
+    "Group practice enquiry":"Demande, école",
+    "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":"Parlez-nous de votre école et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "For patients, use Between on your own":"Pour les élèves, utilisez Between par vous-même",
     "I'm a therapist":"Je fais partie du personnel",
     "I'm a patient":"Je suis un élève",
@@ -3812,11 +3839,12 @@
       if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
       el.setAttribute('placeholder', curLang === 'fr' ? PH_FR[id] : _phEn[id]);
     }
-    for(const id in PH_SPORTS){
+    for(const id of PH_AUD_IDS){
       const el = document.getElementById(id); if(!el) continue;
       if(_phEn[id] === undefined) _phEn[id] = el.getAttribute('placeholder') || '';
       const base = (curLang === 'fr' && PH_FR[id]) ? PH_FR[id] : _phEn[id];
-      el.setAttribute('placeholder', curAudience === 'sports' ? (curLang === 'fr' ? PH_SPORTS[id].fr : PH_SPORTS[id].en) : base);
+      const ov = PH_AUD[curAudience] && PH_AUD[curAudience][id];
+      el.setAttribute('placeholder', ov ? (curLang === 'fr' ? ov.fr : ov.en) : base);
     }
     const mic = document.getElementById('btwMic');
     if(mic){ const l = curLang === 'fr' ? 'Enregistrer une note vocale' : 'Record voice memo'; mic.title = l; mic.setAttribute('aria-label', l); }
@@ -4320,7 +4348,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
