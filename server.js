@@ -340,7 +340,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 
 // Coach signup: a coach is a clinician account with account_type='coach'.
 // No professional licence and no verification step — a coach can use the
-// roster and check-in tools immediately. Like every plan, the 3-day trial
+// roster and check-in tools immediately. Like every plan, the 14-day trial
 // takes a card up front when Stripe is configured (checkoutUrl below).
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
@@ -363,7 +363,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     });
     await startSession(res, req, coach.id);
 
-    // Start the 3-day trial with a card on file, same as every other plan.
+    // Start the 14-day trial with a card on file, same as every other plan.
     // Null when Stripe or this plan's price isn't configured (dev/no-Stripe).
     let checkoutUrl = null;
     try { checkoutUrl = await startClinicianCheckout(coach, plan, siteOrigin(req)); }
@@ -387,7 +387,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
 
 // Mentor signup (addiction recovery): a mentor is a clinician account with
 // account_type='mentor'. No licence and no verification — usable immediately.
-// The 3-day trial takes a card up front when Stripe is configured.
+// The 14-day trial takes a card up front when Stripe is configured.
 app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
@@ -430,7 +430,7 @@ app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) =
 
 // School signup: a school staff account is a clinician account with
 // account_type='school'. No licence and no verification — usable immediately.
-// The 3-day trial takes a card up front when Stripe is configured.
+// The 14-day trial takes a card up front when Stripe is configured.
 app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
@@ -1054,6 +1054,8 @@ function publicPatient(p) {
 }
 
 // Build the Checkout URL for a plan, or null if Stripe/plan isn't set up.
+// Individuals (Personal plan) get a shorter 3-day trial than professionals.
+const PATIENT_TRIAL_DAYS = 3;
 async function startPatientCheckout(patient, plan, origin) {
   const priceId = priceForPlan(plan);
   if (!stripeConfigured() || !priceId) return null;
@@ -1062,15 +1064,16 @@ async function startPatientCheckout(patient, plan, origin) {
     customerEmail: patient.email,
     refType: 'patient',
     refId: patient.id,
+    trialDays: PATIENT_TRIAL_DAYS,
     successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/?checkout=cancel`
   });
   return session.url || null;
 }
 
-// Clinician checkout — same idea, but with a 3-day free trial so no card is
-// charged today (honoring the "3-day free trial" on the pricing page).
-const CLINICIAN_TRIAL_DAYS = 3;
+// Clinician checkout — same idea, but with a 14-day free trial so no card is
+// charged today (honoring the "14-day free trial" on the pricing page).
+const CLINICIAN_TRIAL_DAYS = 14;
 async function startClinicianCheckout(clinician, plan, origin) {
   const priceId = priceForPlan(plan);
   if (!stripeConfigured() || !priceId) return null;
