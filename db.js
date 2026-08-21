@@ -234,9 +234,13 @@ export async function createSchool({ name, email, passwordHash, plan }) {
 // checks their name/number against the public professional-order registry and
 // approves them. There's no public API for those registries, so this is a
 // human review step, not an automated lookup.
+// Only therapist accounts are ever reviewed. Coaches, schools, and mentors
+// hold no professional licence and are auto-verified, so they never appear in
+// the owner's approval list.
 export async function listCliniciansForReview() {
   const { rows } = await pool.query(
     `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians
+     WHERE account_type = 'therapist'
      ORDER BY licence_verified ASC, licence_reviewed_at IS NOT NULL ASC, created_at DESC`
   );
   return rows;
