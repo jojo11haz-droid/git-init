@@ -289,6 +289,29 @@ const TEAM_PLANS = ['team_monthly', 'team_annual', 'team_premium'];
 const MENTOR_PLANS = ['mentor_monthly', 'mentor_annual'];
 const SCHOOL_PLANS = ['school_monthly', 'school_annual', 'school_premium'];
 
+// Fire-and-forget welcome email on signup. Never awaited in the request path,
+// so a slow or unconfigured mailer can't delay or fail account creation. With
+// no RESEND_API_KEY the mailer just logs instead of sending (see email.js).
+// kind: 'therapist' (pending licence review) | 'pro' (coach/school/mentor) | 'patient'
+function sendWelcomeEmail({ to, name, kind }) {
+  if (!to) return;
+  const first = String(name || '').trim().split(/\s+/)[0] || 'there';
+  const site = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
+  const body = kind === 'therapist'
+    ? `Thanks for signing up. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
+    : kind === 'patient'
+    ? `Your account is ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
+    : `Your account is ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
+  const text =
+    `Hi ${first},\n\n` +
+    `${body}\n\n` +
+    `You can sign in anytime at ${site}.\n\n` +
+    `Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.\n\n` +
+    `Thanks for trying it,\nJack\nbetweenpsych.com`;
+  sendEmail({ to, subject: 'Welcome to Between', text })
+    .catch(err => console.error('Welcome email failed:', err && err.message));
+}
+
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, licenceNumber, licenceOrder, province, practiceName } = req.body || {};
@@ -318,6 +341,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       plan
     });
     await startSession(res, req, clinician.id);
+    sendWelcomeEmail({ to: clinician.email, name: clinician.name, kind: isFreeAccess(clinician.email) ? 'pro' : 'therapist' });
 
     // No Stripe checkout yet: an unverified account shouldn't put a card on file
     // or start a trial clock, so billing waits until the licence is approved
@@ -362,6 +386,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
       plan
     });
     await startSession(res, req, coach.id);
+    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: 'pro' });
 
     // Start the 14-day trial with a card on file, same as every other plan.
     // Null when Stripe or this plan's price isn't configured (dev/no-Stripe).
@@ -407,6 +432,7 @@ app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) =
       plan
     });
     await startSession(res, req, mentor.id);
+    sendWelcomeEmail({ to: mentor.email, name: mentor.name, kind: 'pro' });
 
     let checkoutUrl = null;
     try { checkoutUrl = await startClinicianCheckout(mentor, plan, siteOrigin(req)); }
@@ -450,6 +476,7 @@ app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) =
       plan
     });
     await startSession(res, req, school.id);
+    sendWelcomeEmail({ to: school.email, name: school.name, kind: 'pro' });
 
     let checkoutUrl = null;
     try { checkoutUrl = await startClinicianCheckout(school, plan, siteOrigin(req)); }
@@ -1199,6 +1226,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
     if (!patient) return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
 
     const token = await startPatientSession(patient.id);
+    sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
     res.status(201).json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -1231,6 +1259,7 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
 
     const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password), plan, true);
     const token = await startPatientSession(patient.id);
+    sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
 
     // Hand back a Stripe Checkout URL so the client can send them to pay. If
     // Stripe isn't configured, checkoutUrl is null and the account is simply
