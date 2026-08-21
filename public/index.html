@@ -4713,6 +4713,10 @@
         if(proSignup === 'coach') body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
+        // Same as every plan: if billing is on, start the 14-day trial by
+        // sending them to Stripe to put a card on file. The account is already
+        // created and their session cookie is set, so they return signed in.
+        if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
         billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
