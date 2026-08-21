@@ -287,7 +287,7 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
 const TEAM_PLANS = ['team_monthly', 'team_annual', 'team_premium'];
 const MENTOR_PLANS = ['mentor_monthly', 'mentor_annual'];
-const SCHOOL_PLANS = ['school_monthly', 'school_annual'];
+const SCHOOL_PLANS = ['school_monthly', 'school_annual', 'school_premium'];
 
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
