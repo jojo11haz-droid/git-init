@@ -1157,10 +1157,11 @@ const patientCheckInLimiter = rateLimit({
 // on the patient's own row. One-time — the code stops working once accepted.
 app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res) => {
   try {
-    const { inviteCode, email, password } = req.body || {};
+    const { inviteCode, email, password, guardianAck } = req.body || {};
     if (!inviteCode || !inviteCode.trim()) return res.status(400).json({ error: 'An invite code is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    if (!guardianAck) return res.status(400).json({ error: 'Please confirm you are 18 or older, or that a parent or guardian has agreed to your using Between.' });
 
     const code = inviteCode.trim().toUpperCase();
     const found = await getPatientByInviteCode(code);
@@ -1174,7 +1175,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
 
-    const patient = await acceptPatientInvite(found.id, email.trim(), await hashPassword(password));
+    const patient = await acceptPatientInvite(found.id, email.trim(), await hashPassword(password), true);
     if (!patient) return res.status(404).json({ error: 'That invite code is not valid. Check it with your therapist.' });
 
     const token = await startPatientSession(patient.id);
@@ -1196,18 +1197,19 @@ const PATIENT_PLANS = ['patient_monthly', 'patient_annual'];
 
 app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
   try {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, guardianAck } = req.body || {};
     const plan = PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'patient_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'A name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    if (!guardianAck) return res.status(400).json({ error: 'Please confirm you are 18 or older, or that a parent or guardian has agreed to your using Between.' });
 
     const existing = await getPatientByEmail(email.trim());
     if (existing) {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
 
-    const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password), plan);
+    const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password), plan, true);
     const token = await startPatientSession(patient.id);
 
     // Hand back a Stripe Checkout URL so the client can send them to pay. If

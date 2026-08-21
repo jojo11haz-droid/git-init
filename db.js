@@ -148,6 +148,7 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS clinician_note TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS guardian_ack_at TIMESTAMPTZ;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
@@ -421,7 +422,7 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, plan, subscription_status, created_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, created_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -525,12 +526,12 @@ export async function getPatientByEmail(email) {
 // therapist behind them. clinician_id stays NULL — there is no caseload and
 // no clinician can ever see this row (all therapist queries are scoped by
 // clinician_id). invite_status is 'accepted' since there was never an invite.
-export async function createSelfServePatient(displayName, email, passwordHash, plan) {
+export async function createSelfServePatient(displayName, email, passwordHash, plan, guardianAck) {
   const { rows } = await pool.query(
-    `INSERT INTO patients (clinician_id, display_name, email, password_hash, invite_status, plan, subscription_status)
-     VALUES (NULL, $1, $2, $3, 'accepted', $4, $5)
+    `INSERT INTO patients (clinician_id, display_name, email, password_hash, invite_status, plan, subscription_status, guardian_ack_at)
+     VALUES (NULL, $1, $2, $3, 'accepted', $4, $5, $6)
      RETURNING ${PATIENT_ROW_COLS}`,
-    [displayName, email, passwordHash, plan || null, plan ? 'incomplete' : null]
+    [displayName, email, passwordHash, plan || null, plan ? 'incomplete' : null, guardianAck ? new Date() : null]
   );
   return rows[0];
 }
@@ -574,12 +575,13 @@ export async function getPatientByStripeSubscription(subscriptionId) {
   return rows[0] || null;
 }
 
-export async function acceptPatientInvite(patientId, email, passwordHash) {
+export async function acceptPatientInvite(patientId, email, passwordHash, guardianAck) {
   const { rows } = await pool.query(
-    `UPDATE patients SET email = $1, password_hash = $2, invite_status = 'accepted'
+    `UPDATE patients SET email = $1, password_hash = $2, invite_status = 'accepted',
+       guardian_ack_at = COALESCE(guardian_ack_at, $4)
      WHERE id = $3 AND invite_status = 'pending'
      RETURNING ${PATIENT_ROW_COLS}`,
-    [email, passwordHash, patientId]
+    [email, passwordHash, patientId, guardianAck ? new Date() : null]
   );
   return rows[0] || null;
 }
