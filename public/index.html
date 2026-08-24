@@ -1660,6 +1660,7 @@
         <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
         <button type="button" class="btw-aud-btn" data-aud="recovery">Addiction</button>
         <button type="button" class="btw-aud-btn" data-aud="schools">Schools</button>
+        <button type="button" class="btw-aud-btn" data-aud="fitness">Fitness</button>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
@@ -2898,6 +2899,8 @@
   const heroSchoolsFr = 'Ce qui se passe<br><em>entre</em> les suivis<br>ne devrait pas<br>rester un mystère.';
   const heroSchoolsClassEn = 'What happens<br><em>between</em> classes<br>doesn\'t have to<br>stay a mystery.';
   const heroSchoolsClassFr = 'Ce qui se passe<br><em>entre</em> les cours<br>ne devrait pas<br>rester un mystère.';
+  const heroFitnessEn = 'What happens<br><em>between</em> sessions<br>doesn\'t have to<br>stay a mystery.';
+  const heroFitnessFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwLoginPassword:'Votre mot de passe',
@@ -2939,6 +2942,14 @@
       btwResetEmail: {en:'jamie@yourprogram.ca', fr:'jamie@yourprogram.ca'},
       btwContactEmail: {en:'you@yourprogram.ca', fr:'vous@votreprogramme.ca'},
       btwContactMessage: {en:"How many mentors? Anything you'd like to know?", fr:"Combien de mentors? Quelque chose à savoir?"}
+    },
+    fitness: {
+      btwSuName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwContactName: {en:'Jamie Rivera', fr:'Jamie Rivera'},
+      btwSuEmail: {en:'jamie@yourgym.ca', fr:'jamie@yourgym.ca'},
+      btwResetEmail: {en:'jamie@yourgym.ca', fr:'jamie@yourgym.ca'},
+      btwContactEmail: {en:'you@yourgym.ca', fr:'vous@votregym.ca'},
+      btwContactMessage: {en:"How many trainers? Anything you'd like to know?", fr:"Combien d'entraîneurs? Quelque chose à savoir?"}
     }
   };
   const PH_AUD_IDS = ['btwSuName','btwContactName','btwSuEmail','btwResetEmail','btwContactEmail','btwContactMessage'];
@@ -2948,6 +2959,7 @@
     if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
     if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
     if(curAudience === 'schools') return curSchoolMode === 'classroom' ? [SCHOOLS_CLASS_EN, SCHOOLS_CLASS_FR] : [SCHOOLS_EN, SCHOOLS_FR];
+    if(curAudience === 'fitness') return [FITNESS_EN, FITNESS_FR];
     return null;
   }
   function t(en){
@@ -3719,6 +3731,218 @@
     "You start the session already knowing their week":"Vous commencez le cours en connaissant déjà leur semaine",
     "Is this a replacement for my EHR?":"Est-ce que ça remplace notre carnet de notes?"
   });
+  // ---- FITNESS (trainer <-> client) ----
+  // Override-only: strings not listed fall back to the therapist English, which
+  // already fits fitness ("clients", "sessions"). Only trainer/client/energy
+  // wording and the fitness examples are overridden here.
+  const FITNESS_EN = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "See how your clients are really doing between training sessions. They send a quick note when something comes up and you get a short read before the next session.",
+    "For therapists, counsellors & anyone on their own":"For trainers, coaches & anyone on their own",
+    "I'm a therapist":"I'm a trainer",
+    "I'm a patient":"I'm a client",
+    "Invited by your therapist?":"Invited by your trainer?",
+    "Enter the invite code from your therapist.":"Enter the invite code from your trainer.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each client, so you plan the next session already knowing how their week went. Log in to your client list, or start a free trial. A client's data is only ever visible to you.",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Your clients check in between sessions with a quick voice note or message. Between turns each one into a clear read on their energy, training and recovery that's ready before the next session. You walk in already knowing who trained, who's sore, and who needs a lighter day.",
+    "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Free for 14 days. Private, secure and consent first. Built for trainers.",
+    "Not a therapist? You can use Between on your own":"Not a trainer? You can use Between on your own",
+    "Patient sends a check-in":"Client sends a check-in",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "Sore, wiped, or just crushed a workout. Your client captures it in a quick voice note or text the moment it happens, not from memory at the next session.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "A short and neutral summary with theme tags. Never a diagnosis or medical advice. It runs only with the client's explicit opt-in consent.",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Energy and recovery trends, recurring themes, and a recap of the days since you last trained are waiting in your dashboard before every session, so you begin already knowing where things stand.",
+    "Effortless on both sides. A check-in takes your client under a minute, and your whole caseload comes into focus at a glance.":
+      "Effortless on both sides. A check-in takes your client under a minute, and your whole client list comes into focus at a glance.",
+    "What you see: your whole caseload at a glance, with each client's trends ready before the session.":
+      "What you see: your whole client list at a glance, with each client's trends ready before the session.",
+    "Patient view":"Client view",
+    "Therapist view":"Trainer view",
+    "Less admin, more time":"Less guesswork, better sessions",
+    "Built for real practice":"Built for real training",
+    "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":
+      "Private and secure by default. Clients see and control their own data, and AI analysis is opt-in and off.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":
+      "Flagged and new check-ins rise to the top so a big client list is one glance. See who needs you in seconds instead of clicks.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":
+      "Crisis resources are shown to clients instantly if risk language is detected. They never wait on anyone.",
+    "You don't need a therapist to use Between.":"You don't need a trainer to use Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it on their own. Check in whenever something comes up and watch your own energy, training and habits over time. On a rough day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a trainer.",
+    "Pricing for therapists and patients":"Pricing for trainers and clients",
+    // demo captions + example content
+    "A patient checks in within seconds":"A client checks in within seconds",
+    "Rough week. Work stress kept me up again.":"Legs are wrecked. Skipped my run, too sore.",
+    "Rough week, work stress kept me up again.":"Legs are wrecked, skipped my run, too sore.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":
+      "Tough week. Sore and low energy, missed two of her home workouts. One win: she hit a squat PR on Friday. No concerns flagged.",
+    "Rough week. Work stress kept her":"Tough week. Sore legs kept her",
+    "up several nights. One good moment:":"out of two workouts. One win:",
+    "she saw an old friend on the weekend.":"she hit a squat PR on Friday.",
+    // chips
+    "Work":"Training","Family":"Nutrition",
+    // pricing
+    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Trainers pay per seat and invite their clients in for free. Clients can also get Between on their own to track their energy and habits, with or without a trainer.",
+    "For therapists & practices":"For trainers & studios",
+    "Solo":"Trainer",
+    "For individual practitioners":"Up to 20 clients",
+    "$99.99":"$49",
+    "CAD / clinician / month":"CAD / trainer / month",
+    "Unlimited patients & check-ins":"Up to 20 clients and unlimited check-ins",
+    "In-app crisis resources for patients":"In-app support resources for clients",
+    "Most practices":"Most trainers",
+    "Solo Annual":"Trainer Annual",
+    "$79.99":"$39",
+    "Billed annually ($959.88/year), save ~20%":"Billed yearly at $468. You save 20 percent.",
+    "Everything in Solo":"Everything in Trainer",
+    "Group practice":"Premium",
+    "For 2+ clinicians":"For 20+ clients",
+    "Custom":"$99",
+    "Talk to us":"Get Premium",
+    "Volume pricing per seat":"For 20+ clients. Billed monthly.",
+    "Everything in Solo, per seat":"Everything in Trainer, for 20+ clients",
+    "Shared practice billing":"Studio-level billing",
+    "Admin/practice-manager role":"Multiple trainer roles",
+    "Practice-level data agreement":"Studio-level data agreement",
+    "For patients, use Between on your own":"For clients, use Between on your own",
+    // pricing FAQ
+    "Do my patients pay anything?":"Do my clients pay anything?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
+      "Not on your plan. When you add a client, they're covered by your seat and never billed. Clients only pay if they choose a Personal plan and use Between on their own, independent of any trainer.",
+    "Is this a replacement for my EHR?":"Does this replace my coaching app?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":
+      "No, Between focuses specifically on between-session check-ins. It runs alongside whatever coaching or programming app you already use.",
+    "Where is my patients' data stored?":"Where is my clients' data stored?",
+    // dashboard (trainer view)
+    "Caseload":"Clients",
+    "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Auto-updating as check-ins come in. Select a client to see their timeline and trends.",
+    "Selected patient":"Selected client",
+    "No patient selected, pick one from your caseload":"No client selected, pick one from your list",
+    "No patients yet, add your first patient to start receiving check-ins.":"No clients yet, add your first client to start receiving check-ins.",
+    "Add patient":"Add client",
+    "Delete patient":"Delete client",
+    "Add a patient first.":"Add a client first.",
+    "patient":"client",
+    "patients":"clients",
+    "since last session":"since last session",
+    "Patient app: connected":"Client app: connected",
+    "Invite this patient":"Invite this client",
+    "View patient data & AI settings":"View client data & AI settings",
+    "Copy this message and send it to your patient:":"Copy this message and send it to your client:",
+    "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"This removes the client and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.",
+    "To confirm, type the patient name exactly:":"To confirm, type the client name exactly:",
+    "That did not match, the patient was not deleted.":"That did not match, the client was not deleted.",
+    "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the client.",
+    "Patient consent":"Client consent",
+    "Patient data":"Client data",
+    "Delete this patient permanently":"Delete this client permanently",
+    "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our training sessions."
+  };
+  const FITNESS_FR = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "Voyez comment vont vraiment vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court aperçu avant la prochaine séance.",
+    "For therapists, counsellors & anyone on their own":"Pour entraîneurs, coachs et les particuliers",
+    "I'm a therapist":"Je suis entraîneur",
+    "I'm a patient":"Je suis client",
+    "Invited by your therapist?":"Invité par votre entraîneur?",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque client, pour que vous planifiiez la prochaine séance en sachant déjà comment sa semaine s'est passée. Connectez-vous à votre liste de clients, ou commencez un essai gratuit. Les données d'un client ne sont visibles que par vous.",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Vos clients font un suivi entre les séances avec une courte note vocale ou un message. Between en fait un aperçu clair de leur énergie, de leur entraînement et de leur récupération, prêt avant la prochaine séance. Vous arrivez en sachant déjà qui s'est entraîné, qui est courbaturé et qui a besoin d'une séance plus légère.",
+    "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Gratuit pendant 14 jours. Privé, sécurisé et fondé sur le consentement. Conçu pour les entraîneurs.",
+    "Not a therapist? You can use Between on your own":"Pas entraîneur? Vous pouvez utiliser Between par vous-même",
+    "Patient sends a check-in":"Le client envoie un suivi",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "Courbaturé, vidé ou fier d'une bonne séance. Votre client le saisit en une courte note vocale ou un texto au moment même, pas de mémoire à la prochaine séance.",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "Un court résumé neutre avec des étiquettes de thèmes. Jamais de diagnostic ni de conseil médical. Uniquement avec le consentement explicite du client.",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Tendances d'énergie et de récupération, thèmes récurrents et un récapitulatif des jours depuis le dernier entraînement vous attendent dans votre tableau de bord avant chaque séance.",
+    "Effortless on both sides. A check-in takes your client under a minute, and your whole caseload comes into focus at a glance.":
+      "Sans effort des deux côtés. Un suivi prend moins d'une minute à votre client, et toute votre liste de clients se lit d'un seul coup d'œil.",
+    "What you see: your whole caseload at a glance, with each client's trends ready before the session.":
+      "Ce que vous voyez : toute votre liste de clients d'un coup d'œil, avec les tendances de chacun avant la séance.",
+    "Patient view":"Vue client",
+    "Therapist view":"Vue de l'entraîneur",
+    "Less admin, more time":"Moins de devinettes, de meilleures séances",
+    "Built for real practice":"Conçu pour l'entraînement réel",
+    "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":
+      "Privé et sécurisé par défaut. Les clients voient et contrôlent leurs propres données, et l'analyse par IA reste optionnelle et désactivée.",
+    "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":
+      "Les suivis signalés et nouveaux remontent en haut : une grande liste de clients tient en un coup d'œil. Voyez qui a besoin de vous en quelques secondes.",
+    "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":
+      "Des ressources d'aide sont montrées au client immédiatement si un langage à risque est détecté. Sans jamais attendre personne.",
+    "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un entraîneur pour utiliser Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser par soi-même. Faites un suivi quand quelque chose survient et observez votre énergie, votre entraînement et vos habitudes au fil du temps. Un jour difficile, il vous montre même un mot que vous vous êtes laissé un meilleur jour. Vos données restent privées avec ou sans entraîneur.",
+    "Pricing for therapists and patients":"Tarifs pour entraîneurs et clients",
+    "A patient checks in within seconds":"Un client fait un suivi en quelques secondes",
+    "Rough week. Work stress kept me up again.":"Les jambes sont mortes. Course sautée, trop courbaturé.",
+    "Rough week, work stress kept me up again.":"Les jambes sont mortes, course sautée, trop courbaturé.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":
+      "Semaine difficile. Courbaturée et peu d'énergie, deux entraînements maison manqués. Une réussite : un record au squat vendredi. Aucune préoccupation.",
+    "Rough week. Work stress kept her":"Semaine difficile. Les jambes courbaturées l'ont",
+    "up several nights. One good moment:":"gardée hors de deux séances. Une réussite :",
+    "she saw an old friend on the weekend.":"un record au squat vendredi.",
+    "Work":"Entraînement","Family":"Nutrition",
+    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Les entraîneurs paient par place et invitent leurs clients gratuitement. Les clients peuvent aussi prendre Between par eux-mêmes pour suivre leur énergie et leurs habitudes, avec ou sans entraîneur.",
+    "For therapists & practices":"Pour entraîneurs et studios",
+    "Solo":"Entraîneur",
+    "For individual practitioners":"Jusqu'à 20 clients",
+    "$99.99":"49 $",
+    "CAD / clinician / month":"CAD / entraîneur / mois",
+    "Unlimited patients & check-ins":"Jusqu'à 20 clients et suivis illimités",
+    "In-app crisis resources for patients":"Ressources d'aide intégrées pour les clients",
+    "Most practices":"La plupart des entraîneurs",
+    "Solo Annual":"Entraîneur annuel",
+    "$79.99":"39 $",
+    "Billed annually ($959.88/year), save ~20%":"Facturé à l'année (468 $/an). Économisez 20 pour cent.",
+    "Everything in Solo":"Tout ce qu'inclut Entraîneur",
+    "Group practice":"Premium",
+    "For 2+ clinicians":"Pour plus de 20 clients",
+    "Custom":"99 $",
+    "Talk to us":"Obtenir Premium",
+    "Volume pricing per seat":"Pour plus de 20 clients. Facturé au mois.",
+    "Everything in Solo, per seat":"Tout ce qu'inclut Entraîneur, pour plus de 20 clients",
+    "Shared practice billing":"Facturation au niveau du studio",
+    "Admin/practice-manager role":"Plusieurs rôles d'entraîneur",
+    "Practice-level data agreement":"Entente de données au niveau du studio",
+    "For patients, use Between on your own":"Pour les clients, utilisez Between par vous-même",
+    "Do my patients pay anything?":"Mes clients paient-ils quelque chose?",
+    "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
+      "Pas sur votre plan. Quand vous ajoutez un client, il est couvert par votre place et jamais facturé. Un client ne paie que s'il choisit un forfait Personnel et utilise Between par lui-même, indépendamment de tout entraîneur.",
+    "Is this a replacement for my EHR?":"Est-ce que ça remplace mon application de coaching?",
+    "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":
+      "Non, Between se concentre sur les suivis entre les séances. Il fonctionne avec l'application de coaching ou de programmation que vous utilisez déjà.",
+    "Where is my patients' data stored?":"Où sont stockées les données de mes clients?",
+    "Caseload":"Clients",
+    "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Sélectionnez un client pour voir sa chronologie et ses tendances.",
+    "Selected patient":"Client sélectionné",
+    "No patient selected, pick one from your caseload":"Aucun client sélectionné, choisissez-en un dans votre liste",
+    "No patients yet, add your first patient to start receiving check-ins.":"Aucun client pour l'instant, ajoutez votre premier client pour commencer à recevoir des suivis.",
+    "Add patient":"Ajouter un client",
+    "Delete patient":"Supprimer le client",
+    "Add a patient first.":"Ajoutez d'abord un client.",
+    "patient":"client",
+    "patients":"clients",
+    "Patient app: connected":"Application client : connectée",
+    "Invite this patient":"Inviter ce client",
+    "View patient data & AI settings":"Voir les données du client et les réglages IA",
+    "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre client :",
+    "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le client et tous ses suivis, résumés, mémos vocaux et alertes. C'est irréversible.",
+    "To confirm, type the patient name exactly:":"Pour confirmer, tapez exactement le nom du client :",
+    "That did not match, the patient was not deleted.":"Ça ne correspond pas, le client n'a pas été supprimé.",
+    "They have no check-ins yet, this removes the patient.":"Il n'a pas encore de suivis, cela supprime le client.",
+    "Patient consent":"Consentement du client",
+    "Patient data":"Données du client",
+    "Delete this patient permanently":"Supprimer ce client définitivement",
+    "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances."
+  };
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -3779,6 +4003,18 @@
         {cls:"mid",when:"Mer · 7:30",text:"En retard dans les lectures. Pas sûr de rattraper."},
         {cls:"rough",voice:true,when:"Mer · 21:10",text:"Bloqué sur l'intro de la dissertation. Un peu la panique pour jeudi."},
         {cls:"good",when:"Jeu · 8:00",text:"J'ai demandé de l'aide et ça a fait du sens. Ça va mieux."}]}
+    },
+    fitness:{
+      en:{last:"Last session",next:"Next session",day:"Mon",day2:"Fri",ai:"AI summary",since:"Since last session",waiting:"Waiting before Fri",flag:"1 to check on",summary:"Training but run down. Sore and short on sleep, missed one home workout. One win: a squat PR on Friday.",aria:"A week from one session to the next, with four check-ins that gather into a short read.",checkins:[
+        {cls:"good",when:"Tue · 6:30a",text:"Legs felt strong today. Hit all my sets."},
+        {cls:"mid",when:"Wed · 8:15p",text:"Wiped after work. Skipped the run, too sore."},
+        {cls:"rough",voice:true,when:"Thu · 9:40p",text:"Right knee is nagging again after leg day. Sleep has been short."},
+        {cls:"good",when:"Fri · 5:10p",text:"Squat PR today. Felt unstoppable."}]},
+      fr:{last:"Dernière séance",next:"Prochaine séance",day:"Lun",day2:"Ven",ai:"Résumé IA",since:"Depuis la dernière séance",waiting:"En attente avant ven.",flag:"1 à surveiller",summary:"S'entraîne mais fatigué. Courbaturé et peu de sommeil, un entraînement maison manqué. Une réussite : un record au squat vendredi.",aria:"Une semaine d'une séance à l'autre, avec quatre suivis qui forment un court aperçu.",checkins:[
+        {cls:"good",when:"Mar · 6:30",text:"Les jambes étaient fortes aujourd'hui. Toutes mes séries."},
+        {cls:"mid",when:"Mer · 20:15",text:"Vidé après le travail. Course sautée, trop courbaturé."},
+        {cls:"rough",voice:true,when:"Jeu · 21:40",text:"Le genou droit tire encore après la journée jambes. Peu de sommeil."},
+        {cls:"good",when:"Ven · 17:10",text:"Record au squat aujourd'hui. Je me sentais invincible."}]}
     }
   };
   function renderHeroThread(){
@@ -3833,6 +4069,8 @@
         ? (curSchoolMode === 'classroom'
             ? (curLang === 'fr' ? heroSchoolsClassFr : heroSchoolsClassEn)
             : (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn))
+        : curAudience === 'fitness'
+        ? (curLang === 'fr' ? heroFitnessFr : heroFitnessEn)
         : (curLang === 'fr' ? heroFr : heroEn);
     }
     for(const id in PH_FR){
@@ -3873,7 +4111,7 @@
   }
 
   function setAudience(a){
-    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools') ? a : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
@@ -3900,6 +4138,7 @@
     if(state.me.account_type === 'coach' && curAudience !== 'sports') setAudience('sports');
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
     else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
+    else if(state.me.account_type === 'trainer' && curAudience !== 'fitness') setAudience('fitness');
   }
 
   // --- app state: all server-backed, no demo data ---
@@ -4349,7 +4588,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
@@ -4630,6 +4869,7 @@
   const COACH_PLAN_FROM = {solo_monthly:'team_monthly', solo_annual:'team_annual'};
   const MENTOR_PLAN_FROM = {solo_monthly:'mentor_monthly', solo_annual:'mentor_annual'};
   const SCHOOL_PLAN_FROM = {solo_monthly:'school_monthly', solo_annual:'school_annual'};
+  const TRAINER_PLAN_FROM = {solo_monthly:'trainer_monthly', solo_annual:'trainer_annual'};
 
   function showStep(id){
     ['btwStep1','btwStep2','btwStep3','btwStepDone'].forEach(s=>{
@@ -4638,7 +4878,7 @@
   }
 
   window.btwOpenSignup = function(plan){
-    proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : null;
+    proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -4660,6 +4900,12 @@
       teamField.style.display = 'none';
       nextBtn.textContent = 'Create account';
       if(eyebrow) eyebrow.textContent = 'Your school account';
+    } else if(proSignup === 'trainer'){
+      // Trainers sign up in one step too: no licence, no verification.
+      selectedPlan = TRAINER_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('trainer_') === 0 ? plan : 'trainer_monthly');
+      teamField.style.display = 'none';
+      nextBtn.textContent = 'Create account';
+      if(eyebrow) eyebrow.textContent = 'Your trainer account';
     } else {
       selectedPlan = plan || 'solo_monthly';
       teamField.style.display = 'none';
@@ -4712,7 +4958,7 @@
       try{
         const body = { name, email, password: pw, plan: selectedPlan };
         if(proSignup === 'coach') body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
-        const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : '/api/auth/mentor/signup';
+        const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
         // Same as every plan: if billing is on, start the 14-day trial by
         // sending them to Stripe to put a card on file. The account is already
@@ -5991,8 +6237,8 @@
     else if (['schools','school','student','students','staff'].includes(forParam)) _startAud = 'schools';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   try {

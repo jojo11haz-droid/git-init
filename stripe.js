@@ -24,6 +24,9 @@ export function priceForPlan(plan) {
     school_monthly: process.env.STRIPE_PRICE_SCHOOL_MONTHLY,
     school_annual: process.env.STRIPE_PRICE_SCHOOL_ANNUAL,
     school_premium: process.env.STRIPE_PRICE_SCHOOL_PREMIUM,
+    trainer_monthly: process.env.STRIPE_PRICE_TRAINER_MONTHLY,
+    trainer_annual: process.env.STRIPE_PRICE_TRAINER_ANNUAL,
+    trainer_premium: process.env.STRIPE_PRICE_TRAINER_PREMIUM,
     mentor_monthly: process.env.STRIPE_PRICE_MENTOR_MONTHLY,
     mentor_annual: process.env.STRIPE_PRICE_MENTOR_ANNUAL
   };
