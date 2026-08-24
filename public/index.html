@@ -6235,6 +6235,7 @@
     if (['sports','sport','coach','team','teams'].includes(forParam)) _startAud = 'sports';
     else if (['recovery','addiction','mentor','sobriety'].includes(forParam)) _startAud = 'recovery';
     else if (['schools','school','student','students','staff'].includes(forParam)) _startAud = 'schools';
+    else if (['fitness','trainer','trainers','gym','coaching','pt'].includes(forParam)) _startAud = 'fitness';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
   try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness') ? s : 'therapy'; } } catch(e){}
