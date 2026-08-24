@@ -229,6 +229,19 @@ export async function createSchool({ name, email, passwordHash, plan }) {
   return rows[0];
 }
 
+// A trainer account is a clinician row with account_type='trainer' (fitness).
+// Personal trainers hold no professional licence, so nothing to review — the
+// account is usable immediately, exactly like coaches and schools.
+export async function createTrainer({ name, email, passwordHash, plan }) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, plan)
+     VALUES ($1, lower($2), $3, 'trainer', true, $4)
+     RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [name, email, passwordHash, plan || null]
+  );
+  return rows[0];
+}
+
 // --- Licence verification (manual, owner-reviewed) ---
 // New clinicians start unverified and can't reach patient data until the owner
 // checks their name/number against the public professional-order registry and

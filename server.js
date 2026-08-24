@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
-  createClinician, createCoach, createMentor, createSchool, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
+  createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
@@ -288,6 +288,7 @@ const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
 const TEAM_PLANS = ['team_monthly', 'team_annual', 'team_premium'];
 const MENTOR_PLANS = ['mentor_monthly', 'mentor_annual'];
 const SCHOOL_PLANS = ['school_monthly', 'school_annual', 'school_premium'];
+const TRAINER_PLANS = ['trainer_monthly', 'trainer_annual', 'trainer_premium'];
 
 // Fire-and-forget welcome email on signup. Never awaited in the request path,
 // so a slow or unconfigured mailer can't delay or fail account creation. With
@@ -498,6 +499,50 @@ app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) =
   }
 });
 
+// Trainer signup (fitness): a trainer account is a clinician account with
+// account_type='trainer'. No licence and no verification — usable immediately.
+// The 14-day trial takes a card up front when Stripe is configured.
+app.post('/api/auth/trainer/signup', requireDb, signupLimiter, async (req, res) => {
+  try {
+    const { name, email, password } = req.body || {};
+    const plan = TRAINER_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'trainer_monthly';
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
+    if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+
+    if (await getClinicianByEmail(email.trim())) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+
+    const trainer = await createTrainer({
+      name: name.trim(),
+      email: email.trim(),
+      passwordHash: await hashPassword(password),
+      plan
+    });
+    await startSession(res, req, trainer.id);
+    sendWelcomeEmail({ to: trainer.email, name: trainer.name, kind: 'pro' });
+
+    let checkoutUrl = null;
+    try { checkoutUrl = await startClinicianCheckout(trainer, plan, siteOrigin(req)); }
+    catch (e) { console.error('Could not start checkout:', e.message); }
+
+    res.status(201).json({
+      clinician: trainer,
+      checkoutUrl,
+      verificationRequired: false,
+      billingEnabled: stripeConfigured() && !!priceForPlan(plan),
+      freeAccess: isFreeAccess(trainer.email)
+    });
+  } catch (err) {
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+    console.error('Error in trainer signup:', err);
+    res.status(500).json({ error: 'Could not create account.' });
+  }
+});
+
 app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -649,7 +694,7 @@ app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) =>
   try {
     if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
     const acctType = req.clinician.account_type;
-    const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : THERAPIST_PLANS;
+    const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : acctType === 'trainer' ? TRAINER_PLANS : THERAPIST_PLANS;
     const defaultPlan = acctType === 'coach' ? 'team_monthly' : acctType === 'mentor' ? 'mentor_monthly' : acctType === 'school' ? 'school_monthly' : 'solo_monthly';
     const plan = allowedPlans.includes((req.body || {}).plan) ? req.body.plan : (req.clinician.plan || defaultPlan);
     const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
@@ -775,7 +820,8 @@ app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requ
     }
     const accountType = req.clinician.account_type === 'coach' ? 'player'
       : req.clinician.account_type === 'mentor' ? 'member'
-      : req.clinician.account_type === 'school' ? 'student' : 'patient';
+      : req.clinician.account_type === 'school' ? 'student'
+      : req.clinician.account_type === 'trainer' ? 'client' : 'patient';
     const patient = await createPatient(req.clinician.id, displayName.trim(), generateInviteCode(), accountType);
     res.status(201).json(patient);
   } catch (err) {
@@ -1142,8 +1188,8 @@ function patientNeedsSub(p) {
 function clinicianNeedsSub(c) {
   // Coaches (team) and mentors (recovery) only owe a subscription once their
   // plans are configured in Stripe; until then they use the product free.
-  if (c && (c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school')) {
-    const fallbackPlan = c.account_type === 'coach' ? 'team_monthly' : c.account_type === 'school' ? 'school_monthly' : 'mentor_monthly';
+  if (c && (c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer')) {
+    const fallbackPlan = c.account_type === 'coach' ? 'team_monthly' : c.account_type === 'school' ? 'school_monthly' : c.account_type === 'trainer' ? 'trainer_monthly' : 'mentor_monthly';
     if (!stripeConfigured() || !priceForPlan(c.plan || fallbackPlan)) return false;
     return !isFreeAccess(c.email) && !subActive(c.subscription_status);
   }
@@ -1165,7 +1211,7 @@ function requireClinicianSubscription(req, res, next) {
 // has been confirmed by the owner. The owner's own (free-access) account is
 // treated as verified so they can always use and administer the site.
 function clinicianVerified(c) {
-  return !!c && (isFreeAccess(c.email) || c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || !!c.licence_verified);
+  return !!c && (isFreeAccess(c.email) || c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer' || !!c.licence_verified);
 }
 function requireVerifiedClinician(req, res, next) {
   if (!clinicianVerified(req.clinician)) {
