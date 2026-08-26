@@ -2910,6 +2910,8 @@
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Current":"Actuel","Switch":"Changer","Switch to this plan?":"Passer à ce forfait ?",
+    "Choose":"Choisir","Choose your plan":"Choisissez votre forfait",
+    "Choose a plan to start your 14-day free trial. Nothing is charged for 14 days, and you can cancel anytime before then.":"Choisissez un forfait pour commencer votre essai gratuit de 14 jours. Rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps avant.",
     "You're already signed in. Open your settings to manage your plan.":"Vous êtes déjà connecté. Ouvrez vos paramètres pour gérer votre forfait.",
     "Switching takes effect now; your next invoice is adjusted for the difference.":"Le changement prend effet maintenant ; votre prochaine facture est ajustée pour la différence.",
     "Your free trial is on; your card is charged when it ends unless you cancel.":"Votre essai gratuit est en cours ; votre carte est débitée à la fin sauf annulation.",
@@ -4884,10 +4886,19 @@
     const planName = curOpt ? t(curOpt.label) : ((state.me && state.me.plan) || t('Solo'));
     const body = document.getElementById('btwBillingBody');
     const action = document.getElementById('btwBillingAction');
-    if(st === 'active' || st === 'trialing'){
+    action.style.display = 'none';
+    if(st === 'canceling'){
+      body.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '.<br>'
+        + '<button id="btwClinReactivate" style="margin-top:8px;' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
+    } else {
+      // Show the plan picker whether or not there's an active subscription. With
+      // an active/trialing sub, other plans "Switch" in place (prorated). With no
+      // subscription yet, every plan gets a "Choose" that starts checkout for
+      // THAT plan — so a stored plan can never force the price.
+      const activeSub = (st === 'active' || st === 'trialing');
       const cur = state.me && state.me.plan;
       const rows = opts.map(function(o){
-        const isCur = o.plan === cur;
+        const isCur = activeSub && o.plan === cur;
         return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid '
           + (isCur ? 'var(--moss)' : 'var(--line)') + ';border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--paper);">'
           + '<div><div style="font-weight:600;color:var(--ink);">' + esc(t(o.label))
@@ -4895,32 +4906,26 @@
           + (o.note ? '<div style="font-size:11.5px;color:var(--ink-soft);">' + esc(t(o.note)) + '</div>' : '') + '</div>'
           + (isCur
               ? '<span style="font-size:12px;color:var(--moss);font-weight:600;">' + esc(t('Current')) + '</span>'
-              : '<button class="btw-nav-btn" data-switch="' + esc(o.plan) + '" style="font-size:12px;">' + esc(t('Switch')) + '</button>')
+              : '<button class="btw-nav-btn" data-switch="' + esc(o.plan) + '" style="font-size:12px;">' + esc(activeSub ? t('Switch') : t('Choose')) + '</button>')
           + '</div>';
       }).join('');
-      body.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.<br>'
-        + (st === 'trialing' ? esc(t('Your free trial is on; your card is charged when it ends unless you cancel.')) + '<br>' : '')
-        + '<div style="margin:14px 0 8px;font-weight:600;color:var(--ink);">' + esc(t('Change plan')) + '</div>'
+      const header = activeSub
+        ? ('<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.<br>'
+            + (st === 'trialing' ? esc(t('Your free trial is on; your card is charged when it ends unless you cancel.')) + '<br>' : ''))
+        : (esc(t('Choose a plan to start your 14-day free trial. Nothing is charged for 14 days, and you can cancel anytime before then.')) + '<br>');
+      body.innerHTML = header
+        + '<div style="margin:14px 0 8px;font-weight:600;color:var(--ink);">' + esc(activeSub ? t('Change plan') : t('Choose your plan')) + '</div>'
         + rows
-        + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + esc(t('Switching takes effect now; your next invoice is adjusted for the difference.')) + '</div>'
-        + '<button id="btwClinCancel" style="margin-top:14px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
-      action.style.display = 'none';
+        + (activeSub ? '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + esc(t('Switching takes effect now; your next invoice is adjusted for the difference.')) + '</div>' : '')
+        + (activeSub ? '<button id="btwClinCancel" style="margin-top:14px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>' : '');
       body.querySelectorAll('[data-switch]').forEach(function(b){
         b.addEventListener('click', async function(){
           const plan = b.getAttribute('data-switch');
-          if(!confirm(t('Switch to this plan?'))) return;
+          if(activeSub && !confirm(t('Switch to this plan?'))) return;
           await changePlan(plan);
           openBilling();
         });
       });
-    } else if(st === 'canceling'){
-      body.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '.<br>'
-        + '<button id="btwClinReactivate" style="margin-top:8px;' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
-      action.style.display = 'none';
-    } else {
-      body.innerHTML = esc(t('Start your 14-day free trial. Add a card now, nothing is charged for 14 days, and you can cancel anytime before then.'));
-      action.textContent = t('Start subscription');
-      action.style.display = '';
     }
     const cancel = body.querySelector('#btwClinCancel');
     if(cancel) cancel.addEventListener('click', async ()=>{
