@@ -765,7 +765,11 @@ app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) =>
     const acctType = req.clinician.account_type;
     const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : acctType === 'trainer' ? TRAINER_PLANS : THERAPIST_PLANS;
     const defaultPlan = acctType === 'coach' ? 'team_monthly' : acctType === 'mentor' ? 'mentor_monthly' : acctType === 'school' ? 'school_monthly' : 'solo_monthly';
-    const plan = allowedPlans.includes((req.body || {}).plan) ? req.body.plan : (req.clinician.plan || defaultPlan);
+    const requested = (req.body || {}).plan;
+    // Owner/admin accounts may check out any plan (for testing every price id);
+    // everyone else is restricted to their account type's plans.
+    const canAny = isFreeAccess(req.clinician.email) && !!priceForPlan(requested);
+    const plan = (allowedPlans.includes(requested) || canAny) ? requested : (req.clinician.plan || defaultPlan);
     const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
     if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
     if (plan !== req.clinician.plan) await updateClinicianSubscription(req.clinician.id, { plan });
@@ -814,8 +818,11 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     const acctType = req.clinician.account_type;
     const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : acctType === 'trainer' ? TRAINER_PLANS : THERAPIST_PLANS;
     const plan = (req.body || {}).plan;
-    if (!allowedPlans.includes(plan)) return res.status(400).json({ error: 'That plan is not available.' });
     const newPriceId = priceForPlan(plan);
+    // Owner/admin accounts may pick any plan (to test every price id); everyone
+    // else is restricted to their account type's plans.
+    const canAny = isFreeAccess(req.clinician.email) && !!newPriceId;
+    if (!allowedPlans.includes(plan) && !canAny) return res.status(400).json({ error: 'That plan is not available.' });
     if (!newPriceId) return res.status(400).json({ error: 'That plan is not available for checkout.' });
 
     const s = await getClinicianStripe(req.clinician.id);

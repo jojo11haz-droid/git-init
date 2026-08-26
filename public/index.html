@@ -5065,6 +5065,8 @@
     // their account type, send them to Billing to manage it; if it's a plan for
     // a different kind of account, say so — one account is one type.
     if(state.me){
+      // Owner/admin: allowed to check out any plan for testing, cross-type included.
+      if(ownerFreeAccess){ changePlan(plan); return; }
       const target = planAccountType(plan);
       if(target && target !== state.me.account_type){
         alert(t("You're signed in as a different kind of account. Log out first to start a plan for another kind of account."));
@@ -5258,7 +5260,11 @@
   window.btwOpenPatientSignup = function(plan){
     // Already signed in? Skip the create-account form. A professional account
     // can't hold a personal plan; a patient is already set up.
-    if(state.me){ alert(t("You're signed in as a professional account. Log out first to use a personal plan.")); return; }
+    if(state.me){
+      if(ownerFreeAccess){ changePlan(plan); return; } // admin: test any checkout
+      alert(t("You're signed in as a professional account. Log out first to use a personal plan."));
+      return;
+    }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     patientPlan = (plan === 'patient_annual') ? 'patient_annual' : 'patient_monthly';
     document.getElementById('btwPsError').textContent = '';
