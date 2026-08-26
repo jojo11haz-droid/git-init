@@ -284,7 +284,7 @@ async function startSession(res, req, clinicianId) {
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-const THERAPIST_PLANS = ['solo_monthly', 'solo_annual'];
+const THERAPIST_PLANS = ['solo_monthly', 'solo_annual', 'solo_premium'];
 const TEAM_PLANS = ['team_monthly', 'team_annual', 'team_premium'];
 const MENTOR_PLANS = ['mentor_monthly', 'mentor_annual'];
 const SCHOOL_PLANS = ['school_monthly', 'school_annual', 'school_premium'];

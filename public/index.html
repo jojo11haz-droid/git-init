@@ -902,7 +902,7 @@
   }
   .btw-pricing-cards{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
     gap:16px;
     margin-bottom:24px;
   }
@@ -2115,7 +2115,7 @@
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
         <h2>Pricing for therapists and patients</h2>
-        <p>Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
+        <p>Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
       </div>
 
       <div class="btw-pricing-cost-note">Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.</div>
@@ -2128,7 +2128,7 @@
           <div class="btw-price-amount"><span class="num">$99.99</span><span class="unit">CAD / clinician / month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
-            <li>Unlimited patients &amp; check-ins</li>
+            <li>Up to 30 patients &amp; unlimited check-ins</li>
             <li>Text + voice check-ins</li>
             <li>AI summaries &amp; theme tagging</li>
             <li>Mood trend &amp; theme charts</li>
@@ -2151,6 +2151,19 @@
             <li>Locked-in rate for 12 months</li>
           </ul>
           <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_annual')">Start 14-day free trial</button>
+        </div>
+
+        <div class="btw-price-card" id="btwSoloPremiumCard">
+          <div class="btw-price-tier">Premium</div>
+          <div class="btw-price-name">For larger caseloads</div>
+          <div class="btw-price-amount"><span class="num">$149.99</span><span class="unit">CAD / clinician / month</span></div>
+          <div class="btw-price-note">Billed monthly.</div>
+          <ul class="btw-price-features">
+            <li>Everything in Solo</li>
+            <li>For 30+ patients</li>
+            <li>Priority email support</li>
+          </ul>
+          <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_premium')">Start 14-day free trial</button>
         </div>
 
         <div class="btw-price-card">
@@ -2677,12 +2690,13 @@
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
     "CAD / clinician / month":"CAD / clinicien / mois","Billed monthly.":"Facturé mensuellement.",
     "Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.":"Les prix sont en dollars canadiens. Les taxes, le cas échéant, sont calculées au moment du paiement.",
-    "Unlimited patients & check-ins":"Patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
+    "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
     "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
     "In-app crisis resources for patients":"Ressources de crise dans l'app pour les patients",
     "Most practices":"La plupart des cabinets","Solo Annual":"Solo annuel","Same plan, paid yearly":"Même forfait, payé annuellement",
     "Billed annually ($288/year), save ~17%":"Facturé annuellement (288 $/an), économisez ~17 %",
     "Everything in Solo":"Tout ce qui est dans Solo","Priority email support":"Soutien prioritaire par courriel",
+    "For larger caseloads":"Pour les clientèles plus grandes","For 30+ patients":"Pour plus de 30 patients",
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
     "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
     "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
@@ -2817,8 +2831,8 @@
     "Patient display name (as you'd like it to appear in your caseload):":"Nom d'affichage du patient (tel que vous voulez le voir dans votre clientèle) :",
     // --- patients-buy-too: pricing, patient auth, and the patient dashboard ---
     "Pricing for therapists and patients":"Tarification pour thérapeutes et patients",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
-      "Payez un siège par clinicien et intégrez toute votre clientèle sans frais supplémentaires. Les clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans thérapeute.",
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Payez un siège par clinicien et intégrez votre clientèle. Solo couvre jusqu'à 30 patients, et Premium est là pour les clientèles plus grandes. Les clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans thérapeute.",
     "Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.":
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances. Le coût IA par suivi est assez faible pour qu'on ne le facture pas à l'unité, alors utilisez-le autant que vous le souhaitez.",
     "For therapists & practices":"Pour thérapeutes et cabinets",
@@ -3080,14 +3094,14 @@
     "Work":"Training",
     "Family":"Life",
     // pricing
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Coaches pay per team and invite their players in for free. Players can also get Between on their own. They check in and track their own patterns with or without a coach.",
     "For therapists & practices":"For coaches & teams",
     "Solo":"Team",
     "For individual practitioners":"Up to 30 players",
     "$99.99":"$99",
     "CAD / clinician / month":"CAD / team / month",
-    "Unlimited patients & check-ins":"Up to 30 players and unlimited check-ins",
+    "Up to 30 patients & unlimited check-ins":"Up to 30 players and unlimited check-ins",
     "In-app crisis resources for patients":"In-app support resources for players",
     "Most practices":"Most teams",
     "Solo Annual":"Team Annual",
@@ -3204,14 +3218,14 @@
     "Work":"Entraînement",
     "Family":"Vie",
     // pricing
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par équipe et invitent leurs joueurs gratuitement. Les joueurs peuvent aussi prendre Between par eux-mêmes. Ils font des suivis et suivent leurs tendances, avec ou sans entraîneur.",
     "For therapists & practices":"Pour entraîneurs et équipes",
     "Solo":"Équipe",
     "For individual practitioners":"Jusqu'à 30 joueurs",
     "$99.99":"99 $",
     "CAD / clinician / month":"CAD / équipe / mois",
-    "Unlimited patients & check-ins":"Jusqu'à 30 joueurs et des suivis illimités",
+    "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 joueurs et des suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les joueurs",
     "Most practices":"La plupart des équipes",
     "Solo Annual":"Équipe annuel",
@@ -3320,11 +3334,11 @@
     "she saw an old friend on the weekend.":"she got through Friday clean.",
     "Work":"Cravings",
     "Family":"Triggers",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Mentors pay per seat and invite the people they support in for free. Anyone can also get Between on their own, to check in and track their own patterns, with or without a mentor.",
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Mentors pay per seat and invite the people they support in for free. Anyone can also get Between on their own, to check in and track their own patterns, with or without a mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"For individual mentors",
     "CAD / clinician / month":"CAD / mentor / month",
-    "Unlimited patients & check-ins":"Unlimited members & check-ins",
+    "Up to 30 patients & unlimited check-ins":"Unlimited members & check-ins",
     "In-app crisis resources for patients":"In-app crisis resources for members",
     "Most practices":"Most mentors",
     "Solo Annual":"Mentor Annual",
@@ -3415,11 +3429,11 @@
     "she saw an old friend on the weekend.":"elle a passé vendredi sans consommer.",
     "Work":"Envies",
     "Family":"Déclencheurs",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les mentors paient par place et invitent gratuitement les personnes qu'ils accompagnent. N'importe qui peut aussi prendre Between par soi-même, pour faire des suivis et suivre ses tendances, avec ou sans mentor.",
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les mentors paient par place et invitent gratuitement les personnes qu'ils accompagnent. N'importe qui peut aussi prendre Between par soi-même, pour faire des suivis et suivre ses tendances, avec ou sans mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"Pour les mentors individuels",
     "CAD / clinician / month":"CAD / mentor / mois",
-    "Unlimited patients & check-ins":"Membres et suivis illimités",
+    "Up to 30 patients & unlimited check-ins":"Membres et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les membres",
     "Most practices":"La plupart des mentors",
     "Solo Annual":"Mentor annuel",
@@ -3527,11 +3541,11 @@
     "she saw an old friend on the weekend.":"class went better than she feared.",
     "Work":"School",
     "Family":"Home",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
     "Solo":"Staff",
     "For individual practitioners":"Up to 30 students",
     "CAD / clinician / month":"CAD / staff / month",
-    "Unlimited patients & check-ins":"Up to 30 students and unlimited check-ins",
+    "Up to 30 patients & unlimited check-ins":"Up to 30 students and unlimited check-ins",
     "In-app crisis resources for patients":"In-app crisis resources for students",
     "Most practices":"Most schools",
     "Solo Annual":"Staff Annual",
@@ -3629,11 +3643,11 @@
     "she saw an old friend on the weekend.":"la classe s'est mieux passée que prévu.",
     "Work":"École",
     "Family":"Maison",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
     "Solo":"Personnel",
     "For individual practitioners":"Jusqu'à 30 élèves",
     "CAD / clinician / month":"CAD / membre / mois",
-    "Unlimited patients & check-ins":"Jusqu'à 30 élèves et suivis illimités",
+    "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 élèves et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les élèves",
     "Most practices":"La plupart des écoles",
     "Solo Annual":"Personnel annuel",
@@ -3825,14 +3839,14 @@
     // chips
     "Work":"Training","Family":"Nutrition",
     // pricing
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Trainers pay per seat and invite their clients in for free. Clients can also get Between on their own to track their energy and habits, with or without a trainer.",
     "For therapists & practices":"For trainers & studios",
     "Solo":"Trainer",
     "For individual practitioners":"Up to 20 clients",
     "$99.99":"$49",
     "CAD / clinician / month":"CAD / trainer / month",
-    "Unlimited patients & check-ins":"Up to 20 clients and unlimited check-ins",
+    "Up to 30 patients & unlimited check-ins":"Up to 20 clients and unlimited check-ins",
     "In-app crisis resources for patients":"In-app support resources for clients",
     "Most practices":"Most trainers",
     "Solo Annual":"Trainer Annual",
@@ -3929,14 +3943,14 @@
     "up several nights. One good moment:":"gardée hors de deux séances. Une réussite :",
     "she saw an old friend on the weekend.":"un record au squat vendredi.",
     "Work":"Entraînement","Family":"Nutrition",
-    "Pay one seat per clinician and bring your entire caseload on board at no additional cost. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par place et invitent leurs clients gratuitement. Les clients peuvent aussi prendre Between par eux-mêmes pour suivre leur énergie et leurs habitudes, avec ou sans entraîneur.",
     "For therapists & practices":"Pour entraîneurs et studios",
     "Solo":"Entraîneur",
     "For individual practitioners":"Jusqu'à 20 clients",
     "$99.99":"49 $",
     "CAD / clinician / month":"CAD / entraîneur / mois",
-    "Unlimited patients & check-ins":"Jusqu'à 20 clients et suivis illimités",
+    "Up to 30 patients & unlimited check-ins":"Jusqu'à 20 clients et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les clients",
     "Most practices":"La plupart des entraîneurs",
     "Solo Annual":"Entraîneur annuel",
@@ -4127,6 +4141,10 @@
     }
     const mic = document.getElementById('btwMic');
     if(mic){ const l = curLang === 'fr' ? 'Enregistrer une note vocale' : 'Record voice memo'; mic.title = l; mic.setAttribute('aria-label', l); }
+    // The therapist Premium tier (30+ patients) is therapy-only; other
+    // audiences already have their own volume/premium tier in the third card.
+    const soloPremium = document.getElementById('btwSoloPremiumCard');
+    if(soloPremium) soloPremium.style.display = (curAudience === 'therapy') ? '' : 'none';
     renderHeroThread();
   }
 
