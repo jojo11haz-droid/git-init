@@ -2913,6 +2913,8 @@
     "Choose":"Choisir","Choose your plan":"Choisissez votre forfait",
     "Choose a plan to start your 14-day free trial. Nothing is charged for 14 days, and you can cancel anytime before then.":"Choisissez un forfait pour commencer votre essai gratuit de 14 jours. Rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps avant.",
     "You're already signed in. Open your settings to manage your plan.":"Vous êtes déjà connecté. Ouvrez vos paramètres pour gérer votre forfait.",
+    "You're signed in as a different kind of account. Log out first to start a plan for another kind of account.":"Vous êtes connecté avec un autre type de compte. Déconnectez-vous d'abord pour commencer un forfait d'un autre type de compte.",
+    "You're signed in as a professional account. Log out first to use a personal plan.":"Vous êtes connecté avec un compte professionnel. Déconnectez-vous d'abord pour utiliser un forfait personnel.",
     "Switching takes effect now; your next invoice is adjusted for the difference.":"Le changement prend effet maintenant ; votre prochaine facture est ajustée pour la différence.",
     "Your free trial is on; your card is charged when it ends unless you cancel.":"Votre essai gratuit est en cours ; votre carte est débitée à la fin sauf annulation.",
     "Up to 30 patients":"Jusqu'à 30 patients","30+ patients":"Plus de 30 patients","Billed yearly":"Facturé annuellement",
@@ -5046,11 +5048,30 @@
     });
   }
 
+  // Which account type a plan id belongs to, so we can block cross-type actions
+  // for a signed-in user (a school account can't start a therapist plan, etc.).
+  function planAccountType(plan){
+    const p = String(plan || '');
+    if(p.indexOf('solo_') === 0) return 'therapist';
+    if(p.indexOf('team_') === 0) return 'coach';
+    if(p.indexOf('school_') === 0) return 'school';
+    if(p.indexOf('trainer_') === 0) return 'trainer';
+    if(p.indexOf('mentor_') === 0) return 'mentor';
+    if(p.indexOf('patient_') === 0) return 'patient';
+    return null;
+  }
   window.btwOpenSignup = function(plan){
-    // Already signed in? Don't show a create-account form. A clinician manages
-    // their plan in Billing (the plan switcher); a patient can't hold a pro
-    // account, so point them at their own settings.
-    if(state.me){ openBilling(); return; }
+    // Already signed in? Don't show a create-account form. If the plan matches
+    // their account type, send them to Billing to manage it; if it's a plan for
+    // a different kind of account, say so — one account is one type.
+    if(state.me){
+      const target = planAccountType(plan);
+      if(target && target !== state.me.account_type){
+        alert(t("You're signed in as a different kind of account. Log out first to start a plan for another kind of account."));
+        return;
+      }
+      openBilling(); return;
+    }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     const teamField = document.getElementById('btwSuTeamField');
@@ -5235,9 +5256,9 @@
   const psReady = ()=> psAgree.checked && psAge.checked;
   let patientPlan = 'patient_monthly';
   window.btwOpenPatientSignup = function(plan){
-    // Already signed in? Skip the create-account form. A clinician manages their
-    // own plan in Billing; a patient is already set up.
-    if(state.me){ openBilling(); return; }
+    // Already signed in? Skip the create-account form. A professional account
+    // can't hold a personal plan; a patient is already set up.
+    if(state.me){ alert(t("You're signed in as a professional account. Log out first to use a personal plan.")); return; }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     patientPlan = (plan === 'patient_annual') ? 'patient_annual' : 'patient_monthly';
     document.getElementById('btwPsError').textContent = '';
