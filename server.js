@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
-  dbEnabled, initDb, createPatient, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
+  dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
   createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
@@ -881,11 +881,34 @@ app.post('/api/auth/password/reset-confirm', requireDb, async (req, res) => {
 // to that clinician server-side — client-supplied patient IDs are never
 // trusted (backend-spec.md §2).
 
+// Per-plan active-patient caps. Plans not listed here are uncapped. Solo
+// therapists are capped at 30; Premium (solo_premium) and Group practice (team)
+// are uncapped. Free-access/owner accounts are never capped.
+const PLAN_PATIENT_CAP = { solo_monthly: 30, solo_annual: 30 };
+function patientCapForClinician(c) {
+  if (!c || isFreeAccess(c.email)) return null;
+  const cap = PLAN_PATIENT_CAP[c.plan];
+  return typeof cap === 'number' ? cap : null;
+}
+
 app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, async (req, res) => {
   try {
     const { displayName } = req.body || {};
     if (!displayName || !displayName.trim()) {
       return res.status(400).json({ error: 'displayName is required.' });
+    }
+    // Enforce the plan's patient cap (Solo = 30). Removed/left patients don't
+    // count, so freeing a slot lets the clinician add another right away.
+    const cap = patientCapForClinician(req.clinician);
+    if (cap != null) {
+      const current = await countActivePatients(req.clinician.id);
+      if (current >= cap) {
+        return res.status(403).json({
+          error: `You've reached the ${cap}-patient limit on your plan. Upgrade to Premium to add more.`,
+          code: 'patient_limit_reached',
+          limit: cap
+        });
+      }
     }
     const accountType = req.clinician.account_type === 'coach' ? 'player'
       : req.clinician.account_type === 'mentor' ? 'member'
