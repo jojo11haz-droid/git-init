@@ -1662,7 +1662,10 @@
       <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
       <div id="btwLeftNote" style="display:none;background:#FBF3E7;border:1px solid #E6D8A8;border-radius:9px;padding:10px 12px;font-size:12px;color:#6b5a1f;line-height:1.55;margin-bottom:10px;"></div>
-      <button id="btwDownloadRecord" style="width:100%;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Download this patient's record</button>
+      <div id="btwDownloadRow" style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="btwDownloadCsv" style="flex:1;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 12px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Download record (CSV)</button>
+        <button id="btwDownloadJson" style="flex:1;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 12px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Download record (JSON)</button>
+      </div>
       <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Remove this patient</button>
       <button id="btwCloseData" class="btw-modal-continue">Close</button>
     </div>
@@ -2786,7 +2789,7 @@
     "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela retire le patient.",
     "Remove":"Retirer",
     "Remove this patient":"Retirer ce patient",
-    "Download this patient's record":"Télécharger le dossier de ce patient",
+    "Download record (CSV)":"Télécharger le dossier (CSV)","Download record (JSON)":"Télécharger le dossier (JSON)",
     "They lose access now, and their record is kept for you to download for 14 days, then permanently deleted.":"Ils perdent l'accès maintenant, et leur dossier est conservé pour que vous puissiez le télécharger pendant 14 jours, puis supprimé définitivement.",
     "This patient has left. Their access is off and their record will be permanently deleted in":"Ce patient est parti. Son accès est désactivé et son dossier sera supprimé définitivement dans",
     "Download it now if you want to keep it.":"Téléchargez-le maintenant si vous souhaitez le conserver.",
@@ -5460,7 +5463,7 @@
       if(resetBtn) resetBtn.style.display = 'none';
       const delBtn = document.getElementById('btwDeletePatient');
       if(delBtn) delBtn.style.display = 'none'; // patients delete their history, not a "patient" record
-      const dlBtnP = document.getElementById('btwDownloadRecord'); if(dlBtnP) dlBtnP.style.display = 'none';
+      const dlRowP = document.getElementById('btwDownloadRow'); if(dlRowP) dlRowP.style.display = 'none';
       const leftNoteP = document.getElementById('btwLeftNote'); if(leftNoteP) leftNoteP.style.display = 'none';
       syncConsentUi();
       renderDataList();
@@ -5481,8 +5484,8 @@
     // Hide the reset/deletion controls, surface a countdown, keep Download.
     const left = !!p.left_at;
     const leftNote = document.getElementById('btwLeftNote');
-    const dlBtn = document.getElementById('btwDownloadRecord');
-    if(dlBtn) dlBtn.style.display = '';
+    const dlBtn = document.getElementById('btwDownloadRow');
+    if(dlBtn) dlBtn.style.display = 'flex';
     if(left){
       const days = daysUntilPurge(p.left_at);
       if(leftNote){
@@ -5592,15 +5595,16 @@
 
   // Download a patient's full record as a JSON file. Clinician auth rides on the
   // session cookie, so a plain fetch is authenticated; we save the returned blob.
-  async function downloadPatientRecord(p){
+  async function downloadPatientRecord(p, format){
     if(!p){ alert(t('Add a patient first.')); return; }
     try{
-      const resp = await fetch('/api/patients/' + p.id + '/export');
+      const q = format === 'csv' ? '?format=csv' : '';
+      const resp = await fetch('/api/patients/' + p.id + '/export' + q);
       if(!resp.ok){ let e = null; try { e = await resp.json(); } catch(_){} throw new Error((e && e.error) || ('Request failed (' + resp.status + ')')); }
       const blob = await resp.blob();
       const cd = resp.headers.get('Content-Disposition') || '';
       const m = /filename="([^"]+)"/.exec(cd);
-      const name = m ? m[1] : 'between-record.json';
+      const name = m ? m[1] : ('between-record.' + (format === 'csv' ? 'csv' : 'json'));
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name;
@@ -5608,7 +5612,8 @@
       URL.revokeObjectURL(url);
     }catch(err){ alert(err.message); }
   }
-  document.getElementById('btwDownloadRecord').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient()); });
+  document.getElementById('btwDownloadCsv').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient(), 'csv'); });
+  document.getElementById('btwDownloadJson').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient(), 'json'); });
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#C0392B', Craving:'#B8701F',

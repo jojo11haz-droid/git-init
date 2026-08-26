@@ -996,6 +996,27 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
     const safeName = String(patient.display_name || 'patient')
       .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient';
     const stamp = new Date().toISOString().slice(0, 10);
+
+    if (String(req.query.format || '').toLowerCase() === 'csv') {
+      // One row per check-in, newest first. Spreadsheet-friendly: a single
+      // header row, arrays flattened to "a; b", every cell CSV-escaped. A
+      // leading BOM makes Excel read the accented characters as UTF-8.
+      const cell = v => {
+        if (v == null) return '';
+        const s = Array.isArray(v) ? v.join('; ') : String(v);
+        return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const header = ['submitted_at', 'mood_score', 'mood_inferred', 'manual_tags', 'auto_tags', 'summary_text', 'raw_text', 'risk_flag', 'has_voice_memo'];
+      const lines = [header.join(',')];
+      for (const c of record.check_ins) {
+        lines.push([c.submitted_at, c.mood_score, c.mood_inferred, c.manual_tags, c.auto_tags, c.summary_text, c.raw_text, c.risk_flag, c.has_voice_memo].map(cell).join(','));
+      }
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.csv"`);
+      res.send('﻿' + lines.join('\r\n') + '\r\n');
+      return;
+    }
+
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.json"`);
     res.send(JSON.stringify(record, null, 2));
