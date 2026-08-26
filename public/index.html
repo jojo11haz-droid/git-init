@@ -2508,6 +2508,7 @@
     if(!resp.ok){
       const err = new Error((data && data.error) || ('Request failed (' + resp.status + ')'));
       err.status = resp.status;
+      if(data && data.code) err.code = data.code;
       throw err;
     }
     return data;
@@ -2697,6 +2698,7 @@
     "Billed annually ($288/year), save ~17%":"Facturé annuellement (288 $/an), économisez ~17 %",
     "Everything in Solo":"Tout ce qui est dans Solo","Priority email support":"Soutien prioritaire par courriel",
     "For larger caseloads":"Pour les clientèles plus grandes","For 30+ patients":"Pour plus de 30 patients",
+    "Open billing to upgrade now?":"Ouvrir la facturation pour passer à Premium maintenant ?",
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
     "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
     "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
@@ -5861,7 +5863,13 @@
         if(patient.invite_code){
           alert(t('Patient added. Open their card and tap "View patient data & AI settings" → "Copy invite message" to send them a sign-up link.'));
         }
-      }catch(err){ alert(err.message); }
+      }catch(err){
+        if(err && err.code === 'patient_limit_reached'){
+          if(confirm(err.message + '\n\n' + t('Open billing to upgrade now?'))) openBilling();
+        } else {
+          alert(err.message);
+        }
+      }
     });
   }
 

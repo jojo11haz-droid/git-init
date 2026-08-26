@@ -489,6 +489,16 @@ export async function updatePatientNote(clinicianId, patientId, note) {
   return rows[0] || null;
 }
 
+// Count a clinician's active patients (excludes those already marked as having
+// left — removing one frees a slot immediately). Used to enforce plan caps.
+export async function countActivePatients(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM patients WHERE clinician_id = $1 AND left_at IS NULL`,
+    [clinicianId]
+  );
+  return rows[0] ? rows[0].n : 0;
+}
+
 export async function listPatients(clinicianId) {
   // Triage-oriented: per patient we return recent activity so the caseload can
   // surface who needs attention without the clinician opening each profile.
