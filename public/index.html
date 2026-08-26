@@ -1076,6 +1076,29 @@
     outline-offset:1px;
     border-color:var(--moss);
   }
+  .btw-pw-wrap{position:relative;}
+  .btw-pw-wrap input{padding-right:40px;}
+  .btw-pw-toggle{
+    position:absolute;
+    top:50%;
+    right:4px;
+    transform:translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:32px;
+    height:32px;
+    padding:0;
+    margin:0;
+    border:none;
+    background:none;
+    cursor:pointer;
+    color:var(--ink-soft);
+    border-radius:7px;
+  }
+  .btw-pw-toggle:hover{color:var(--ink);}
+  .btw-pw-toggle:focus-visible{outline:2px solid var(--moss-light);outline-offset:1px;}
+  .btw-pw-toggle svg{width:18px;height:18px;display:block;}
   .btw-form-note{
     font-size:11px;
     color:var(--ink-soft);
@@ -1531,7 +1554,7 @@
       </div>
       <div class="btw-form-field">
         <label>Password</label>
-        <input type="password" id="btwLoginPassword" placeholder="Your password">
+        <div class="btw-pw-wrap"><input type="password" id="btwLoginPassword" placeholder="Your password"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
       </div>
       <div class="btw-form-field" id="btwMfaField" style="display:none;">
         <label>Two-factor code</label>
@@ -1575,7 +1598,7 @@
         <h2>Choose a new password</h2>
         <div class="btw-form-field">
           <label>New password</label>
-          <input type="password" id="btwResetNewPw" placeholder="At least 10 characters">
+          <div class="btw-pw-wrap"><input type="password" id="btwResetNewPw" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
         </div>
         <div class="btw-form-error" id="btwResetConfError"></div>
         <button class="btw-modal-continue" id="btwResetConfSubmit">Set new password</button>
@@ -2215,7 +2238,7 @@
           </div>
           <div class="btw-form-field">
             <label>Password</label>
-            <input type="password" id="btwSuPassword" placeholder="At least 10 characters">
+            <div class="btw-pw-wrap"><input type="password" id="btwSuPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
           </div>
           <div class="btw-form-error" id="btwStep1Error"></div>
           <button class="btw-modal-continue" id="btwStep1Next">Continue</button>
@@ -2326,7 +2349,7 @@
         </div>
         <div class="btw-form-field">
           <label>Password</label>
-          <input type="password" id="btwPsPassword" placeholder="At least 10 characters">
+          <div class="btw-pw-wrap"><input type="password" id="btwPsPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
         </div>
         <label class="btw-modal-agree">
           <input type="checkbox" id="btwPsAgree">
@@ -2383,7 +2406,7 @@
       </div>
       <div class="btw-form-field">
         <label>Password</label>
-        <input type="password" id="btwInvPassword" placeholder="At least 10 characters">
+        <div class="btw-pw-wrap"><input type="password" id="btwInvPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
       </div>
       <label class="btw-modal-agree">
         <input type="checkbox" id="btwInvAgree">
@@ -4205,6 +4228,21 @@
   });
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
+
+  // Show/hide password: eye toggle inside password fields. Delegated so it
+  // works for every .btw-pw-wrap without wiring each one up individually.
+  const BTW_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  const BTW_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest && e.target.closest('.btw-pw-toggle');
+    if(!btn) return;
+    const inp = btn.parentNode.querySelector('input');
+    if(!inp) return;
+    const reveal = inp.type === 'password';
+    inp.type = reveal ? 'text' : 'password';
+    btn.innerHTML = reveal ? BTW_EYE_OFF : BTW_EYE;
+    btn.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+  });
 
   // "Talk to us" (group practice) opens a contact form that emails the owner,
   // so any visitor can reach us without needing their own mail app.
