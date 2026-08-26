@@ -1661,7 +1661,9 @@
 
       <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
-      <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Delete this patient permanently</button>
+      <div id="btwLeftNote" style="display:none;background:#FBF3E7;border:1px solid #E6D8A8;border-radius:9px;padding:10px 12px;font-size:12px;color:#6b5a1f;line-height:1.55;margin-bottom:10px;"></div>
+      <button id="btwDownloadRecord" style="width:100%;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Download this patient's record</button>
+      <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Remove this patient</button>
       <button id="btwCloseData" class="btw-modal-continue">Close</button>
     </div>
   </div>
@@ -2780,7 +2782,16 @@
     "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
     "To confirm, type the patient name exactly:":"Pour confirmer, tapez le nom du patient exactement :",
     "That did not match, the patient was not deleted.":"Cela ne correspond pas, le patient n'a pas été supprimé.",
-    "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela supprime le patient.",
+    "That did not match, the patient was not removed.":"Cela ne correspond pas, le patient n'a pas été retiré.",
+    "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela retire le patient.",
+    "Remove":"Retirer",
+    "Remove this patient":"Retirer ce patient",
+    "Download this patient's record":"Télécharger le dossier de ce patient",
+    "They lose access now, and their record is kept for you to download for 14 days, then permanently deleted.":"Ils perdent l'accès maintenant, et leur dossier est conservé pour que vous puissiez le télécharger pendant 14 jours, puis supprimé définitivement.",
+    "This patient has left. Their access is off and their record will be permanently deleted in":"Ce patient est parti. Son accès est désactivé et son dossier sera supprimé définitivement dans",
+    "Download it now if you want to keep it.":"Téléchargez-le maintenant si vous souhaitez le conserver.",
+    "day.":"jour.","days.":"jours.",
+    "Left":"Parti","d left":"j restants",
     "Last check-in":"Dernier suivi","on file":"au dossier",
     "Recurring themes":"Thèmes récurrents","also":"aussi",
     "Tied to lower mood":"Associé à une humeur plus basse","Tied to better mood":"Associé à une meilleure humeur","vs":"vs","overall":"en général",
@@ -3121,7 +3132,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the player.",
     "Patient consent":"Player consent",
     "Patient data":"Player data",
-    "Delete this patient permanently":"Delete this player permanently",
+    "Remove this patient":"Remove this player",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between practices and games.",
     "Enter the invite code from your therapist.":"Enter the invite code from your coach."
   };
@@ -3245,7 +3256,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime le joueur.",
     "Patient consent":"Consentement du joueur",
     "Patient data":"Données du joueur",
-    "Delete this patient permanently":"Supprimer ce joueur définitivement",
+    "Remove this patient":"Retirer ce joueur",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre les entraînements et les matchs.",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur."
   };
@@ -3347,7 +3358,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the member.",
     "Patient consent":"Member consent",
     "Patient data":"Member data",
-    "Delete this patient permanently":"Delete this member permanently"
+    "Remove this patient":"Remove this member"
   };
   const RECOVERY_FR = {
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -3442,7 +3453,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime le membre.",
     "Patient consent":"Consentement du membre",
     "Patient data":"Données du membre",
-    "Delete this patient permanently":"Supprimer ce membre définitivement"
+    "Remove this patient":"Retirer ce membre"
   };
 
   function pickCopy(key){
@@ -3558,7 +3569,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the student.",
     "Patient consent":"Student consent",
     "Patient data":"Student data",
-    "Delete this patient permanently":"Delete this student permanently",
+    "Remove this patient":"Remove this student",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our check-ins."
   };
   const SCHOOLS_FR = {
@@ -3659,7 +3670,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime l'élève.",
     "Patient consent":"Consentement de l'élève",
     "Patient data":"Données de l'élève",
-    "Delete this patient permanently":"Supprimer cet élève définitivement",
+    "Remove this patient":"Retirer cet élève",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos rencontres."
   };
   // Classroom mode = the teacher's view inside Schools. It layers homework /
@@ -3865,7 +3876,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the client.",
     "Patient consent":"Client consent",
     "Patient data":"Client data",
-    "Delete this patient permanently":"Delete this client permanently",
+    "Remove this patient":"Remove this client",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our training sessions."
   };
   const FITNESS_FR = {
@@ -3966,7 +3977,7 @@
     "They have no check-ins yet, this removes the patient.":"Il n'a pas encore de suivis, cela supprime le client.",
     "Patient consent":"Consentement du client",
     "Patient data":"Données du client",
-    "Delete this patient permanently":"Supprimer ce client définitivement",
+    "Remove this patient":"Retirer ce client",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances."
   };
   const HERO_THREAD = {
@@ -5449,6 +5460,8 @@
       if(resetBtn) resetBtn.style.display = 'none';
       const delBtn = document.getElementById('btwDeletePatient');
       if(delBtn) delBtn.style.display = 'none'; // patients delete their history, not a "patient" record
+      const dlBtnP = document.getElementById('btwDownloadRecord'); if(dlBtnP) dlBtnP.style.display = 'none';
+      const leftNoteP = document.getElementById('btwLeftNote'); if(leftNoteP) leftNoteP.style.display = 'none';
       syncConsentUi();
       renderDataList();
       dataOverlay.style.display = 'flex';
@@ -5464,6 +5477,26 @@
     const delBtn0 = document.getElementById('btwDeletePatient');
     if(delBtn0) delBtn0.style.display = '';
     renderTherapistInvite(inviteEl, p);
+    // A "left" patient: access is already off, data kept for the grace window.
+    // Hide the reset/deletion controls, surface a countdown, keep Download.
+    const left = !!p.left_at;
+    const leftNote = document.getElementById('btwLeftNote');
+    const dlBtn = document.getElementById('btwDownloadRecord');
+    if(dlBtn) dlBtn.style.display = '';
+    if(left){
+      const days = daysUntilPurge(p.left_at);
+      if(leftNote){
+        leftNote.style.display = '';
+        leftNote.textContent = t('This patient has left. Their access is off and their record will be permanently deleted in')
+          + ' ' + days + ' ' + (days === 1 ? t('day.') : t('days.')) + ' ' + t('Download it now if you want to keep it.');
+      }
+      if(resetBtn0) resetBtn0.style.display = 'none';
+      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = 'none';
+      if(delBtn0) delBtn0.style.display = 'none';
+    } else {
+      if(leftNote) leftNote.style.display = 'none';
+      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = '';
+    }
     syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
@@ -5524,16 +5557,28 @@
   // Delete the whole patient record (and everything tied to it). Therapist-only.
   // A patient with no check-ins deletes with one confirm; one with history also
   // has to have its name typed, so real data can't be lost to a stray tap.
+  // How long a removed patient's record is kept before it is purged. Must match
+  // PATIENT_LEFT_GRACE_DAYS on the server.
+  const PATIENT_LEFT_GRACE_DAYS = 14;
+  function daysUntilPurge(leftAt){
+    const left = new Date(leftAt).getTime();
+    if(!isFinite(left)) return PATIENT_LEFT_GRACE_DAYS;
+    const purge = left + PATIENT_LEFT_GRACE_DAYS * 86400000;
+    return Math.max(0, Math.ceil((purge - Date.now()) / 86400000));
+  }
+
   async function deletePatientFlow(p){
     if(!p) return;
+    if(p.left_at) return; // already removed; nothing to do
     const hasData = !!p.last_check_in_at;
+    const kept = t('They lose access now, and their record is kept for you to download for 14 days, then permanently deleted.');
     if(hasData){
-      if(!confirm(t('Permanently delete') + ' ' + p.display_name + '? ' + t('This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.'))) return;
+      if(!confirm(t('Remove') + ' ' + p.display_name + '? ' + kept)) return;
       const typed = prompt(t('To confirm, type the patient name exactly:') + ' ' + p.display_name);
       if(typed == null) return;
-      if(typed.trim() !== p.display_name){ alert(t('That did not match, the patient was not deleted.')); return; }
+      if(typed.trim() !== p.display_name){ alert(t('That did not match, the patient was not removed.')); return; }
     } else {
-      if(!confirm(t('Delete') + ' ' + p.display_name + '? ' + t('They have no check-ins yet, this removes the patient.'))) return;
+      if(!confirm(t('Remove') + ' ' + p.display_name + '? ' + t('They have no check-ins yet, this removes the patient.'))) return;
     }
     try{
       await api('DELETE', '/api/patients/' + p.id);
@@ -5544,6 +5589,26 @@
     }catch(err){ alert(err.message); }
   }
   document.getElementById('btwDeletePatient').addEventListener('click', ()=>{ deletePatientFlow(selectedPatient()); });
+
+  // Download a patient's full record as a JSON file. Clinician auth rides on the
+  // session cookie, so a plain fetch is authenticated; we save the returned blob.
+  async function downloadPatientRecord(p){
+    if(!p){ alert(t('Add a patient first.')); return; }
+    try{
+      const resp = await fetch('/api/patients/' + p.id + '/export');
+      if(!resp.ok){ let e = null; try { e = await resp.json(); } catch(_){} throw new Error((e && e.error) || ('Request failed (' + resp.status + ')')); }
+      const blob = await resp.blob();
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const m = /filename="([^"]+)"/.exec(cd);
+      const name = m ? m[1] : 'between-record.json';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }catch(err){ alert(err.message); }
+  }
+  document.getElementById('btwDownloadRecord').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient()); });
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#C0392B', Craving:'#B8701F',
@@ -5736,12 +5801,14 @@
     }
     let cards = list.map(p=>{
       const active = p.id === state.selectedPatientId;
-      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
+      const left = !!p.left_at;
+      const leftMeta = left ? `<div class="btw-patient-meta" style="color:var(--clay);">${esc(t('Left'))} · ${daysUntilPurge(p.left_at)} ${esc(t('d left'))}</div>` : `<div class="btw-patient-meta">${patientCardMeta(p)}</div>`;
+      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}" style="${left?'opacity:0.6;':''}">
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
         ${p.clinician_note ? `<span class="btw-patient-note" title="${esc(t('Has notes'))}" aria-label="${esc(t('Has notes'))}"></span>` : ''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
-        <div class="btw-patient-meta">${patientCardMeta(p)}</div>
+        ${leftMeta}
       </div>`;
     }).join('');
     if(caseloadFilter === 'attention' && list.length === 0){

@@ -13,7 +13,7 @@ import {
   flagCheckInInaccurate, getCheckIn,
   createFutureNote, listFutureNotes, deleteFutureNote,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
-  resetPatientAccess, deletePatient,
+  resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
   createAlert, listAlerts, markAlertViewed
@@ -882,6 +882,11 @@ app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requ
 
 app.get('/api/patients', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
+    // Lazy garbage-collection: purge patients whose grace period has elapsed.
+    // Runs on caseload load so no separate scheduler is needed. Best-effort —
+    // a purge failure must never block the clinician from seeing their list.
+    purgeExpiredPatients(PATIENT_LEFT_GRACE_DAYS)
+      .catch(err => console.error('Expired-patient purge failed:', err && err.message));
     res.json(await listPatients(req.clinician.id));
   } catch (err) {
     console.error('Error listing patients:', err);
@@ -934,16 +939,69 @@ app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifi
   }
 });
 
-// Permanently delete a patient and all of their data (check-ins, summaries,
-// voice memos, alerts). Scoped to the signed-in clinician; irreversible.
+// How long a removed patient's record is kept for the clinician before it is
+// permanently purged. During this window the clinician can still view and
+// download the record; the patient can no longer log in or send check-ins.
+const PATIENT_LEFT_GRACE_DAYS = 14;
+
+// "Remove patient" — marks them as having left rather than erasing immediately.
+// Their access is cut now; their data is kept for PATIENT_LEFT_GRACE_DAYS so the
+// clinician can download it, then purgeExpiredPatients() deletes it for good.
 app.delete('/api/patients/:id', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
-    const deleted = await deletePatient(req.clinician.id, req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Patient not found.' });
-    res.json({ ok: true });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    if (!patient.left_at) await markPatientLeft(req.clinician.id, req.params.id);
+    res.json({ ok: true, grace_days: PATIENT_LEFT_GRACE_DAYS });
   } catch (err) {
-    console.error('Error deleting patient:', err);
-    res.status(500).json({ error: 'Could not delete the patient.' });
+    console.error('Error removing patient:', err);
+    res.status(500).json({ error: 'Could not remove the patient.' });
+  }
+});
+
+// Download a patient's full record as a JSON file — profile plus every
+// check-in (mood, tags, summary, text, timestamps, flags). Available while the
+// patient is active and throughout the post-departure grace window, so the
+// clinician can keep the record before it is purged. Clinician-scoped.
+app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIns = await listCheckIns(patient.id);
+    const record = {
+      exported_at: new Date().toISOString(),
+      source: 'Between',
+      patient: {
+        display_name: patient.display_name,
+        email: patient.email || null,
+        account_type: patient.account_type,
+        created_at: patient.created_at,
+        left_at: patient.left_at || null,
+        ai_consent_enabled: patient.ai_consent_enabled
+      },
+      clinician_note: patient.clinician_note || null,
+      check_in_count: checkIns.length,
+      check_ins: checkIns.map(c => ({
+        submitted_at: c.submitted_at,
+        mood_score: c.mood_score,
+        mood_inferred: c.mood_inferred || false,
+        manual_tags: c.manual_tags || [],
+        auto_tags: c.auto_tags || [],
+        summary_text: c.summary_text || null,
+        raw_text: c.raw_text || null,
+        risk_flag: c.risk_flag || false,
+        has_voice_memo: !!c.audio_upload_id
+      }))
+    };
+    const safeName = String(patient.display_name || 'patient')
+      .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient';
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.json"`);
+    res.send(JSON.stringify(record, null, 2));
+  } catch (err) {
+    console.error('Error exporting patient record:', err);
+    res.status(500).json({ error: 'Could not export the record.' });
   }
 });
 
@@ -1145,7 +1203,7 @@ async function requirePatientAuth(req, res, next) {
     const token = readBearerToken(req);
     if (token) {
       const patient = await getPatientBySession(hashSessionToken(token));
-      if (patient) {
+      if (patient && !patient.left_at) {
         req.patient = patient;
         return next();
       }
@@ -1465,6 +1523,9 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
       : 'scrypt$16384$8$1$00000000000000000000000000000000$00');
     if (!patient || !ok || patient.invite_status === 'revoked') {
       return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+    if (patient.left_at) {
+      return res.status(403).json({ error: 'This account is no longer active.' });
     }
 
     const token = await startPatientSession(patient.id);
