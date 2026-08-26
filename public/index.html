@@ -2706,6 +2706,7 @@
     "Talk to us":"Contactez-nous",
     "Needs attention now":"À contacter dès que possible","Doing okay":"Ça va","Doing well":"Va bien",
     "Team billing is not enabled yet.":"La facturation d'équipe n'est pas encore activée.",
+    "Premium billing is not enabled yet.":"La facturation Premium n'est pas encore activée.",
     "Do my patients pay anything?":"Mes patients paient-ils quelque chose?",
     "No. Patients never see a bill, Between is licensed to the clinician or practice, and patients are invited in at no cost to them.":"Non. Les patients ne voient jamais de facture, Between est sous licence pour le clinicien ou le cabinet, et les patients sont invités sans frais.",
     "What happens after my trial?":"Que se passe-t-il après mon essai?",
@@ -4292,22 +4293,29 @@
     contactOverlay.style.display = 'flex';
     document.getElementById('btwContactName').focus();
   }
-  // Send a coach to Stripe checkout for the Premium (team_premium) plan. Used to
-  // upgrade an existing, signed-in coach — the plan is stored and they pay there.
-  async function startCoachPremiumCheckout(){
+  // Send a signed-in pro straight to Stripe checkout for their Premium plan.
+  async function startPremiumCheckout(plan){
     try{
-      const r = await api('POST', '/api/auth/checkout/start', { plan: 'team_premium' });
+      const r = await api('POST', '/api/auth/checkout/start', { plan });
       if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
-      alert(t('Team billing is not enabled yet.'));
+      alert(t('Premium billing is not enabled yet.'));
     }catch(e){ alert(e.message); }
   }
-  // Therapy: the group-practice card opens a contact form. Sports: the Premium
-  // (30+ players) card is fully self-serve — an existing coach upgrades and pays,
-  // anyone else makes an account (or logs in) first.
+  // The third pricing card is self-serve Premium for every audience that has a
+  // real billable Premium plan: an existing pro of the right type upgrades and
+  // pays right away, anyone else makes an account (or logs in) first. Therapy
+  // (Group practice) and Recovery have no self-serve Premium, so their card
+  // opens the contact form instead.
+  const PREMIUM_BY_AUD = {
+    sports:  { plan: 'team_premium',    acct: 'coach' },
+    schools: { plan: 'school_premium',  acct: 'school' },
+    fitness: { plan: 'trainer_premium', acct: 'trainer' }
+  };
   if(talkBtn) talkBtn.addEventListener('click', ()=>{
-    if(curAudience !== 'sports'){ openContact(); return; }
-    if(state.me && state.me.account_type === 'coach') startCoachPremiumCheckout();
-    else if(window.btwOpenSignup) window.btwOpenSignup('team_premium');
+    const prem = PREMIUM_BY_AUD[curAudience];
+    if(!prem){ openContact(); return; }
+    if(state.me && state.me.account_type === prem.acct) startPremiumCheckout(prem.plan);
+    else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
   });
   contactOverlay.addEventListener('click', (e)=>{ if(e.target === contactOverlay) contactOverlay.style.display = 'none'; });
   document.getElementById('btwContactClose').addEventListener('click', ()=>{ contactOverlay.style.display = 'none'; });
