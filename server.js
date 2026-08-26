@@ -303,10 +303,21 @@ function escapeHtml(s) {
 // Branded HTML wrapper for the signup-confirmation email. Table-based and
 // inline-styled so it survives the major email clients; the plain-text version
 // is always sent alongside as a fallback.
-function confirmationEmailHtml({ first, heading, paragraphs, site }) {
-  const paras = paragraphs
-    .map(p => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#1A1E1C;">${p}</p>`)
-    .join('');
+// Generic branded shell: wordmark, an uppercase eyebrow, a heading, a body
+// (raw HTML), an optional CTA button, and an optional footer. Reused by every
+// user-facing email so they all look like one product.
+function brandedEmailHtml({ eyebrow, heading, bodyHtml, ctaText, ctaHref, footerHtml }) {
+  const cta = (ctaText && ctaHref)
+    ? `<tr><td style="padding:8px 32px 26px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="border-radius:10px;background:#1E4C86;">
+<a href="${ctaHref}" style="display:inline-block;padding:11px 22px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;">${ctaText}</a>
+</td></tr></table>
+</td></tr>`
+    : '';
+  const footer = footerHtml
+    ? `<tr><td style="padding:18px 32px 26px;border-top:1px solid #E4E3DD;">${footerHtml}</td></tr>`
+    : '';
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F5F4F1;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:28px 12px;">
@@ -316,23 +327,31 @@ function confirmationEmailHtml({ first, heading, paragraphs, site }) {
 <span style="font-size:18px;font-weight:700;color:#1E4C86;letter-spacing:-0.2px;">Between</span>
 </td></tr>
 <tr><td style="padding:20px 32px 4px;">
-<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1E4C86;margin-bottom:10px;">Signup confirmed</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1E4C86;margin-bottom:10px;">${eyebrow}</div>
 <h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1A1E1C;font-weight:700;">${heading}</h1>
-${paras}
+${bodyHtml}
 </td></tr>
-<tr><td style="padding:8px 32px 26px;">
-<table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td style="border-radius:10px;background:#1E4C86;">
-<a href="${site}" style="display:inline-block;padding:11px 22px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;">Sign in to Between</a>
-</td></tr></table>
-</td></tr>
-<tr><td style="padding:18px 32px 26px;border-top:1px solid #E4E3DD;">
-<p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#5A6169;">Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.</p>
-<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it — Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>
-</td></tr>
+${cta}
+${footer}
 </table>
 </td></tr></table>
 </body></html>`;
+}
+
+function confirmationEmailHtml({ heading, paragraphs, site }) {
+  const bodyHtml = paragraphs
+    .map(p => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#1A1E1C;">${p}</p>`)
+    .join('');
+  return brandedEmailHtml({
+    eyebrow: 'Signup confirmed',
+    heading,
+    bodyHtml,
+    ctaText: 'Sign in to Between',
+    ctaHref: site,
+    footerHtml:
+      `<p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#5A6169;">Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.</p>` +
+      `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it — Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>`
+  });
 }
 
 function sendWelcomeEmail({ to, name, kind }) {
@@ -1806,11 +1825,21 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     if (!message || !message.trim()) return res.status(400).json({ error: 'Please include a message.' });
     if (message.length > 5000) return res.status(400).json({ error: 'That message is too long.' });
 
+    const html = brandedEmailHtml({
+      eyebrow: 'New message',
+      heading: 'Someone reached out',
+      bodyHtml:
+        `<p style="margin:0 0 4px;font-size:12px;color:#5A6169;">From</p>` +
+        `<p style="margin:0 0 16px;font-size:15px;color:#1A1E1C;font-weight:600;">${escapeHtml(name.trim())} &lt;${escapeHtml(email.trim())}&gt;</p>` +
+        `<div style="background:#F5F4F1;border:1px solid #E4E3DD;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.6;color:#1A1E1C;white-space:pre-wrap;">${escapeHtml(message.trim())}</div>`,
+      footerHtml: `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Reply directly to this email to respond to ${escapeHtml(name.trim())}.</p>`
+    });
     const { delivered } = await sendEmail({
       to: CONTACT_EMAIL,
       replyTo: email.trim(),
       subject: `Between — message from ${name.trim()}`,
-      text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`
+      text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`,
+      html
     });
     res.json({ ok: true, delivered });
   } catch (err) {
