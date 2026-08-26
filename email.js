@@ -10,12 +10,13 @@ export function emailConfigured() {
   return !!RESEND_API_KEY;
 }
 
-export async function sendEmail({ to, subject, text, replyTo }) {
+export async function sendEmail({ to, subject, text, html, replyTo }) {
   if (!RESEND_API_KEY) {
     console.log(`📧 [email not configured — would send]\nTo: ${to}\nSubject: ${subject}\n${replyTo ? 'Reply-To: ' + replyTo + '\n' : ''}${text}\n`);
     return { delivered: false };
   }
   const payload = { from: EMAIL_FROM, to: [to], subject, text };
+  if (html) payload.html = html;
   if (replyTo) payload.reply_to = replyTo;
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',

@@ -294,23 +294,73 @@ const TRAINER_PLANS = ['trainer_monthly', 'trainer_annual', 'trainer_premium'];
 // so a slow or unconfigured mailer can't delay or fail account creation. With
 // no RESEND_API_KEY the mailer just logs instead of sending (see email.js).
 // kind: 'therapist' (pending licence review) | 'pro' (coach/school/mentor) | 'patient'
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Branded HTML wrapper for the signup-confirmation email. Table-based and
+// inline-styled so it survives the major email clients; the plain-text version
+// is always sent alongside as a fallback.
+function confirmationEmailHtml({ first, heading, paragraphs, site }) {
+  const paras = paragraphs
+    .map(p => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#1A1E1C;">${p}</p>`)
+    .join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F4F1;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E4E3DD;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<tr><td style="padding:26px 32px 0;">
+<span style="font-size:18px;font-weight:700;color:#1E4C86;letter-spacing:-0.2px;">Between</span>
+</td></tr>
+<tr><td style="padding:20px 32px 4px;">
+<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1E4C86;margin-bottom:10px;">Signup confirmed</div>
+<h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1A1E1C;font-weight:700;">${heading}</h1>
+${paras}
+</td></tr>
+<tr><td style="padding:8px 32px 26px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="border-radius:10px;background:#1E4C86;">
+<a href="${site}" style="display:inline-block;padding:11px 22px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;">Sign in to Between</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:18px 32px 26px;border-top:1px solid #E4E3DD;">
+<p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#5A6169;">Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it — Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
 function sendWelcomeEmail({ to, name, kind }) {
   if (!to) return;
   const first = String(name || '').trim().split(/\s+/)[0] || 'there';
   const site = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
+  const heading = kind === 'therapist'
+    ? `You're signed up, ${first}.`
+    : `You're in, ${first}.`;
   const body = kind === 'therapist'
-    ? `Thanks for signing up. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
+    ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
     : kind === 'patient'
-    ? `Your account is ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
-    : `Your account is ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
+    ? `Your account is confirmed and ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
+    : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const text =
     `Hi ${first},\n\n` +
     `${body}\n\n` +
     `You can sign in anytime at ${site}.\n\n` +
     `Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.\n\n` +
     `Thanks for trying it,\nJack\nbetweenpsych.com`;
-  sendEmail({ to, subject: 'Welcome to Between', text })
-    .catch(err => console.error('Welcome email failed:', err && err.message));
+  const html = confirmationEmailHtml({
+    first: escapeHtml(first),
+    heading: escapeHtml(heading),
+    paragraphs: [escapeHtml(body)],
+    site: encodeURI(site)
+  });
+  sendEmail({ to, subject: 'Your Between signup is confirmed', text, html })
+    .catch(err => console.error('Confirmation email failed:', err && err.message));
 }
 
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
