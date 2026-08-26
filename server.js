@@ -833,7 +833,9 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     return res.json({ checkoutUrl: url });
   } catch (err) {
     console.error('Error changing plan:', err);
-    res.status(500).json({ error: 'Could not change your plan.' });
+    // Surface the underlying billing error (e.g. Stripe "No such price") so a
+    // misconfigured price id is diagnosable instead of a generic failure.
+    res.status(502).json({ error: (err && err.message) ? ('Billing error: ' + err.message) : 'Could not change your plan.' });
   }
 });
 
