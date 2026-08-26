@@ -83,6 +83,25 @@ export async function retrieveCheckoutSession(id) {
   return stripeRequest('GET', '/v1/checkout/sessions/' + encodeURIComponent(id));
 }
 
+export async function retrieveSubscription(id) {
+  return stripeRequest('GET', '/v1/subscriptions/' + encodeURIComponent(id));
+}
+
+// Change an existing subscription's plan by swapping the price on its single
+// line item — this keeps the SAME subscription (no second one is created, so no
+// double billing) and prorates the difference. Used for in-place upgrades and
+// downgrades. Returns the updated subscription.
+export async function changeSubscriptionPrice(subscriptionId, newPriceId, prorationBehavior = 'create_prorations') {
+  const sub = await retrieveSubscription(subscriptionId);
+  const itemId = sub && sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].id;
+  if (!itemId) throw new Error('Subscription has no line item to update.');
+  return stripeRequest('POST', '/v1/subscriptions/' + encodeURIComponent(subscriptionId), {
+    'items[0][id]': itemId,
+    'items[0][price]': newPriceId,
+    proration_behavior: prorationBehavior
+  });
+}
+
 // Cancel-at-period-end (kind cancel: keep access through the paid period) or
 // undo it. Pass cancel=false to reactivate a subscription set to cancel.
 export async function setSubscriptionCancelAtPeriodEnd(subscriptionId, cancel) {

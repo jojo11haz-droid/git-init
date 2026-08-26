@@ -33,7 +33,7 @@ import {
 import { rateLimit } from './rate-limit.js';
 import {
   stripeConfigured, priceForPlan, createSubscriptionCheckout,
-  retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd
+  retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice
 } from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -800,6 +800,40 @@ app.post('/api/auth/checkout/verify', requireDb, requireAuth, async (req, res) =
   } catch (err) {
     console.error('Error verifying clinician checkout:', err);
     res.status(500).json({ error: 'Could not verify your subscription.' });
+  }
+});
+
+// Change the signed-in clinician's plan (e.g. Solo -> Premium). If they already
+// have a live subscription, swap the price on that SAME subscription so there's
+// no second subscription and no double billing (prorated). If they have no live
+// subscription yet, fall back to a fresh checkout. Plan is validated against the
+// account type's allowed plans.
+app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const acctType = req.clinician.account_type;
+    const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : acctType === 'trainer' ? TRAINER_PLANS : THERAPIST_PLANS;
+    const plan = (req.body || {}).plan;
+    if (!allowedPlans.includes(plan)) return res.status(400).json({ error: 'That plan is not available.' });
+    const newPriceId = priceForPlan(plan);
+    if (!newPriceId) return res.status(400).json({ error: 'That plan is not available for checkout.' });
+
+    const s = await getClinicianStripe(req.clinician.id);
+    // Live subscription (active or trialing): change the price in place.
+    if (s && s.stripe_subscription_id && subActive(s.subscription_status)) {
+      await changeSubscriptionPrice(s.stripe_subscription_id, newPriceId);
+      const updated = await updateClinicianSubscription(req.clinician.id, { plan });
+      const { password_hash, mfa_secret, ...pub } = updated || req.clinician;
+      return res.json({ upgraded: true, clinician: pub });
+    }
+    // No live subscription — send them through checkout for the new plan.
+    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
+    if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
+    await updateClinicianSubscription(req.clinician.id, { plan });
+    return res.json({ checkoutUrl: url });
+  } catch (err) {
+    console.error('Error changing plan:', err);
+    res.status(500).json({ error: 'Could not change your plan.' });
   }
 });
 
