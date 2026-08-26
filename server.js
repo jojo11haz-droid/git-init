@@ -1197,6 +1197,27 @@ async function startPatientCheckout(patient, plan, origin) {
 // Clinician checkout — same idea, but with a 14-day free trial so no card is
 // charged today (honoring the "14-day free trial" on the pricing page).
 const CLINICIAN_TRIAL_DAYS = 14;
+// Clinics running a pilot can get a longer free trial. List the clinicians'
+// emails — or a whole clinic domain like "@clinicname.com" — in
+// EXTENDED_TRIAL_EMAILS (comma-separated). Those signups start with
+// EXTENDED_TRIAL_DAYS free (default 30) instead of the standard 14; everyone
+// else is unaffected. Mirrors the FREE_ACCESS_EMAILS pattern above.
+const EXTENDED_TRIAL_DAYS = Number(process.env.EXTENDED_TRIAL_DAYS) > 0
+  ? Math.floor(Number(process.env.EXTENDED_TRIAL_DAYS)) : 30;
+const EXTENDED_TRIAL_LIST = (process.env.EXTENDED_TRIAL_EMAILS || '')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+function trialDaysFor(email) {
+  const e = String(email || '').toLowerCase();
+  if (e) {
+    const at = e.lastIndexOf('@');
+    const domain = at >= 0 ? e.slice(at) : ''; // keeps the leading "@"
+    for (const entry of EXTENDED_TRIAL_LIST) {
+      const match = entry.startsWith('@') ? entry === domain : entry === e;
+      if (match) return EXTENDED_TRIAL_DAYS;
+    }
+  }
+  return CLINICIAN_TRIAL_DAYS;
+}
 async function startClinicianCheckout(clinician, plan, origin) {
   const priceId = priceForPlan(plan);
   if (!stripeConfigured() || !priceId) return null;
@@ -1205,7 +1226,7 @@ async function startClinicianCheckout(clinician, plan, origin) {
     customerEmail: clinician.email,
     refType: 'clinician',
     refId: clinician.id,
-    trialDays: CLINICIAN_TRIAL_DAYS,
+    trialDays: trialDaysFor(clinician.email),
     successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/?checkout=cancel`
   });
