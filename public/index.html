@@ -2910,6 +2910,7 @@
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Current":"Actuel","Switch":"Changer","Switch to this plan?":"Passer à ce forfait ?",
+    "You're already signed in. Open your settings to manage your plan.":"Vous êtes déjà connecté. Ouvrez vos paramètres pour gérer votre forfait.",
     "Switching takes effect now; your next invoice is adjusted for the difference.":"Le changement prend effet maintenant ; votre prochaine facture est ajustée pour la différence.",
     "Your free trial is on; your card is charged when it ends unless you cancel.":"Votre essai gratuit est en cours ; votre carte est débitée à la fin sauf annulation.",
     "Up to 30 patients":"Jusqu'à 30 patients","30+ patients":"Plus de 30 patients","Billed yearly":"Facturé annuellement",
@@ -5041,6 +5042,11 @@
   }
 
   window.btwOpenSignup = function(plan){
+    // Already signed in? Don't show a create-account form. A clinician manages
+    // their plan in Billing (the plan switcher); a patient can't hold a pro
+    // account, so point them at their own settings.
+    if(state.me){ openBilling(); return; }
+    if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     proSignup = curAudience === 'sports' ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
@@ -5224,6 +5230,10 @@
   const psReady = ()=> psAgree.checked && psAge.checked;
   let patientPlan = 'patient_monthly';
   window.btwOpenPatientSignup = function(plan){
+    // Already signed in? Skip the create-account form. A clinician manages their
+    // own plan in Billing; a patient is already set up.
+    if(state.me){ openBilling(); return; }
+    if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     patientPlan = (plan === 'patient_annual') ? 'patient_annual' : 'patient_monthly';
     document.getElementById('btwPsError').textContent = '';
     psAgree.checked = false; psAge.checked = false; psSubmit.disabled = true;
