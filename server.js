@@ -185,7 +185,7 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
   try {
     parsed = JSON.parse(clean);
   } catch (e) {
-    console.error('Model did not return valid JSON:', clean);
+    console.error('Model did not return valid JSON (length ' + clean.length + ').');
     throw new Error('AI returned an unexpected format.');
   }
 
