@@ -2163,7 +2163,7 @@
             <li>For 30+ patients</li>
             <li>Priority email support</li>
           </ul>
-          <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_premium')">Start 14-day free trial</button>
+          <button class="btw-price-cta" id="btwSoloPremiumCta">Start 14-day free trial</button>
         </div>
 
         <div class="btw-price-card">
@@ -2698,7 +2698,8 @@
     "Billed annually ($288/year), save ~17%":"Facturé annuellement (288 $/an), économisez ~17 %",
     "Everything in Solo":"Tout ce qui est dans Solo","Priority email support":"Soutien prioritaire par courriel",
     "For larger caseloads":"Pour les clientèles plus grandes","For 30+ patients":"Pour plus de 30 patients",
-    "Open billing to upgrade now?":"Ouvrir la facturation pour passer à Premium maintenant ?",
+    "Upgrade to Premium now?":"Passer à Premium maintenant ?",
+    "Your plan has been updated.":"Votre forfait a été mis à jour.",
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
     "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
     "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
@@ -4293,11 +4294,21 @@
     contactOverlay.style.display = 'flex';
     document.getElementById('btwContactName').focus();
   }
-  // Send a signed-in pro straight to Stripe checkout for their Premium plan.
-  async function startPremiumCheckout(plan){
+  // Change the signed-in pro's plan (e.g. upgrade to Premium). If they already
+  // have a live subscription the server swaps the price in place (no second
+  // subscription, prorated) and returns the updated account; otherwise it
+  // returns a checkout URL for a fresh subscription.
+  async function changePlan(plan){
     try{
-      const r = await api('POST', '/api/auth/checkout/start', { plan });
+      const r = await api('POST', '/api/auth/plan/change', { plan });
       if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
+      if(r && r.upgraded){
+        if(r.clinician) state.me = { ...state.me, ...r.clinician };
+        try { await loadPatients(); } catch(_){}
+        renderAll();
+        alert(t('Your plan has been updated.'));
+        return;
+      }
       alert(t('Premium billing is not enabled yet.'));
     }catch(e){ alert(e.message); }
   }
@@ -4314,8 +4325,15 @@
   if(talkBtn) talkBtn.addEventListener('click', ()=>{
     const prem = PREMIUM_BY_AUD[curAudience];
     if(!prem){ openContact(); return; }
-    if(state.me && state.me.account_type === prem.acct) startPremiumCheckout(prem.plan);
+    if(state.me && state.me.account_type === prem.acct) changePlan(prem.plan);
     else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
+  });
+  // Therapist Premium card: upgrade a signed-in therapist in place, otherwise
+  // open signup with the Premium plan pre-selected.
+  const soloPremCta = document.getElementById('btwSoloPremiumCta');
+  if(soloPremCta) soloPremCta.addEventListener('click', ()=>{
+    if(state.me && state.me.account_type === 'therapist') changePlan('solo_premium');
+    else if(window.btwOpenSignup) window.btwOpenSignup('solo_premium');
   });
   contactOverlay.addEventListener('click', (e)=>{ if(e.target === contactOverlay) contactOverlay.style.display = 'none'; });
   document.getElementById('btwContactClose').addEventListener('click', ()=>{ contactOverlay.style.display = 'none'; });
@@ -5889,7 +5907,7 @@
         }
       }catch(err){
         if(err && err.code === 'patient_limit_reached'){
-          if(confirm(err.message + '\n\n' + t('Open billing to upgrade now?'))) openBilling();
+          if(confirm(err.message + '\n\n' + t('Upgrade to Premium now?'))) changePlan('solo_premium');
         } else {
           alert(err.message);
         }
