@@ -5796,6 +5796,16 @@
     if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + moodWord(p.last_mood)));
     return bits.join(' · ');
   }
+  // Active-patient cap for the signed-in clinician, mirrored from the server's
+  // PLAN_PATIENT_CAP. Null = uncapped (Premium, Group practice, other audiences,
+  // free-access/owner). Used only for the caseload counter; the server enforces.
+  function caseloadCap(){
+    if(!state.me || ownerFreeAccess) return null;
+    const caps = { solo_monthly: 30, solo_annual: 30 };
+    const c = caps[state.me.plan];
+    return typeof c === 'number' ? c : null;
+  }
+
   function renderCaseloadSummary(){
     const controls = document.getElementById('btwCaseloadControls');
     const el = document.getElementById('btwCaseloadSummary');
@@ -5812,6 +5822,12 @@
         +' ('+t('across')+' '+active.length+' '+(active.length===1?t('patient'):t('patients'))+')'));
     } else if(flagged===0){
       bits.push(esc(t('All caught up, nothing new.')));
+    }
+    const cap = caseloadCap();
+    if(cap != null){
+      const used = state.patients.filter(p=>!p.left_at).length;
+      const col = used >= cap ? 'var(--clay)' : used >= Math.ceil(cap*0.8) ? 'var(--amber)' : 'var(--ink-soft)';
+      bits.push('<span style="color:'+col+';">'+used+' / '+cap+' '+esc(t('patients'))+'</span>');
     }
     el.innerHTML = bits.join(' · ');
   }
