@@ -13,7 +13,7 @@ import {
   flagCheckInInaccurate, getCheckIn,
   createFutureNote, listFutureNotes, deleteFutureNote,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
-  resetPatientAccess, deletePatient,
+  resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
   createAlert, listAlerts, markAlertViewed
@@ -185,7 +185,7 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
   try {
     parsed = JSON.parse(clean);
   } catch (e) {
-    console.error('Model did not return valid JSON:', clean);
+    console.error('Model did not return valid JSON (length ' + clean.length + ').');
     throw new Error('AI returned an unexpected format.');
   }
 
@@ -294,23 +294,73 @@ const TRAINER_PLANS = ['trainer_monthly', 'trainer_annual', 'trainer_premium'];
 // so a slow or unconfigured mailer can't delay or fail account creation. With
 // no RESEND_API_KEY the mailer just logs instead of sending (see email.js).
 // kind: 'therapist' (pending licence review) | 'pro' (coach/school/mentor) | 'patient'
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Branded HTML wrapper for the signup-confirmation email. Table-based and
+// inline-styled so it survives the major email clients; the plain-text version
+// is always sent alongside as a fallback.
+function confirmationEmailHtml({ first, heading, paragraphs, site }) {
+  const paras = paragraphs
+    .map(p => `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#1A1E1C;">${p}</p>`)
+    .join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F5F4F1;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E4E3DD;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<tr><td style="padding:26px 32px 0;">
+<span style="font-size:18px;font-weight:700;color:#1E4C86;letter-spacing:-0.2px;">Between</span>
+</td></tr>
+<tr><td style="padding:20px 32px 4px;">
+<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1E4C86;margin-bottom:10px;">Signup confirmed</div>
+<h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1A1E1C;font-weight:700;">${heading}</h1>
+${paras}
+</td></tr>
+<tr><td style="padding:8px 32px 26px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="border-radius:10px;background:#1E4C86;">
+<a href="${site}" style="display:inline-block;padding:11px 22px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;">Sign in to Between</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:18px 32px 26px;border-top:1px solid #E4E3DD;">
+<p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#5A6169;">Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it — Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
 function sendWelcomeEmail({ to, name, kind }) {
   if (!to) return;
   const first = String(name || '').trim().split(/\s+/)[0] || 'there';
   const site = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
+  const heading = kind === 'therapist'
+    ? `You're signed up, ${first}.`
+    : `You're in, ${first}.`;
   const body = kind === 'therapist'
-    ? `Thanks for signing up. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
+    ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
     : kind === 'patient'
-    ? `Your account is ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
-    : `Your account is ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
+    ? `Your account is confirmed and ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
+    : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const text =
     `Hi ${first},\n\n` +
     `${body}\n\n` +
     `You can sign in anytime at ${site}.\n\n` +
     `Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.\n\n` +
     `Thanks for trying it,\nJack\nbetweenpsych.com`;
-  sendEmail({ to, subject: 'Welcome to Between', text })
-    .catch(err => console.error('Welcome email failed:', err && err.message));
+  const html = confirmationEmailHtml({
+    first: escapeHtml(first),
+    heading: escapeHtml(heading),
+    paragraphs: [escapeHtml(body)],
+    site: encodeURI(site)
+  });
+  sendEmail({ to, subject: 'Your Between signup is confirmed', text, html })
+    .catch(err => console.error('Confirmation email failed:', err && err.message));
 }
 
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
@@ -832,6 +882,11 @@ app.post('/api/patients', requireDb, requireAuth, requireVerifiedClinician, requ
 
 app.get('/api/patients', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
+    // Lazy garbage-collection: purge patients whose grace period has elapsed.
+    // Runs on caseload load so no separate scheduler is needed. Best-effort —
+    // a purge failure must never block the clinician from seeing their list.
+    purgeExpiredPatients(PATIENT_LEFT_GRACE_DAYS)
+      .catch(err => console.error('Expired-patient purge failed:', err && err.message));
     res.json(await listPatients(req.clinician.id));
   } catch (err) {
     console.error('Error listing patients:', err);
@@ -884,16 +939,90 @@ app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifi
   }
 });
 
-// Permanently delete a patient and all of their data (check-ins, summaries,
-// voice memos, alerts). Scoped to the signed-in clinician; irreversible.
+// How long a removed patient's record is kept for the clinician before it is
+// permanently purged. During this window the clinician can still view and
+// download the record; the patient can no longer log in or send check-ins.
+const PATIENT_LEFT_GRACE_DAYS = 14;
+
+// "Remove patient" — marks them as having left rather than erasing immediately.
+// Their access is cut now; their data is kept for PATIENT_LEFT_GRACE_DAYS so the
+// clinician can download it, then purgeExpiredPatients() deletes it for good.
 app.delete('/api/patients/:id', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
-    const deleted = await deletePatient(req.clinician.id, req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Patient not found.' });
-    res.json({ ok: true });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    if (!patient.left_at) await markPatientLeft(req.clinician.id, req.params.id);
+    res.json({ ok: true, grace_days: PATIENT_LEFT_GRACE_DAYS });
   } catch (err) {
-    console.error('Error deleting patient:', err);
-    res.status(500).json({ error: 'Could not delete the patient.' });
+    console.error('Error removing patient:', err);
+    res.status(500).json({ error: 'Could not remove the patient.' });
+  }
+});
+
+// Download a patient's full record as a JSON file — profile plus every
+// check-in (mood, tags, summary, text, timestamps, flags). Available while the
+// patient is active and throughout the post-departure grace window, so the
+// clinician can keep the record before it is purged. Clinician-scoped.
+app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIns = await listCheckIns(patient.id);
+    const record = {
+      exported_at: new Date().toISOString(),
+      source: 'Between',
+      patient: {
+        display_name: patient.display_name,
+        email: patient.email || null,
+        account_type: patient.account_type,
+        created_at: patient.created_at,
+        left_at: patient.left_at || null,
+        ai_consent_enabled: patient.ai_consent_enabled
+      },
+      clinician_note: patient.clinician_note || null,
+      check_in_count: checkIns.length,
+      check_ins: checkIns.map(c => ({
+        submitted_at: c.submitted_at,
+        mood_score: c.mood_score,
+        mood_inferred: c.mood_inferred || false,
+        manual_tags: c.manual_tags || [],
+        auto_tags: c.auto_tags || [],
+        summary_text: c.summary_text || null,
+        raw_text: c.raw_text || null,
+        risk_flag: c.risk_flag || false,
+        has_voice_memo: !!c.audio_upload_id
+      }))
+    };
+    const safeName = String(patient.display_name || 'patient')
+      .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient';
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (String(req.query.format || '').toLowerCase() === 'csv') {
+      // One row per check-in, newest first. Spreadsheet-friendly: a single
+      // header row, arrays flattened to "a; b", every cell CSV-escaped. A
+      // leading BOM makes Excel read the accented characters as UTF-8.
+      const cell = v => {
+        if (v == null) return '';
+        const s = Array.isArray(v) ? v.join('; ') : String(v);
+        return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const header = ['submitted_at', 'mood_score', 'mood_inferred', 'manual_tags', 'auto_tags', 'summary_text', 'raw_text', 'risk_flag', 'has_voice_memo'];
+      const lines = [header.join(',')];
+      for (const c of record.check_ins) {
+        lines.push([c.submitted_at, c.mood_score, c.mood_inferred, c.manual_tags, c.auto_tags, c.summary_text, c.raw_text, c.risk_flag, c.has_voice_memo].map(cell).join(','));
+      }
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.csv"`);
+      res.send('﻿' + lines.join('\r\n') + '\r\n');
+      return;
+    }
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.json"`);
+    res.send(JSON.stringify(record, null, 2));
+  } catch (err) {
+    console.error('Error exporting patient record:', err);
+    res.status(500).json({ error: 'Could not export the record.' });
   }
 });
 
@@ -1095,7 +1224,7 @@ async function requirePatientAuth(req, res, next) {
     const token = readBearerToken(req);
     if (token) {
       const patient = await getPatientBySession(hashSessionToken(token));
-      if (patient) {
+      if (patient && !patient.left_at) {
         req.patient = patient;
         return next();
       }
@@ -1147,6 +1276,27 @@ async function startPatientCheckout(patient, plan, origin) {
 // Clinician checkout — same idea, but with a 14-day free trial so no card is
 // charged today (honoring the "14-day free trial" on the pricing page).
 const CLINICIAN_TRIAL_DAYS = 14;
+// Clinics running a pilot can get a longer free trial. List the clinicians'
+// emails — or a whole clinic domain like "@clinicname.com" — in
+// EXTENDED_TRIAL_EMAILS (comma-separated). Those signups start with
+// EXTENDED_TRIAL_DAYS free (default 30) instead of the standard 14; everyone
+// else is unaffected. Mirrors the FREE_ACCESS_EMAILS pattern above.
+const EXTENDED_TRIAL_DAYS = Number(process.env.EXTENDED_TRIAL_DAYS) > 0
+  ? Math.floor(Number(process.env.EXTENDED_TRIAL_DAYS)) : 30;
+const EXTENDED_TRIAL_LIST = (process.env.EXTENDED_TRIAL_EMAILS || '')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+function trialDaysFor(email) {
+  const e = String(email || '').toLowerCase();
+  if (e) {
+    const at = e.lastIndexOf('@');
+    const domain = at >= 0 ? e.slice(at) : ''; // keeps the leading "@"
+    for (const entry of EXTENDED_TRIAL_LIST) {
+      const match = entry.startsWith('@') ? entry === domain : entry === e;
+      if (match) return EXTENDED_TRIAL_DAYS;
+    }
+  }
+  return CLINICIAN_TRIAL_DAYS;
+}
 async function startClinicianCheckout(clinician, plan, origin) {
   const priceId = priceForPlan(plan);
   if (!stripeConfigured() || !priceId) return null;
@@ -1155,7 +1305,7 @@ async function startClinicianCheckout(clinician, plan, origin) {
     customerEmail: clinician.email,
     refType: 'clinician',
     refId: clinician.id,
-    trialDays: CLINICIAN_TRIAL_DAYS,
+    trialDays: trialDaysFor(clinician.email),
     successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/?checkout=cancel`
   });
@@ -1394,6 +1544,9 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
       : 'scrypt$16384$8$1$00000000000000000000000000000000$00');
     if (!patient || !ok || patient.invite_status === 'revoked') {
       return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+    if (patient.left_at) {
+      return res.status(403).json({ error: 'This account is no longer active.' });
     }
 
     const token = await startPatientSession(patient.id);

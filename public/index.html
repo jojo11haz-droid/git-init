@@ -1076,6 +1076,29 @@
     outline-offset:1px;
     border-color:var(--moss);
   }
+  .btw-pw-wrap{position:relative;}
+  .btw-pw-wrap input{padding-right:40px;}
+  .btw-pw-toggle{
+    position:absolute;
+    top:50%;
+    right:4px;
+    transform:translateY(-50%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:32px;
+    height:32px;
+    padding:0;
+    margin:0;
+    border:none;
+    background:none;
+    cursor:pointer;
+    color:var(--ink-soft);
+    border-radius:7px;
+  }
+  .btw-pw-toggle:hover{color:var(--ink);}
+  .btw-pw-toggle:focus-visible{outline:2px solid var(--moss-light);outline-offset:1px;}
+  .btw-pw-toggle svg{width:18px;height:18px;display:block;}
   .btw-form-note{
     font-size:11px;
     color:var(--ink-soft);
@@ -1531,7 +1554,7 @@
       </div>
       <div class="btw-form-field">
         <label>Password</label>
-        <input type="password" id="btwLoginPassword" placeholder="Your password">
+        <div class="btw-pw-wrap"><input type="password" id="btwLoginPassword" placeholder="Your password"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
       </div>
       <div class="btw-form-field" id="btwMfaField" style="display:none;">
         <label>Two-factor code</label>
@@ -1575,7 +1598,7 @@
         <h2>Choose a new password</h2>
         <div class="btw-form-field">
           <label>New password</label>
-          <input type="password" id="btwResetNewPw" placeholder="At least 10 characters">
+          <div class="btw-pw-wrap"><input type="password" id="btwResetNewPw" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
         </div>
         <div class="btw-form-error" id="btwResetConfError"></div>
         <button class="btw-modal-continue" id="btwResetConfSubmit">Set new password</button>
@@ -1638,7 +1661,12 @@
 
       <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
-      <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Delete this patient permanently</button>
+      <div id="btwLeftNote" style="display:none;background:#FBF3E7;border:1px solid #E6D8A8;border-radius:9px;padding:10px 12px;font-size:12px;color:#6b5a1f;line-height:1.55;margin-bottom:10px;"></div>
+      <div id="btwDownloadRow" style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="btwDownloadCsv" style="flex:1;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 12px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Download record (CSV)</button>
+        <button id="btwDownloadJson" style="flex:1;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:10px 12px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Download record (JSON)</button>
+      </div>
+      <button id="btwDeletePatient" style="display:none;width:100%;background:var(--clay);color:#fff;border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Remove this patient</button>
       <button id="btwCloseData" class="btw-modal-continue">Close</button>
     </div>
   </div>
@@ -1858,7 +1886,7 @@
           <div class="btw-feature">
             <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
             <h4>Privacy by design</h4>
-            <p>Built with privacy law in mind from day one, from Quebec's Law 25 to US rules like HIPAA.</p>
+            <p>Built with privacy law in mind from day one, including Quebec's Law 25, with consent and data controls at the core.</p>
           </div>
           <div class="btw-feature">
             <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
@@ -2172,6 +2200,8 @@
         </div>
       </div>
 
+      <div class="btw-pricing-cost-note">Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.</div>
+
       <div class="btw-pricing-faq">
         <div class="btw-faq-item">
           <h4>Do my patients pay anything?</h4>
@@ -2215,7 +2245,7 @@
           </div>
           <div class="btw-form-field">
             <label>Password</label>
-            <input type="password" id="btwSuPassword" placeholder="At least 10 characters">
+            <div class="btw-pw-wrap"><input type="password" id="btwSuPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
           </div>
           <div class="btw-form-error" id="btwStep1Error"></div>
           <button class="btw-modal-continue" id="btwStep1Next">Continue</button>
@@ -2326,7 +2356,7 @@
         </div>
         <div class="btw-form-field">
           <label>Password</label>
-          <input type="password" id="btwPsPassword" placeholder="At least 10 characters">
+          <div class="btw-pw-wrap"><input type="password" id="btwPsPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
         </div>
         <label class="btw-modal-agree">
           <input type="checkbox" id="btwPsAgree">
@@ -2383,7 +2413,7 @@
       </div>
       <div class="btw-form-field">
         <label>Password</label>
-        <input type="password" id="btwInvPassword" placeholder="At least 10 characters">
+        <div class="btw-pw-wrap"><input type="password" id="btwInvPassword" placeholder="At least 10 characters"><button type="button" class="btw-pw-toggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div>
       </div>
       <label class="btw-modal-agree">
         <input type="checkbox" id="btwInvAgree">
@@ -2601,7 +2631,7 @@
     "Privacy by default":"Confidentialité par défaut",
     "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":"Privé et sécurisé par défaut. Les patients voient et contrôlent leurs propres données, et l'analyse par IA reste optionnelle et désactivée.",
     "Privacy by design":"Confidentialité dès la conception","Consent-first data controls":"Contrôles axés sur le consentement",
-    "Built with privacy law in mind from day one, from Quebec's Law 25 to US rules like HIPAA.":"Conçu dès le départ dans le respect des lois sur la vie privée, de la loi 25 du Québec aux règles américaines comme la HIPAA.",
+    "Built with privacy law in mind from day one, including Quebec's Law 25, with consent and data controls at the core.":"Conçu dès le départ dans le respect des lois sur la vie privée, dont la loi 25 du Québec, avec le consentement et le contrôle des données au cœur.",
     "Multi-patient dashboard":"Tableau de bord multipatient",
     "Your whole caseload, at-a-glance, with flags for anything that needs a closer look.":"Toute votre clientèle d'un coup d'œil, avec des indicateurs pour ce qui mérite un examen plus attentif.",
     "Built-in safety net":"Filet de sécurité intégré",
@@ -2646,6 +2676,7 @@
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances, le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
     "CAD / clinician / month":"CAD / clinicien / mois","Billed monthly.":"Facturé mensuellement.",
+    "Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.":"Les prix sont en dollars canadiens. Les taxes, le cas échéant, sont calculées au moment du paiement.",
     "Unlimited patients & check-ins":"Patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
     "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
     "In-app crisis resources for patients":"Ressources de crise dans l'app pour les patients",
@@ -2754,7 +2785,16 @@
     "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
     "To confirm, type the patient name exactly:":"Pour confirmer, tapez le nom du patient exactement :",
     "That did not match, the patient was not deleted.":"Cela ne correspond pas, le patient n'a pas été supprimé.",
-    "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela supprime le patient.",
+    "That did not match, the patient was not removed.":"Cela ne correspond pas, le patient n'a pas été retiré.",
+    "They have no check-ins yet, this removes the patient.":"Ils n'ont encore aucun suivi, cela retire le patient.",
+    "Remove":"Retirer",
+    "Remove this patient":"Retirer ce patient",
+    "Download record (CSV)":"Télécharger le dossier (CSV)","Download record (JSON)":"Télécharger le dossier (JSON)",
+    "They lose access now, and their record is kept for you to download for 14 days, then permanently deleted.":"Ils perdent l'accès maintenant, et leur dossier est conservé pour que vous puissiez le télécharger pendant 14 jours, puis supprimé définitivement.",
+    "This patient has left. Their access is off and their record will be permanently deleted in":"Ce patient est parti. Son accès est désactivé et son dossier sera supprimé définitivement dans",
+    "Download it now if you want to keep it.":"Téléchargez-le maintenant si vous souhaitez le conserver.",
+    "day.":"jour.","days.":"jours.",
+    "Left":"Parti","d left":"j restants",
     "Last check-in":"Dernier suivi","on file":"au dossier",
     "Recurring themes":"Thèmes récurrents","also":"aussi",
     "Tied to lower mood":"Associé à une humeur plus basse","Tied to better mood":"Associé à une meilleure humeur","vs":"vs","overall":"en général",
@@ -3095,7 +3135,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the player.",
     "Patient consent":"Player consent",
     "Patient data":"Player data",
-    "Delete this patient permanently":"Delete this player permanently",
+    "Remove this patient":"Remove this player",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between practices and games.",
     "Enter the invite code from your therapist.":"Enter the invite code from your coach."
   };
@@ -3219,7 +3259,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime le joueur.",
     "Patient consent":"Consentement du joueur",
     "Patient data":"Données du joueur",
-    "Delete this patient permanently":"Supprimer ce joueur définitivement",
+    "Remove this patient":"Retirer ce joueur",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre les entraînements et les matchs.",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur."
   };
@@ -3321,7 +3361,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the member.",
     "Patient consent":"Member consent",
     "Patient data":"Member data",
-    "Delete this patient permanently":"Delete this member permanently"
+    "Remove this patient":"Remove this member"
   };
   const RECOVERY_FR = {
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -3416,7 +3456,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime le membre.",
     "Patient consent":"Consentement du membre",
     "Patient data":"Données du membre",
-    "Delete this patient permanently":"Supprimer ce membre définitivement"
+    "Remove this patient":"Retirer ce membre"
   };
 
   function pickCopy(key){
@@ -3532,7 +3572,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the student.",
     "Patient consent":"Student consent",
     "Patient data":"Student data",
-    "Delete this patient permanently":"Delete this student permanently",
+    "Remove this patient":"Remove this student",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our check-ins."
   };
   const SCHOOLS_FR = {
@@ -3633,7 +3673,7 @@
     "They have no check-ins yet, this removes the patient.":"Aucun suivi pour l'instant, cela supprime l'élève.",
     "Patient consent":"Consentement de l'élève",
     "Patient data":"Données de l'élève",
-    "Delete this patient permanently":"Supprimer cet élève définitivement",
+    "Remove this patient":"Retirer cet élève",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos rencontres."
   };
   // Classroom mode = the teacher's view inside Schools. It layers homework /
@@ -3839,7 +3879,7 @@
     "They have no check-ins yet, this removes the patient.":"They have no check-ins yet, this removes the client.",
     "Patient consent":"Client consent",
     "Patient data":"Client data",
-    "Delete this patient permanently":"Delete this client permanently",
+    "Remove this patient":"Remove this client",
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our training sessions."
   };
   const FITNESS_FR = {
@@ -3940,7 +3980,7 @@
     "They have no check-ins yet, this removes the patient.":"Il n'a pas encore de suivis, cela supprime le client.",
     "Patient consent":"Consentement du client",
     "Patient data":"Données du client",
-    "Delete this patient permanently":"Supprimer ce client définitivement",
+    "Remove this patient":"Retirer ce client",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances."
   };
   const HERO_THREAD = {
@@ -4205,6 +4245,21 @@
   });
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
+
+  // Show/hide password: eye toggle inside password fields. Delegated so it
+  // works for every .btw-pw-wrap without wiring each one up individually.
+  const BTW_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+  const BTW_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest && e.target.closest('.btw-pw-toggle');
+    if(!btn) return;
+    const inp = btn.parentNode.querySelector('input');
+    if(!inp) return;
+    const reveal = inp.type === 'password';
+    inp.type = reveal ? 'text' : 'password';
+    btn.innerHTML = reveal ? BTW_EYE_OFF : BTW_EYE;
+    btn.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+  });
 
   // "Talk to us" (group practice) opens a contact form that emails the owner,
   // so any visitor can reach us without needing their own mail app.
@@ -5408,6 +5463,8 @@
       if(resetBtn) resetBtn.style.display = 'none';
       const delBtn = document.getElementById('btwDeletePatient');
       if(delBtn) delBtn.style.display = 'none'; // patients delete their history, not a "patient" record
+      const dlRowP = document.getElementById('btwDownloadRow'); if(dlRowP) dlRowP.style.display = 'none';
+      const leftNoteP = document.getElementById('btwLeftNote'); if(leftNoteP) leftNoteP.style.display = 'none';
       syncConsentUi();
       renderDataList();
       dataOverlay.style.display = 'flex';
@@ -5423,6 +5480,26 @@
     const delBtn0 = document.getElementById('btwDeletePatient');
     if(delBtn0) delBtn0.style.display = '';
     renderTherapistInvite(inviteEl, p);
+    // A "left" patient: access is already off, data kept for the grace window.
+    // Hide the reset/deletion controls, surface a countdown, keep Download.
+    const left = !!p.left_at;
+    const leftNote = document.getElementById('btwLeftNote');
+    const dlBtn = document.getElementById('btwDownloadRow');
+    if(dlBtn) dlBtn.style.display = 'flex';
+    if(left){
+      const days = daysUntilPurge(p.left_at);
+      if(leftNote){
+        leftNote.style.display = '';
+        leftNote.textContent = t('This patient has left. Their access is off and their record will be permanently deleted in')
+          + ' ' + days + ' ' + (days === 1 ? t('day.') : t('days.')) + ' ' + t('Download it now if you want to keep it.');
+      }
+      if(resetBtn0) resetBtn0.style.display = 'none';
+      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = 'none';
+      if(delBtn0) delBtn0.style.display = 'none';
+    } else {
+      if(leftNote) leftNote.style.display = 'none';
+      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = '';
+    }
     syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
@@ -5483,16 +5560,28 @@
   // Delete the whole patient record (and everything tied to it). Therapist-only.
   // A patient with no check-ins deletes with one confirm; one with history also
   // has to have its name typed, so real data can't be lost to a stray tap.
+  // How long a removed patient's record is kept before it is purged. Must match
+  // PATIENT_LEFT_GRACE_DAYS on the server.
+  const PATIENT_LEFT_GRACE_DAYS = 14;
+  function daysUntilPurge(leftAt){
+    const left = new Date(leftAt).getTime();
+    if(!isFinite(left)) return PATIENT_LEFT_GRACE_DAYS;
+    const purge = left + PATIENT_LEFT_GRACE_DAYS * 86400000;
+    return Math.max(0, Math.ceil((purge - Date.now()) / 86400000));
+  }
+
   async function deletePatientFlow(p){
     if(!p) return;
+    if(p.left_at) return; // already removed; nothing to do
     const hasData = !!p.last_check_in_at;
+    const kept = t('They lose access now, and their record is kept for you to download for 14 days, then permanently deleted.');
     if(hasData){
-      if(!confirm(t('Permanently delete') + ' ' + p.display_name + '? ' + t('This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.'))) return;
+      if(!confirm(t('Remove') + ' ' + p.display_name + '? ' + kept)) return;
       const typed = prompt(t('To confirm, type the patient name exactly:') + ' ' + p.display_name);
       if(typed == null) return;
-      if(typed.trim() !== p.display_name){ alert(t('That did not match, the patient was not deleted.')); return; }
+      if(typed.trim() !== p.display_name){ alert(t('That did not match, the patient was not removed.')); return; }
     } else {
-      if(!confirm(t('Delete') + ' ' + p.display_name + '? ' + t('They have no check-ins yet, this removes the patient.'))) return;
+      if(!confirm(t('Remove') + ' ' + p.display_name + '? ' + t('They have no check-ins yet, this removes the patient.'))) return;
     }
     try{
       await api('DELETE', '/api/patients/' + p.id);
@@ -5503,6 +5592,28 @@
     }catch(err){ alert(err.message); }
   }
   document.getElementById('btwDeletePatient').addEventListener('click', ()=>{ deletePatientFlow(selectedPatient()); });
+
+  // Download a patient's full record as a JSON file. Clinician auth rides on the
+  // session cookie, so a plain fetch is authenticated; we save the returned blob.
+  async function downloadPatientRecord(p, format){
+    if(!p){ alert(t('Add a patient first.')); return; }
+    try{
+      const q = format === 'csv' ? '?format=csv' : '';
+      const resp = await fetch('/api/patients/' + p.id + '/export' + q);
+      if(!resp.ok){ let e = null; try { e = await resp.json(); } catch(_){} throw new Error((e && e.error) || ('Request failed (' + resp.status + ')')); }
+      const blob = await resp.blob();
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const m = /filename="([^"]+)"/.exec(cd);
+      const name = m ? m[1] : ('between-record.' + (format === 'csv' ? 'csv' : 'json'));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }catch(err){ alert(err.message); }
+  }
+  document.getElementById('btwDownloadCsv').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient(), 'csv'); });
+  document.getElementById('btwDownloadJson').addEventListener('click', ()=>{ downloadPatientRecord(selectedPatient(), 'json'); });
 
   const tagColors = {
     Sleep:'#7A93A8', Work:'#B08968', Conflict:'#C0392B', Craving:'#B8701F',
@@ -5695,12 +5806,14 @@
     }
     let cards = list.map(p=>{
       const active = p.id === state.selectedPatientId;
-      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}">
+      const left = !!p.left_at;
+      const leftMeta = left ? `<div class="btw-patient-meta" style="color:var(--clay);">${esc(t('Left'))} · ${daysUntilPurge(p.left_at)} ${esc(t('d left'))}</div>` : `<div class="btw-patient-meta">${patientCardMeta(p)}</div>`;
+      return `<div class="btw-patient-card ${active?'active':''}" data-pid="${esc(p.id)}" style="${left?'opacity:0.6;':''}">
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
         ${p.clinician_note ? `<span class="btw-patient-note" title="${esc(t('Has notes'))}" aria-label="${esc(t('Has notes'))}"></span>` : ''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
         <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
-        <div class="btw-patient-meta">${patientCardMeta(p)}</div>
+        ${leftMeta}
       </div>`;
     }).join('');
     if(caseloadFilter === 'attention' && list.length === 0){

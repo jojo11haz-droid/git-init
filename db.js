@@ -154,6 +154,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
@@ -439,7 +440,7 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, created_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -663,12 +664,45 @@ export async function resetPatientAccess(clinicianId, patientId, newInviteCode) 
 // Permanently delete a patient and everything tied to them. Scoped to the
 // owning clinician so no one can delete another clinician's patient. Foreign
 // keys cascade to check-ins (and their alerts), audio, and sessions.
+// "Removing" a patient no longer erases them immediately. It marks them as
+// having left: their login/check-in access is cut (their sessions are dropped),
+// but the clinician keeps read + download access to the existing record for a
+// grace period. purgeExpiredPatients() hard-deletes them once the window is up.
+export async function markPatientLeft(clinicianId, patientId) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET left_at = now()
+     WHERE id = $1 AND clinician_id = $2 AND left_at IS NULL
+     RETURNING ${PATIENT_ROW_COLS}`,
+    [patientId, clinicianId]
+  );
+  const patient = rows[0] || null;
+  if (patient) {
+    await pool.query(`DELETE FROM patient_sessions WHERE patient_id = $1`, [patientId]);
+  }
+  return patient;
+}
+
+// Permanently erase a patient and all their data (cascades to check-ins,
+// summaries, voice memos, alerts, notes, sessions). Scoped to the clinician.
 export async function deletePatient(clinicianId, patientId) {
   const { rows } = await pool.query(
     `DELETE FROM patients WHERE id = $1 AND clinician_id = $2 RETURNING id`,
     [patientId, clinicianId]
   );
   return rows[0] || null;
+}
+
+// Sweep that permanently deletes patients whose grace period has elapsed. Runs
+// lazily (called when a clinician loads their caseload) so no cron is needed;
+// the interval is expressed in days. Returns how many were purged.
+export async function purgeExpiredPatients(graceDays = 14) {
+  const { rows } = await pool.query(
+    `DELETE FROM patients
+     WHERE left_at IS NOT NULL AND left_at < now() - ($1 || ' days')::interval
+     RETURNING id`,
+    [String(Math.max(0, Math.floor(graceDays)))]
+  );
+  return rows.length;
 }
 
 // --- Audio uploads (voice memos) ---
