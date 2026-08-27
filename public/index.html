@@ -5108,13 +5108,26 @@
     if(p.indexOf('patient_') === 0) return 'patient';
     return null;
   }
+  // Resolve a base pricing-card plan (solo_monthly/solo_annual) to the current
+  // audience's actual plan — mirrors the mapping btwOpenSignup does for a new
+  // signup, so checkout/upgrade uses the right price (e.g. trainer_monthly on
+  // the Fitness page, not solo_monthly).
+  function resolveAudiencePlan(plan){
+    const p = String(plan || '');
+    if(curAudience === 'sports')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
+    if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
+    if(curAudience === 'fitness')  return TRAINER_PLAN_FROM[p] || (p.indexOf('trainer_') === 0 ? p : 'trainer_monthly');
+    return p;
+  }
   window.btwOpenSignup = function(plan){
     // Already signed in? Don't show a create-account form. If the plan matches
     // their account type, send them to Billing to manage it; if it's a plan for
     // a different kind of account, say so — one account is one type.
     if(state.me){
-      // Owner/admin: allowed to check out any plan for testing, cross-type included.
-      if(ownerFreeAccess){ changePlan(plan); return; }
+      // Owner/admin: allowed to check out any plan for testing, cross-type
+      // included — mapped to the current audience so the right price is used.
+      if(ownerFreeAccess){ changePlan(resolveAudiencePlan(plan)); return; }
       const target = planAccountType(plan);
       if(target && target !== state.me.account_type){
         alert(t("You're signed in as a different kind of account. Log out first to start a plan for another kind of account."));
