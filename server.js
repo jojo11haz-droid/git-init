@@ -1385,12 +1385,17 @@ function trialDaysFor(email) {
 async function startClinicianCheckout(clinician, plan, origin) {
   const priceId = priceForPlan(plan);
   if (!stripeConfigured() || !priceId) return null;
+  // Trial length follows the plan, not the account: an Individual (Personal)
+  // plan always gets the 3-day trial, even when checked out through this
+  // clinician path (e.g. an admin testing it). Everything else uses the
+  // clinician trial (14 days, or an extended pilot trial).
+  const trialDays = String(plan).indexOf('patient_') === 0 ? PATIENT_TRIAL_DAYS : trialDaysFor(clinician.email);
   const session = await createSubscriptionCheckout({
     priceId,
     customerEmail: clinician.email,
     refType: 'clinician',
     refId: clinician.id,
-    trialDays: trialDaysFor(clinician.email),
+    trialDays,
     successUrl: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/?checkout=cancel`
   });
