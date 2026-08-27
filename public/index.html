@@ -672,6 +672,8 @@
     cursor:pointer;
   }
   .btw-nav-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .btw-nav-btn.icon{padding:0;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;}
+  .btw-nav-btn.icon svg{width:17px;height:17px;display:block;}
   .btw-nav-btn.active{
     background:var(--ink);
     border-color:var(--ink);
@@ -1701,7 +1703,7 @@
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
       <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
-      <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
+      <button class="btw-nav-btn icon" id="btwSecurityBtn" style="display:none;" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
     </div>
   </div>
