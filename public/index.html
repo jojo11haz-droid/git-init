@@ -1719,6 +1719,7 @@
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
+          <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
       </div>
@@ -2589,7 +2590,7 @@
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Guidance":"Orientation","Classroom":"Classe",
-    "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion",
+    "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -4466,6 +4467,8 @@
     const pendingVerify = asTherapist && needsVerification();
     const accountBtn = document.getElementById('btwAccountBtn');
     if(accountBtn) accountBtn.style.display = signedIn ? '' : 'none';
+    const menuSettings = document.getElementById('btwMenuSettings');
+    if(menuSettings) menuSettings.style.display = asPatient ? '' : 'none';
     document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
     const adminBtn = document.getElementById('btwAdminBtn');
@@ -4978,6 +4981,11 @@
       navMenu.style.display = open ? 'flex' : 'none';
       accountBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
+    const menuSettings = document.getElementById('btwMenuSettings');
+    if(menuSettings) menuSettings.addEventListener('click', function(){
+      const open = document.getElementById('btwOpenData');
+      if(open) open.click();
+    });
     accountBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(); });
     navMenu.addEventListener('click', function(){ closeMenu(); }); // an item ran its own handler first, then we close
     document.addEventListener('click', function(e){ if(!e.target.closest('.btw-account')) closeMenu(); });
