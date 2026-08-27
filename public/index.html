@@ -674,6 +674,18 @@
   .btw-nav-btn:hover{border-color:var(--ink);color:var(--ink);}
   .btw-nav-btn.icon{padding:0;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;}
   .btw-nav-btn.icon svg{width:17px;height:17px;display:block;}
+  .btw-nav-menu{
+    position:absolute; right:0; top:calc(100% + 8px); z-index:60;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:6px; min-width:190px;
+    box-shadow:0 14px 34px rgba(26,30,28,0.16);
+    flex-direction:column; gap:3px;
+  }
+  .btw-nav-menu .btw-nav-btn{
+    display:block; width:100%; text-align:left; border:none; background:none;
+    border-radius:8px; padding:9px 12px; font-weight:500; color:var(--ink);
+  }
+  .btw-nav-menu .btw-nav-btn:hover{background:color-mix(in srgb, var(--ink) 7%, transparent); color:var(--ink);}
   .btw-nav-btn.active{
     background:var(--ink);
     border-color:var(--ink);
@@ -1701,10 +1713,15 @@
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
-      <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
-      <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
-      <button class="btw-nav-btn icon" id="btwSecurityBtn" style="display:none;" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
-      <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
+      <div class="btw-account" style="position:relative;display:inline-block;">
+        <button class="btw-nav-btn icon" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
+          <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
+          <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
+          <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
+          <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4447,6 +4464,8 @@
     loginBtn.style.display = signedIn ? 'none' : '';
     // Two-factor is a clinician feature for now.
     const pendingVerify = asTherapist && needsVerification();
+    const accountBtn = document.getElementById('btwAccountBtn');
+    if(accountBtn) accountBtn.style.display = signedIn ? '' : 'none';
     document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
     const adminBtn = document.getElementById('btwAdminBtn');
@@ -4945,6 +4964,25 @@
     billingOverlay.style.display = 'flex';
   }
   document.getElementById('btwBillingBtn').addEventListener('click', openBilling);
+
+  // Account menu: the gear toggles a dropdown holding Billing, Security,
+  // Verify therapists (admin), and Log out. Any item click closes it, as does
+  // a click outside or Escape.
+  (function(){
+    const accountBtn = document.getElementById('btwAccountBtn');
+    const navMenu = document.getElementById('btwNavMenu');
+    if(!accountBtn || !navMenu) return;
+    function closeMenu(){ navMenu.style.display = 'none'; accountBtn.setAttribute('aria-expanded', 'false'); }
+    function toggleMenu(){
+      const open = navMenu.style.display !== 'flex';
+      navMenu.style.display = open ? 'flex' : 'none';
+      accountBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    accountBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(); });
+    navMenu.addEventListener('click', function(){ closeMenu(); }); // an item ran its own handler first, then we close
+    document.addEventListener('click', function(e){ if(!e.target.closest('.btw-account')) closeMenu(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+  })();
 
   // --- Owner: verify therapists (licence review) ---
   const adminOverlay = document.getElementById('btwAdminOverlay');
