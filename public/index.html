@@ -2964,6 +2964,8 @@
     "Subscription: cancels at the end of your billing period":"Abonnement : se termine à la fin de votre période de facturation",
     "Cancel your subscription? You keep access until the end of your billing period.":
       "Annuler votre abonnement? Vous gardez l'accès jusqu'à la fin de votre période de facturation.",
+    "If you cancel, you keep access until the end of your current billing period.":
+      "Si vous annulez, vous gardez l'accès jusqu'à la fin de votre période de facturation en cours.",
     "Your 14-day free trial is on; your card is charged when it ends unless you cancel.":
       "Votre essai gratuit de 14 jours est actif; votre carte est débitée à la fin, sauf annulation.",
     "Start your 14-day free trial. Add a card now, nothing is charged for 14 days, and you can cancel anytime before then.":
@@ -4943,7 +4945,8 @@
         + '<div style="margin:14px 0 8px;font-weight:600;color:var(--ink);">' + esc(activeSub ? t('Change plan') : t('Choose your plan')) + '</div>'
         + rows
         + (activeSub ? '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + esc(t('Switching takes effect now; your next invoice is adjusted for the difference.')) + '</div>' : '')
-        + (activeSub ? '<button id="btwClinCancel" style="margin-top:14px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>' : '');
+        + (activeSub ? '<button id="btwClinCancel" style="margin-top:14px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>'
+            + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">' + esc(t('If you cancel, you keep access until the end of your current billing period.')) + '</div>' : '');
       body.querySelectorAll('[data-switch]').forEach(function(b){
         b.addEventListener('click', async function(){
           const plan = b.getAttribute('data-switch');
@@ -5518,7 +5521,8 @@
     const active = (st === 'active' || st === 'trialing');
     if(active){
       el.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '. '
-        + '<button id="btwSubCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
+        + '<button id="btwSubCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>'
+        + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">' + esc(t('If you cancel, you keep access until the end of your current billing period.')) + '</div>';
     } else if(st === 'canceling'){
       el.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '. '
         + '<button id="btwSubReactivate" style="' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
