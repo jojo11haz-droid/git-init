@@ -2083,6 +2083,7 @@
         <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
         <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
           <button type="button" class="btw-role-btn active" data-filter="attention" style="font-size:11.5px;padding:5px 9px;">Needs attention</button>
+          <button type="button" class="btw-role-btn" data-filter="quiet" title="No check-in in the last few days" style="font-size:11.5px;padding:5px 9px;">Gone quiet</button>
           <button type="button" class="btw-role-btn" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
         </div>
       </div>
@@ -2947,6 +2948,8 @@
     "new":"nouveaux","All caught up, nothing new.":"Tout est à jour, rien de nouveau.",
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
+    "Gone quiet":"Devenus silencieux","No check-in in the last few days":"Aucun suivi depuis quelques jours",
+    "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
@@ -4294,7 +4297,7 @@
   // Caseload triage filter: needs-attention vs all.
   document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
-      caseloadFilter = b.dataset.filter === 'all' ? 'all' : 'attention';
+      caseloadFilter = b.dataset.filter || 'attention';
       document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(x=>x.classList.toggle('active', x===b));
       renderPatientList();
     });
@@ -5945,8 +5948,19 @@
     ];
   }
 
-  let caseloadFilter = 'attention'; // 'attention' | 'all'
-  function needsAttention(p){ return p.has_recent_risk || (p.new_check_in_count||0) > 0; }
+  let caseloadFilter = 'attention'; // 'attention' | 'all' | 'quiet'
+  // Needs attention: a safety flag, unreviewed new check-ins, or a persistently
+  // low last mood (matches the red status ping so the tab never hides a red dot).
+  function needsAttention(p){ return p.has_recent_risk || (p.new_check_in_count||0) > 0 || (p.last_mood != null && p.last_mood <= 3); }
+  // Gone quiet: no check-in in the last few days (never-checked-in counts too),
+  // so a therapist can nudge patients who have drifted off. Left patients are
+  // being removed anyway, so they're excluded.
+  const QUIET_DAYS = 3;
+  function daysSinceCheckIn(p){
+    if(!p.last_check_in_at) return Infinity;
+    return (Date.now() - new Date(p.last_check_in_at).getTime()) / 86400000;
+  }
+  function isQuiet(p){ return !p.left_at && daysSinceCheckIn(p) >= QUIET_DAYS; }
   // Compact, localized "time ago" for the caseload cards.
   function agoLabel(ts){
     if(!ts) return '';
@@ -6034,6 +6048,8 @@
     let list = state.patients;
     if(caseloadFilter === 'attention'){
       list = state.patients.filter(p=> needsAttention(p) || p.id === state.selectedPatientId);
+    } else if(caseloadFilter === 'quiet'){
+      list = state.patients.filter(p=> isQuiet(p) || p.id === state.selectedPatientId);
     }
     let cards = list.map(p=>{
       const active = p.id === state.selectedPatientId;
@@ -6047,8 +6063,12 @@
         ${leftMeta}
       </div>`;
     }).join('');
-    if(caseloadFilter === 'attention' && list.length === 0){
-      cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>';
+    if(list.length === 0){
+      if(caseloadFilter === 'attention'){
+        cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>';
+      } else if(caseloadFilter === 'quiet'){
+        cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Everyone has checked in recently.'))+'</div>';
+      }
     }
     el.innerHTML = cards + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
