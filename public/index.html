@@ -5955,7 +5955,7 @@
   // Gone quiet: no check-in in the last few days (never-checked-in counts too),
   // so a therapist can nudge patients who have drifted off. Left patients are
   // being removed anyway, so they're excluded.
-  const QUIET_DAYS = 3;
+  const QUIET_DAYS = 2;
   function daysSinceCheckIn(p){
     if(!p.last_check_in_at) return Infinity;
     return (Date.now() - new Date(p.last_check_in_at).getTime()) / 86400000;
