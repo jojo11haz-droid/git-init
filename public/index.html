@@ -864,16 +864,18 @@
   .btw-mk-mlabel{font-size:11px;color:var(--ink-soft);}
   .btw-mk-moodpill{font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--moss);background:var(--moss-light);border-radius:100px;padding:3px 10px;}
   .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:11px 0 7px;}
-  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));transition:width .05s linear;}
+  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));}
   /* The native range thumb IS the handle (styled directly), so iOS never draws
-     its own thumb on top. Track is transparent; the custom .fill shows through. */
-  .btw-mk-range{position:absolute;left:0;top:-8px;width:100%;height:22px;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer;}
+     its own thumb on top. Track is transparent; the custom .fill shows through.
+     Input height == thumb size and is centered on the 6px track so the handle
+     sits dead-centre on the line. */
+  .btw-mk-range{position:absolute;left:0;top:-10px;width:100%;height:26px;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer;}
   .btw-mk-range:focus{outline:none;}
-  .btw-mk-range::-webkit-slider-runnable-track{-webkit-appearance:none;background:transparent;border:none;height:22px;}
-  .btw-mk-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:0;border-radius:50%;background:#fff;border:3px solid var(--moss);box-shadow:none;cursor:grab;}
+  .btw-mk-range::-webkit-slider-runnable-track{-webkit-appearance:none;background:transparent;border:none;height:26px;}
+  .btw-mk-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:0;border-radius:50%;background:#fff;border:3px solid var(--moss);box-shadow:none;cursor:grab;}
   .btw-mk-range::-webkit-slider-thumb:active{cursor:grabbing;}
-  .btw-mk-range::-moz-range-track{background:transparent;border:none;height:22px;}
-  .btw-mk-range::-moz-range-thumb{width:16px;height:16px;border:3px solid var(--moss);border-radius:50%;background:#fff;box-shadow:none;cursor:grab;}
+  .btw-mk-range::-moz-range-track{background:transparent;border:none;height:26px;}
+  .btw-mk-range::-moz-range-thumb{width:20px;height:20px;border:3px solid var(--moss);border-radius:50%;background:#fff;box-shadow:none;cursor:grab;}
   .btw-mk-range::-moz-focus-outer{border:0;}
   .btw-mk-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);opacity:.75;margin-bottom:9px;}
   .btw-mk-airead{display:flex;align-items:center;gap:7px;margin:0 0 5px;font-size:11px;color:var(--ink-soft);}
@@ -1836,7 +1838,7 @@
                 </div>
                 <div class="btw-mk-q">How are things right now?</div>
                 <div class="btw-mk-moodhead"><span class="btw-mk-mlabel">Mood right now</span><span class="btw-mk-moodpill" id="btwMkPill">Okay (5/10)</span></div>
-                <div class="btw-mk-slider" id="btwMkSlider"><div class="fill" id="btwMkFill" style="width:44%;"></div><input type="range" min="1" max="10" value="5" id="btwMkMood" class="btw-mk-range" aria-label="Mood right now"></div>
+                <div class="btw-mk-slider" id="btwMkSlider"><div class="fill" id="btwMkFill" style="width:44%;"></div><input type="range" min="1" max="10" step="any" value="5" id="btwMkMood" class="btw-mk-range" aria-label="Mood right now"></div>
                 <div class="btw-mk-scale"><span>Low</span><span>Great</span></div>
                 <div class="btw-mk-airead"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwMkFeeling">getting by, a mixed day</span></div>
                 <div class="btw-mk-airnote">Move the slider. Between reads how you're feeling from what you share.</div>
@@ -4357,10 +4359,10 @@
     }
     function update(){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
-      const v = parseInt(range.value, 10) || 5;
-      const pct = ((v - 1) / 9) * 100;
+      const raw = parseFloat(range.value); const rawv = isNaN(raw) ? 5 : raw;
+      const v = Math.min(10, Math.max(1, Math.round(rawv))); // whole number for display
+      const pct = ((rawv - 1) / 9) * 100;                    // raw for a smooth fill
       if(fill) fill.style.width = pct + '%';
-      if(knob) knob.style.left = pct + '%';
       if(pill) pill.textContent = pick(WORDS, v) + ' (' + v + '/10)';
       // Weave any tapped topics (read live so they follow language + audience)
       // into the AI read, e.g. "getting by, a mixed day, mostly work and sleep".
