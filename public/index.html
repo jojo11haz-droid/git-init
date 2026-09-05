@@ -865,8 +865,20 @@
   .btw-mk-moodpill{font-family:var(--font-mono);font-size:10px;letter-spacing:.02em;color:var(--moss);background:var(--moss-light);border-radius:100px;padding:3px 10px;}
   .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:11px 0 7px;}
   .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));}
-  .btw-mk-slider .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--moss);transform:translate(-50%,-50%);box-shadow:0 2px 7px rgba(30,76,134,.28);}
-  .btw-mk-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);opacity:.75;margin-bottom:16px;}
+  .btw-mk-slider .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--moss);transform:translate(-50%,-50%);box-shadow:0 2px 7px rgba(30,76,134,.28);transition:left .05s linear;}
+  .btw-mk-slider .fill{transition:width .05s linear;}
+  .btw-mk-range{position:absolute;left:0;top:-9px;width:100%;height:24px;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer;}
+  .btw-mk-range:focus{outline:none;}
+  .btw-mk-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:transparent;cursor:grab;}
+  .btw-mk-range::-webkit-slider-thumb:active{cursor:grabbing;}
+  .btw-mk-range::-moz-range-thumb{width:26px;height:26px;border:none;border-radius:50%;background:transparent;cursor:grab;}
+  .btw-mk-range::-moz-range-track{background:transparent;}
+  .btw-mk-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);opacity:.75;margin-bottom:9px;}
+  .btw-mk-airead{display:flex;align-items:center;gap:7px;margin:0 0 5px;font-size:11px;color:var(--ink-soft);}
+  .btw-mk-airead-dot{width:6px;height:6px;border-radius:50%;background:var(--moss);flex-shrink:0;box-shadow:0 0 0 3px var(--moss-light);}
+  .btw-mk-airead-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;}
+  .btw-mk-airead-val{font-weight:600;color:var(--moss);}
+  .btw-mk-airnote{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-bottom:15px;line-height:1.4;}
   .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
   .btw-mk-chips{margin-bottom:15px;}
   .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:100px;padding:4px 13px;font-size:12px;color:var(--ink-soft);margin:0 6px 6px 0;transition:transform .2s ease;}
@@ -1820,9 +1832,11 @@
                   <span class="btw-mk-time">Just now</span>
                 </div>
                 <div class="btw-mk-q">How are things right now?</div>
-                <div class="btw-mk-moodhead"><span class="btw-mk-mlabel">Mood right now</span><span class="btw-mk-moodpill">Low (4/10)</span></div>
-                <div class="btw-mk-slider"><div class="fill" style="width:38%;"></div><div class="knob" style="left:38%;"></div></div>
+                <div class="btw-mk-moodhead"><span class="btw-mk-mlabel">Mood right now</span><span class="btw-mk-moodpill" id="btwMkPill">Okay (5/10)</span></div>
+                <div class="btw-mk-slider" id="btwMkSlider"><div class="fill" id="btwMkFill" style="width:44%;"></div><div class="knob" id="btwMkKnob" style="left:44%;"></div><input type="range" min="1" max="10" value="5" id="btwMkMood" class="btw-mk-range" aria-label="Mood right now"></div>
                 <div class="btw-mk-scale"><span>Low</span><span>Great</span></div>
+                <div class="btw-mk-airead"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwMkFeeling">getting by, a mixed day</span></div>
+                <div class="btw-mk-airnote">Move the slider. Between reads how you're feeling from what you share.</div>
                 <div class="btw-mk-sub">What's going on?</div>
                 <div class="btw-mk-chips"><span class="btw-mk-chip on">Work</span><span class="btw-mk-chip on">Sleep</span><span class="btw-mk-chip">Family</span><span class="btw-mk-chip">Win</span></div>
                 <div class="btw-mk-voice">
@@ -2950,6 +2964,8 @@
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "Gone quiet":"Devenus silencieux","No check-in in the last few days":"Aucun suivi depuis quelques jours",
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
+    "AI reads":"L'IA perçoit",
+    "Move the slider. Between reads how you're feeling from what you share.":"Bougez le curseur. Between perçoit comment vous allez d'après ce que vous partagez.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
@@ -4196,6 +4212,7 @@
     document.querySelectorAll('.btw-lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang === curLang));
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
+    if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -4302,6 +4319,42 @@
       renderPatientList();
     });
   });
+  // Interactive patient-view mockup: dragging the mood slider updates the pill
+  // and shows Between's read of how you're feeling, so the landing page demos a
+  // live check-in instead of a static screenshot. Bilingual via curLang.
+  (function(){
+    const range = document.getElementById('btwMkMood');
+    if(!range) return;
+    const fill = document.getElementById('btwMkFill');
+    const knob = document.getElementById('btwMkKnob');
+    const pill = document.getElementById('btwMkPill');
+    const feeling = document.getElementById('btwMkFeeling');
+    const WORDS = {
+      en: [[3,'Low'],[6,'Okay'],[8,'Good'],[10,'Great']],
+      fr: [[3,'Bas'],[6,'Correct'],[8,'Bien'],[10,'Excellent']]
+    };
+    const READS = {
+      en: [[2,'really struggling today'],[4,'low energy and worn down'],[6,'getting by, a mixed day'],[8,'feeling pretty steady'],[10,'in a good place today']],
+      fr: [[2,'vraiment en difficulté'],[4,"peu d'énergie, journée éprouvante"],[6,'ça va, journée en dents de scie'],[8,'plutôt stable'],[10,'dans un bon moment']]
+    };
+    function pick(table, v){
+      const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
+      const rows = table[l];
+      for(const r of rows){ if(v <= r[0]) return r[1]; }
+      return rows[rows.length - 1][1];
+    }
+    function update(){
+      const v = parseInt(range.value, 10) || 5;
+      const pct = ((v - 1) / 9) * 100;
+      if(fill) fill.style.width = pct + '%';
+      if(knob) knob.style.left = pct + '%';
+      if(pill) pill.textContent = pick(WORDS, v) + ' (' + v + '/10)';
+      if(feeling) feeling.textContent = pick(READS, v);
+    }
+    range.addEventListener('input', update);
+    window.__btwMoodRefresh = update; // re-localize on language switch
+    update();
+  })();
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
 
