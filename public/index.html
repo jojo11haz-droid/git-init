@@ -900,7 +900,7 @@
   .btw-bodysvg{width:98px;height:auto;display:block;}
   .btw-mk-bodyfigt .btw-bodysvg{width:74px;}
   .btw-bz-base{fill:#E4E3DE;stroke:none;pointer-events:none;}
-  .btw-bz{fill:transparent;stroke:#D8D7D1;stroke-width:0.6;pointer-events:all;cursor:pointer;transition:fill .12s ease;}
+  .btw-bz{fill:transparent;stroke:none;pointer-events:all;cursor:pointer;transition:fill .12s ease;}
   .btw-mk-bodyfigt .btw-bz{cursor:default;}
   .btw-mk-bodyleg{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--ink-soft);}
   .btw-mk-bodyleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:7px;}
@@ -4923,16 +4923,21 @@
     const state = {}; // (view + ':' + id) -> 0..3
     function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
-    function svg(v){
+    function svg(v, uid){
+      const cid = 'bpc_' + uid;
+      // The base shapes double as a clipPath (their union = the body outline),
+      // so colored regions are trimmed to the body and read as muscle areas,
+      // not rectangles stacked on top.
+      const clipShapes = BASE.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
       const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('');
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map">' + base + regs + '</svg>';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></svg>';
     }
     function paint(){
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
         el.style.fill = FILL[state[view + ':' + el.getAttribute('data-zone')] || 0]; }); });
     }
-    function render(){ fig.innerHTML = svg(view); if(figT) figT.innerHTML = svg(view); paint(); }
+    function render(){ fig.innerHTML = svg(view, 'p'); if(figT) figT.innerHTML = svg(view, 't'); paint(); }
     function updateSummary(){
       if(!sumEl) return;
       const hurts = [];
