@@ -899,7 +899,8 @@
   .btw-mk-bodyfig{flex:0 0 auto;}
   .btw-bodysvg{width:98px;height:auto;display:block;}
   .btw-mk-bodyfigt .btw-bodysvg{width:74px;}
-  .btw-bz{fill:#E4E3DE;stroke:none;cursor:pointer;transition:fill .12s ease;}
+  .btw-bz-base{fill:#E4E3DE;stroke:none;pointer-events:none;}
+  .btw-bz{fill:transparent;stroke:#D8D7D1;stroke-width:0.6;pointer-events:all;cursor:pointer;transition:fill .12s ease;}
   .btw-mk-bodyfigt .btw-bz{cursor:default;}
   .btw-mk-bodyleg{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--ink-soft);}
   .btw-mk-bodyleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:7px;}
@@ -1891,6 +1892,7 @@
                 <div class="btw-mk-airnote" id="btwMkChipsNote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
                 <div class="btw-mk-body" id="btwMkBody" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Where does it hurt or feel sore?</div>
+                  <div class="btw-mk-moodmode" id="btwMkBodyViews" style="margin:6px 0 10px;"><button type="button" class="btw-mk-modebtn active" data-view="front">Front</button><button type="button" class="btw-mk-modebtn" data-view="back">Back</button></div>
                   <div class="btw-mk-bodyrow">
                     <div class="btw-mk-bodyfig" id="btwMkBodyFig"></div>
                     <div class="btw-mk-bodyleg">
@@ -3045,6 +3047,7 @@
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
+    "Front":"Avant","Back":"Arrière",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
     "Pain map · from their check-in":"Carte de douleur · d'après leur suivi",
@@ -4826,71 +4829,140 @@
     const wrapT = document.getElementById('btwMkBodyMirror');
     const sumEl = document.getElementById('btwMkBodySum');
     const clearBtn = document.getElementById('btwMkBodyClear');
-    const FILL = ['#E7E6E1','#E9B949','#E07B39','#C0392B'];
+    const viewBtns = [...document.querySelectorAll('#btwMkBodyViews .btw-mk-modebtn')];
+    const FILL = ['transparent','#E9B949','#E07B39','#C0392B'];
     const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
-    // Rounded parts that overlap slightly so they merge into one body
-    // silhouette (no gaps, no seams). Drawn base-first, joints last.
-    const ZONES = [
-      {id:'head',   en:'head', fr:'tête', el:'ellipse', a:{cx:50,cy:16,rx:10.5,ry:12.5}},
-      {id:'neck',   en:'neck', fr:'cou', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
-      {id:'chest',  en:'chest and shoulders', fr:'poitrine et épaules', el:'rect', a:{x:32,y:31,width:36,height:26,rx:12}},
-      {id:'abdomen',en:'abdomen and core', fr:'abdomen et tronc', el:'rect', a:{x:35,y:53,width:30,height:24,rx:9}},
-      {id:'hips',   en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:34,y:72,width:32,height:18,rx:9}},
-      {id:'l_arm',  en:'left shoulder and arm', fr:'épaule et bras gauches', el:'rect', a:{x:23,y:35,width:11,height:34,rx:5.5}},
-      {id:'r_arm',  en:'right shoulder and arm', fr:'épaule et bras droits', el:'rect', a:{x:66,y:35,width:11,height:34,rx:5.5}},
-      {id:'l_fore', en:'left elbow and forearm', fr:'coude et avant-bras gauches', el:'rect', a:{x:21,y:64,width:10,height:30,rx:5}},
-      {id:'r_fore', en:'right elbow and forearm', fr:'coude et avant-bras droits', el:'rect', a:{x:69,y:64,width:10,height:30,rx:5}},
-      {id:'l_hand', en:'left wrist and hand', fr:'poignet et main gauches', el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
-      {id:'r_hand', en:'right wrist and hand', fr:'poignet et main droits', el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
-      {id:'l_thigh',en:'left thigh', fr:'cuisse gauche', el:'rect', a:{x:35,y:85,width:14,height:40,rx:7}},
-      {id:'r_thigh',en:'right thigh', fr:'cuisse droite', el:'rect', a:{x:51,y:85,width:14,height:40,rx:7}},
-      {id:'l_calf', en:'left shin and calf', fr:'tibia et mollet gauches', el:'rect', a:{x:37,y:122,width:11,height:40,rx:5.5}},
-      {id:'r_calf', en:'right shin and calf', fr:'tibia et mollet droits', el:'rect', a:{x:52,y:122,width:11,height:40,rx:5.5}},
-      {id:'l_knee', en:'left knee', fr:'genou gauche', el:'ellipse', a:{cx:42.5,cy:123,rx:6.5,ry:5.5}},
-      {id:'r_knee', en:'right knee', fr:'genou droit', el:'ellipse', a:{cx:57.5,cy:123,rx:6.5,ry:5.5}},
-      {id:'l_foot', en:'left ankle and foot', fr:'cheville et pied gauches', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
-      {id:'r_foot', en:'right ankle and foot', fr:'cheville et pied droits', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+    // Grey body silhouette (overlapping rounded parts merge into one shape).
+    const BASE = [
+      {el:'ellipse', a:{cx:50,cy:16,rx:10.5,ry:12.5}},
+      {el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
+      {el:'rect', a:{x:32,y:31,width:36,height:26,rx:12}},
+      {el:'rect', a:{x:35,y:53,width:30,height:24,rx:9}},
+      {el:'rect', a:{x:34,y:72,width:32,height:18,rx:9}},
+      {el:'rect', a:{x:23,y:34,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:66,y:34,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:21,y:64,width:10,height:30,rx:5}},
+      {el:'rect', a:{x:69,y:64,width:10,height:30,rx:5}},
+      {el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
+      {el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
+      {el:'rect', a:{x:35,y:85,width:14,height:40,rx:7}},
+      {el:'rect', a:{x:51,y:85,width:14,height:40,rx:7}},
+      {el:'rect', a:{x:37,y:122,width:11,height:40,rx:5.5}},
+      {el:'rect', a:{x:52,y:122,width:11,height:40,rx:5.5}},
+      {el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
+      {el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
     ];
-    const state = {}; // id -> 0..3
+    // Muscle-group regions overlaid on the silhouette, one set per view.
+    const ARMS = [
+      {id:'l_arm', el:'rect', a:{x:23,y:40,width:11,height:26,rx:5.5}},
+      {id:'r_arm', el:'rect', a:{x:66,y:40,width:11,height:26,rx:5.5}},
+      {id:'l_fore', el:'rect', a:{x:21,y:65,width:10,height:29,rx:5}},
+      {id:'r_fore', el:'rect', a:{x:69,y:65,width:10,height:29,rx:5}},
+      {id:'l_hand', el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
+      {id:'r_hand', el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
+      {id:'l_shoulder', el:'ellipse', a:{cx:31,cy:37,rx:6.5,ry:6}},
+      {id:'r_shoulder', el:'ellipse', a:{cx:69,cy:37,rx:6.5,ry:6}},
+      {id:'l_knee', el:'ellipse', a:{cx:42.5,cy:123,rx:6.5,ry:5.5}},
+      {id:'r_knee', el:'ellipse', a:{cx:57.5,cy:123,rx:6.5,ry:5.5}}
+    ];
+    const REGIONS = {
+      front: ARMS.concat([
+        {id:'neck', en:'neck', fr:'cou', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
+        {id:'chest', en:'chest', fr:'poitrine', el:'rect', a:{x:34,y:33,width:32,height:20,rx:9}},
+        {id:'abs', en:'abs and core', fr:'abdominaux et tronc', el:'rect', a:{x:39,y:53,width:22,height:22,rx:6}},
+        {id:'hips', en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:35,y:73,width:30,height:15,rx:7}},
+        {id:'l_thigh', en:'left thigh (quad)', fr:'cuisse gauche (quadriceps)', el:'rect', a:{x:36,y:88,width:13,height:35,rx:6}},
+        {id:'r_thigh', en:'right thigh (quad)', fr:'cuisse droite (quadriceps)', el:'rect', a:{x:51,y:88,width:13,height:35,rx:6}},
+        {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:126,width:10,height:34,rx:5}},
+        {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:126,width:10,height:34,rx:5}},
+        {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
+        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+      ], [
+        {id:'l_arm', en:'left arm (biceps)', fr:'bras gauche (biceps)'},
+        {id:'r_arm', en:'right arm (biceps)', fr:'bras droit (biceps)'},
+        {id:'l_fore', en:'left forearm', fr:'avant-bras gauche'},
+        {id:'r_fore', en:'right forearm', fr:'avant-bras droit'},
+        {id:'l_hand', en:'left hand', fr:'main gauche'},
+        {id:'r_hand', en:'right hand', fr:'main droite'},
+        {id:'l_shoulder', en:'left shoulder', fr:'épaule gauche'},
+        {id:'r_shoulder', en:'right shoulder', fr:'épaule droite'},
+        {id:'l_knee', en:'left knee', fr:'genou gauche'},
+        {id:'r_knee', en:'right knee', fr:'genou droit'}
+      ].reduce(function(m,x){ m[x.id]=x; return m; }, {})),
+      back: ARMS.concat([
+        {id:'neck', en:'neck and nape', fr:'cou et nuque', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
+        {id:'upper_back', en:'upper back', fr:'haut du dos', el:'rect', a:{x:34,y:33,width:32,height:22,rx:9}},
+        {id:'lower_back', en:'lower back', fr:'bas du dos', el:'rect', a:{x:37,y:55,width:26,height:20,rx:6}},
+        {id:'glutes', en:'glutes', fr:'fessiers', el:'rect', a:{x:35,y:73,width:30,height:16,rx:7}},
+        {id:'l_thigh', en:'left hamstring', fr:'ischio-jambier gauche', el:'rect', a:{x:36,y:88,width:13,height:35,rx:6}},
+        {id:'r_thigh', en:'right hamstring', fr:'ischio-jambier droit', el:'rect', a:{x:51,y:88,width:13,height:35,rx:6}},
+        {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:126,width:10,height:34,rx:5}},
+        {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:126,width:10,height:34,rx:5}},
+        {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
+        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+      ], [
+        {id:'l_arm', en:'left arm (triceps)', fr:'bras gauche (triceps)'},
+        {id:'r_arm', en:'right arm (triceps)', fr:'bras droit (triceps)'},
+        {id:'l_fore', en:'left forearm', fr:'avant-bras gauche'},
+        {id:'r_fore', en:'right forearm', fr:'avant-bras droit'},
+        {id:'l_hand', en:'left hand', fr:'main gauche'},
+        {id:'r_hand', en:'right hand', fr:'main droite'},
+        {id:'l_shoulder', en:'left shoulder', fr:'épaule gauche'},
+        {id:'r_shoulder', en:'right shoulder', fr:'épaule droite'},
+        {id:'l_knee', en:'back of left knee', fr:'arrière du genou gauche'},
+        {id:'r_knee', en:'back of right knee', fr:'arrière du genou droit'}
+      ].reduce(function(m,x){ m[x.id]=x; return m; }, {}))
+    };
+    // Merge the ARMS geometry with each view's per-id label overrides.
+    function zonesFor(v){
+      const meta = REGIONS[v][REGIONS[v].length - 1]; // the label map is last
+      const list = REGIONS[v].slice(0, -1);
+      return list.map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
+    }
+    let view = 'front';
+    const state = {}; // (view + ':' + id) -> 0..3
     function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
-    function label(z){ return fr() ? z.fr : z.en; }
-    function svg(){
-      return '<svg viewBox="0 0 100 176" class="btw-bodysvg" role="img" aria-label="Body pain map">' +
-        ZONES.map(function(z){ var at=''; for(var k in z.a){ at += ' ' + k + '="' + z.a[k] + '"'; }
-          return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + at + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('') +
-        '</svg>';
+    function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
+    function svg(v){
+      const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('');
+      return '<svg viewBox="0 0 100 176" class="btw-bodysvg" role="img" aria-label="Body pain map">' + base + regs + '</svg>';
     }
-    fig.innerHTML = svg(); if(figT) figT.innerHTML = svg();
     function paint(){
-      // Inline style, not the fill attribute: the CSS .btw-bz{fill:...} rule
-      // would otherwise win and keep every zone grey.
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
-        el.style.fill = FILL[state[el.getAttribute('data-zone')] || 0]; }); });
+        el.style.fill = FILL[state[view + ':' + el.getAttribute('data-zone')] || 0]; }); });
     }
+    function render(){ fig.innerHTML = svg(view); if(figT) figT.innerHTML = svg(view); paint(); }
     function updateSummary(){
       if(!sumEl) return;
-      const hurts = ZONES.filter(function(z){ return (state[z.id] || 0) > 0; })
-                         .sort(function(a,b){ return (state[b.id]||0) - (state[a.id]||0); });
+      const hurts = [];
+      ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
-      const parts = hurts.map(function(z){ return label(z) + ' (' + LV[fr()?'fr':'en'][state[z.id]] + ')'; });
+      const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + LV[fr()?'fr':'en'][h.lv] + ')'; });
       sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
     }
     fig.addEventListener('click', function(e){
       const z = e.target.closest('.btw-bz'); if(!z) return;
-      const id = z.getAttribute('data-zone');
-      state[id] = ((state[id] || 0) + 1) % 4;
+      const key = view + ':' + z.getAttribute('data-zone');
+      state[key] = ((state[key] || 0) + 1) % 4;
       paint(); updateSummary();
     });
+    viewBtns.forEach(function(b){ b.addEventListener('click', function(){
+      view = (b.dataset.view === 'back') ? 'back' : 'front';
+      viewBtns.forEach(function(x){ x.classList.toggle('active', x === b); });
+      render();
+    }); });
     if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; paint(); updateSummary(); });
     const PHYS = { sports:1, fitness:1, physio:1 };
     function refresh(){
       const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
       if(wrap) wrap.hidden = !on;
       if(wrapT) wrapT.hidden = !on;
-      updateSummary();
+      render(); updateSummary();
     }
     window.__btwBodyRefresh = refresh;
-    paint(); refresh();
+    render(); refresh();
   })();
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
