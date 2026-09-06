@@ -907,8 +907,12 @@
   .btw-mk-tryhint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-top:8px;}
   .btw-mk-status{font-size:11.5px;color:var(--clay,#C0392B);margin-top:8px;}
   .btw-mk-send{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--moss);color:#fff;border:none;border-radius:100px;padding:12px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;letter-spacing:.01em;width:100%;margin-top:16px;}
-  .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
+  .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color .12s ease,box-shadow .12s ease;}
   .btw-mk-row.flag{border-color:var(--amber);}
+  .btw-mk-row.active{border-color:var(--moss);box-shadow:0 2px 10px rgba(30,76,134,.14);}
+  #btwMkCaseHint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-bottom:8px;}
+  .btw-mk-chips.aichoose .btw-mk-chip{pointer-events:none;}
+  .btw-mk-chips.aichoose .btw-mk-chip:not(.on){opacity:.5;}
   .btw-mk-avatar{width:24px;height:24px;border-radius:50%;background:var(--moss);color:#fff;font-family:var(--font-mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .btw-mk-name{font-size:12.5px;font-weight:600;flex:1;}
   .btw-mk-badge{background:var(--moss);color:#fff;border-radius:8px;padding:2px 8px;font-size:11px;}
@@ -1856,8 +1860,9 @@
                 <div class="btw-mk-airead"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwMkFeeling">getting by, a mixed day</span></div>
                 <div class="btw-mk-airnote">Move the slider. Between reads how you're feeling from what you share.</div>
                 <div class="btw-mk-sub">What's going on?</div>
+                <div class="btw-mk-moodmode" id="btwMkTopicMode"><button type="button" class="btw-mk-modebtn active" data-tmode="self">I'll pick</button><button type="button" class="btw-mk-modebtn" data-tmode="ai">Not sure yet</button></div>
                 <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip on" data-topic="Work">Work</span><span class="btw-mk-chip on" data-topic="Sleep">Sleep</span><span class="btw-mk-chip" data-topic="Family">Family</span><span class="btw-mk-chip" data-topic="Win">Win</span></div>
-                <div class="btw-mk-airnote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
+                <div class="btw-mk-airnote" id="btwMkChipsNote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
                   <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
@@ -1876,17 +1881,18 @@
               <div class="btw-shot-bar"><i></i><i></i><i></i><span class="btw-shot-tag">Therapist view</span></div>
               <div class="btw-shot-body">
                 <div class="btw-shot-label">Caseload</div>
-                <div class="btw-mk-row flag"><span class="btw-mk-flagdot"></span><span class="btw-mk-avatar">A</span><span class="btw-mk-name">Amy</span><span class="btw-mk-badge">2 new</span></div>
-                <div class="btw-mk-row"><span class="btw-mk-avatar">B</span><span class="btw-mk-name">Ben</span><span class="btw-mk-badge">1 new</span></div>
-                <div class="btw-mk-row" style="opacity:.6;"><span class="btw-mk-avatar">C</span><span class="btw-mk-name">Cara</span><span style="font-size:11px;color:var(--ink-soft);">quiet</span></div>
+                <div class="btw-mk-caption" id="btwMkCaseHint">Tap a client to see their read.</div>
+                <div class="btw-mk-row flag active" data-pt="amy"><span class="btw-mk-flagdot"></span><span class="btw-mk-avatar">A</span><span class="btw-mk-name">Amy</span><span class="btw-mk-badge">2 new</span></div>
+                <div class="btw-mk-row" data-pt="ben"><span class="btw-mk-avatar">B</span><span class="btw-mk-name">Ben</span><span class="btw-mk-badge">1 new</span></div>
+                <div class="btw-mk-row" data-pt="cara"><span class="btw-mk-avatar">C</span><span class="btw-mk-name">Cara</span><span style="font-size:11px;color:var(--ink-soft);">quiet</span></div>
                 <div class="btw-mk-summary">
                   <div class="l" id="btwMkSummaryLabel">AI summary · Amy</div>
                   <p id="btwMkSummary">Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.</p>
                 </div>
-                <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path d="M8,42 L70,38 L132,29 L194,19 L246,13" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle cx="8" cy="42" r="3" fill="#1E4C86"></circle><circle cx="70" cy="38" r="3" fill="#1E4C86"></circle><circle cx="132" cy="29" r="3" fill="#B8701F"></circle><circle cx="194" cy="19" r="3" fill="#1E4C86"></circle><circle cx="246" cy="13" r="3" fill="#1E4C86"></circle></svg>
+                <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path id="btwMkTrend" d="M8,42 L70,38 L132,32 L194,22 L246,14" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle id="btwMkTrendDot" cx="246" cy="14" r="3.5" fill="#1E4C86"></circle></svg>
                 <div class="btw-mk-insights">
-                  <div class="btw-mk-ins"><div class="l">Mood direction</div><div class="v" style="color:var(--moss);">↑ improving</div></div>
-                  <div class="btw-mk-ins"><div class="l">Tied to lower mood</div><div class="v">Work</div></div>
+                  <div class="btw-mk-ins"><div class="l">Mood direction</div><div class="v" id="btwMkMoodDir" style="color:var(--moss);">↑ improving</div></div>
+                  <div class="btw-mk-ins"><div class="l">Tied to lower mood</div><div class="v" id="btwMkTiedTo">Work</div></div>
                 </div>
                 <div class="btw-mk-statslink">View advanced stats <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
               </div>
@@ -2991,6 +2997,7 @@
     "I'll set it":"Je l'indique","Let Between estimate":"Laisser Between estimer",
     "Tap to record":"Touchez pour enregistrer",
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
+    "I'll pick":"Je choisis","Not sure yet":"Pas encore sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
@@ -4238,6 +4245,7 @@
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
+    if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -4356,10 +4364,14 @@
     const pill = document.getElementById('btwMkPill');
     const feeling = document.getElementById('btwMkFeeling');
     const chips = [...document.querySelectorAll('#btwMkChips .btw-mk-chip')];
+    const chipsWrap = document.getElementById('btwMkChips');
+    const chipsNote = document.getElementById('btwMkChipsNote');
+    const topicBtns = [...document.querySelectorAll('#btwMkTopicMode .btw-mk-modebtn')];
     const slider = document.getElementById('btwMkSlider');
     const modeBtns = [...document.querySelectorAll('#btwMkMoodMode .btw-mk-modebtn')];
     let moodMode = 'self';  // 'self' = you set the slider, 'ai' = Between estimates
     let aiRated = false;    // has AI supplied a mood yet, in 'ai' mode
+    let topicMode = 'self'; // 'self' = you tap chips, 'ai' = Between picks the topic
     const LEAD = { en: ', mostly ', fr: ', surtout ' };
     const CONJ = { en: 'and', fr: 'et' };
     function humanJoin(arr, conj){
@@ -4400,6 +4412,11 @@
           ? (fr ? 'envoyez votre suivi pour une estimation' : 'send your check-in for an estimate') + clause
           : pick(READS, v) + clause;
       }
+      if(chipsNote){
+        chipsNote.textContent = (topicMode === 'ai')
+          ? (fr ? "Pas de souci — Between choisira le sujet d'après votre suivi." : 'No problem — Between will choose the topic from your check-in.')
+          : (fr ? 'Touchez ce qui correspond, ou laissez Between le repérer.' : "Tap what fits, or let Between pick up what's bothering you.");
+      }
     }
     chips.forEach(c => c.addEventListener('click', ()=>{ c.classList.toggle('on'); update(); }));
 
@@ -4411,6 +4428,20 @@
       modeBtns.forEach(x => x.classList.toggle('active', x === b));
       range.disabled = (moodMode === 'ai');
       if(slider) slider.classList.toggle('disabled', moodMode === 'ai');
+      update();
+    }));
+
+    // Topic source: "I'll pick" keeps the chips tappable; "Not sure yet" clears
+    // them and lets Between choose the category from the check-in on send.
+    topicBtns.forEach(b => b.addEventListener('click', ()=>{
+      topicMode = (b.dataset.tmode === 'ai') ? 'ai' : 'self';
+      topicBtns.forEach(x => x.classList.toggle('active', x === b));
+      if(topicMode === 'ai'){
+        chips.forEach(c => c.classList.remove('on'));
+        if(chipsWrap) chipsWrap.classList.add('aichoose');
+      } else if(chipsWrap){
+        chipsWrap.classList.remove('aichoose');
+      }
       update();
     }));
 
@@ -4497,6 +4528,55 @@
     range.addEventListener('input', update);
     window.__btwMoodRefresh = update; // re-localize on language switch
     update();
+  })();
+
+  // Interactive therapist view: tap a caseload row to see that client's read,
+  // trend and insights — the mirror of the interactive patient card. Bilingual.
+  (function(){
+    const rows = [...document.querySelectorAll('.btw-shot [data-pt]')];
+    if(!rows.length) return;
+    const sumLabel = document.getElementById('btwMkSummaryLabel');
+    const sumText = document.getElementById('btwMkSummary');
+    const moodDir = document.getElementById('btwMkMoodDir');
+    const tiedTo = document.getElementById('btwMkTiedTo');
+    const trend = document.getElementById('btwMkTrend');
+    const trendDot = document.getElementById('btwMkTrendDot');
+    const FR = () => (typeof curLang !== 'undefined' && curLang === 'fr');
+    const PT = {
+      amy: {
+        label:{en:'AI summary · Amy',fr:'Résumé IA · Amy'},
+        summary:{en:'Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.',fr:'Semaine difficile. Le stress au travail l’a tenue éveillée plusieurs nuits. Point positif : elle a renoué avec une vieille amie la fin de semaine. Aucun enjeu de sécurité.'},
+        dir:{en:'↑ improving',fr:'↑ en hausse'}, dirColor:'moss',
+        tied:{en:'Work',fr:'Travail'}, trend:'M8,42 L70,38 L132,32 L194,22 L246,14', dot:[246,14]
+      },
+      ben: {
+        label:{en:'AI summary · Ben',fr:'Résumé IA · Ben'},
+        summary:{en:'Steadier week overall. Sleep is still short, but he kept his routine and logged two good workouts.',fr:'Semaine plus stable dans l’ensemble. Le sommeil reste court, mais il a gardé sa routine et noté deux bons entraînements.'},
+        dir:{en:'→ steady',fr:'→ stable'}, dirColor:'soft',
+        tied:{en:'Sleep',fr:'Sommeil'}, trend:'M8,30 L70,31 L132,29 L194,30 L246,28', dot:[246,28]
+      },
+      cara: {
+        label:{en:'AI summary · Cara',fr:'Résumé IA · Cara'},
+        summary:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
+        dir:{en:'— no data',fr:'— aucune donnée'}, dirColor:'soft',
+        tied:{en:'—',fr:'—'}, trend:'M8,28 L70,30 L132,33 L194,36 L246,38', dot:[246,38]
+      }
+    };
+    let cur = 'amy';
+    function L(o){ return FR() ? o.fr : o.en; }
+    function render(){
+      const p = PT[cur]; if(!p) return;
+      rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
+      if(sumLabel) sumLabel.textContent = L(p.label);
+      if(sumText) sumText.textContent = L(p.summary);
+      if(moodDir){ moodDir.textContent = L(p.dir); moodDir.style.color = (p.dirColor === 'moss') ? 'var(--moss)' : 'var(--ink-soft)'; }
+      if(tiedTo) tiedTo.textContent = L(p.tied);
+      if(trend) trend.setAttribute('d', p.trend);
+      if(trendDot){ trendDot.setAttribute('cx', p.dot[0]); trendDot.setAttribute('cy', p.dot[1]); }
+    }
+    rows.forEach(r => r.addEventListener('click', ()=>{ cur = r.getAttribute('data-pt'); render(); }));
+    window.__btwTherapistRefresh = render; // re-localize on language switch
+    render();
   })();
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
