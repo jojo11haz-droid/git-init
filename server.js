@@ -232,6 +232,21 @@ const checkInLimiter = rateLimit({
   keyFn: req => (req.clinician && req.clinician.id) || req.ip,
   message: 'Too many check-ins at once — wait a minute and try again.'
 });
+// Public landing-page "try it" demo. Strict per-IP window plus a global daily
+// ceiling so it can't be abused as a cheap AI endpoint or run up cost.
+const demoLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, max: 6,
+  message: 'You have tried the demo a few times — start a free trial to keep going.'
+});
+const DEMO_DAILY_MAX = parseInt(process.env.DEMO_DAILY_MAX || '300', 10);
+let demoDay = '', demoCount = 0;
+function demoBudgetOk() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== demoDay) { demoDay = today; demoCount = 0; }
+  if (demoCount >= DEMO_DAILY_MAX) return false;
+  demoCount++;
+  return true;
+}
 
 app.post('/api/summarize', summarizeLimiter, async (req, res) => {
   try {
@@ -247,6 +262,42 @@ app.post('/api/summarize', summarizeLimiter, async (req, res) => {
   } catch (err) {
     console.error('Unexpected error in /api/summarize:', err);
     res.status(502).json({ error: err.message || 'Something went wrong.' });
+  }
+});
+
+// Landing-page "try it": interpret a short check-in with no account and no
+// storage. Guardrails: strict per-IP limit (demoLimiter), a global daily
+// ceiling (demoBudgetOk), a short length cap, and the same fixed check-in
+// prompt as the real product — so it can't be repurposed as a general
+// chatbot. Nothing typed here is logged or persisted.
+app.post('/api/demo/interpret', demoLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) {
+      return res.status(503).json({ error: 'The live demo is unavailable right now.' });
+    }
+    const { text } = req.body || {};
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'Type a sentence about your day to try it.' });
+    }
+    const trimmed = text.trim();
+    if (trimmed.length > 400) {
+      return res.status(400).json({ error: 'Keep it short for the demo — a sentence or two.' });
+    }
+    if (!demoBudgetOk()) {
+      return res.status(429).json({ error: 'The live demo is busy today. Start a free trial to use it for real.' });
+    }
+    const result = await summarizeCheckIn(trimmed);
+    if (result.risk_flag) {
+      return res.json({ risk: true, crisis: CRISIS_RESOURCES });
+    }
+    res.json({
+      summary: result.summary,
+      mood_estimate: result.mood_estimate,
+      auto_tags: result.auto_tags
+    });
+  } catch (err) {
+    console.error('Demo interpret error:', err.message); // never log the text itself
+    res.status(502).json({ error: 'Could not read that just now. Please try again.' });
   }
 });
 
