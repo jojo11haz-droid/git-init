@@ -4834,49 +4834,49 @@
     const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
     // Grey body silhouette (overlapping rounded parts merge into one shape).
     const BASE = [
-      {el:'ellipse', a:{cx:50,cy:16,rx:10.5,ry:12.5}},
-      {el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
-      {el:'rect', a:{x:32,y:31,width:36,height:26,rx:12}},
-      {el:'rect', a:{x:35,y:53,width:30,height:24,rx:9}},
-      {el:'rect', a:{x:34,y:72,width:32,height:18,rx:9}},
-      {el:'rect', a:{x:23,y:34,width:11,height:36,rx:5.5}},
-      {el:'rect', a:{x:66,y:34,width:11,height:36,rx:5.5}},
-      {el:'rect', a:{x:21,y:64,width:10,height:30,rx:5}},
-      {el:'rect', a:{x:69,y:64,width:10,height:30,rx:5}},
-      {el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
-      {el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
-      {el:'rect', a:{x:35,y:85,width:14,height:40,rx:7}},
-      {el:'rect', a:{x:51,y:85,width:14,height:40,rx:7}},
-      {el:'rect', a:{x:37,y:122,width:11,height:40,rx:5.5}},
-      {el:'rect', a:{x:52,y:122,width:11,height:40,rx:5.5}},
-      {el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
-      {el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+      {el:'ellipse', a:{cx:50,cy:15,rx:10.5,ry:12}},
+      {el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+      {el:'rect', a:{x:28,y:30,width:44,height:24,rx:13}},
+      {el:'rect', a:{x:35,y:50,width:30,height:24,rx:9}},
+      {el:'rect', a:{x:34,y:70,width:32,height:18,rx:9}},
+      {el:'rect', a:{x:21,y:33,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:68,y:33,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:19,y:64,width:10,height:32,rx:5}},
+      {el:'rect', a:{x:71,y:64,width:10,height:32,rx:5}},
+      {el:'ellipse', a:{cx:24,cy:100,rx:5.5,ry:6.5}},
+      {el:'ellipse', a:{cx:76,cy:100,rx:5.5,ry:6.5}},
+      {el:'rect', a:{x:35,y:86,width:14,height:48,rx:7}},
+      {el:'rect', a:{x:51,y:86,width:14,height:48,rx:7}},
+      {el:'rect', a:{x:37,y:136,width:11,height:48,rx:5.5}},
+      {el:'rect', a:{x:52,y:136,width:11,height:48,rx:5.5}},
+      {el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+      {el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
     ];
     // Muscle-group regions overlaid on the silhouette, one set per view.
     const ARMS = [
-      {id:'l_arm', el:'rect', a:{x:23,y:40,width:11,height:26,rx:5.5}},
-      {id:'r_arm', el:'rect', a:{x:66,y:40,width:11,height:26,rx:5.5}},
-      {id:'l_fore', el:'rect', a:{x:21,y:65,width:10,height:29,rx:5}},
-      {id:'r_fore', el:'rect', a:{x:69,y:65,width:10,height:29,rx:5}},
-      {id:'l_hand', el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
-      {id:'r_hand', el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
-      {id:'l_shoulder', el:'ellipse', a:{cx:31,cy:37,rx:6.5,ry:6}},
-      {id:'r_shoulder', el:'ellipse', a:{cx:69,cy:37,rx:6.5,ry:6}},
-      {id:'l_knee', el:'ellipse', a:{cx:42.5,cy:123,rx:6.5,ry:5.5}},
-      {id:'r_knee', el:'ellipse', a:{cx:57.5,cy:123,rx:6.5,ry:5.5}}
+      {id:'l_arm', el:'rect', a:{x:21,y:39,width:11,height:28,rx:5.5}},
+      {id:'r_arm', el:'rect', a:{x:68,y:39,width:11,height:28,rx:5.5}},
+      {id:'l_fore', el:'rect', a:{x:19,y:65,width:10,height:31,rx:5}},
+      {id:'r_fore', el:'rect', a:{x:71,y:65,width:10,height:31,rx:5}},
+      {id:'l_hand', el:'ellipse', a:{cx:24,cy:100,rx:5.5,ry:6.5}},
+      {id:'r_hand', el:'ellipse', a:{cx:76,cy:100,rx:5.5,ry:6.5}},
+      {id:'l_shoulder', el:'ellipse', a:{cx:30,cy:35,rx:7.5,ry:6.5}},
+      {id:'r_shoulder', el:'ellipse', a:{cx:70,cy:35,rx:7.5,ry:6.5}},
+      {id:'l_knee', el:'ellipse', a:{cx:42.5,cy:133,rx:6.5,ry:5.5}},
+      {id:'r_knee', el:'ellipse', a:{cx:57.5,cy:133,rx:6.5,ry:5.5}}
     ];
     const REGIONS = {
       front: ARMS.concat([
-        {id:'neck', en:'neck', fr:'cou', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
-        {id:'chest', en:'chest', fr:'poitrine', el:'rect', a:{x:34,y:33,width:32,height:20,rx:9}},
-        {id:'abs', en:'abs and core', fr:'abdominaux et tronc', el:'rect', a:{x:39,y:53,width:22,height:22,rx:6}},
-        {id:'hips', en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:35,y:73,width:30,height:15,rx:7}},
-        {id:'l_thigh', en:'left thigh (quad)', fr:'cuisse gauche (quadriceps)', el:'rect', a:{x:36,y:88,width:13,height:35,rx:6}},
-        {id:'r_thigh', en:'right thigh (quad)', fr:'cuisse droite (quadriceps)', el:'rect', a:{x:51,y:88,width:13,height:35,rx:6}},
-        {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:126,width:10,height:34,rx:5}},
-        {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:126,width:10,height:34,rx:5}},
-        {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
-        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+        {id:'neck', en:'neck', fr:'cou', el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+        {id:'chest', en:'chest', fr:'poitrine', el:'rect', a:{x:30,y:32,width:40,height:20,rx:10}},
+        {id:'abs', en:'abs and core', fr:'abdominaux et tronc', el:'rect', a:{x:39,y:50,width:22,height:22,rx:6}},
+        {id:'hips', en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:35,y:71,width:30,height:15,rx:7}},
+        {id:'l_thigh', en:'left thigh (quad)', fr:'cuisse gauche (quadriceps)', el:'rect', a:{x:36,y:89,width:13,height:44,rx:6}},
+        {id:'r_thigh', en:'right thigh (quad)', fr:'cuisse droite (quadriceps)', el:'rect', a:{x:51,y:89,width:13,height:44,rx:6}},
+        {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
+        {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
+        {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
       ], [
         {id:'l_arm', en:'left arm (biceps)', fr:'bras gauche (biceps)'},
         {id:'r_arm', en:'right arm (biceps)', fr:'bras droit (biceps)'},
@@ -4890,16 +4890,16 @@
         {id:'r_knee', en:'right knee', fr:'genou droit'}
       ].reduce(function(m,x){ m[x.id]=x; return m; }, {})),
       back: ARMS.concat([
-        {id:'neck', en:'neck and nape', fr:'cou et nuque', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
-        {id:'upper_back', en:'upper back', fr:'haut du dos', el:'rect', a:{x:34,y:33,width:32,height:22,rx:9}},
-        {id:'lower_back', en:'lower back', fr:'bas du dos', el:'rect', a:{x:37,y:55,width:26,height:20,rx:6}},
-        {id:'glutes', en:'glutes', fr:'fessiers', el:'rect', a:{x:35,y:73,width:30,height:16,rx:7}},
-        {id:'l_thigh', en:'left hamstring', fr:'ischio-jambier gauche', el:'rect', a:{x:36,y:88,width:13,height:35,rx:6}},
-        {id:'r_thigh', en:'right hamstring', fr:'ischio-jambier droit', el:'rect', a:{x:51,y:88,width:13,height:35,rx:6}},
-        {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:126,width:10,height:34,rx:5}},
-        {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:126,width:10,height:34,rx:5}},
-        {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
-        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
+        {id:'neck', en:'neck and nape', fr:'cou et nuque', el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+        {id:'upper_back', en:'upper back', fr:'haut du dos', el:'rect', a:{x:30,y:32,width:40,height:22,rx:10}},
+        {id:'lower_back', en:'lower back', fr:'bas du dos', el:'rect', a:{x:37,y:52,width:26,height:20,rx:6}},
+        {id:'glutes', en:'glutes', fr:'fessiers', el:'rect', a:{x:35,y:71,width:30,height:16,rx:7}},
+        {id:'l_thigh', en:'left hamstring', fr:'ischio-jambier gauche', el:'rect', a:{x:36,y:89,width:13,height:44,rx:6}},
+        {id:'r_thigh', en:'right hamstring', fr:'ischio-jambier droit', el:'rect', a:{x:51,y:89,width:13,height:44,rx:6}},
+        {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
+        {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
+        {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
       ], [
         {id:'l_arm', en:'left arm (triceps)', fr:'bras gauche (triceps)'},
         {id:'r_arm', en:'right arm (triceps)', fr:'bras droit (triceps)'},
@@ -4926,7 +4926,7 @@
     function svg(v){
       const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('');
-      return '<svg viewBox="0 0 100 176" class="btw-bodysvg" role="img" aria-label="Body pain map">' + base + regs + '</svg>';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map">' + base + regs + '</svg>';
     }
     function paint(){
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
