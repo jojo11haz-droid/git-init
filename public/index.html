@@ -847,6 +847,10 @@
   .btw-demo-dot.active{background:var(--moss);}
   /* Static interface previews ("see both sides") */
   .btw-shots{margin:44px 0 8px;text-align:center;}
+  .btw-try-badge{display:inline-flex;align-items:center;gap:8px;background:var(--moss-light);color:var(--moss);border:1px solid var(--ice,#CADCFC);border-radius:100px;padding:6px 15px;font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:500;margin-bottom:14px;}
+  .btw-try-dot{width:7px;height:7px;border-radius:50%;background:var(--red,#C0392B);animation:btwTryPulse 1.6s ease-in-out infinite;}
+  @keyframes btwTryPulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.5);}50%{box-shadow:0 0 0 6px rgba(192,57,43,0);}}
+  .btw-try-sub{max-width:600px;margin:2px auto 4px;color:var(--moss);font-size:13.5px;font-weight:600;line-height:1.5;}
   .btw-shots-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:960px;margin:22px auto 0;}
   @media (max-width:820px){.btw-shots-grid{grid-template-columns:1fr;}}
   .btw-shot{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 12px 32px rgba(30,76,134,0.12);}
@@ -1842,8 +1846,10 @@
       </section>
 
       <section class="btw-shots">
+        <span class="btw-try-badge"><span class="btw-try-dot"></span>Try it live</span>
         <div class="btw-section-label">See both sides</div>
         <p class="btw-demo-lead">One tool, two views. Your clients check in in seconds, and you get the full picture before they arrive.</p>
+        <p class="btw-try-sub">Both cards below are live. Move the slider, record a voice memo, or tap a client.</p>
         <div class="btw-shots-grid">
           <div>
             <div class="btw-shot">
@@ -2999,6 +3005,8 @@
     "Tap to record":"Touchez pour enregistrer",
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
+    "Try it live":"Essayez-le",
+    "Both cards below are live. Move the slider, record a voice memo, or tap a client.":"Les deux cartes ci-dessous sont interactives. Bougez le curseur, enregistrez une note vocale ou touchez un client.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
