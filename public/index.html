@@ -912,6 +912,12 @@
   .btw-mk-tbody{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
   .btw-mk-tbody .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:8px;}
   .btw-mk-bodysum{font-size:12.5px;color:var(--ink);line-height:1.5;}
+  .btw-compose-pain{margin:16px 0;}
+  .btw-pm.ro{margin-top:6px;}
+  .btw-pm.ro .btw-bodysvg{width:66px;}
+  .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
+  .btw-ci-pain{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
+  .btw-ci-pain .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
   .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
   .btw-mk-chips{margin-bottom:15px;}
   .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:100px;padding:4px 13px;font-size:12px;color:var(--ink-soft);margin:0 6px 6px 0;cursor:pointer;user-select:none;transition:transform .12s ease, background .12s ease, color .12s ease;}
@@ -2127,6 +2133,10 @@
         <input class="btw-tag-input" id="btwTagInput" type="text" maxlength="24" autocomplete="off" placeholder="Type it and press enter" style="display:none;">
       </div>
 
+      <div id="btwComposePain" class="btw-compose-pain" style="display:none;">
+        <div class="btw-field-label">Where does it hurt or feel sore?</div>
+      </div>
+
       <div class="btw-field-label">Tell it like it happened</div>
       <textarea class="btw-textarea" id="btwText" placeholder="Type, or tap the mic to record and transcribe..."></textarea>
       <div class="btw-input-row">
@@ -3047,7 +3057,7 @@
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
-    "Front":"Avant","Back":"Arrière",
+    "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
     "Pain map · from their check-in":"Carte de douleur · d'après leur suivi",
@@ -4538,7 +4548,8 @@
       tags: [...new Set([...(row.manual_tags||[]), ...(row.auto_tags||[])])],
       summary: row.summary_text || row.raw_text || (row.audio_upload_id ? 'Voice memo (no transcript yet).' : 'Check-in received (no notes).'),
       risk: !!row.risk_flag,
-      hasAudio: !!row.audio_upload_id
+      hasAudio: !!row.audio_upload_id,
+      painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null
     };
   }
 
@@ -4969,6 +4980,149 @@
     window.__btwBodyRefresh = refresh;
     render(); refresh();
   })();
+  // Reusable body pain map for the real app: interactive picker (check-in
+  // composer) or read-only display (dashboard). Self-contained; front/back
+  // views, muscle regions, severity 1..3. State is { "view:region": level }.
+  function btwCreateBodyMap(opts){
+    opts = opts || {};
+    const readOnly = !!opts.readOnly;
+    const FILL = ['transparent','#E9B949','#E07B39','#C0392B'];
+    const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
+    const BASE = [
+      {el:'ellipse', a:{cx:50,cy:15,rx:10.5,ry:12}},
+      {el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+      {el:'rect', a:{x:28,y:30,width:44,height:24,rx:13}},
+      {el:'rect', a:{x:35,y:50,width:30,height:24,rx:9}},
+      {el:'rect', a:{x:34,y:70,width:32,height:18,rx:9}},
+      {el:'rect', a:{x:21,y:33,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:68,y:33,width:11,height:36,rx:5.5}},
+      {el:'rect', a:{x:19,y:64,width:10,height:32,rx:5}},
+      {el:'rect', a:{x:71,y:64,width:10,height:32,rx:5}},
+      {el:'ellipse', a:{cx:24,cy:100,rx:5.5,ry:6.5}},
+      {el:'ellipse', a:{cx:76,cy:100,rx:5.5,ry:6.5}},
+      {el:'rect', a:{x:35,y:86,width:14,height:48,rx:7}},
+      {el:'rect', a:{x:51,y:86,width:14,height:48,rx:7}},
+      {el:'rect', a:{x:37,y:136,width:11,height:48,rx:5.5}},
+      {el:'rect', a:{x:52,y:136,width:11,height:48,rx:5.5}},
+      {el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+      {el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+    ];
+    const ARMS = [
+      {id:'l_arm', el:'rect', a:{x:21,y:39,width:11,height:28,rx:5.5}},
+      {id:'r_arm', el:'rect', a:{x:68,y:39,width:11,height:28,rx:5.5}},
+      {id:'l_fore', el:'rect', a:{x:19,y:65,width:10,height:31,rx:5}},
+      {id:'r_fore', el:'rect', a:{x:71,y:65,width:10,height:31,rx:5}},
+      {id:'l_hand', el:'ellipse', a:{cx:24,cy:100,rx:5.5,ry:6.5}},
+      {id:'r_hand', el:'ellipse', a:{cx:76,cy:100,rx:5.5,ry:6.5}},
+      {id:'l_shoulder', el:'ellipse', a:{cx:30,cy:35,rx:7.5,ry:6.5}},
+      {id:'r_shoulder', el:'ellipse', a:{cx:70,cy:35,rx:7.5,ry:6.5}},
+      {id:'l_knee', el:'ellipse', a:{cx:42.5,cy:133,rx:6.5,ry:5.5}},
+      {id:'r_knee', el:'ellipse', a:{cx:57.5,cy:133,rx:6.5,ry:5.5}}
+    ];
+    const REGIONS = {
+      front: ARMS.concat([
+        {id:'neck', en:'neck', fr:'cou', el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+        {id:'chest', en:'chest', fr:'poitrine', el:'rect', a:{x:30,y:32,width:40,height:20,rx:10}},
+        {id:'abs', en:'abs and core', fr:'abdominaux et tronc', el:'rect', a:{x:39,y:50,width:22,height:22,rx:6}},
+        {id:'hips', en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:35,y:71,width:30,height:15,rx:7}},
+        {id:'l_thigh', en:'left thigh (quad)', fr:'cuisse gauche (quadriceps)', el:'rect', a:{x:36,y:89,width:13,height:44,rx:6}},
+        {id:'r_thigh', en:'right thigh (quad)', fr:'cuisse droite (quadriceps)', el:'rect', a:{x:51,y:89,width:13,height:44,rx:6}},
+        {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
+        {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
+        {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+      ], [
+        {id:'l_arm', en:'left arm (biceps)', fr:'bras gauche (biceps)'},
+        {id:'r_arm', en:'right arm (biceps)', fr:'bras droit (biceps)'},
+        {id:'l_fore', en:'left forearm', fr:'avant-bras gauche'},
+        {id:'r_fore', en:'right forearm', fr:'avant-bras droit'},
+        {id:'l_hand', en:'left hand', fr:'main gauche'},
+        {id:'r_hand', en:'right hand', fr:'main droite'},
+        {id:'l_shoulder', en:'left shoulder', fr:'épaule gauche'},
+        {id:'r_shoulder', en:'right shoulder', fr:'épaule droite'},
+        {id:'l_knee', en:'left knee', fr:'genou gauche'},
+        {id:'r_knee', en:'right knee', fr:'genou droit'}
+      ].reduce(function(m,x){ m[x.id]=x; return m; }, {})),
+      back: ARMS.concat([
+        {id:'neck', en:'neck and nape', fr:'cou et nuque', el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
+        {id:'upper_back', en:'upper back', fr:'haut du dos', el:'rect', a:{x:30,y:32,width:40,height:22,rx:10}},
+        {id:'lower_back', en:'lower back', fr:'bas du dos', el:'rect', a:{x:37,y:52,width:26,height:20,rx:6}},
+        {id:'glutes', en:'glutes', fr:'fessiers', el:'rect', a:{x:35,y:71,width:30,height:16,rx:7}},
+        {id:'l_thigh', en:'left hamstring', fr:'ischio-jambier gauche', el:'rect', a:{x:36,y:89,width:13,height:44,rx:6}},
+        {id:'r_thigh', en:'right hamstring', fr:'ischio-jambier droit', el:'rect', a:{x:51,y:89,width:13,height:44,rx:6}},
+        {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
+        {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
+        {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
+        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+      ], [
+        {id:'l_arm', en:'left arm (triceps)', fr:'bras gauche (triceps)'},
+        {id:'r_arm', en:'right arm (triceps)', fr:'bras droit (triceps)'},
+        {id:'l_fore', en:'left forearm', fr:'avant-bras gauche'},
+        {id:'r_fore', en:'right forearm', fr:'avant-bras droit'},
+        {id:'l_hand', en:'left hand', fr:'main gauche'},
+        {id:'r_hand', en:'right hand', fr:'main droite'},
+        {id:'l_shoulder', en:'left shoulder', fr:'épaule gauche'},
+        {id:'r_shoulder', en:'right shoulder', fr:'épaule droite'},
+        {id:'l_knee', en:'back of left knee', fr:'arrière du genou gauche'},
+        {id:'r_knee', en:'back of right knee', fr:'arrière du genou droit'}
+      ].reduce(function(m,x){ m[x.id]=x; return m; }, {}))
+    };
+    function zonesFor(v){
+      const meta = REGIONS[v][REGIONS[v].length - 1];
+      return REGIONS[v].slice(0, -1).map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
+    }
+    function frL(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
+    function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
+    btwCreateBodyMap._n = (btwCreateBodyMap._n || 0) + 1;
+    const uid = 'bpm' + btwCreateBodyMap._n;
+    let view = 'front';
+    let state = {};
+    const root = document.createElement('div');
+    root.className = 'btw-pm' + (readOnly ? ' ro' : '');
+    const views = document.createElement('div');
+    views.className = 'btw-mk-moodmode'; views.style.margin = '0 0 8px';
+    views.innerHTML = '<button type="button" class="btw-mk-modebtn active" data-view="front">' + esc(frL()?'Avant':'Front') + '</button><button type="button" class="btw-mk-modebtn" data-view="back">' + esc(frL()?'Arrière':'Back') + '</button>';
+    const rowEl = document.createElement('div'); rowEl.className = 'btw-mk-bodyrow';
+    const figWrap = document.createElement('div'); figWrap.className = 'btw-mk-bodyfig' + (readOnly ? ' btw-mk-bodyfigt' : '');
+    const side = document.createElement('div');
+    rowEl.appendChild(figWrap); rowEl.appendChild(side);
+    root.appendChild(views); root.appendChild(rowEl);
+    if(readOnly){
+      side.className = 'btw-mk-bodysum';
+    } else {
+      side.className = 'btw-mk-bodyleg';
+      side.innerHTML = '<div><span class="sw" data-lv="1"></span>' + esc(frL()?'Un peu':'A bit') + '</div><div><span class="sw" data-lv="2"></span>' + esc(frL()?'Modéré':'Moderate') + '</div><div><span class="sw" data-lv="3"></span>' + esc(frL()?'Beaucoup':'A lot') + '</div>';
+      const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'btw-mk-bodyclear'; clr.textContent = frL()?'Effacer':'Clear';
+      clr.addEventListener('click', function(){ state = {}; render(); }); side.appendChild(clr);
+    }
+    function svg(v){
+      const cid = 'bpc_' + uid;
+      const clipShapes = BASE.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(frL()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></svg>';
+    }
+    function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ el.style.fill = FILL[state[view + ':' + el.getAttribute('data-zone')] || 0]; }); }
+    function summary(){
+      const hurts = [];
+      ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      hurts.sort(function(a,b){ return b.lv - a.lv; });
+      if(!hurts.length) return frL() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.';
+      return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + LV[frL()?'fr':'en'][h.lv] + ')'; }).join(', ') + '.';
+    }
+    function render(){ figWrap.innerHTML = svg(view); paint(); if(readOnly) side.textContent = summary(); }
+    if(!readOnly){
+      figWrap.addEventListener('click', function(e){ const z = e.target.closest('.btw-bz'); if(!z) return; const key = view + ':' + z.getAttribute('data-zone'); state[key] = ((state[key] || 0) + 1) % 4; paint(); });
+    }
+    views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = (b.dataset.view === 'back') ? 'back' : 'front'; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
+    render();
+    return {
+      el: root,
+      getMap: function(){ return Object.keys(state).length ? Object.assign({}, state) : null; },
+      setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; render(); },
+      clear: function(){ state = {}; render(); }
+    };
+  }
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
 
@@ -5132,6 +5286,7 @@
     const asTherapist = !!state.me;
     const asPatient = !!state.patient;
     const signedIn = asTherapist || asPatient;
+    if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
     authUserEl.innerHTML = signedIn ? `${esc(t('Signed in as'))} <strong>${esc(name)}</strong>` : '';
@@ -6859,6 +7014,7 @@
       const audioHtml = (c.hasAudio && !isPatient() && state.selectedPatientId)
         ? `<audio controls preload="none" style="width:100%;height:32px;margin:6px 0 2px;" src="/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/audio"></audio>`
         : (c.hasAudio ? `<div style="font-size:11.5px;color:var(--moss);margin:4px 0;">${esc(t('Voice memo'))}</div>` : '');
+      const painHtml = c.painMap ? `<div class="btw-ci-pain" data-pain="${esc(c.id)}"><div class="l">${esc(t('Pain map'))}</div></div>` : '';
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
@@ -6866,9 +7022,15 @@
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
+          ${painHtml}
         </div>
       </div>`;
     }).join('') : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>';
+    // Attach a read-only body map to each entry that has one.
+    el.querySelectorAll('.btw-ci-pain[data-pain]').forEach(function(host){
+      const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
+      if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true }); bm.setMap(ci.painMap); host.appendChild(bm.el); }
+    });
   }
 
   function renderMoodChart(){
@@ -7209,13 +7371,25 @@
   const processingEl = document.getElementById('btwProcessing');
   const crisisEl = document.getElementById('btwCrisis');
 
+  // Body pain map in the composer, shown only for coach/trainer contexts
+  // (sports, fitness, physio) on both the clinician and patient sides.
+  let composeBodyMap = null;
+  (function(){ const host = document.getElementById('btwComposePain'); if(host){ composeBodyMap = btwCreateBodyMap({}); host.appendChild(composeBodyMap.el); } })();
+  function painMapContext(){
+    const at = isPatient() ? (state.patient && state.patient.clinician_account_type) : (state.me && state.me.account_type);
+    return at === 'coach' || at === 'trainer';
+  }
+  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; }
+  window.__btwUpdateComposePain = updateComposePain;
+
   sendBtn.addEventListener('click', async ()=>{
     const p = selectedPatient();
     if(!isPatient() && !p) return;
     const text = textEl.value.trim();
     const mood = moodSkipped ? null : parseInt(moodEl.value,10);
     const manualTags = [...state.selectedTags];
-    if(!text && manualTags.length===0){
+    const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
+    if(!text && manualTags.length===0 && !painMap){
       textEl.placeholder = t('Say a bit about what happened before sending…');
       textEl.focus();
       return;
@@ -7228,12 +7402,12 @@
       let risk = false;
       if(isPatient()){
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags
+          text: text || null, moodScore: mood, manualTags, painMap
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
-          text: text || null, moodScore: mood, manualTags
+          text: text || null, moodScore: mood, manualTags, painMap
         });
         risk = !!checkIn.risk_flag;
       }
@@ -7247,6 +7421,7 @@
       document.querySelectorAll('.btw-tag-custom').forEach(el=>el.remove());
       showTagInput(false);
       moodEl.value = 5; setMoodSkipped(false);
+      if(composeBodyMap) composeBodyMap.clear();
 
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();

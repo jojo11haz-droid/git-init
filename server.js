@@ -1126,7 +1126,8 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         summary_text: c.summary_text || null,
         raw_text: c.raw_text || null,
         risk_flag: c.risk_flag || false,
-        has_voice_memo: !!c.audio_upload_id
+        has_voice_memo: !!c.audio_upload_id,
+        pain_map: c.pain_map || null
       }))
     };
     const safeName = String(patient.display_name || 'patient')
@@ -1215,7 +1216,26 @@ async function raiseRiskAlert(patient, checkIn) {
   }
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId }) {
+// Validate a body pain map from a check-in: an object of "view:region" -> 1..3.
+// Keeps only sane keys/values and caps the size so it can't be abused as blob
+// storage. Returns null when there's nothing usable.
+function sanitizePainMap(pm) {
+  if (!pm || typeof pm !== 'object' || Array.isArray(pm)) return null;
+  const out = {};
+  let n = 0;
+  for (const k of Object.keys(pm)) {
+    if (n >= 60) break;
+    if (typeof k !== 'string' || k.length > 40 || !/^[a-z]+:[a-z_]+$/.test(k)) continue;
+    const v = pm[k];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      const r = Math.round(v);
+      if (r >= 1 && r <= 3) { out[k] = r; n++; }
+    }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, painMap }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -1249,7 +1269,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
   const checkIn = await createCheckIn({
     patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
-    summaryText, autoTags, riskFlag, modelVersion, audioUploadId
+    summaryText, autoTags, riskFlag, modelVersion, audioUploadId, painMap: sanitizePainMap(painMap)
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
   return checkIn;
@@ -1257,12 +1277,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text } = req.body || {};
+    const { moodScore, manualTags, text, painMap } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -1387,7 +1407,8 @@ function publicPatient(p) {
     consent_recorded_at: p.consent_recorded_at,
     consent_version: p.consent_version,
     plan: p.plan,
-    subscription_status: p.subscription_status
+    subscription_status: p.subscription_status,
+    clinician_account_type: p.clinician_account_type || null
   };
 }
 
@@ -1789,7 +1810,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, painMap } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -1811,7 +1832,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, painMap });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
