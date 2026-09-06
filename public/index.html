@@ -4547,23 +4547,41 @@
         label:{en:'AI summary · Amy',fr:'Résumé IA · Amy'},
         summary:{en:'Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.',fr:'Semaine difficile. Le stress au travail l’a tenue éveillée plusieurs nuits. Point positif : elle a renoué avec une vieille amie la fin de semaine. Aucun enjeu de sécurité.'},
         dir:{en:'↑ improving',fr:'↑ en hausse'}, dirColor:'moss',
-        tied:{en:'Work',fr:'Travail'}, trend:'M8,42 L70,38 L132,32 L194,22 L246,14', dot:[246,14]
+        tied:{en:'Work',fr:'Travail'}, ys:[42,38,32,22,14]
       },
       ben: {
         label:{en:'AI summary · Ben',fr:'Résumé IA · Ben'},
         summary:{en:'Steadier week overall. Sleep is still short, but he kept his routine and logged two good workouts.',fr:'Semaine plus stable dans l’ensemble. Le sommeil reste court, mais il a gardé sa routine et noté deux bons entraînements.'},
         dir:{en:'→ steady',fr:'→ stable'}, dirColor:'soft',
-        tied:{en:'Sleep',fr:'Sommeil'}, trend:'M8,30 L70,31 L132,29 L194,30 L246,28', dot:[246,28]
+        tied:{en:'Sleep',fr:'Sommeil'}, ys:[30,31,29,30,28]
       },
       cara: {
         label:{en:'AI summary · Cara',fr:'Résumé IA · Cara'},
         summary:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
         dir:{en:'— no data',fr:'— aucune donnée'}, dirColor:'soft',
-        tied:{en:'—',fr:'—'}, trend:'M8,28 L70,30 L132,33 L194,36 L246,38', dot:[246,38]
+        tied:{en:'—',fr:'—'}, ys:[28,30,33,36,38]
       }
     };
     let cur = 'amy';
     function L(o){ return FR() ? o.fr : o.en; }
+    // Trend line morphs between clients: same x's, so tween the y's over ~0.4s
+    // with rAF (reliable everywhere, unlike CSS `d` animation on iOS).
+    const XS = [8, 70, 132, 194, 246];
+    let curYs = PT.amy.ys.slice();
+    let trendRAF = null;
+    function pathFrom(ys){ return 'M' + XS[0] + ',' + ys[0] + XS.slice(1).map((x, i) => ' L' + x + ',' + ys[i + 1]).join(''); }
+    function drawTrend(ys){ if(trend) trend.setAttribute('d', pathFrom(ys)); if(trendDot) trendDot.setAttribute('cy', ys[ys.length - 1]); }
+    function animateTrend(target){
+      if(trendRAF) cancelAnimationFrame(trendRAF);
+      const start = curYs.slice(), t0 = performance.now(), dur = 420;
+      (function step(now){
+        const k = Math.min(1, (now - t0) / dur);
+        const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // easeInOutQuad
+        curYs = start.map((s, i) => s + (target[i] - s) * e);
+        drawTrend(curYs);
+        if(k < 1){ trendRAF = requestAnimationFrame(step); } else { curYs = target.slice(); drawTrend(curYs); trendRAF = null; }
+      })(t0);
+    }
     function render(){
       const p = PT[cur]; if(!p) return;
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
@@ -4571,8 +4589,7 @@
       if(sumText) sumText.textContent = L(p.summary);
       if(moodDir){ moodDir.textContent = L(p.dir); moodDir.style.color = (p.dirColor === 'moss') ? 'var(--moss)' : 'var(--ink-soft)'; }
       if(tiedTo) tiedTo.textContent = L(p.tied);
-      if(trend) trend.setAttribute('d', p.trend);
-      if(trendDot){ trendDot.setAttribute('cx', p.dot[0]); trendDot.setAttribute('cy', p.dot[1]); }
+      animateTrend(p.ys);
     }
     rows.forEach(r => r.addEventListener('click', ()=>{ cur = r.getAttribute('data-pt'); render(); }));
     window.__btwTherapistRefresh = render; // re-localize on language switch
