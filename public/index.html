@@ -1860,7 +1860,7 @@
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
                   <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
-                  <span class="btw-mk-dur">0:14</span>
+                  <span class="btw-mk-dur" id="btwMkDur">Tap to record</span>
                 </div>
                 <textarea id="btwMkInput" class="btw-mk-transcript btw-mk-input" rows="2" maxlength="400" aria-label="Your check-in">Rough week, work stress kept me up again.</textarea>
                 <div class="btw-mk-tryhint">Edit this, then send to see Between read it.</div>
@@ -2988,6 +2988,7 @@
     "Move the slider. Between reads how you're feeling from what you share.":"Bougez le curseur. Between perçoit comment vous allez d'après ce que vous partagez.",
     "Edit this, then send to see Between read it.":"Modifiez ceci, puis envoyez pour voir Between l'interpréter.",
     "I'll set it":"Je l'indique","Let Between estimate":"Laisser Between estimer",
+    "Tap to record":"Touchez pour enregistrer",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
@@ -4460,8 +4461,12 @@
     // into the check-in field. No audio is sent to our server; the interpret step
     // still goes through the guarded endpoint. Falls back to a message if unsupported.
     const mic = document.getElementById('btwMkMic');
+    const durEl = document.getElementById('btwMkDur');
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recog = null, listening = false;
+    let recog = null, listening = false, voiceTimer = null;
+    function fmtDur(s){ return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+    function idleDur(){ if(durEl) durEl.textContent = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'Touchez pour enregistrer' : 'Tap to record'; }
+    function stopTimer(){ if(voiceTimer){ clearInterval(voiceTimer); voiceTimer = null; } }
     function toggleVoice(){
       const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
       if(!SR){ dShowStatus(fr ? "La voix n'est pas prise en charge ici. Écrivez plutôt." : "Voice isn't supported on this browser — type instead."); return; }
@@ -4471,12 +4476,18 @@
       recog.interimResults = true;
       recog.continuous = false;
       const base = (dInput && dInput.value || '').trim();
-      recog.onstart = function(){ listening = true; if(mic) mic.classList.add('rec'); dShowStatus(fr ? 'À l’écoute… touchez le micro pour arrêter.' : 'Listening… tap the mic to stop.'); };
+      recog.onstart = function(){
+        listening = true; if(mic) mic.classList.add('rec');
+        dShowStatus(fr ? 'À l’écoute… touchez le micro pour arrêter.' : 'Listening… tap the mic to stop.');
+        let secs = 0; if(durEl) durEl.textContent = fmtDur(0);
+        stopTimer(); voiceTimer = setInterval(function(){ secs++; if(durEl) durEl.textContent = fmtDur(secs); }, 1000);
+      };
       recog.onresult = function(e){ let txt = ''; for(let i=0;i<e.results.length;i++){ txt += e.results[i][0].transcript; } if(dInput) dInput.value = (base ? base + ' ' : '') + txt; };
-      recog.onerror = function(){ dShowStatus(fr ? 'Micro indisponible. Autorisez le micro ou écrivez.' : 'Mic unavailable. Allow the mic or type instead.'); };
-      recog.onend = function(){ listening = false; if(mic) mic.classList.remove('rec'); if(dStatus && /list|écout/i.test(dStatus.textContent || '')) dShowStatus(''); };
+      recog.onerror = function(){ stopTimer(); dShowStatus(fr ? 'Micro indisponible. Autorisez le micro ou écrivez.' : 'Mic unavailable. Allow the mic or type instead.'); };
+      recog.onend = function(){ listening = false; if(mic) mic.classList.remove('rec'); stopTimer(); idleDur(); if(dStatus && /list|écout/i.test(dStatus.textContent || '')) dShowStatus(''); };
       try{ recog.start(); }catch(e){}
     }
+    idleDur();
     if(mic){
       mic.addEventListener('click', toggleVoice);
       mic.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleVoice(); } });
