@@ -4692,6 +4692,8 @@
       const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
       if(!text){ dShowStatus(fr ? 'Écrivez une phrase sur votre journée.' : 'Type a sentence about your day.'); return; }
       dShowStatus('');
+      // React to body parts immediately, before (and regardless of) the AI call.
+      if(window.__btwDemoBodyFromText) window.__btwDemoBodyFromText(text);
       const orig = dSend.textContent;
       dSend.disabled = true; dSend.textContent = fr ? 'Lecture…' : 'Reading…';
       try{
@@ -4715,6 +4717,18 @@
           chips.forEach(function(c){ const k = c.getAttribute('data-topic'); if(k) c.classList.toggle('on', data.auto_tags.indexOf(k) !== -1); });
         }
         update();
+        // Reflect the check-in in the therapist insight tiles.
+        const mv = (typeof data.mood_estimate === 'number') ? data.mood_estimate : (range ? parseInt(range.value, 10) : 5);
+        const md = document.getElementById('btwMkMoodDir');
+        if(md){
+          let mt, mc;
+          if(mv <= 3){ mt = fr ? '↓ à surveiller' : '↓ needs a look'; mc = 'var(--clay,#C0392B)'; }
+          else if(mv <= 6){ mt = fr ? '→ stable' : '→ steady'; mc = 'var(--ink-soft)'; }
+          else { mt = fr ? '↑ en hausse' : '↑ improving'; mc = 'var(--moss)'; }
+          md.textContent = mt; md.style.color = mc;
+        }
+        const tt = document.getElementById('btwMkTiedTo');
+        if(tt && Array.isArray(data.auto_tags) && data.auto_tags[0]){ tt.textContent = t(data.auto_tags[0]); }
       }catch(e){
         dShowStatus(fr ? 'Problème de connexion. Réessayez.' : 'Connection problem. Try again.');
       }finally{
@@ -4977,6 +4991,59 @@
       if(wrapT) wrapT.hidden = !on;
       render(); updateSummary();
     }
+    // Highlight body regions from a typed check-in ("sore knee", "lower back",
+    // "tight hamstring") so the demo body map reacts to what the person wrote.
+    // Specific phrases are listed before general ones (first match wins).
+    const BODY_KEYWORDS = [
+      [/lower back|low back|lumbar/, 'back', ['lower_back']],
+      [/upper back|\btraps?\b|\blats?\b/, 'back', ['upper_back']],
+      [/glute|buttock|\bbutt\b/, 'back', ['glutes']],
+      [/hamstring/, 'back', ['l_thigh','r_thigh']],
+      [/calf|calves/, 'back', ['l_calf','r_calf']],
+      [/\bback\b/, 'back', ['lower_back']],
+      [/knee/, 'front', ['l_knee','r_knee']],
+      [/quad|thigh/, 'front', ['l_thigh','r_thigh']],
+      [/shin/, 'front', ['l_shin','r_shin']],
+      [/ankle|foot|feet|heel/, 'front', ['l_foot','r_foot']],
+      [/shoulder|delt/, 'front', ['l_shoulder','r_shoulder']],
+      [/neck/, 'front', ['neck']],
+      [/chest|pec/, 'front', ['chest']],
+      [/\babs\b|core|stomach|belly/, 'front', ['abs']],
+      [/\bhip|groin/, 'front', ['hips']],
+      [/elbow|forearm/, 'front', ['l_fore','r_fore']],
+      [/wrist|hand/, 'front', ['l_hand','r_hand']],
+      [/bicep|tricep|\barm\b/, 'front', ['l_arm','r_arm']]
+    ];
+    window.__btwDemoBodyFromText = function(text){
+      if(!text) return false;
+      const s = ' ' + String(text).toLowerCase() + ' ';
+      let lvl = /sore|hurt|pain|ach|tight|stiff|strain|injur|swollen|twinge/.test(s) ? 2 : 1;
+      if(/really|very| so | a lot|badly|killing|worst|sharp|can.?t/.test(s)) lvl = 3;
+      const hasL = /\bleft\b/.test(s), hasR = /\bright\b/.test(s);
+      const side = (hasL && !hasR) ? 'l' : (hasR && !hasL ? 'r' : 'both');
+      let matched = false;
+      BODY_KEYWORDS.forEach(function(k){
+        if(k[0].test(s)){
+          matched = true;
+          k[2].forEach(function(id){
+            if(side !== 'both' && (id.indexOf('l_') === 0 || id.indexOf('r_') === 0)){
+              if(side === 'l' && id.indexOf('l_') !== 0) return;
+              if(side === 'r' && id.indexOf('r_') !== 0) return;
+            }
+            state[k[1] + ':' + id] = lvl;
+          });
+        }
+      });
+      if(matched){
+        const frontHas = Object.keys(state).some(function(kk){ return kk.indexOf('front:') === 0; });
+        const backHas = Object.keys(state).some(function(kk){ return kk.indexOf('back:') === 0; });
+        if(view === 'front' && !frontHas && backHas){ view = 'back'; }
+        else if(view === 'back' && !backHas && frontHas){ view = 'front'; }
+        viewBtns.forEach(function(x){ x.classList.toggle('active', x.dataset.view === view); });
+        render(); updateSummary();
+      }
+      return matched;
+    };
     window.__btwBodyRefresh = refresh;
     render(); refresh();
   })();
