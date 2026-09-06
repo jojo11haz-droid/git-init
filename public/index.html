@@ -899,7 +899,7 @@
   .btw-mk-bodyfig{flex:0 0 auto;}
   .btw-bodysvg{width:98px;height:auto;display:block;}
   .btw-mk-bodyfigt .btw-bodysvg{width:74px;}
-  .btw-bz{fill:#E7E6E1;stroke:#fff;stroke-width:1.2;cursor:pointer;transition:fill .12s ease;}
+  .btw-bz{fill:#E4E3DE;stroke:none;cursor:pointer;transition:fill .12s ease;}
   .btw-mk-bodyfigt .btw-bz{cursor:default;}
   .btw-mk-bodyleg{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--ink-soft);}
   .btw-mk-bodyleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:7px;}
@@ -4828,32 +4828,34 @@
     const clearBtn = document.getElementById('btwMkBodyClear');
     const FILL = ['#E7E6E1','#E9B949','#E07B39','#C0392B'];
     const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
+    // Rounded parts that overlap slightly so they merge into one body
+    // silhouette (no gaps, no seams). Drawn base-first, joints last.
     const ZONES = [
-      {id:'head',   en:'head', fr:'tête', el:'circle', a:{cx:50,cy:22,r:13}},
-      {id:'neck',   en:'neck', fr:'cou', el:'rect', a:{x:46,y:34,width:8,height:7,rx:3}},
-      {id:'chest',  en:'chest and shoulders', fr:'poitrine et épaules', el:'rect', a:{x:37,y:41,width:26,height:25,rx:7}},
-      {id:'abdomen',en:'abdomen and core', fr:'abdomen et tronc', el:'rect', a:{x:38,y:67,width:24,height:22,rx:7}},
-      {id:'l_arm',  en:'left shoulder and arm', fr:'épaule et bras gauches', el:'rect', a:{x:24,y:44,width:9,height:30,rx:4.5}},
-      {id:'l_fore', en:'left elbow and forearm', fr:'coude et avant-bras gauches', el:'rect', a:{x:22,y:75,width:9,height:26,rx:4.5}},
-      {id:'l_hand', en:'left wrist and hand', fr:'poignet et main gauches', el:'circle', a:{cx:26.5,cy:105,r:5}},
-      {id:'r_arm',  en:'right shoulder and arm', fr:'épaule et bras droits', el:'rect', a:{x:67,y:44,width:9,height:30,rx:4.5}},
-      {id:'r_fore', en:'right elbow and forearm', fr:'coude et avant-bras droits', el:'rect', a:{x:69,y:75,width:9,height:26,rx:4.5}},
-      {id:'r_hand', en:'right wrist and hand', fr:'poignet et main droits', el:'circle', a:{cx:73.5,cy:105,r:5}},
-      {id:'hips',   en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:38,y:90,width:24,height:13,rx:6}},
-      {id:'l_thigh',en:'left thigh', fr:'cuisse gauche', el:'rect', a:{x:39,y:104,width:10,height:32,rx:5}},
-      {id:'l_knee', en:'left knee', fr:'genou gauche', el:'circle', a:{cx:44,cy:139,r:5}},
-      {id:'l_calf', en:'left shin and calf', fr:'tibia et mollet gauches', el:'rect', a:{x:40,y:143,width:8,height:32,rx:4}},
-      {id:'l_foot', en:'left ankle and foot', fr:'cheville et pied gauches', el:'rect', a:{x:39,y:177,width:9,height:9,rx:3}},
-      {id:'r_thigh',en:'right thigh', fr:'cuisse droite', el:'rect', a:{x:51,y:104,width:10,height:32,rx:5}},
-      {id:'r_knee', en:'right knee', fr:'genou droit', el:'circle', a:{cx:56,cy:139,r:5}},
-      {id:'r_calf', en:'right shin and calf', fr:'tibia et mollet droits', el:'rect', a:{x:52,y:143,width:8,height:32,rx:4}},
-      {id:'r_foot', en:'right ankle and foot', fr:'cheville et pied droits', el:'rect', a:{x:52,y:177,width:9,height:9,rx:3}}
+      {id:'head',   en:'head', fr:'tête', el:'ellipse', a:{cx:50,cy:16,rx:10.5,ry:12.5}},
+      {id:'neck',   en:'neck', fr:'cou', el:'rect', a:{x:45,y:25,width:10,height:9,rx:4}},
+      {id:'chest',  en:'chest and shoulders', fr:'poitrine et épaules', el:'rect', a:{x:32,y:31,width:36,height:26,rx:12}},
+      {id:'abdomen',en:'abdomen and core', fr:'abdomen et tronc', el:'rect', a:{x:35,y:53,width:30,height:24,rx:9}},
+      {id:'hips',   en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:34,y:72,width:32,height:18,rx:9}},
+      {id:'l_arm',  en:'left shoulder and arm', fr:'épaule et bras gauches', el:'rect', a:{x:23,y:35,width:11,height:34,rx:5.5}},
+      {id:'r_arm',  en:'right shoulder and arm', fr:'épaule et bras droits', el:'rect', a:{x:66,y:35,width:11,height:34,rx:5.5}},
+      {id:'l_fore', en:'left elbow and forearm', fr:'coude et avant-bras gauches', el:'rect', a:{x:21,y:64,width:10,height:30,rx:5}},
+      {id:'r_fore', en:'right elbow and forearm', fr:'coude et avant-bras droits', el:'rect', a:{x:69,y:64,width:10,height:30,rx:5}},
+      {id:'l_hand', en:'left wrist and hand', fr:'poignet et main gauches', el:'ellipse', a:{cx:26,cy:98,rx:5.5,ry:6.5}},
+      {id:'r_hand', en:'right wrist and hand', fr:'poignet et main droits', el:'ellipse', a:{cx:74,cy:98,rx:5.5,ry:6.5}},
+      {id:'l_thigh',en:'left thigh', fr:'cuisse gauche', el:'rect', a:{x:35,y:85,width:14,height:40,rx:7}},
+      {id:'r_thigh',en:'right thigh', fr:'cuisse droite', el:'rect', a:{x:51,y:85,width:14,height:40,rx:7}},
+      {id:'l_calf', en:'left shin and calf', fr:'tibia et mollet gauches', el:'rect', a:{x:37,y:122,width:11,height:40,rx:5.5}},
+      {id:'r_calf', en:'right shin and calf', fr:'tibia et mollet droits', el:'rect', a:{x:52,y:122,width:11,height:40,rx:5.5}},
+      {id:'l_knee', en:'left knee', fr:'genou gauche', el:'ellipse', a:{cx:42.5,cy:123,rx:6.5,ry:5.5}},
+      {id:'r_knee', en:'right knee', fr:'genou droit', el:'ellipse', a:{cx:57.5,cy:123,rx:6.5,ry:5.5}},
+      {id:'l_foot', en:'left ankle and foot', fr:'cheville et pied gauches', el:'rect', a:{x:36,y:158,width:12,height:12,rx:4}},
+      {id:'r_foot', en:'right ankle and foot', fr:'cheville et pied droits', el:'rect', a:{x:52,y:158,width:12,height:12,rx:4}}
     ];
     const state = {}; // id -> 0..3
     function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function label(z){ return fr() ? z.fr : z.en; }
     function svg(){
-      return '<svg viewBox="0 0 100 192" class="btw-bodysvg" role="img" aria-label="Body pain map">' +
+      return '<svg viewBox="0 0 100 176" class="btw-bodysvg" role="img" aria-label="Body pain map">' +
         ZONES.map(function(z){ var at=''; for(var k in z.a){ at += ' ' + k + '="' + z.a[k] + '"'; }
           return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + at + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('') +
         '</svg>';
