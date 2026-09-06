@@ -894,6 +894,10 @@
   .btw-mk-wave{flex:1;height:22px;min-width:0;}
   .btw-mk-dur{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);flex-shrink:0;}
   .btw-mk-transcript{font-family:var(--font-display);font-style:italic;font-size:14px;line-height:1.5;color:var(--ink);margin-top:12px;padding-left:13px;border-left:2px solid var(--moss-light);}
+  .btw-mk-input{display:block;width:100%;box-sizing:border-box;resize:none;border:none;border-left:2px solid var(--moss-light);background:transparent;outline:none;padding:0 0 0 13px;}
+  .btw-mk-input:focus{border-left-color:var(--moss);}
+  .btw-mk-tryhint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-top:8px;}
+  .btw-mk-status{font-size:11.5px;color:var(--clay,#C0392B);margin-top:8px;}
   .btw-mk-send{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--moss);color:#fff;border:none;border-radius:100px;padding:12px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;letter-spacing:.01em;width:100%;margin-top:16px;}
   .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
   .btw-mk-row.flag{border-color:var(--amber);}
@@ -1843,14 +1847,16 @@
                 <div class="btw-mk-airead"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwMkFeeling">getting by, a mixed day</span></div>
                 <div class="btw-mk-airnote">Move the slider. Between reads how you're feeling from what you share.</div>
                 <div class="btw-mk-sub">What's going on?</div>
-                <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip on">Work</span><span class="btw-mk-chip on">Sleep</span><span class="btw-mk-chip">Family</span><span class="btw-mk-chip">Win</span></div>
+                <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip on" data-topic="Work">Work</span><span class="btw-mk-chip on" data-topic="Sleep">Sleep</span><span class="btw-mk-chip" data-topic="Family">Family</span><span class="btw-mk-chip" data-topic="Win">Win</span></div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
                   <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
                   <span class="btw-mk-dur">0:14</span>
                 </div>
-                <div class="btw-mk-transcript">Rough week, work stress kept me up again.</div>
-                <button class="btw-mk-send" type="button" tabindex="-1">Send check-in</button>
+                <textarea id="btwMkInput" class="btw-mk-transcript btw-mk-input" rows="2" maxlength="400" aria-label="Your check-in">Rough week, work stress kept me up again.</textarea>
+                <div class="btw-mk-tryhint">Edit this, then send to see Between read it.</div>
+                <button class="btw-mk-send" type="button" id="btwMkSend">Send check-in</button>
+                <div class="btw-mk-status" id="btwMkStatus" hidden></div>
               </div>
             </div>
             <div class="btw-shot-cap">What your client sees: a check-in done in under a minute, by voice or text.</div>
@@ -1864,8 +1870,8 @@
                 <div class="btw-mk-row"><span class="btw-mk-avatar">B</span><span class="btw-mk-name">Ben</span><span class="btw-mk-badge">1 new</span></div>
                 <div class="btw-mk-row" style="opacity:.6;"><span class="btw-mk-avatar">C</span><span class="btw-mk-name">Cara</span><span style="font-size:11px;color:var(--ink-soft);">quiet</span></div>
                 <div class="btw-mk-summary">
-                  <div class="l">AI summary · Amy</div>
-                  <p>Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.</p>
+                  <div class="l" id="btwMkSummaryLabel">AI summary · Amy</div>
+                  <p id="btwMkSummary">Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.</p>
                 </div>
                 <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path d="M8,42 L70,38 L132,29 L194,19 L246,13" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle cx="8" cy="42" r="3" fill="#1E4C86"></circle><circle cx="70" cy="38" r="3" fill="#1E4C86"></circle><circle cx="132" cy="29" r="3" fill="#B8701F"></circle><circle cx="194" cy="19" r="3" fill="#1E4C86"></circle><circle cx="246" cy="13" r="3" fill="#1E4C86"></circle></svg>
                 <div class="btw-mk-insights">
@@ -2971,6 +2977,7 @@
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
     "AI reads":"L'IA perçoit",
     "Move the slider. Between reads how you're feeling from what you share.":"Bougez le curseur. Between perçoit comment vous allez d'après ce que vous partagez.",
+    "Edit this, then send to see Between read it.":"Modifiez ceci, puis envoyez pour voir Between l'interpréter.",
     "Terms":"Conditions","Privacy":"Confidentialité",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
@@ -4372,6 +4379,48 @@
       if(feeling) feeling.textContent = pick(READS, v) + clause;
     }
     chips.forEach(c => c.addEventListener('click', ()=>{ c.classList.toggle('on'); update(); }));
+
+    // "Try it" — send the typed check-in to the demo endpoint (no account, no
+    // storage) and show Between's read in both cards. Guardrails live server-side.
+    const dInput = document.getElementById('btwMkInput');
+    const dSend = document.getElementById('btwMkSend');
+    const dStatus = document.getElementById('btwMkStatus');
+    const dSummary = document.getElementById('btwMkSummary');
+    const dSummaryLabel = document.getElementById('btwMkSummaryLabel');
+    function dShowStatus(msg){ if(dStatus){ dStatus.textContent = msg || ''; dStatus.hidden = !msg; } }
+    async function tryDemo(){
+      if(!dInput || !dSend) return;
+      const text = (dInput.value || '').trim();
+      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+      if(!text){ dShowStatus(fr ? 'Écrivez une phrase sur votre journée.' : 'Type a sentence about your day.'); return; }
+      dShowStatus('');
+      const orig = dSend.textContent;
+      dSend.disabled = true; dSend.textContent = fr ? 'Lecture…' : 'Reading…';
+      try{
+        const r = await fetch('/api/demo/interpret', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: text }) });
+        const data = await r.json().catch(function(){ return {}; });
+        if(!r.ok){ dShowStatus(data.error || (fr ? 'Réessayez dans un moment.' : 'Please try again in a moment.')); return; }
+        if(data.risk){
+          if(dSummary) dSummary.textContent = (data.crisis && data.crisis.message) || (fr ? "Ça semble très difficile en ce moment. Between n'est pas un service de crise." : 'This sounds really hard right now. Between is not a crisis service.');
+          if(dSummaryLabel) dSummaryLabel.textContent = fr ? 'SÉCURITÉ D’ABORD' : 'SAFETY FIRST';
+          return;
+        }
+        if(dSummary && data.summary){
+          dSummary.textContent = data.summary;
+          if(dSummaryLabel) dSummaryLabel.textContent = fr ? 'RÉSUMÉ IA · VOTRE SUIVI' : 'AI SUMMARY · YOUR CHECK-IN';
+        }
+        if(typeof data.mood_estimate === 'number' && range) range.value = String(data.mood_estimate);
+        if(chips.length && Array.isArray(data.auto_tags)){
+          chips.forEach(function(c){ const k = c.getAttribute('data-topic'); if(k) c.classList.toggle('on', data.auto_tags.indexOf(k) !== -1); });
+        }
+        update();
+      }catch(e){
+        dShowStatus(fr ? 'Problème de connexion. Réessayez.' : 'Connection problem. Try again.');
+      }finally{
+        dSend.disabled = false; dSend.textContent = orig;
+      }
+    }
+    if(dSend) dSend.addEventListener('click', tryDemo);
     range.addEventListener('input', update);
     window.__btwMoodRefresh = update; // re-localize on language switch
     update();
