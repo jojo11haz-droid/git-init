@@ -893,6 +893,24 @@
   .btw-mk-airead-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;}
   .btw-mk-airead-val{font-weight:600;color:var(--moss);}
   .btw-mk-airnote{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-bottom:15px;line-height:1.4;}
+  /* Body pain map (sports / fitness / physio) */
+  .btw-mk-body{margin:14px 0 4px;}
+  .btw-mk-bodyrow{display:flex;gap:16px;align-items:center;}
+  .btw-mk-bodyfig{flex:0 0 auto;}
+  .btw-bodysvg{width:98px;height:auto;display:block;}
+  .btw-mk-bodyfigt .btw-bodysvg{width:74px;}
+  .btw-bz{fill:#E7E6E1;stroke:#fff;stroke-width:1.2;cursor:pointer;transition:fill .12s ease;}
+  .btw-mk-bodyfigt .btw-bz{cursor:default;}
+  .btw-mk-bodyleg{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--ink-soft);}
+  .btw-mk-bodyleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:7px;}
+  .btw-mk-bodyleg .sw[data-lv="1"]{background:#E9B949;}
+  .btw-mk-bodyleg .sw[data-lv="2"]{background:#E07B39;}
+  .btw-mk-bodyleg .sw[data-lv="3"]{background:#C0392B;}
+  .btw-mk-bodyclear{margin-top:2px;background:none;border:none;padding:0;color:var(--moss);text-decoration:underline;font-size:12px;cursor:pointer;align-self:flex-start;}
+  .btw-mk-bodyhint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-top:9px;line-height:1.4;}
+  .btw-mk-tbody{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .btw-mk-tbody .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:8px;}
+  .btw-mk-bodysum{font-size:12.5px;color:var(--ink);line-height:1.5;}
   .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
   .btw-mk-chips{margin-bottom:15px;}
   .btw-mk-chip{display:inline-block;border:1px solid var(--line);border-radius:100px;padding:4px 13px;font-size:12px;color:var(--ink-soft);margin:0 6px 6px 0;cursor:pointer;user-select:none;transition:transform .12s ease, background .12s ease, color .12s ease;}
@@ -1871,6 +1889,19 @@
                 <div class="btw-mk-moodmode" id="btwMkTopicMode"><button type="button" class="btw-mk-modebtn active" data-tmode="self">I'll pick</button><button type="button" class="btw-mk-modebtn" data-tmode="ai">Not sure</button></div>
                 <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip on" data-topic="Work">Work</span><span class="btw-mk-chip on" data-topic="Sleep">Sleep</span><span class="btw-mk-chip" data-topic="Family">Family</span><span class="btw-mk-chip" data-topic="Win">Win</span></div>
                 <div class="btw-mk-airnote" id="btwMkChipsNote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
+                <div class="btw-mk-body" id="btwMkBody" hidden>
+                  <div class="btw-mk-sub" style="margin-top:2px;">Where does it hurt or feel sore?</div>
+                  <div class="btw-mk-bodyrow">
+                    <div class="btw-mk-bodyfig" id="btwMkBodyFig"></div>
+                    <div class="btw-mk-bodyleg">
+                      <div><span class="sw" data-lv="1"></span>A bit</div>
+                      <div><span class="sw" data-lv="2"></span>Moderate</div>
+                      <div><span class="sw" data-lv="3"></span>A lot</div>
+                      <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
+                    </div>
+                  </div>
+                  <div class="btw-mk-bodyhint">Tap a body part. Tap again to change how much it hurts.</div>
+                </div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
                   <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
@@ -1901,6 +1932,13 @@
                 <div class="btw-mk-insights">
                   <div class="btw-mk-ins"><div class="l">Mood direction</div><div class="v" id="btwMkMoodDir" style="color:var(--moss);">↑ improving</div></div>
                   <div class="btw-mk-ins"><div class="l">Tied to lower mood</div><div class="v" id="btwMkTiedTo">Work</div></div>
+                </div>
+                <div class="btw-mk-tbody" id="btwMkBodyMirror" hidden>
+                  <div class="l">Pain map · from their check-in</div>
+                  <div class="btw-mk-bodyrow">
+                    <div class="btw-mk-bodyfig btw-mk-bodyfigt" id="btwMkBodyFigT"></div>
+                    <div class="btw-mk-bodysum" id="btwMkBodySum">No sore spots reported.</div>
+                  </div>
                 </div>
                 <div class="btw-mk-statslink">View advanced stats <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
               </div>
@@ -3006,6 +3044,11 @@
     "Tap to record":"Touchez pour enregistrer",
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
+    "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
+    "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
+    "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
+    "Pain map · from their check-in":"Carte de douleur · d'après leur suivi",
+    "No sore spots reported.":"Aucune zone douloureuse signalée.",
     "Try it live":"Essayez-le",
     "Both cards below are live. Move the slider, record a voice memo, or tap a client.":"Les deux cartes ci-dessous sont interactives. Bougez le curseur, enregistrez une note vocale ou touchez un client.",
     "Terms":"Conditions","Privacy":"Confidentialité",
@@ -4420,6 +4463,7 @@
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
+    if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -4441,6 +4485,7 @@
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
+    if(window.__btwBodyRefresh) window.__btwBodyRefresh();
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
@@ -4768,6 +4813,82 @@
     rows.forEach(r => r.addEventListener('click', ()=>{ cur = r.getAttribute('data-pt'); render(); }));
     window.__btwTherapistRefresh = render; // re-localize on language switch
     render();
+  })();
+
+  // Body pain map: the patient taps where it hurts and how much (a bit / moderate
+  // / a lot), and the therapist card mirrors it as a colour-coded map plus a
+  // summary. Shown only for the physical audiences (sports / fitness / physio).
+  (function(){
+    const fig = document.getElementById('btwMkBodyFig');
+    if(!fig) return;
+    const figT = document.getElementById('btwMkBodyFigT');
+    const wrap = document.getElementById('btwMkBody');
+    const wrapT = document.getElementById('btwMkBodyMirror');
+    const sumEl = document.getElementById('btwMkBodySum');
+    const clearBtn = document.getElementById('btwMkBodyClear');
+    const FILL = ['#E7E6E1','#E9B949','#E07B39','#C0392B'];
+    const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
+    const ZONES = [
+      {id:'head',   en:'head', fr:'tête', el:'circle', a:{cx:50,cy:22,r:13}},
+      {id:'neck',   en:'neck', fr:'cou', el:'rect', a:{x:46,y:34,width:8,height:7,rx:3}},
+      {id:'chest',  en:'chest and shoulders', fr:'poitrine et épaules', el:'rect', a:{x:37,y:41,width:26,height:25,rx:7}},
+      {id:'abdomen',en:'abdomen and core', fr:'abdomen et tronc', el:'rect', a:{x:38,y:67,width:24,height:22,rx:7}},
+      {id:'l_arm',  en:'left shoulder and arm', fr:'épaule et bras gauches', el:'rect', a:{x:24,y:44,width:9,height:30,rx:4.5}},
+      {id:'l_fore', en:'left elbow and forearm', fr:'coude et avant-bras gauches', el:'rect', a:{x:22,y:75,width:9,height:26,rx:4.5}},
+      {id:'l_hand', en:'left wrist and hand', fr:'poignet et main gauches', el:'circle', a:{cx:26.5,cy:105,r:5}},
+      {id:'r_arm',  en:'right shoulder and arm', fr:'épaule et bras droits', el:'rect', a:{x:67,y:44,width:9,height:30,rx:4.5}},
+      {id:'r_fore', en:'right elbow and forearm', fr:'coude et avant-bras droits', el:'rect', a:{x:69,y:75,width:9,height:26,rx:4.5}},
+      {id:'r_hand', en:'right wrist and hand', fr:'poignet et main droits', el:'circle', a:{cx:73.5,cy:105,r:5}},
+      {id:'hips',   en:'hips and groin', fr:'hanches et aine', el:'rect', a:{x:38,y:90,width:24,height:13,rx:6}},
+      {id:'l_thigh',en:'left thigh', fr:'cuisse gauche', el:'rect', a:{x:39,y:104,width:10,height:32,rx:5}},
+      {id:'l_knee', en:'left knee', fr:'genou gauche', el:'circle', a:{cx:44,cy:139,r:5}},
+      {id:'l_calf', en:'left shin and calf', fr:'tibia et mollet gauches', el:'rect', a:{x:40,y:143,width:8,height:32,rx:4}},
+      {id:'l_foot', en:'left ankle and foot', fr:'cheville et pied gauches', el:'rect', a:{x:39,y:177,width:9,height:9,rx:3}},
+      {id:'r_thigh',en:'right thigh', fr:'cuisse droite', el:'rect', a:{x:51,y:104,width:10,height:32,rx:5}},
+      {id:'r_knee', en:'right knee', fr:'genou droit', el:'circle', a:{cx:56,cy:139,r:5}},
+      {id:'r_calf', en:'right shin and calf', fr:'tibia et mollet droits', el:'rect', a:{x:52,y:143,width:8,height:32,rx:4}},
+      {id:'r_foot', en:'right ankle and foot', fr:'cheville et pied droits', el:'rect', a:{x:52,y:177,width:9,height:9,rx:3}}
+    ];
+    const state = {}; // id -> 0..3
+    function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
+    function label(z){ return fr() ? z.fr : z.en; }
+    function svg(){
+      return '<svg viewBox="0 0 100 192" class="btw-bodysvg" role="img" aria-label="Body pain map">' +
+        ZONES.map(function(z){ var at=''; for(var k in z.a){ at += ' ' + k + '="' + z.a[k] + '"'; }
+          return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + at + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('') +
+        '</svg>';
+    }
+    fig.innerHTML = svg(); if(figT) figT.innerHTML = svg();
+    function paint(){
+      // Inline style, not the fill attribute: the CSS .btw-bz{fill:...} rule
+      // would otherwise win and keep every zone grey.
+      [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
+        el.style.fill = FILL[state[el.getAttribute('data-zone')] || 0]; }); });
+    }
+    function updateSummary(){
+      if(!sumEl) return;
+      const hurts = ZONES.filter(function(z){ return (state[z.id] || 0) > 0; })
+                         .sort(function(a,b){ return (state[b.id]||0) - (state[a.id]||0); });
+      if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
+      const parts = hurts.map(function(z){ return label(z) + ' (' + LV[fr()?'fr':'en'][state[z.id]] + ')'; });
+      sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
+    }
+    fig.addEventListener('click', function(e){
+      const z = e.target.closest('.btw-bz'); if(!z) return;
+      const id = z.getAttribute('data-zone');
+      state[id] = ((state[id] || 0) + 1) % 4;
+      paint(); updateSummary();
+    });
+    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; paint(); updateSummary(); });
+    const PHYS = { sports:1, fitness:1, physio:1 };
+    function refresh(){
+      const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
+      if(wrap) wrap.hidden = !on;
+      if(wrapT) wrapT.hidden = !on;
+      updateSummary();
+    }
+    window.__btwBodyRefresh = refresh;
+    paint(); refresh();
   })();
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
