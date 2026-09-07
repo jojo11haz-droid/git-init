@@ -1915,7 +1915,7 @@
                       <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
                     </div>
                   </div>
-                  <div class="btw-mk-bodyhint">Pick a pain level, then tap where it hurts.</div>
+                  <div class="btw-mk-bodyhint">Tap where it hurts, then slide to set how strong.</div>
                 </div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
@@ -3067,7 +3067,7 @@
     "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
-    "Pick a pain level, then tap where it hurts.":"Choisissez un niveau de douleur, puis touchez où ça fait mal.",
+    "Tap where it hurts, then slide to set how strong.":"Touchez où ça fait mal, puis glissez pour régler l'intensité.",
     "1 · mild":"1 · léger","10 · worst":"10 · pire",
     "Pain map · from their check-in":"Carte de douleur · d'après leur suivi",
     "No sore spots reported.":"Aucune zone douloureuse signalée.",
@@ -4958,7 +4958,8 @@
       return list.map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
     let view = 'front';
-    const state = {}; // (view + ':' + id) -> 0..3
+    const state = {}; // (view + ':' + id) -> 0..10
+    let selected = null; // region key the slider is currently dialing
     function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     function svg(v, uid){
@@ -4973,7 +4974,12 @@
     }
     function paint(){
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
-        el.style.fill = FILL[state[view + ':' + el.getAttribute('data-zone')] || 0]; }); });
+        const key = view + ':' + el.getAttribute('data-zone');
+        el.style.fill = FILL[state[key] || 0];
+        // Ring the spot the slider is currently dialing (interactive body only).
+        if(f === fig && key === selected){ el.style.stroke = 'var(--ink)'; el.style.strokeWidth = '1.6'; el.style.strokeOpacity = '.85'; }
+        else { el.style.stroke = 'none'; }
+      }); });
     }
     function render(){ fig.innerHTML = svg(view, 'p'); if(figT) figT.innerHTML = svg(view, 't'); paint(); }
     function updateSummary(){
@@ -4985,20 +4991,29 @@
       const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10)'; });
       sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
     }
-    function updBrush(){ if(!levelEl) return; brush = parseInt(levelEl.value, 10) || 1; if(curEl){ curEl.querySelector('.e').textContent = EMOJI[brush]; curEl.querySelector('.n').textContent = brush; curEl.style.setProperty('--pc', FILL[brush]); if(levelEl) levelEl.style.setProperty('--pc', FILL[brush]); } }
+    function updBrush(){
+      if(!levelEl) return;
+      brush = parseInt(levelEl.value, 10) || 1;
+      if(curEl){ curEl.querySelector('.e').textContent = EMOJI[brush]; curEl.querySelector('.n').textContent = brush; curEl.style.setProperty('--pc', FILL[brush]); }
+      levelEl.style.setProperty('--pc', FILL[brush]);
+      // Slider drives the picked spot live: drag it and that area on the body changes.
+      if(selected){ state[selected] = brush; paint(); updateSummary(); }
+    }
     if(levelEl){ levelEl.addEventListener('input', updBrush); updBrush(); }
     fig.addEventListener('click', function(e){
       const z = e.target.closest('.btw-bz'); if(!z) return;
       const key = view + ':' + z.getAttribute('data-zone');
-      if(state[key] === brush){ delete state[key]; } else { state[key] = brush; }
+      if(selected === key){ delete state[key]; selected = null; } // tap the active spot again to clear it
+      else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); }
       paint(); updateSummary();
     });
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
       view = (b.dataset.view === 'back') ? 'back' : 'front';
+      selected = null;
       viewBtns.forEach(function(x){ x.classList.toggle('active', x === b); });
       render();
     }); });
-    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; paint(); updateSummary(); });
+    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
     const PHYS = { sports:1, fitness:1, physio:1 };
     function refresh(){
       const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
@@ -5161,6 +5176,7 @@
     let view = 'front';
     let state = {};
     let brush = 4; // currently selected pain level for tapping
+    let selected = null; // region key the slider is currently dialing
     const root = document.createElement('div');
     root.className = 'btw-pm' + (readOnly ? ' ro' : '');
     const views = document.createElement('div');
@@ -5182,9 +5198,23 @@
       const ends = document.createElement('div'); ends.className = 'btw-pain-ends';
       ends.innerHTML = '<span>1 · ' + esc(frL()?'léger':'mild') + '</span><span>10 · ' + esc(frL()?'pire':'worst') + '</span>';
       const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'btw-mk-bodyclear'; clr.textContent = frL()?'Effacer':'Clear';
-      clr.addEventListener('click', function(){ state = {}; render(); });
-      function updBrush(){ brush = parseInt(rng.value, 10) || 1; cur.querySelector('.e').textContent = EMOJI[brush]; cur.querySelector('.n').textContent = brush; side.style.setProperty('--pc', FILL[brush]); }
+      clr.addEventListener('click', function(){ state = {}; selected = null; render(); });
+      function updBrush(){
+        brush = parseInt(rng.value, 10) || 1;
+        cur.querySelector('.e').textContent = EMOJI[brush]; cur.querySelector('.n').textContent = brush;
+        side.style.setProperty('--pc', FILL[brush]);
+        // Slider drives the picked spot live: drag it and that area on the body changes.
+        if(selected){ state[selected] = brush; paint(); }
+      }
       rng.addEventListener('input', updBrush);
+      // Tap a spot to pick it (slider snaps to its level), tap it again to clear it.
+      figWrap.addEventListener('click', function(e){
+        const z = e.target.closest('.btw-bz'); if(!z) return;
+        const key = view + ':' + z.getAttribute('data-zone');
+        if(selected === key){ delete state[key]; selected = null; }
+        else { selected = key; if(!state[key]) state[key] = brush; rng.value = state[key]; updBrush(); }
+        paint();
+      });
       side.appendChild(cur); side.appendChild(rng); side.appendChild(ends); side.appendChild(clr);
       updBrush();
     }
@@ -5195,7 +5225,7 @@
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(frL()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
       return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></svg>';
     }
-    function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ el.style.fill = FILL[state[view + ':' + el.getAttribute('data-zone')] || 0]; }); }
+    function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ const key = view + ':' + el.getAttribute('data-zone'); el.style.fill = FILL[state[key] || 0]; if(!readOnly && key === selected){ el.style.stroke = 'var(--ink)'; el.style.strokeWidth = '1.6'; el.style.strokeOpacity = '.85'; } else { el.style.stroke = 'none'; } }); }
     function summary(){
       const hurts = [];
       ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
@@ -5204,16 +5234,13 @@
       return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + h.lv + '/10)'; }).join(', ') + '.';
     }
     function render(){ figWrap.innerHTML = svg(view); paint(); if(readOnly) side.textContent = summary(); }
-    if(!readOnly){
-      figWrap.addEventListener('click', function(e){ const z = e.target.closest('.btw-bz'); if(!z) return; const key = view + ':' + z.getAttribute('data-zone'); if(state[key] === brush){ delete state[key]; } else { state[key] = brush; } paint(); });
-    }
-    views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = (b.dataset.view === 'back') ? 'back' : 'front'; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
+    views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = (b.dataset.view === 'back') ? 'back' : 'front'; selected = null; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
     render();
     return {
       el: root,
       getMap: function(){ return Object.keys(state).length ? Object.assign({}, state) : null; },
-      setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; render(); },
-      clear: function(){ state = {}; render(); }
+      setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; selected = null; render(); },
+      clear: function(){ state = {}; selected = null; render(); }
     };
   }
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
