@@ -1229,7 +1229,7 @@ function sanitizePainMap(pm) {
     const v = pm[k];
     if (typeof v === 'number' && Number.isFinite(v)) {
       const r = Math.round(v);
-      if (r >= 1 && r <= 3) { out[k] = r; n++; }
+      if (r >= 1 && r <= 10) { out[k] = r; n++; }
     }
   }
   return Object.keys(out).length ? out : null;

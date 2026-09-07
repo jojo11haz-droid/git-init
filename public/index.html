@@ -912,6 +912,13 @@
   .btw-mk-tbody{margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
   .btw-mk-tbody .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:8px;}
   .btw-mk-bodysum{font-size:12.5px;color:var(--ink);line-height:1.5;}
+  .btw-mk-bodyside{display:flex;flex-direction:column;gap:6px;min-width:128px;}
+  .btw-pain-cur{display:flex;align-items:center;gap:6px;color:var(--ink);}
+  .btw-pain-cur .e{font-size:22px;line-height:1;}
+  .btw-pain-cur .n{font-size:17px;font-weight:700;color:var(--pc,var(--ink));}
+  .btw-pain-cur .s{font-size:12px;color:var(--ink-soft);}
+  .btw-pain-range{width:132px;max-width:100%;accent-color:var(--pc,#EA6F3B);}
+  .btw-pain-ends{display:flex;justify-content:space-between;width:132px;max-width:100%;font-size:9.5px;color:var(--ink-soft);letter-spacing:.02em;}
   .btw-compose-pain{margin:16px 0;}
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
@@ -1901,14 +1908,14 @@
                   <div class="btw-mk-moodmode" id="btwMkBodyViews" style="margin:6px 0 10px;"><button type="button" class="btw-mk-modebtn active" data-view="front">Front</button><button type="button" class="btw-mk-modebtn" data-view="back">Back</button></div>
                   <div class="btw-mk-bodyrow">
                     <div class="btw-mk-bodyfig" id="btwMkBodyFig"></div>
-                    <div class="btw-mk-bodyleg">
-                      <div><span class="sw" data-lv="1"></span>A bit</div>
-                      <div><span class="sw" data-lv="2"></span>Moderate</div>
-                      <div><span class="sw" data-lv="3"></span>A lot</div>
+                    <div class="btw-mk-bodyside">
+                      <div class="btw-pain-cur" id="btwMkPainCur"><span class="e">😐</span><span class="n">4</span><span class="s">/10</span></div>
+                      <input type="range" min="1" max="10" step="1" value="4" id="btwMkPainLevel" class="btw-pain-range" aria-label="Pain level">
+                      <div class="btw-pain-ends"><span>1 · mild</span><span>10 · worst</span></div>
                       <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
                     </div>
                   </div>
-                  <div class="btw-mk-bodyhint">Tap a body part. Tap again to change how much it hurts.</div>
+                  <div class="btw-mk-bodyhint">Pick a pain level, then tap where it hurts.</div>
                 </div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
@@ -3060,6 +3067,8 @@
     "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
+    "Pick a pain level, then tap where it hurts.":"Choisissez un niveau de douleur, puis touchez où ça fait mal.",
+    "1 · mild":"1 · léger","10 · worst":"10 · pire",
     "Pain map · from their check-in":"Carte de douleur · d'après leur suivi",
     "No sore spots reported.":"Aucune zone douloureuse signalée.",
     "Try it live":"Essayez-le",
@@ -4855,8 +4864,12 @@
     const sumEl = document.getElementById('btwMkBodySum');
     const clearBtn = document.getElementById('btwMkBodyClear');
     const viewBtns = [...document.querySelectorAll('#btwMkBodyViews .btw-mk-modebtn')];
-    const FILL = ['transparent','#E9B949','#E07B39','#C0392B'];
-    const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
+    const levelEl = document.getElementById('btwMkPainLevel');
+    const curEl = document.getElementById('btwMkPainCur');
+    // 0-10 pain scale (0 = none, 1 = mild/best, 10 = worst), green->red, with faces.
+    const FILL = ['transparent','#7FB84F','#9CC63E','#C9D630','#EAC72E','#F0AE33','#EF8E38','#EA6F3B','#DE5238','#CF3B33','#C0392B'];
+    const EMOJI = ['','🙂','🙂','😐','😐','😕','😟','😧','😖','😫','😭'];
+    let brush = 4; // selected pain level for tapping
     // Grey body silhouette (overlapping rounded parts merge into one shape).
     const BASE = [
       {el:'ellipse', a:{cx:50,cy:15,rx:10.5,ry:12}},
@@ -4969,13 +4982,15 @@
       ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
-      const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + LV[fr()?'fr':'en'][h.lv] + ')'; });
+      const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10)'; });
       sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
     }
+    function updBrush(){ if(!levelEl) return; brush = parseInt(levelEl.value, 10) || 1; if(curEl){ curEl.querySelector('.e').textContent = EMOJI[brush]; curEl.querySelector('.n').textContent = brush; curEl.style.setProperty('--pc', FILL[brush]); if(levelEl) levelEl.style.setProperty('--pc', FILL[brush]); } }
+    if(levelEl){ levelEl.addEventListener('input', updBrush); updBrush(); }
     fig.addEventListener('click', function(e){
       const z = e.target.closest('.btw-bz'); if(!z) return;
       const key = view + ':' + z.getAttribute('data-zone');
-      state[key] = ((state[key] || 0) + 1) % 4;
+      if(state[key] === brush){ delete state[key]; } else { state[key] = brush; }
       paint(); updateSummary();
     });
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
@@ -5017,8 +5032,8 @@
     window.__btwDemoBodyFromText = function(text){
       if(!text) return false;
       const s = ' ' + String(text).toLowerCase() + ' ';
-      let lvl = /sore|hurt|pain|ach|tight|stiff|strain|injur|swollen|twinge/.test(s) ? 2 : 1;
-      if(/really|very| so | a lot|badly|killing|worst|sharp|can.?t/.test(s)) lvl = 3;
+      let lvl = /sore|hurt|pain|ach|tight|stiff|strain|injur|swollen|twinge/.test(s) ? 5 : 3;
+      if(/really|very| so | a lot|badly|killing|worst|sharp|can.?t/.test(s)) lvl = 8;
       const hasL = /\bleft\b/.test(s), hasR = /\bright\b/.test(s);
       const side = (hasL && !hasR) ? 'l' : (hasR && !hasL ? 'r' : 'both');
       let matched = false;
@@ -5053,8 +5068,9 @@
   function btwCreateBodyMap(opts){
     opts = opts || {};
     const readOnly = !!opts.readOnly;
-    const FILL = ['transparent','#E9B949','#E07B39','#C0392B'];
-    const LV = { en:['','a bit','moderate','a lot'], fr:['','un peu','modéré','beaucoup'] };
+    // 0-10 pain scale (0 = none, 1 = mild/best, 10 = worst), green->red, with faces.
+    const FILL = ['transparent','#7FB84F','#9CC63E','#C9D630','#EAC72E','#F0AE33','#EF8E38','#EA6F3B','#DE5238','#CF3B33','#C0392B'];
+    const EMOJI = ['','🙂','🙂','😐','😐','😕','😟','😧','😖','😫','😭'];
     const BASE = [
       {el:'ellipse', a:{cx:50,cy:15,rx:10.5,ry:12}},
       {el:'rect', a:{x:45,y:24,width:10,height:9,rx:4}},
@@ -5144,6 +5160,7 @@
     const uid = 'bpm' + btwCreateBodyMap._n;
     let view = 'front';
     let state = {};
+    let brush = 4; // currently selected pain level for tapping
     const root = document.createElement('div');
     root.className = 'btw-pm' + (readOnly ? ' ro' : '');
     const views = document.createElement('div');
@@ -5157,10 +5174,19 @@
     if(readOnly){
       side.className = 'btw-mk-bodysum';
     } else {
-      side.className = 'btw-mk-bodyleg';
-      side.innerHTML = '<div><span class="sw" data-lv="1"></span>' + esc(frL()?'Un peu':'A bit') + '</div><div><span class="sw" data-lv="2"></span>' + esc(frL()?'Modéré':'Moderate') + '</div><div><span class="sw" data-lv="3"></span>' + esc(frL()?'Beaucoup':'A lot') + '</div>';
+      side.className = 'btw-mk-bodyside';
+      const cur = document.createElement('div'); cur.className = 'btw-pain-cur';
+      cur.innerHTML = '<span class="e"></span><span class="n"></span><span class="s">/10</span>';
+      const rng = document.createElement('input'); rng.type = 'range'; rng.min = '1'; rng.max = '10'; rng.step = '1'; rng.value = String(brush);
+      rng.className = 'btw-pain-range'; rng.setAttribute('aria-label', frL()?'Niveau de douleur':'Pain level');
+      const ends = document.createElement('div'); ends.className = 'btw-pain-ends';
+      ends.innerHTML = '<span>1 · ' + esc(frL()?'léger':'mild') + '</span><span>10 · ' + esc(frL()?'pire':'worst') + '</span>';
       const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'btw-mk-bodyclear'; clr.textContent = frL()?'Effacer':'Clear';
-      clr.addEventListener('click', function(){ state = {}; render(); }); side.appendChild(clr);
+      clr.addEventListener('click', function(){ state = {}; render(); });
+      function updBrush(){ brush = parseInt(rng.value, 10) || 1; cur.querySelector('.e').textContent = EMOJI[brush]; cur.querySelector('.n').textContent = brush; side.style.setProperty('--pc', FILL[brush]); }
+      rng.addEventListener('input', updBrush);
+      side.appendChild(cur); side.appendChild(rng); side.appendChild(ends); side.appendChild(clr);
+      updBrush();
     }
     function svg(v){
       const cid = 'bpc_' + uid;
@@ -5175,11 +5201,11 @@
       ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length) return frL() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.';
-      return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + LV[frL()?'fr':'en'][h.lv] + ')'; }).join(', ') + '.';
+      return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + h.lv + '/10)'; }).join(', ') + '.';
     }
     function render(){ figWrap.innerHTML = svg(view); paint(); if(readOnly) side.textContent = summary(); }
     if(!readOnly){
-      figWrap.addEventListener('click', function(e){ const z = e.target.closest('.btw-bz'); if(!z) return; const key = view + ':' + z.getAttribute('data-zone'); state[key] = ((state[key] || 0) + 1) % 4; paint(); });
+      figWrap.addEventListener('click', function(e){ const z = e.target.closest('.btw-bz'); if(!z) return; const key = view + ':' + z.getAttribute('data-zone'); if(state[key] === brush){ delete state[key]; } else { state[key] = brush; } paint(); });
     }
     views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = (b.dataset.view === 'back') ? 'back' : 'front'; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
     render();
