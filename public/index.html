@@ -2797,6 +2797,7 @@
     "Sleep":"Sommeil","Work":"Travail","Conflict":"Conflit","Craving":"Envie","Panic":"Panique","Family":"Famille","Win":"Réussite","Social":"Social",
     "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
+    "Pressure":"Pression","Confidence":"Confiance","Motivation":"Motivation",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
@@ -3277,8 +3278,8 @@
     "up several nights. One good moment:":"out of full training. One bright spot:",
     "she saw an old friend on the weekend.":"she set a sprint best on Friday.",
     // check-in chips / tags
-    "Work":"Training",
-    "Family":"Soreness","Win":"Mobility",
+    "Work":"Soreness",
+    "Family":"Pressure","Win":"Confidence",
     // pricing
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Coaches pay per team and invite their players in for free. Players can also get Between on their own. They check in and track their own patterns with or without a coach.",
@@ -3401,8 +3402,8 @@
     "up several nights. One good moment:":"freinée à l'entraînement. Point positif :",
     "she saw an old friend on the weekend.":"record de sprint vendredi.",
     // check-in chips / tags
-    "Work":"Entraînement",
-    "Family":"Courbatures","Win":"Mobilité",
+    "Work":"Courbatures",
+    "Family":"Pression","Win":"Confiance",
     // pricing
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par équipe et invitent leurs joueurs gratuitement. Les joueurs peuvent aussi prendre Between par eux-mêmes. Ils font des suivis et suivent leurs tendances, avec ou sans entraîneur.",
@@ -6936,7 +6937,9 @@
   // the picker matches whoever is checking in.
   const COMPOSER_TAGS = {
     therapy: ['Sleep','Work','Conflict','Craving','Panic','Family','Win','Social','Health','Money','Loneliness','Anger'],
-    phys: ['Soreness','Stiffness','Fatigue','Injury','Sleep','Mobility','Training load','Stress']
+    phys: ['Soreness','Stiffness','Fatigue','Injury','Sleep','Mobility','Training load','Stress'],
+    // Sports blends the physio and therapist worlds: body and mind together.
+    mixed: ['Soreness','Fatigue','Injury','Sleep','Pressure','Confidence','Motivation','Stress']
   };
   let _composerTagSet = 'therapy'; // matches the static markup on load
   function renderComposerTags(which){
@@ -6952,7 +6955,13 @@
     });
     presetTags = [...picker.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
   }
-  function syncComposerTags(){ const want = painMapContext() ? 'phys' : 'therapy'; if(want !== _composerTagSet) renderComposerTags(want); }
+  function syncComposerTags(){
+    // Sports gets the mixed body+mind set; other coach/trainer contexts stay
+    // physical; therapy stays emotional.
+    const want = (typeof curAudience !== 'undefined' && curAudience === 'sports') ? 'mixed'
+      : (painMapContext() ? 'phys' : 'therapy');
+    if(want !== _composerTagSet) renderComposerTags(want);
+  }
 
   // Free-text "Something else" tag: patients can name a theme the presets
   // miss. Custom chips are removable (tap to delete) and cleared on send.
