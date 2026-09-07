@@ -7081,7 +7081,8 @@
       const audioHtml = (c.hasAudio && !isPatient() && state.selectedPatientId)
         ? `<audio controls preload="none" style="width:100%;height:32px;margin:6px 0 2px;" src="/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/audio"></audio>`
         : (c.hasAudio ? `<div style="font-size:11.5px;color:var(--moss);margin:4px 0;">${esc(t('Voice memo'))}</div>` : '');
-      const painHtml = c.painMap ? `<div class="btw-ci-pain" data-pain="${esc(c.id)}"><div class="l">${esc(t('Pain map'))}</div></div>` : '';
+      // Pain map is a physio/fitness/sports feature only (coach/trainer contexts).
+      const painHtml = (c.painMap && painMapContext()) ? `<div class="btw-ci-pain" data-pain="${esc(c.id)}"><div class="l">${esc(t('Pain map'))}</div></div>` : '';
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
