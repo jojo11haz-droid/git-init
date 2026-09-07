@@ -1774,6 +1774,7 @@
         <button type="button" class="btw-aud-btn" data-aud="schools">Schools</button>
         <button type="button" class="btw-aud-btn" data-aud="fitness">Fitness</button>
         <button type="button" class="btw-aud-btn" data-aud="physio">Physio</button>
+        <button type="button" class="btw-aud-btn" data-aud="kinesiology">Kinesiology</button>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
@@ -1905,7 +1906,7 @@
                 <div class="btw-mk-airnote" id="btwMkChipsNote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
                 <div class="btw-mk-body" id="btwMkBody" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Where does it hurt or feel sore?</div>
-                  <div class="btw-mk-moodmode" id="btwMkBodyViews" style="margin:6px 0 10px;"><button type="button" class="btw-mk-modebtn active" data-view="front">Front</button><button type="button" class="btw-mk-modebtn" data-view="back">Back</button></div>
+                  <div class="btw-mk-moodmode" id="btwMkBodyViews" style="margin:6px 0 10px;flex-wrap:wrap;"><button type="button" class="btw-mk-modebtn active" data-view="front">Front</button><button type="button" class="btw-mk-modebtn" data-view="back">Back</button><button type="button" class="btw-mk-modebtn" data-view="left">Left</button><button type="button" class="btw-mk-modebtn" data-view="right">Right</button></div>
                   <div class="btw-mk-bodyrow">
                     <div class="btw-mk-bodyfig" id="btwMkBodyFig"></div>
                     <div class="btw-mk-bodyside">
@@ -2795,6 +2796,7 @@
     "What's going on? (tap any that fit)":"Qu'est-ce qui se passe? (touchez ce qui correspond)",
     "Sleep":"Sommeil","Work":"Travail","Conflict":"Conflit","Craving":"Envie","Panic":"Panique","Family":"Famille","Win":"Réussite","Social":"Social",
     "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
+    "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
@@ -3178,6 +3180,14 @@
       btwResetEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
       btwContactEmail: {en:'you@yourclinic.ca', fr:'vous@votreclinique.ca'},
       btwContactMessage: {en:"How many physios? Anything you'd like to know?", fr:"Combien de physios? Quelque chose à savoir?"}
+    },
+    kinesiology: {
+      btwSuName: {en:'Jamie Rivera, Kin', fr:'Jamie Rivera, kin'},
+      btwContactName: {en:'Jamie Rivera, Kin', fr:'Jamie Rivera, kin'},
+      btwSuEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
+      btwResetEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
+      btwContactEmail: {en:'you@yourclinic.ca', fr:'vous@votreclinique.ca'},
+      btwContactMessage: {en:"How many kinesiologists? Anything you'd like to know?", fr:"Combien de kinésiologues? Quelque chose à savoir?"}
     }
   };
   const PH_AUD_IDS = ['btwSuName','btwContactName','btwSuEmail','btwResetEmail','btwContactEmail','btwContactMessage'];
@@ -3189,6 +3199,7 @@
     if(curAudience === 'schools') return curSchoolMode === 'classroom' ? [SCHOOLS_CLASS_EN, SCHOOLS_CLASS_FR] : [SCHOOLS_EN, SCHOOLS_FR];
     if(curAudience === 'fitness') return [FITNESS_EN, FITNESS_FR];
     if(curAudience === 'physio') return [PHYSIO_EN, PHYSIO_FR];
+    if(curAudience === 'kinesiology') return [KIN_EN, KIN_FR];
     return null;
   }
   function t(en){
@@ -3267,7 +3278,7 @@
     "she saw an old friend on the weekend.":"she set a sprint best on Friday.",
     // check-in chips / tags
     "Work":"Training",
-    "Family":"Life",
+    "Family":"Soreness","Win":"Mobility",
     // pricing
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Coaches pay per team and invite their players in for free. Players can also get Between on their own. They check in and track their own patterns with or without a coach.",
@@ -3391,7 +3402,7 @@
     "she saw an old friend on the weekend.":"record de sprint vendredi.",
     // check-in chips / tags
     "Work":"Entraînement",
-    "Family":"Vie",
+    "Family":"Courbatures","Win":"Mobilité",
     // pricing
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par équipe et invitent leurs joueurs gratuitement. Les joueurs peuvent aussi prendre Between par eux-mêmes. Ils font des suivis et suivent leurs tendances, avec ou sans entraîneur.",
@@ -3965,6 +3976,8 @@
   // already fits fitness ("clients", "sessions"). Only trainer/client/energy
   // wording and the fitness examples are overridden here.
   const FITNESS_EN = {
+    // check-in chips (demo): physical topics instead of the emotional set
+    "Win":"Mobility",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "See how your clients are really doing between training sessions. They send a quick note when something comes up and you get a short read before the next session.",
     "For therapists, counsellors & anyone on their own":"For trainers, coaches & anyone on their own",
@@ -4072,6 +4085,8 @@
     "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between our training sessions."
   };
   const FITNESS_FR = {
+    // check-in chips (demo): physical topics instead of the emotional set
+    "Win":"Mobilité",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Voyez comment vont vraiment vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court aperçu avant la prochaine séance.",
     "For therapists, counsellors & anyone on their own":"Pour entraîneurs, coachs et les particuliers",
@@ -4176,6 +4191,8 @@
   // Physiotherapists keep the clinical patient/caseload wording (like therapy),
   // with physio-flavoured marketing and the same pricing as Sports (team plan).
   const PHYSIO_EN = {
+    // check-in chips (demo): physical topics instead of the emotional set
+    "Work":"Soreness","Family":"Stiffness","Win":"Mobility",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "A simple way to see how recovery is going between appointments. Your patient sends a quick note when pain flares or an exercise is hard, and you get a short summary before the next visit.",
     "For therapists, counsellors & anyone on their own":"For physiotherapists & anyone on their own",
@@ -4244,6 +4261,8 @@
       "No, Between focuses specifically on between-appointment check-ins. It runs alongside whatever clinic or notes software you already use."
   };
   const PHYSIO_FR = {
+    // check-in chips (demo): physical topics instead of the emotional set
+    "Work":"Courbatures","Family":"Raideur","Win":"Mobilité",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment la récupération avance entre les rendez-vous. Votre patient envoie une note rapide quand la douleur augmente ou qu'un exercice est difficile, et vous recevez un court résumé avant la prochaine visite.",
     "For therapists, counsellors & anyone on their own":"Pour les physiothérapeutes et tous ceux qui veulent l'utiliser seuls",
@@ -4310,6 +4329,29 @@
     "No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.":
       "Non, Between se concentre sur les suivis entre les rendez-vous. Il fonctionne avec le logiciel de clinique ou de notes que vous utilisez déjà."
   };
+
+  // Kinesiology reuses the physio treatment (same clinic pricing, pain map,
+  // coach-type account); we just swap the profession word so it reads right.
+  function btwKinDict(dict, fr){
+    const map = fr ? [
+      [/Physiothérapeutes/g,'Kinésiologues'],[/physiothérapeutes/g,'kinésiologues'],
+      [/Physiothérapeute/g,'Kinésiologue'],[/physiothérapeute/g,'kinésiologue'],
+      [/Physiothérapie/g,'Kinésiologie'],[/physiothérapie/g,'kinésiologie'],
+      [/Physios/g,'Kinésiologues'],[/physios/g,'kinésiologues'],
+      [/Physio/g,'Kinésiologue'],[/physio/g,'kinésiologue']
+    ] : [
+      [/Physiotherapists/g,'Kinesiologists'],[/physiotherapists/g,'kinesiologists'],
+      [/Physiotherapist/g,'Kinesiologist'],[/physiotherapist/g,'kinesiologist'],
+      [/Physiotherapy/g,'Kinesiology'],[/physiotherapy/g,'kinesiology'],
+      [/Physios/g,'Kinesiologists'],[/physios/g,'kinesiologists'],
+      [/Physio/g,'Kinesiologist'],[/physio/g,'kinesiologist']
+    ];
+    const out = {};
+    for(const k in dict){ let v = dict[k]; for(const pair of map) v = v.replace(pair[0], pair[1]); out[k] = v; }
+    return out;
+  }
+  const KIN_EN = btwKinDict(PHYSIO_EN, false);
+  const KIN_FR = btwKinDict(PHYSIO_FR, true);
 
   const HERO_THREAD = {
     therapy:{
@@ -4451,7 +4493,7 @@
             : (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn))
         : curAudience === 'fitness'
         ? (curLang === 'fr' ? heroFitnessFr : heroFitnessEn)
-        : curAudience === 'physio'
+        : (curAudience === 'physio' || curAudience === 'kinesiology')
         ? (curLang === 'fr' ? heroPhysioFr : heroPhysioEn)
         : (curLang === 'fr' ? heroFr : heroEn);
     }
@@ -4500,7 +4542,7 @@
   }
 
   function setAudience(a){
-    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio') ? a : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
@@ -4526,7 +4568,7 @@
   // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
   function maybeCoachAudience(){
     if(!state.me) return;
-    if(state.me.account_type === 'coach' && curAudience !== 'sports' && curAudience !== 'physio') setAudience('sports');
+    if(state.me.account_type === 'coach' && curAudience !== 'sports' && curAudience !== 'physio' && curAudience !== 'kinesiology') setAudience('sports');
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
     else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
     else if(state.me.account_type === 'trainer' && curAudience !== 'fitness') setAudience('fitness');
@@ -4852,9 +4894,51 @@
     render();
   })();
 
-  // Body pain map: the patient taps where it hurts and how much (a bit / moderate
-  // / a lot), and the therapist card mirrors it as a colour-coded map plus a
-  // summary. Shown only for the physical audiences (sports / fitness / physio).
+  // Lateral (side-profile) body used by the Left and Right tabs. One geometry,
+  // shared by the demo and the real map; the right view mirrors it horizontally.
+  // Region labels carry {S}, replaced with the side word per view + language.
+  const BTW_SIDE_BASE = [
+    {el:'ellipse', a:{cx:49,cy:15,rx:10,ry:12}},          // head
+    {el:'ellipse', a:{cx:40,cy:17,rx:3.6,ry:5}},          // nose / brow forward
+    {el:'rect', a:{x:44,y:23,width:11,height:11,rx:4}},    // neck
+    {el:'rect', a:{x:38,y:31,width:27,height:44,rx:13}},   // trunk (chest -> hip)
+    {el:'ellipse', a:{cx:62,cy:70,rx:7,ry:9}},            // seat / buttock
+    {el:'rect', a:{x:45,y:33,width:11,height:33,rx:5}},    // upper arm
+    {el:'rect', a:{x:46,y:64,width:10,height:28,rx:5}},    // forearm
+    {el:'ellipse', a:{cx:51,cy:96,rx:6,ry:7}},            // hand
+    {el:'rect', a:{x:39,y:70,width:26,height:17,rx:10}},   // pelvis
+    {el:'rect', a:{x:41,y:85,width:19,height:50,rx:9}},    // thigh
+    {el:'ellipse', a:{cx:50,cy:135,rx:8,ry:7}},           // knee
+    {el:'rect', a:{x:42,y:139,width:16,height:47,rx:7}},   // shin
+    {el:'rect', a:{x:30,y:185,width:28,height:11,rx:4}}    // foot forward
+  ];
+  const BTW_SIDE_ZONES = [
+    {id:'neck', el:'rect', a:{x:44,y:23,width:11,height:11,rx:4}, en:'{S} side of neck', fr:'côté du cou {S}'},
+    {id:'shoulder', el:'ellipse', a:{cx:50,cy:34,rx:8,ry:7}, en:'{S} shoulder', fr:'épaule {S}'},
+    {id:'uarm', el:'rect', a:{x:45,y:38,width:11,height:26,rx:5}, en:'{S} upper arm', fr:'bras {S}'},
+    {id:'forearm', el:'rect', a:{x:46,y:64,width:10,height:27,rx:5}, en:'{S} forearm', fr:'avant-bras {S}'},
+    {id:'hand', el:'ellipse', a:{cx:51,cy:96,rx:6,ry:7}, en:'{S} hand', fr:'main {S}'},
+    {id:'chest', el:'rect', a:{x:38,y:33,width:15,height:16,rx:7}, en:'chest ({S})', fr:'poitrine ({S})'},
+    {id:'midback', el:'rect', a:{x:53,y:33,width:12,height:18,rx:6}, en:'upper back ({S})', fr:'haut du dos ({S})'},
+    {id:'core', el:'rect', a:{x:38,y:50,width:15,height:15,rx:6}, en:'core ({S})', fr:'tronc ({S})'},
+    {id:'lowback', el:'rect', a:{x:53,y:50,width:12,height:17,rx:6}, en:'lower back ({S})', fr:'bas du dos ({S})'},
+    {id:'glute', el:'ellipse', a:{cx:62,cy:70,rx:7,ry:9}, en:'{S} glute', fr:'fessier {S}'},
+    {id:'hip', el:'rect', a:{x:40,y:71,width:20,height:15,rx:8}, en:'{S} hip / groin', fr:'hanche / aine {S}'},
+    {id:'thigh', el:'rect', a:{x:41,y:86,width:19,height:46,rx:9}, en:'{S} outer thigh (IT band)', fr:'cuisse externe {S} (bandelette)'},
+    {id:'knee', el:'ellipse', a:{cx:50,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
+    {id:'calf', el:'rect', a:{x:42,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
+    {id:'foot', el:'rect', a:{x:30,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'}
+  ];
+  function btwSideZones(v){
+    const we = (v === 'right') ? 'right' : 'left';
+    const wf = (v === 'right') ? 'à droite' : 'à gauche';
+    return BTW_SIDE_ZONES.map(function(z){ return { id:z.id, el:z.el, a:z.a, en:z.en.replace('{S}', we), fr:z.fr.replace('{S}', wf) }; });
+  }
+  function btwIsSide(v){ return v === 'left' || v === 'right'; }
+
+  // Body pain map: the patient taps where it hurts and how much, and the
+  // therapist card mirrors it as a colour-coded map plus a summary. Shown only
+  // for the physical audiences (sports / fitness / physio / kinesiology).
   (function(){
     const fig = document.getElementById('btwMkBodyFig');
     if(!fig) return;
@@ -4953,10 +5037,12 @@
     };
     // Merge the ARMS geometry with each view's per-id label overrides.
     function zonesFor(v){
+      if(btwIsSide(v)) return btwSideZones(v);
       const meta = REGIONS[v][REGIONS[v].length - 1]; // the label map is last
       const list = REGIONS[v].slice(0, -1);
       return list.map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
+    function baseFor(v){ return btwIsSide(v) ? BTW_SIDE_BASE : BASE; }
     let view = 'front';
     const state = {}; // (view + ':' + id) -> 0..10
     let selected = null; // region key the slider is currently dialing
@@ -4964,13 +5050,16 @@
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     function svg(v, uid){
       const cid = 'bpc_' + uid;
+      const B = baseFor(v);
       // The base shapes double as a clipPath (their union = the body outline),
       // so colored regions are trimmed to the body and read as muscle areas,
       // not rectangles stacked on top.
-      const clipShapes = BASE.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
-      const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
-      const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(z.en) + '</title></' + z.el + '>'; }).join('');
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></svg>';
+      const clipShapes = B.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const base = B.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(fr()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
+      // Right side is the left profile mirrored, so both lateral views share one geometry.
+      const flip = (v === 'right') ? ' transform="translate(100,0) scale(-1,1)"' : '';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></g></svg>';
     }
     function paint(){
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
@@ -4985,7 +5074,7 @@
     function updateSummary(){
       if(!sumEl) return;
       const hurts = [];
-      ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
       const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10)'; });
@@ -5007,14 +5096,15 @@
       else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); }
       paint(); updateSummary();
     });
+    const VIEWS = { front:1, back:1, left:1, right:1 };
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
-      view = (b.dataset.view === 'back') ? 'back' : 'front';
+      view = VIEWS[b.dataset.view] ? b.dataset.view : 'front';
       selected = null;
       viewBtns.forEach(function(x){ x.classList.toggle('active', x === b); });
       render();
     }); });
     if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
-    const PHYS = { sports:1, fitness:1, physio:1 };
+    const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1 };
     function refresh(){
       const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
       if(wrap) wrap.hidden = !on;
@@ -5166,9 +5256,11 @@
       ].reduce(function(m,x){ m[x.id]=x; return m; }, {}))
     };
     function zonesFor(v){
+      if(btwIsSide(v)) return btwSideZones(v);
       const meta = REGIONS[v][REGIONS[v].length - 1];
       return REGIONS[v].slice(0, -1).map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
+    function baseFor(v){ return btwIsSide(v) ? BTW_SIDE_BASE : BASE; }
     function frL(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     btwCreateBodyMap._n = (btwCreateBodyMap._n || 0) + 1;
@@ -5181,7 +5273,8 @@
     root.className = 'btw-pm' + (readOnly ? ' ro' : '');
     const views = document.createElement('div');
     views.className = 'btw-mk-moodmode'; views.style.margin = '0 0 8px';
-    views.innerHTML = '<button type="button" class="btw-mk-modebtn active" data-view="front">' + esc(frL()?'Avant':'Front') + '</button><button type="button" class="btw-mk-modebtn" data-view="back">' + esc(frL()?'Arrière':'Back') + '</button>';
+    views.style.flexWrap = 'wrap';
+    views.innerHTML = '<button type="button" class="btw-mk-modebtn active" data-view="front">' + esc(frL()?'Avant':'Front') + '</button><button type="button" class="btw-mk-modebtn" data-view="back">' + esc(frL()?'Arrière':'Back') + '</button><button type="button" class="btw-mk-modebtn" data-view="left">' + esc(frL()?'Gauche':'Left') + '</button><button type="button" class="btw-mk-modebtn" data-view="right">' + esc(frL()?'Droite':'Right') + '</button>';
     const rowEl = document.createElement('div'); rowEl.className = 'btw-mk-bodyrow';
     const figWrap = document.createElement('div'); figWrap.className = 'btw-mk-bodyfig' + (readOnly ? ' btw-mk-bodyfigt' : '');
     const side = document.createElement('div');
@@ -5220,21 +5313,24 @@
     }
     function svg(v){
       const cid = 'bpc_' + uid;
-      const clipShapes = BASE.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
-      const base = BASE.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const B = baseFor(v);
+      const clipShapes = B.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
+      const base = B.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(frL()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></svg>';
+      const flip = (v === 'right') ? ' transform="translate(100,0) scale(-1,1)"' : '';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></g></svg>';
     }
     function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ const key = view + ':' + el.getAttribute('data-zone'); el.style.fill = FILL[state[key] || 0]; if(!readOnly && key === selected){ el.style.stroke = 'var(--ink)'; el.style.strokeWidth = '1.6'; el.style.strokeOpacity = '.85'; } else { el.style.stroke = 'none'; } }); }
     function summary(){
       const hurts = [];
-      ['front','back'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length) return frL() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.';
       return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + h.lv + '/10)'; }).join(', ') + '.';
     }
     function render(){ figWrap.innerHTML = svg(view); paint(); if(readOnly) side.textContent = summary(); }
-    views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = (b.dataset.view === 'back') ? 'back' : 'front'; selected = null; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
+    const VIEWS = { front:1, back:1, left:1, right:1 };
+    views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = VIEWS[b.dataset.view] ? b.dataset.view : 'front'; selected = null; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
     render();
     return {
       el: root,
@@ -5298,6 +5394,7 @@
   const PREMIUM_BY_AUD = {
     sports:  { plan: 'team_premium',    acct: 'coach' },
     physio:  { plan: 'team_premium',    acct: 'coach' },
+    kinesiology: { plan: 'team_premium', acct: 'coach' },
     schools: { plan: 'school_premium',  acct: 'school' },
     fitness: { plan: 'trainer_premium', acct: 'trainer' }
   };
@@ -5673,7 +5770,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : curAudience === 'physio' ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
@@ -6065,6 +6162,7 @@
     const p = String(plan || '');
     if(curAudience === 'sports')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'physio')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'kinesiology') return COACH_PLAN_FROM[p] || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
     if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
     if(curAudience === 'fitness')  return TRAINER_PLAN_FROM[p] || (p.indexOf('trainer_') === 0 ? p : 'trainer_monthly');
@@ -6086,7 +6184,7 @@
       openBilling(); return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    proSignup = (curAudience === 'sports' || curAudience === 'physio') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -6095,7 +6193,7 @@
       selectedPlan = COACH_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('team_') === 0 ? plan : 'team_monthly');
       teamField.style.display = '';
       nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = (curAudience === 'physio') ? 'Your physio account' : 'Your coach account';
+      if(eyebrow) eyebrow.textContent = (curAudience === 'physio') ? 'Your physio account' : (curAudience === 'kinesiology') ? 'Your kinesiology account' : 'Your coach account';
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
       selectedPlan = MENTOR_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('mentor_') === 0 ? plan : 'mentor_monthly');
@@ -6811,19 +6909,46 @@
   moodEl.addEventListener('input', ()=>{ if(moodSkipped) moodSkipped = false; moodValEl.textContent = moodEl.value; });
   document.getElementById('btwMoodSkip').addEventListener('click', ()=> setMoodSkipped(true));
 
-  document.querySelectorAll('.btw-tag:not(.btw-tag-add)').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const t = el.dataset.tag;
-      if(state.selectedTags.has(t)){ state.selectedTags.delete(t); el.classList.remove('active'); }
-      else { state.selectedTags.add(t); el.classList.add('active'); }
+  // Delegated so it keeps working when the preset set is rebuilt (physio vs
+  // therapy). Custom chips have no data-tag and keep their own remove handler.
+  const _tagPicker = document.getElementById('btwTagPicker');
+  if(_tagPicker){
+    _tagPicker.addEventListener('click', (e)=>{
+      const el = e.target.closest('.btw-tag[data-tag]'); if(!el || el.id === 'btwTagAdd') return;
+      const tg = el.dataset.tag;
+      if(state.selectedTags.has(tg)){ state.selectedTags.delete(tg); el.classList.remove('active'); }
+      else { state.selectedTags.add(tg); el.classList.add('active'); }
     });
-  });
+  }
+
+  // For physio/fitness/sports/kinesiology (coach/trainer contexts) the check-in
+  // topics are physical; therapy keeps the emotional set. Rebuilt in place so
+  // the picker matches whoever is checking in.
+  const COMPOSER_TAGS = {
+    therapy: ['Sleep','Work','Conflict','Craving','Panic','Family','Win','Social','Health','Money','Loneliness','Anger'],
+    phys: ['Soreness','Stiffness','Fatigue','Injury','Sleep','Mobility','Training load','Stress']
+  };
+  let _composerTagSet = 'therapy'; // matches the static markup on load
+  function renderComposerTags(which){
+    const picker = document.getElementById('btwTagPicker'); if(!picker) return;
+    const addBtn = document.getElementById('btwTagAdd');
+    _composerTagSet = which;
+    picker.querySelectorAll('.btw-tag[data-tag], .btw-tag-custom').forEach(el=>{ if(el.id !== 'btwTagAdd') el.remove(); });
+    state.selectedTags.clear();
+    (COMPOSER_TAGS[which] || COMPOSER_TAGS.therapy).forEach(tag=>{
+      const el = document.createElement('div');
+      el.className = 'btw-tag'; el.setAttribute('data-tag', tag); el.textContent = t(tag);
+      picker.insertBefore(el, addBtn);
+    });
+    presetTags = [...picker.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
+  }
+  function syncComposerTags(){ const want = painMapContext() ? 'phys' : 'therapy'; if(want !== _composerTagSet) renderComposerTags(want); }
 
   // Free-text "Something else" tag: patients can name a theme the presets
   // miss. Custom chips are removable (tap to delete) and cleared on send.
   const tagAddBtn = document.getElementById('btwTagAdd');
   const tagInput = document.getElementById('btwTagInput');
-  const presetTags = [...document.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
+  let presetTags = [...document.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
   function showTagInput(show){
     tagInput.style.display = show ? '' : 'none';
     tagAddBtn.style.display = show ? 'none' : '';
@@ -7500,7 +7625,7 @@
     const at = isPatient() ? (state.patient && state.patient.clinician_account_type) : (state.me && state.me.account_type);
     return at === 'coach' || at === 'trainer';
   }
-  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; }
+  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); }
   window.__btwUpdateComposePain = updateComposePain;
 
   sendBtn.addEventListener('click', async ()=>{
@@ -7572,10 +7697,11 @@
     else if (['schools','school','student','students','staff'].includes(forParam)) _startAud = 'schools';
     else if (['fitness','trainer','trainers','gym','coaching','pt'].includes(forParam)) _startAud = 'fitness';
     else if (['physio','physio therapy','physiotherapy','physiotherapist','physical-therapy','physicaltherapy'].includes(forParam)) _startAud = 'physio';
+    else if (['kinesiology','kinesiologist','kin','kinesiologie','kinésiologie','kinésiologue'].includes(forParam)) _startAud = 'kinesiology';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   try {
