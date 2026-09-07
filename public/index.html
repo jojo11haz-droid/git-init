@@ -4897,37 +4897,47 @@
   // Lateral (side-profile) body used by the Left and Right tabs. One geometry,
   // shared by the demo and the real map; the right view mirrors it horizontally.
   // Region labels carry {S}, replaced with the side word per view + language.
+  // Facing left (front of the body toward smaller x). The near-side arm hangs
+  // down the front so it reads as a distinct limb rather than blending into the
+  // trunk. Chest and seat bumps give the torso a recognizable side S-curve.
   const BTW_SIDE_BASE = [
-    {el:'ellipse', a:{cx:49,cy:15,rx:10,ry:12}},          // head
-    {el:'ellipse', a:{cx:40,cy:17,rx:3.6,ry:5}},          // nose / brow forward
-    {el:'rect', a:{x:44,y:23,width:11,height:11,rx:4}},    // neck
-    {el:'rect', a:{x:38,y:31,width:27,height:44,rx:13}},   // trunk (chest -> hip)
-    {el:'ellipse', a:{cx:62,cy:70,rx:7,ry:9}},            // seat / buttock
-    {el:'rect', a:{x:45,y:33,width:11,height:33,rx:5}},    // upper arm
-    {el:'rect', a:{x:46,y:64,width:10,height:28,rx:5}},    // forearm
-    {el:'ellipse', a:{cx:51,cy:96,rx:6,ry:7}},            // hand
-    {el:'rect', a:{x:39,y:70,width:26,height:17,rx:10}},   // pelvis
-    {el:'rect', a:{x:41,y:85,width:19,height:50,rx:9}},    // thigh
-    {el:'ellipse', a:{cx:50,cy:135,rx:8,ry:7}},           // knee
-    {el:'rect', a:{x:42,y:139,width:16,height:47,rx:7}},   // shin
-    {el:'rect', a:{x:30,y:185,width:28,height:11,rx:4}}    // foot forward
+    {el:'ellipse', a:{cx:50,cy:14,rx:9.5,ry:11.5}},       // head
+    {el:'ellipse', a:{cx:41,cy:15,rx:4,ry:5.5}},          // face / brow forward
+    {el:'ellipse', a:{cx:38,cy:18,rx:2.4,ry:2.2}},        // nose
+    {el:'rect', a:{x:45,y:23,width:10,height:10,rx:4}},    // neck
+    {el:'rect', a:{x:40,y:30,width:25,height:42,rx:12}},   // trunk
+    {el:'ellipse', a:{cx:41,cy:41,rx:5,ry:9}},            // chest front curve
+    {el:'ellipse', a:{cx:63,cy:73,rx:6.5,ry:8}},          // seat / buttock curve
+    {el:'rect', a:{x:41,y:70,width:24,height:16,rx:9}},    // pelvis
+    // near-side arm, hanging down the front so it reads as a distinct limb
+    {el:'ellipse', a:{cx:46,cy:33,rx:6.5,ry:6}},          // shoulder
+    {el:'rect', a:{x:33,y:34,width:10,height:30,rx:5}},    // upper arm
+    {el:'rect', a:{x:33,y:62,width:9,height:27,rx:4.5}},   // forearm
+    {el:'ellipse', a:{cx:38,cy:93,rx:6,ry:7}},            // hand
+    // near-side leg
+    {el:'rect', a:{x:43,y:85,width:19,height:50,rx:9}},    // thigh
+    {el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}},           // knee
+    {el:'rect', a:{x:44,y:139,width:16,height:47,rx:7}},   // shin
+    {el:'ellipse', a:{cx:59,cy:151,rx:5,ry:9}},           // calf bulge back
+    {el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}}    // foot forward
   ];
+  // Torso/leg regions first, then the arm last so the near arm sits on top.
   const BTW_SIDE_ZONES = [
-    {id:'neck', el:'rect', a:{x:44,y:23,width:11,height:11,rx:4}, en:'{S} side of neck', fr:'côté du cou {S}'},
-    {id:'shoulder', el:'ellipse', a:{cx:50,cy:34,rx:8,ry:7}, en:'{S} shoulder', fr:'épaule {S}'},
-    {id:'uarm', el:'rect', a:{x:45,y:38,width:11,height:26,rx:5}, en:'{S} upper arm', fr:'bras {S}'},
-    {id:'forearm', el:'rect', a:{x:46,y:64,width:10,height:27,rx:5}, en:'{S} forearm', fr:'avant-bras {S}'},
-    {id:'hand', el:'ellipse', a:{cx:51,cy:96,rx:6,ry:7}, en:'{S} hand', fr:'main {S}'},
-    {id:'chest', el:'rect', a:{x:38,y:33,width:15,height:16,rx:7}, en:'chest ({S})', fr:'poitrine ({S})'},
-    {id:'midback', el:'rect', a:{x:53,y:33,width:12,height:18,rx:6}, en:'upper back ({S})', fr:'haut du dos ({S})'},
-    {id:'core', el:'rect', a:{x:38,y:50,width:15,height:15,rx:6}, en:'core ({S})', fr:'tronc ({S})'},
+    {id:'neck', el:'rect', a:{x:45,y:23,width:10,height:10,rx:4}, en:'{S} side of neck', fr:'côté du cou {S}'},
+    {id:'chest', el:'rect', a:{x:44,y:32,width:11,height:16,rx:6}, en:'chest ({S})', fr:'poitrine ({S})'},
+    {id:'midback', el:'rect', a:{x:53,y:32,width:12,height:18,rx:6}, en:'upper back ({S})', fr:'haut du dos ({S})'},
+    {id:'core', el:'rect', a:{x:45,y:50,width:10,height:15,rx:5}, en:'core ({S})', fr:'tronc ({S})'},
     {id:'lowback', el:'rect', a:{x:53,y:50,width:12,height:17,rx:6}, en:'lower back ({S})', fr:'bas du dos ({S})'},
-    {id:'glute', el:'ellipse', a:{cx:62,cy:70,rx:7,ry:9}, en:'{S} glute', fr:'fessier {S}'},
-    {id:'hip', el:'rect', a:{x:40,y:71,width:20,height:15,rx:8}, en:'{S} hip / groin', fr:'hanche / aine {S}'},
-    {id:'thigh', el:'rect', a:{x:41,y:86,width:19,height:46,rx:9}, en:'{S} outer thigh (IT band)', fr:'cuisse externe {S} (bandelette)'},
-    {id:'knee', el:'ellipse', a:{cx:50,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
-    {id:'calf', el:'rect', a:{x:42,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
-    {id:'foot', el:'rect', a:{x:30,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'}
+    {id:'glute', el:'ellipse', a:{cx:62,cy:73,rx:6.5,ry:8}, en:'{S} glute', fr:'fessier {S}'},
+    {id:'hip', el:'rect', a:{x:42,y:71,width:18,height:14,rx:8}, en:'{S} hip / groin', fr:'hanche / aine {S}'},
+    {id:'thigh', el:'rect', a:{x:43,y:86,width:19,height:46,rx:9}, en:'{S} outer thigh (IT band)', fr:'cuisse externe {S} (bandelette)'},
+    {id:'knee', el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
+    {id:'calf', el:'rect', a:{x:44,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
+    {id:'foot', el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'},
+    {id:'shoulder', el:'ellipse', a:{cx:46,cy:33,rx:6.5,ry:6}, en:'{S} shoulder', fr:'épaule {S}'},
+    {id:'uarm', el:'rect', a:{x:33,y:37,width:10,height:25,rx:5}, en:'{S} upper arm', fr:'bras {S}'},
+    {id:'forearm', el:'rect', a:{x:33,y:62,width:9,height:26,rx:4.5}, en:'{S} forearm', fr:'avant-bras {S}'},
+    {id:'hand', el:'ellipse', a:{cx:38,cy:93,rx:6,ry:7}, en:'{S} hand', fr:'main {S}'}
   ];
   function btwSideZones(v){
     const we = (v === 'right') ? 'right' : 'left';
