@@ -2125,14 +2125,14 @@
         <div id="btwFutureCardDate" style="font-size:11px;color:#8a7a4a;margin-top:8px;"></div>
         <button type="button" id="btwFutureCardDismiss" style="background:none;border:none;padding:0;margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Thanks, close this</button>
       </div>
-      <div class="btw-field-label">Mood right now</div>
+      <div class="btw-field-label" id="btwMoodLabel">Mood right now</div>
       <div class="btw-mood-row">
-        <span style="font-size:11px;color:var(--ink-soft)">Low</span>
+        <span style="font-size:11px;color:var(--ink-soft)" id="btwMoodLow">Low</span>
         <input type="range" id="btwMood" min="1" max="10" value="5">
-        <span style="font-size:11px;color:var(--ink-soft)">High</span>
+        <span style="font-size:11px;color:var(--ink-soft)" id="btwMoodHigh">High</span>
         <span class="btw-mood-val" id="btwMoodVal">5</span>
       </div>
-      <div style="margin:-6px 0 12px;font-size:11px;">
+      <div style="margin:-6px 0 12px;font-size:11px;" id="btwMoodSkipRow">
         <button type="button" id="btwMoodSkip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Not sure? Let AI estimate it</button>
         <span id="btwMoodSkipNote" style="display:none;color:var(--ink-soft);"></span>
       </div>
@@ -2228,7 +2228,7 @@
 
       <div class="btw-charts">
         <div class="btw-chart-box">
-          <div class="btw-chart-title">Mood trend</div>
+          <div class="btw-chart-title" id="btwMoodChartTitle">Mood trend</div>
           <svg id="btwMoodChart" viewBox="0 0 260 90" width="100%" height="90"></svg>
         </div>
         <div class="btw-chart-box">
@@ -2944,6 +2944,10 @@
     "avg so far, more check-ins reveal the trend":"moyenne jusqu'ici, d'autres suivis révéleront la tendance",
     "vs earlier check-ins":"vs suivis précédents",
     "Mood range":"Amplitude de l'humeur","most recent":"le plus récent",
+    "Pain right now":"Douleur en ce moment","Pain trend":"Tendance de la douleur","Pain range":"Amplitude de la douleur","Pain stability":"Stabilité de la douleur",
+    "easing":"en baisse","worsening":"en hausse","avg pain":"douleur moy.","pain":"douleur","No pain":"Aucune",
+    "Minimal":"Minimale","Mild":"Légère","Moderate":"Modérée","High pain":"Élevée","Severe":"Sévère",
+    "Tied to more pain":"Associé à plus de douleur","Tied to less pain":"Associé à moins de douleur",
     "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier","several a day":"plusieurs par jour",
     "Delete patient":"Supprimer le patient","Permanently delete":"Supprimer définitivement","Delete":"Supprimer",
     "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
@@ -4547,6 +4551,7 @@
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
+    if(window.__btwScoreMode) window.__btwScoreMode();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -4570,6 +4575,7 @@
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
+    if(window.__btwScoreMode) window.__btwScoreMode();
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
@@ -4691,6 +4697,17 @@
       en: [[2,'really struggling today'],[4,'low energy and worn down'],[6,'getting by, a mixed day'],[8,'feeling pretty steady'],[10,'in a good place today']],
       fr: [[2,'vraiment en difficulté'],[4,"peu d'énergie, journée éprouvante"],[6,'ça va, journée en dents de scie'],[8,'plutôt stable'],[10,'dans un bon moment']]
     };
+    // Physio / kinesiology track pain instead of mood: higher means more pain.
+    const PAIN_WORDS = {
+      en: [[2,'Minimal'],[4,'Mild'],[6,'Moderate'],[8,'High'],[10,'Severe']],
+      fr: [[2,'Minimale'],[4,'Légère'],[6,'Modérée'],[8,'Élevée'],[10,'Sévère']]
+    };
+    const PAIN_READS = {
+      en: [[2,'barely any pain today'],[4,'a bit sore'],[6,'sore, a rough day'],[8,'in real pain today'],[10,'severe pain right now']],
+      fr: [[2,'presque aucune douleur'],[4,'un peu endolori'],[6,'endolori, journée difficile'],[8,'vraiment douloureux'],[10,'douleur sévère en ce moment']]
+    };
+    const mlabel = document.querySelector('#btwMkComposer .btw-mk-mlabel') || document.querySelector('.btw-mk-mlabel');
+    function painDemo(){ return typeof painMode === 'function' && painMode(); }
     function pick(table, v){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
       const rows = table[l];
@@ -4704,8 +4721,12 @@
       const v = Math.min(10, Math.max(1, Math.round(rawv))); // whole number for display
       const pct = ((rawv - 1) / 9) * 100;                    // raw for a smooth fill
       const waiting = (moodMode === 'ai' && !aiRated);        // AI mode, before a check-in is read
+      const pmode = painDemo();
+      const wordsT = pmode ? PAIN_WORDS : WORDS;
+      const readsT = pmode ? PAIN_READS : READS;
+      if(mlabel) mlabel.textContent = pmode ? (fr ? 'Douleur en ce moment' : 'Pain right now') : (fr ? 'Humeur en ce moment' : 'Mood right now');
       if(fill) fill.style.width = waiting ? '0%' : pct + '%';
-      if(pill) pill.textContent = waiting ? (fr ? 'Between estime' : 'Between estimates') : (pick(WORDS, v) + ' (' + v + '/10)');
+      if(pill) pill.textContent = waiting ? (fr ? 'Between estime' : 'Between estimates') : (pick(wordsT, v) + ' (' + v + '/10)');
       // Weave any tapped topics (read live so they follow language + audience)
       // into the AI read, e.g. "getting by, a mixed day, mostly work and sleep".
       const topics = chips.filter(c => c.classList.contains('on'))
@@ -4714,7 +4735,7 @@
       if(feeling){
         feeling.textContent = waiting
           ? (fr ? 'envoyez votre suivi pour une estimation' : 'send your check-in for an estimate') + clause
-          : pick(READS, v) + clause;
+          : pick(readsT, v) + clause;
       }
       if(chipsNote){
         chipsNote.textContent = (topicMode === 'ai')
@@ -6800,7 +6821,7 @@
       const when = d.toLocaleDateString(loc,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(loc,{hour:'numeric',minute:'2-digit'});
       return `<div style="padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px;">
         <button class="btw-entry-delete" data-cid="${esc(c.id)}" title="✕">✕</button>
-        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · ${esc(t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10${c.risk?' · <span style="color:var(--amber)">'+esc(t('safety flag'))+'</span>':''}</div>
+        <div style="font-family:var(--font-mono);color:var(--ink-soft);margin-bottom:3px;">${when} · ${esc(painMode()?t('pain'):t('mood'))} ${esc(c.mood!=null?c.mood:'–')}/10${c.risk?' · <span style="color:var(--amber)">'+esc(t('safety flag'))+'</span>':''}</div>
         <div>${esc(c.summary)}</div>
       </div>`;
     }).join('');
@@ -7178,6 +7199,29 @@
     if(n <= 8) return t('Good');
     return t('Great');
   }
+  // Physio and kinesiology track pain instead of mood: the 0-10 scalar means
+  // pain (higher = worse) and the trend reads the other way (less pain = better).
+  function painMode(){ const d = painDiscipline(); return d === 'physio' || d === 'kinesiology'; }
+  function painWord(n){
+    if(n == null) return '';
+    if(n <= 2) return t('Minimal');
+    if(n <= 4) return t('Mild');
+    if(n <= 6) return t('Moderate');
+    if(n <= 8) return t('High pain');
+    return t('Severe');
+  }
+  function scoreWord(n){ return painMode() ? painWord(n) : moodWord(n); }
+  // Relabel the check-in scalar (mood vs pain) wherever it is static text.
+  function applyScoreMode(){
+    const pm = painMode();
+    const set = (id, txt)=>{ const e = document.getElementById(id); if(e) e.textContent = txt; };
+    set('btwMoodLabel', pm ? t('Pain right now') : t('Mood right now'));
+    set('btwMoodLow', pm ? t('No pain') : t('Low'));
+    set('btwMoodHigh', pm ? t('Severe') : t('High'));
+    set('btwMoodChartTitle', pm ? t('Pain trend') : t('Mood trend'));
+    const skip = document.getElementById('btwMoodSkipRow'); if(skip) skip.style.display = pm ? 'none' : '';
+  }
+  window.__btwScoreMode = applyScoreMode;
   // Warning-triangle icon marking a patient in a critical situation.
   const RISK_ICO = '<svg class="btw-risk-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
   // Traffic-light status dot from the latest mood and any safety flag.
@@ -7391,7 +7435,7 @@
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
-          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(t('mood'))} ${c.mood!=null?esc(moodWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
+          <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(painMode()?t('pain'):t('mood'))} ${c.mood!=null?esc(scoreWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
@@ -7506,27 +7550,32 @@
     const ins = computeInsights(list);
     const card = (label,value,sub)=> `<div class="btw-insight"><div class="btw-insight-label">${esc(label)}</div><div class="btw-insight-value">${value}</div>${sub?`<div class="btw-insight-sub">${esc(sub)}</div>`:''}</div>`;
     const cards = [];
+    const pm = painMode();
     if(ins.avg != null){
       let value, sub;
       if(ins.delta == null){
-        value = esc(moodWord(ins.avg)) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.avg.toFixed(1) + '/10)</span>';
+        value = esc(scoreWord(ins.avg)) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.avg.toFixed(1) + '/10)</span>';
         sub = t('avg so far, more check-ins reveal the trend');
-      } else if(ins.delta > 0.5){
-        value = '<span class="up">↑ ' + esc(t('improving')) + '</span>';
-        sub = '+' + ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
-      } else if(ins.delta < -0.5){
-        value = '<span class="down">↓ ' + esc(t('declining')) + '</span>';
-        sub = ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
       } else {
-        value = esc(t('holding steady'));
-        sub = t('avg mood') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + '/10)';
+        // For pain, less is better, so improving/declining flip direction.
+        const better = pm ? (ins.delta < -0.5) : (ins.delta > 0.5);
+        const worse  = pm ? (ins.delta > 0.5)  : (ins.delta < -0.5);
+        const signed = (ins.delta > 0 ? '+' : '') + ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
+        if(better){
+          value = '<span class="up">' + (pm ? '↓ ' + esc(t('easing')) : '↑ ' + esc(t('improving'))) + '</span>'; sub = signed;
+        } else if(worse){
+          value = '<span class="down">' + (pm ? '↑ ' + esc(t('worsening')) : '↓ ' + esc(t('declining'))) + '</span>'; sub = signed;
+        } else {
+          value = esc(t('holding steady'));
+          sub = (pm ? t('avg pain') : t('avg mood')) + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + '/10)';
+        }
       }
-      cards.push(card(t('Mood direction'), value, sub));
+      cards.push(card(pm ? t('Pain trend') : t('Mood direction'), value, sub));
     }
     if(ins.low != null){
-      const wLow = moodWord(ins.low), wHigh = moodWord(ins.high);
+      const wLow = scoreWord(ins.low), wHigh = scoreWord(ins.high);
       const rangeWord = wLow === wHigh ? wLow : wLow + '–' + wHigh;
-      cards.push(card(t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + '–' + ins.high + '/10)</span>', t('most recent') + ': ' + moodWord(ins.latest) + ' (' + ins.latest + '/10)'));
+      cards.push(card(pm ? t('Pain range') : t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + '–' + ins.high + '/10)</span>', t('most recent') + ': ' + scoreWord(ins.latest) + ' (' + ins.latest + '/10)'));
     }
     // Only talk about a rate once there's enough of a time window to mean
     // something, otherwise a couple of check-ins made minutes apart would
@@ -7547,21 +7596,26 @@
     }
     // Themes that line up with lower / higher moods than usual.
     if(ins.avg != null && ins.themeMood && ins.themeMood.length){
-      const byMood = [...ins.themeMood].sort((a,b)=>a.avg-b.avg);
-      const lowest = byMood[0];
-      const highest = byMood[byMood.length-1];
-      const moodSpan = (v)=> ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">' + esc(moodWord(v)) + ' (' + v.toFixed(1) + '/10)</span>';
-      if(lowest && (ins.avg - lowest.avg) >= 0.8){
-        cards.push(card(t('Tied to lower mood'), '<span class="down">' + esc(themeName(lowest.tag)) + '</span>' + moodSpan(lowest.avg), t('vs') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
+      const byScore = [...ins.themeMood].sort((a,b)=>a.avg-b.avg);
+      const lowest = byScore[0];
+      const highest = byScore[byScore.length-1];
+      const span = (v)=> ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">' + esc(scoreWord(v)) + ' (' + v.toFixed(1) + '/10)</span>';
+      // The "concern" theme is the lowest mood, or for pain the highest pain.
+      const concern = pm ? highest : lowest;
+      const good = pm ? lowest : highest;
+      const concernGap = pm ? (highest.avg - ins.avg) : (ins.avg - lowest.avg);
+      const goodGap = pm ? (ins.avg - lowest.avg) : (highest.avg - ins.avg);
+      if(concern && concernGap >= 0.8){
+        cards.push(card(pm ? t('Tied to more pain') : t('Tied to lower mood'), '<span class="down">' + esc(themeName(concern.tag)) + '</span>' + span(concern.avg), t('vs') + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
       }
-      if(highest && highest.tag !== lowest.tag && (highest.avg - ins.avg) >= 0.8){
-        cards.push(card(t('Tied to better mood'), '<span class="up">' + esc(themeName(highest.tag)) + '</span>' + moodSpan(highest.avg), t('vs') + ' ' + moodWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
+      if(good && good.tag !== concern.tag && goodGap >= 0.8){
+        cards.push(card(pm ? t('Tied to less pain') : t('Tied to better mood'), '<span class="up">' + esc(themeName(good.tag)) + '</span>' + span(good.avg), t('vs') + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
       }
     }
-    // How steady the mood has been.
+    // How steady the score has been.
     if(ins.moodSd != null){
       const label = ins.moodSd < 1.2 ? t('steady') : (ins.moodSd < 2.2 ? t('some ups and downs') : t('highly variable'));
-      cards.push(card(t('Mood stability'), esc(label), '±' + ins.moodSd.toFixed(1) + ' ' + t('pts')));
+      cards.push(card(pm ? t('Pain stability') : t('Mood stability'), esc(label), '±' + ins.moodSd.toFixed(1) + ' ' + t('pts')));
     }
     if(ins.recentRisk > 0 && !isPatient()){
       cards.push(card(t('Safety flags'), String(ins.recentRisk), t('in the last 14 days')));
@@ -7777,7 +7831,7 @@
     const at = isPatient() ? (state.patient && state.patient.clinician_account_type) : (state.me && state.me.account_type);
     return at === 'coach' || at === 'trainer';
   }
-  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); }
+  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); applyScoreMode(); }
   window.__btwUpdateComposePain = updateComposePain;
 
   sendBtn.addEventListener('click', async ()=>{
