@@ -160,6 +160,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'patient';
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
@@ -179,7 +180,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, mfa_enabled, plan, subscription_status, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -195,12 +196,12 @@ export async function createClinician({ name, email, passwordHash, licenceNumber
 // hold a professional licence, so there's nothing to review: the account is
 // created already verified and can use the roster/check-in tools immediately.
 // The team name is stored in practice_name, reusing the existing column.
-export async function createCoach({ name, email, passwordHash, teamName, plan }) {
+export async function createCoach({ name, email, passwordHash, teamName, plan, discipline }) {
   const { rows } = await pool.query(
-    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, practice_name, plan)
-     VALUES ($1, lower($2), $3, 'coach', true, $4, $5)
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, practice_name, plan, discipline)
+     VALUES ($1, lower($2), $3, 'coach', true, $4, $5, $6)
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
-    [name, email, passwordHash, teamName || null, plan || null]
+    [name, email, passwordHash, teamName || null, plan || null, discipline || null]
   );
   return rows[0];
 }
@@ -236,8 +237,8 @@ export async function createSchool({ name, email, passwordHash, plan }) {
 // account is usable immediately, exactly like coaches and schools.
 export async function createTrainer({ name, email, passwordHash, plan }) {
   const { rows } = await pool.query(
-    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, plan)
-     VALUES ($1, lower($2), $3, 'trainer', true, $4)
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, plan, discipline)
+     VALUES ($1, lower($2), $3, 'trainer', true, $4, 'fitness')
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
     [name, email, passwordHash, plan || null]
   );
@@ -634,7 +635,7 @@ export async function createPatientSession(tokenHash, patientId, ttlDays) {
 
 export async function getPatientBySession(tokenHash) {
   const { rows } = await pool.query(
-    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type
+    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
      FROM patient_sessions s JOIN patients p ON p.id = s.patient_id
      LEFT JOIN clinicians c ON c.id = p.clinician_id
      WHERE s.token_hash = $1 AND s.expires_at > now()`,

@@ -405,18 +405,28 @@ function confirmationEmailHtml({ heading, paragraphs, site }) {
   });
 }
 
-function sendWelcomeEmail({ to, name, kind }) {
+function sendWelcomeEmail({ to, name, kind, discipline }) {
   if (!to) return;
   const first = String(name || '').trim().split(/\s+/)[0] || 'there';
   const site = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
   const heading = kind === 'therapist'
     ? `You're signed up, ${first}.`
     : `You're in, ${first}.`;
+  // Physio / kinesiology / fitness accounts get copy that speaks to their
+  // practice — patients, recovery between visits, and the body pain map.
+  const proBody =
+    discipline === 'physio'
+      ? `Your clinic account is confirmed and ready. Add your patients and you'll see how their recovery is going between appointments — a quick note when pain flares or an exercise is hard, plus a body pain map showing exactly where it hurts and how much.`
+    : discipline === 'kinesiology'
+      ? `Your kinesiology account is confirmed and ready. Add your clients and you'll see how they're moving between sessions — a quick note when something bothers them, plus a body pain map showing exactly where it hurts and how much.`
+    : discipline === 'fitness'
+      ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions — soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
+    : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const body = kind === 'therapist'
     ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
     : kind === 'patient'
     ? `Your account is confirmed and ready. Whenever something comes up, you can check in with a quick voice note or text, and watch your own patterns over time. Your check-ins stay private to you, and AI summaries stay off until you turn them on.`
-    : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
+    : proBody;
   const text =
     `Hi ${first},\n\n` +
     `${body}\n\n` +
@@ -490,6 +500,10 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, teamName } = req.body || {};
+    // Coaches, physios and kinesiologists all use this route (all coach-type
+    // accounts); the discipline just tailors the welcome email and the app copy.
+    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology'];
+    const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
@@ -504,10 +518,11 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
       email: email.trim(),
       passwordHash: await hashPassword(password),
       teamName: typeof teamName === 'string' ? teamName.trim() : null,
-      plan
+      plan,
+      discipline
     });
     await startSession(res, req, coach.id);
-    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: 'pro' });
+    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: 'pro', discipline });
 
     // Start the 14-day trial with a card on file, same as every other plan.
     // Null when Stripe or this plan's price isn't configured (dev/no-Stripe).
@@ -641,7 +656,7 @@ app.post('/api/auth/trainer/signup', requireDb, signupLimiter, async (req, res) 
       plan
     });
     await startSession(res, req, trainer.id);
-    sendWelcomeEmail({ to: trainer.email, name: trainer.name, kind: 'pro' });
+    sendWelcomeEmail({ to: trainer.email, name: trainer.name, kind: 'pro', discipline: 'fitness' });
 
     let checkoutUrl = null;
     try { checkoutUrl = await startClinicianCheckout(trainer, plan, siteOrigin(req)); }
@@ -1408,7 +1423,8 @@ function publicPatient(p) {
     consent_version: p.consent_version,
     plan: p.plan,
     subscription_status: p.subscription_status,
-    clinician_account_type: p.clinician_account_type || null
+    clinician_account_type: p.clinician_account_type || null,
+    clinician_discipline: p.clinician_discipline || null
   };
 }
 
