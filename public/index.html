@@ -2817,8 +2817,9 @@
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
-    "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.":
-      "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local. Votre thérapeute a aussi été avisé.",
+    "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.":
+      "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local.",
+    "Your therapist has also been notified.":"Votre thérapeute a aussi été avisé.",
     "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
       "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
     // therapist pane
@@ -3239,6 +3240,8 @@
   // itself (dashboards, auth, stored data) is never touched.
   const SPORTS_EN = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Send a quick check-in. Your coach will see a short summary, not the raw recording.",
+    "Summarizing for your therapist…":"Summarizing for your coach…",
+    "Your therapist has also been notified.":"Your coach has also been notified.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Check-ins between practices and games for sports teams. A player sends a quick note the moment something happens. Between turns it into a short summary. You see the pattern before your next practice or game.",
     "For therapists, counsellors & anyone on their own":"For coaches, teams & anyone on their own",
@@ -3364,6 +3367,8 @@
   };
   const SPORTS_FR = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Envoyez un court suivi. Votre entraîneur verra un bref résumé, pas l'enregistrement brut.",
+    "Summarizing for your therapist…":"Résumé en cours pour votre entraîneur…",
+    "Your therapist has also been notified.":"Votre entraîneur a aussi été avisé.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Des suivis entre les entraînements et les matchs pour les équipes sportives. Un joueur envoie une note sur le vif. Between la résume. Vous voyez la tendance avant votre prochain entraînement ou match.",
     "For therapists, counsellors & anyone on their own":"Pour entraîneurs, équipes et les particuliers",
@@ -4001,6 +4006,8 @@
   // wording and the fitness examples are overridden here.
   const FITNESS_EN = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Send a quick check-in. Your trainer will see a short summary, not the raw recording.",
+    "Summarizing for your therapist…":"Summarizing for your trainer…",
+    "Your therapist has also been notified.":"Your trainer has also been notified.",
     // check-in chips (demo): physical topics instead of the emotional set
     "Win":"Mobility",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -4111,6 +4118,8 @@
   };
   const FITNESS_FR = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Envoyez un court suivi. Votre entraîneur verra un bref résumé, pas l'enregistrement brut.",
+    "Summarizing for your therapist…":"Résumé en cours pour votre entraîneur…",
+    "Your therapist has also been notified.":"Votre entraîneur a aussi été avisé.",
     // check-in chips (demo): physical topics instead of the emotional set
     "Win":"Mobilité",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -4218,6 +4227,8 @@
   // with physio-flavoured marketing and the same pricing as Sports (team plan).
   const PHYSIO_EN = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Send a quick check-in. Your physio will see a short summary, not the raw recording.",
+    "Summarizing for your therapist…":"Summarizing for your physio…",
+    "Your therapist has also been notified.":"Your physio has also been notified.",
     // check-in chips (demo): physical topics instead of the emotional set
     "Work":"Soreness","Family":"Stiffness","Win":"Mobility",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -4289,6 +4300,8 @@
   };
   const PHYSIO_FR = {
     "Send a quick check-in. Your therapist will see a short summary, not the raw recording.":"Envoyez un court suivi. Votre physio verra un bref résumé, pas l'enregistrement brut.",
+    "Summarizing for your therapist…":"Résumé en cours pour votre physio…",
+    "Your therapist has also been notified.":"Votre physio a aussi été avisé.",
     // check-in chips (demo): physical topics instead of the emotional set
     "Work":"Courbatures","Family":"Raideur","Win":"Mobilité",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -5698,9 +5711,9 @@
     if(proc) proc.textContent = patient ? t('Saving your check-in…') : t('Summarizing for your therapist…');
     const crisisBox = document.getElementById('btwCrisis');
     if(crisisBox){
-      crisisBox.innerHTML = patient
-        ? "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number."
-        : "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.";
+      const lead = t("This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.");
+      const full = patient ? lead : (lead + ' ' + t('Your therapist has also been notified.'));
+      crisisBox.innerHTML = full.replace('988', '<strong>988</strong>');
     }
   }
 
