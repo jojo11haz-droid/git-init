@@ -4908,9 +4908,10 @@
   // A single smooth contour for the profile (head, back, buttock, leg, foot,
   // then up the front) plus a separate arm shape, so it reads as an actual
   // person in side view rather than stacked blocks. Facing left (front = -x).
+  const BTW_SIDE_ARM_D = 'M45 33 C41 33 38 37 37 43 C36 56 36 70 37 82 C37 90 38 98 41 101 C44 102 46 97 47 90 C48 76 48 60 48 46 C48 40 48 35 45 33 Z';
   const BTW_SIDE_BASE = [
     {el:'path', a:{d:'M49 4 C54 4 58 9 58 16 C58 21 56 26 55 30 C55 33 59 33 60 36 C61 41 61 46 61 51 C61 57 60 60 60 64 C60 68 61 72 62 76 C63 80 62 84 59 87 C58 101 58 118 57 130 C56 137 59 145 60 153 C60 166 56 172 55 178 C55 184 56 188 57 191 L58 194 L31 195 L31 189 C36 186 42 185 45 183 C46 170 46 150 46 140 C46 137 47 135 47 132 C46 120 43 105 43 92 C43 87 42 81 41 75 C40 69 39 64 39 57 C39 50 38 46 38 43 C38 39 39 36 42 34 C44 32 45 31 46 29 C47 27 47 24 46 22 C45 20 42 20 41 18 C40 16 41 13 43 10 C45 7 47 4 49 4 Z'}},   // body
-    {el:'path', a:{d:'M45 33 C41 33 38 37 37 43 C36 56 36 70 37 82 C37 90 38 98 41 101 C44 102 46 97 47 90 C48 76 48 60 48 46 C48 40 48 35 45 33 Z'}}   // near arm
+    {el:'path', a:{d:BTW_SIDE_ARM_D}}   // near arm
   ];
   // Torso/leg regions first, then the arm last so the near arm sits on top.
   const BTW_SIDE_ZONES = [
@@ -4968,18 +4969,35 @@
     '<line x1="43" y1="91" x2="44" y2="129"/><path d="M38 93 C37 106 38 120 41 128"/><line x1="47" y1="100" x2="46" y2="126"/>' + // hamstring
     '<path d="M41 141 C39 151 40 163 43 171"/><path d="M46 141 C47 151 46 161 44 169"/><line x1="44" y1="141" x2="44" y2="169"/>' + // calf
     '<line x1="43" y1="172" x2="44" y2="183"/>';                                                            // achilles
-  const BTW_ART_SIDE =
-    '<path d="M39 31 C35 33 34 38 37 41"/>' +                                                               // delt
-    '<path d="M41 35 C39 40 40 46 43 49"/>' +                                                               // pec edge
-    '<line x1="45" y1="50" x2="46" y2="65"/>' +                                                             // ab line
-    '<line x1="44" y1="46" x2="47" y2="48"/><line x1="44" y1="49" x2="47" y2="51"/>' +                      // serratus
-    '<line x1="41" y1="42" x2="41" y2="62"/><line x1="44" y1="44" x2="44" y2="62"/>' +                      // biceps
-    '<line x1="41" y1="66" x2="42" y2="88"/>' +                                                             // forearm
+  // Side art is layered: torso muscles, then the arm is re-filled on top to
+  // occlude the torso where it overlaps (the near arm hangs in front), then arm
+  // and leg muscles. Gives the muscular-side-view look without lines showing
+  // through the arm.
+  const BTW_ART_SIDE_TORSO =
+    '<path d="M39 31 C35 33 34 39 37 43 C40 42 42 39 43 36"/>' +                                            // deltoid cap
+    '<line x1="47" y1="24" x2="49" y2="31"/>' +                                                             // scm
+    '<path d="M40 35 C39 40 41 46 44 49"/><line x1="41" y1="39" x2="45" y2="40"/><line x1="41" y1="43" x2="46" y2="44"/>' + // pec + striations
+    '<path d="M45 46 L48 48 L45 50 L48 52 L45 54 L48 56"/>' +                                               // serratus fingers
+    '<line x1="45" y1="59" x2="50" y2="63"/><line x1="45" y1="63" x2="50" y2="67"/>' +                      // obliques
+    '<line x1="42" y1="50" x2="43" y2="68"/><line x1="41" y1="53" x2="45" y2="53"/><line x1="41" y1="59" x2="45" y2="59"/><line x1="42" y1="65" x2="45" y2="65"/>' + // abs
+    '<path d="M52 42 C55 51 57 59 58 65"/>';                                                                // lat / back
+  const BTW_ART_SIDE_ARM =
+    '<path d="M41 42 C39 50 40 58 42 62"/>' +                                                               // biceps
+    '<line x1="46" y1="43" x2="46" y2="61"/>' +                                                             // triceps
+    '<line x1="41" y1="66" x2="42" y2="88"/><line x1="45" y1="66" x2="45" y2="85"/>';                       // forearm
+  const BTW_ART_SIDE_LEG =
     '<path class="fillmus" d="M57 68 C60 67 62 70 61 74 C60 77 57 76 57 72 Z"/>' +                          // glute
-    '<line x1="50" y1="92" x2="51" y2="128"/><line x1="45" y1="92" x2="46" y2="126"/>' +                    // thigh
-    '<path d="M56 146 C59 153 58 163 55 170"/><line x1="47" y1="142" x2="48" y2="176"/>';                   // calf / shin
+    '<line x1="49" y1="90" x2="50" y2="128"/><path d="M45 92 C44 105 45 118 47 128"/><path d="M53 108 C54 116 53 124 51 130"/>' + // quads
+    '<path d="M55 92 C56 106 55 120 53 128"/>' +                                                            // hamstring
+    '<line x1="47" y1="133" x2="55" y2="133"/>' +                                                           // knee
+    '<path d="M54 142 C57 150 56 162 53 170"/><path d="M50 143 C51 152 50 162 49 168"/>' +                  // gastrocnemius (2 heads)
+    '<line x1="47" y1="141" x2="48" y2="177"/>';                                                            // tibialis / shin
   function btwMuscleArt(v){
-    if(btwIsSide(v)) return '<g class="btw-bz-art">' + BTW_ART_SIDE + '</g>';
+    if(btwIsSide(v)){
+      return '<g class="btw-bz-art">' + BTW_ART_SIDE_TORSO +
+        '<path class="btw-bz-base" d="' + BTW_SIDE_ARM_D + '"/>' +   // re-cover the arm to hide torso lines behind it
+        BTW_ART_SIDE_ARM + BTW_ART_SIDE_LEG + '</g>';
+    }
     const half = (v === 'back') ? BTW_ART_BACK : BTW_ART_FRONT;
     return '<g class="btw-bz-art">' + half + '<g transform="matrix(-1,0,0,1,100,0)">' + half + '</g></g>';
   }
