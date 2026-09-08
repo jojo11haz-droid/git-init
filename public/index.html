@@ -1802,7 +1802,7 @@
       <div class="btw-account" style="position:relative;display:inline-block;">
         <button class="btw-nav-btn icon" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
-          <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify therapists</button>
+          <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
@@ -2534,7 +2534,7 @@
     <div class="btw-modal" style="max-width:640px;">
       <button class="btw-modal-close" data-close="btwAdminOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Owner · Licence review</div>
-      <h2>Verify therapists</h2>
+      <h2>Verify clinicians</h2>
       <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
@@ -2906,7 +2906,7 @@
     "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
     "Create account & submit":"Créer le compte et soumettre",
     "Account created":"Compte créé","We're verifying your licence":"Nous validons votre permis","Got it":"Compris",
-    "Verify therapists":"Valider les thérapeutes",
+    "Verify clinicians":"Valider les cliniciens",
     "Your account is pending verification":"Votre compte est en attente de validation",
     // dynamic (built in JS)
     "Signed in as":"Connecté en tant que",
@@ -3248,6 +3248,13 @@
     "I'm a therapist":"I'm a coach",
     "I'm a patient":"I'm a player",
     "Invited by your therapist?":"Invited by your coach?",
+    "Invited by your therapist":"Invited by your coach",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Your check-ins are shared with your coach as short summaries, not always the raw recording.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"You can turn this off and still send check-ins, they'll go to your coach as you typed or recorded them, without AI analysis.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your coach never sees these.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your coach never sees them.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Enter the invite code your coach gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.",
+    "Enter the invite code from your therapist.":"Enter the invite code from your coach.",
     "The important part happens between sessions.":"The important part happens between practices and games.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each player, so you plan the next session already knowing where their head and body are at. Log in to your roster, or start a free trial. A player's data is only ever visible to you.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -3375,6 +3382,13 @@
     "I'm a therapist":"Je suis entraîneur",
     "I'm a patient":"Je suis joueur",
     "Invited by your therapist?":"Invité par votre entraîneur?",
+    "Invited by your therapist":"Invité par votre entraîneur",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Vos suivis sont partagés avec votre entraîneur sous forme de courts résumés, pas toujours l'enregistrement brut.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis, ils iront à votre entraîneur tels que saisis ou enregistrés, sans analyse par IA.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, votre entraîneur ne les voit jamais.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre entraîneur ne les voit jamais.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Entrez le code d'invitation que votre entraîneur vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur.",
     "The important part happens between sessions.":"Le plus important se passe entre les entraînements et les matchs.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque joueur, pour que vous planifiiez la prochaine séance en sachant déjà où en sont sa tête et son corps. Connectez-vous à votre équipe, ou commencez un essai gratuit. Les données d'un joueur ne sont visibles que par vous.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -4016,6 +4030,13 @@
     "I'm a therapist":"I'm a trainer",
     "I'm a patient":"I'm a client",
     "Invited by your therapist?":"Invited by your trainer?",
+    "Invited by your therapist":"Invited by your trainer",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Your check-ins are shared with your trainer as short summaries, not always the raw recording.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"You can turn this off and still send check-ins, they'll go to your trainer as you typed or recorded them, without AI analysis.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your trainer never sees these.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your trainer never sees them.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Enter the invite code your trainer gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.",
+    "Enter the invite code from your therapist.":"Enter the invite code from your trainer.",
     "Enter the invite code from your therapist.":"Enter the invite code from your trainer.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each client, so you plan the next session already knowing how their week went. Log in to your client list, or start a free trial. A client's data is only ever visible to you.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -4128,6 +4149,13 @@
     "I'm a therapist":"Je suis entraîneur",
     "I'm a patient":"Je suis client",
     "Invited by your therapist?":"Invité par votre entraîneur?",
+    "Invited by your therapist":"Invité par votre entraîneur",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Vos suivis sont partagés avec votre entraîneur sous forme de courts résumés, pas toujours l'enregistrement brut.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis, ils iront à votre entraîneur tels que saisis ou enregistrés, sans analyse par IA.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, votre entraîneur ne les voit jamais.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre entraîneur ne les voit jamais.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Entrez le code d'invitation que votre entraîneur vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur.",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque client, pour que vous planifiiez la prochaine séance en sachant déjà comment sa semaine s'est passée. Connectez-vous à votre liste de clients, ou commencez un essai gratuit. Les données d'un client ne sont visibles que par vous.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -4236,6 +4264,13 @@
     "For therapists, counsellors & anyone on their own":"For physiotherapists & anyone on their own",
     "I'm a therapist":"I'm a physio",
     "Invited by your therapist?":"Invited by your physio?",
+    "Invited by your therapist":"Invited by your physio",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Your check-ins are shared with your physio as short summaries, not always the raw recording.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"You can turn this off and still send check-ins, they'll go to your physio as you typed or recorded them, without AI analysis.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your physio never sees these.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your physio never sees them.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Enter the invite code your physio gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.",
+    "Enter the invite code from your therapist.":"Enter the invite code from your physio.",
     "The important part happens between sessions.":"Recovery happens between appointments.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":
       "This is where you pick it up, on your own time. Between keeps what matters for each patient, so you walk into the next appointment already knowing how their week and their home exercises went. Log in to your caseload, or start a 14-day free trial. A patient's data is only ever visible to you.",
@@ -4309,6 +4344,13 @@
     "For therapists, counsellors & anyone on their own":"Pour les physiothérapeutes et tous ceux qui veulent l'utiliser seuls",
     "I'm a therapist":"Je suis physio",
     "Invited by your therapist?":"Invité par votre physio?",
+    "Invited by your therapist":"Invité par votre physio",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Vos suivis sont partagés avec votre physio sous forme de courts résumés, pas toujours l'enregistrement brut.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis, ils iront à votre physio tels que saisis ou enregistrés, sans analyse par IA.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, votre physio ne les voit jamais.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre physio ne les voit jamais.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Entrez le code d'invitation que votre physio vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre physio.",
     "The important part happens between sessions.":"La récupération se passe entre les rendez-vous.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":
       "C'est ici que vous le récupérez, à votre rythme. Between garde l'essentiel pour chaque patient, pour que vous arriviez au prochain rendez-vous en sachant déjà comment s'est passée leur semaine et leurs exercices à la maison. Connectez-vous à votre clientèle, ou commencez un essai gratuit de 14 jours. Les données d'un patient ne sont visibles que par vous.",
