@@ -927,6 +927,8 @@
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
+  .btw-bodyov{margin:2px 0 18px;padding:14px 16px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;}
+  .btw-bodyov-l{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
   .btw-ci-pain{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
   .btw-ci-pain .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
   .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
@@ -2209,6 +2211,8 @@
 
       <div class="btw-insights" id="btwInsights" style="display:none;"></div>
 
+      <div class="btw-bodyov" id="btwBodyOverview" style="display:none;"></div>
+
       <button type="button" class="btw-stats-btn" id="btwStatsBtn" style="display:none;">
         <span>View advanced stats</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -3071,7 +3075,7 @@
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
-    "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur",
+    "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur","Where it hurts":"Où ça fait mal",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
     "Tap where it hurts, then slide to set how strong.":"Touchez où ça fait mal, puis glissez pour régler l'intensité.",
@@ -7535,6 +7539,29 @@
     if(sb) sb.style.display = list.length ? 'inline-flex' : 'none';
   }
 
+  // A body overview on the dashboard for coach/trainer contexts (physio,
+  // sports, kinesiology, fitness): merges the pain maps across check-ins into
+  // one read-only body so the sore areas show at a glance.
+  function renderBodyOverview(){
+    const host = document.getElementById('btwBodyOverview');
+    if(!host) return;
+    const list = state.checkIns || [];
+    if(!painMapContext() || !list.length){ host.style.display='none'; host.innerHTML=''; return; }
+    const merged = {};
+    list.forEach(function(c){
+      const pm = c.painMap;
+      if(pm && typeof pm === 'object'){
+        for(const k in pm){ const v = pm[k]; if(typeof v === 'number' && v > 0 && (!merged[k] || v > merged[k])) merged[k] = v; }
+      }
+    });
+    if(!Object.keys(merged).length){ host.style.display='none'; host.innerHTML=''; return; }
+    host.innerHTML = '<div class="btw-bodyov-l">' + esc(t('Where it hurts')) + '</div>';
+    const bm = btwCreateBodyMap({ readOnly:true });
+    bm.setMap(merged);
+    host.appendChild(bm.el);
+    host.style.display = '';
+  }
+
   // ---- Advanced stats: deeper, longer-range breakdowns from the same data ----
   const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const MONTHS_FR = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
@@ -7666,6 +7693,7 @@
       syncConsentUi();
       renderDigestSelf();
       renderInsights();
+      renderBodyOverview();
       renderFutureCard();
       renderTimeline();
       renderMoodChart();
@@ -7676,6 +7704,7 @@
     renderPatientPane();
     renderDigest();
     renderInsights();
+    renderBodyOverview();
     renderTimeline();
     renderMoodChart();
     renderPie();
