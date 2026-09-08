@@ -4458,7 +4458,9 @@
   };
   function renderHeroThread(){
     const host = document.getElementById('btwHeroThread'); if(!host) return;
-    const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom' : curAudience;
+    const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
+      : (curAudience === 'kinesiology') ? 'physio'
+      : curAudience;
     const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
     const d = A[curLang] || A.en;
     const cards = d.checkins.map(function(c){
