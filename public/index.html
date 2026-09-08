@@ -899,8 +899,12 @@
   .btw-mk-bodyfig{flex:0 0 auto;}
   .btw-bodysvg{width:98px;height:auto;display:block;}
   .btw-mk-bodyfigt .btw-bodysvg{width:74px;}
-  .btw-bz-base{fill:#E4E3DE;stroke:none;pointer-events:none;}
+  .btw-bz-base{fill:#E7CDBD;stroke:#C99A82;stroke-width:0.4;pointer-events:none;}
+  .btw-bz-art{fill:none;stroke:#A85C43;stroke-width:0.7;stroke-opacity:.42;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+  .btw-bz-art .fillmus{fill:#CE9A83;fill-opacity:.35;stroke:#A85C43;stroke-opacity:.4;}
+  .btw-bz-sh{fill:#8a4a34;opacity:.06;pointer-events:none;}
   .btw-bz{fill:transparent;stroke:none;pointer-events:all;cursor:pointer;transition:fill .12s ease;}
+  .btw-bz.on{fill-opacity:.82;}
   .btw-mk-bodyfigt .btw-bz{cursor:default;}
   .btw-mk-bodyleg{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--ink-soft);}
   .btw-mk-bodyleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:7px;}
@@ -4947,6 +4951,53 @@
   }
   function btwIsSide(v){ return v === 'left' || v === 'right'; }
 
+  // Decorative muscle definition drawn under the tappable regions so the figure
+  // reads like a light anatomical chart. Front/back are authored as the left
+  // half and mirrored about x=50; the profile is drawn whole (the view's own
+  // flip handles left vs right). Non-interactive; pain colour paints on top.
+  const BTW_ART_FRONT =
+    '<path class="fillmus" d="M49 35 C42 34 35 36 32 41 C33 46 38 50 45 49 C48 48 49 43 49 37 Z"/>' +      // pec
+    '<line x1="46" y1="25" x2="49" y2="33"/><line x1="45" y1="27" x2="33" y2="35"/>' +                     // scm / trap
+    '<path d="M24 35 C22 39 23 44 27 45 C31 43 33 39 33 36"/>' +                                            // deltoid
+    '<line x1="47" y1="38" x2="38" y2="41"/><line x1="47" y1="41" x2="36" y2="45"/><line x1="47" y1="45" x2="39" y2="48"/>' + // pec striations
+    '<line x1="35" y1="49" x2="38" y2="51"/><line x1="35" y1="52" x2="38" y2="54"/><line x1="35" y1="55" x2="38" y2="57"/>' + // serratus
+    '<path d="M26 40 C22 47 22 56 26 62"/><line x1="30" y1="41" x2="29" y2="60"/>' +                        // biceps
+    '<line x1="21" y1="66" x2="24" y2="92"/><line x1="27" y1="66" x2="27" y2="90"/>' +                     // forearm
+    '<line x1="50" y1="51" x2="50" y2="71"/>' +                                                             // linea alba
+    '<path d="M41 51 C40 58 41 66 45 71"/>' +                                                               // semilunaris
+    '<line x1="41" y1="57" x2="50" y2="57"/><line x1="42" y1="63" x2="50" y2="63"/><line x1="43" y1="69" x2="50" y2="69"/>' + // ab rows
+    '<line x1="40" y1="55" x2="44" y2="59"/><line x1="40" y1="61" x2="44" y2="65"/>' +                      // obliques
+    '<line x1="43" y1="72" x2="50" y2="83"/>' +                                                             // inguinal
+    '<line x1="43" y1="91" x2="44" y2="128"/><path d="M38 93 C37 106 38 120 41 128"/><path d="M47 113 C48 121 47 127 44 130"/>' + // quad
+    '<line x1="40" y1="132" x2="47" y2="132"/>' +                                                           // knee
+    '<line x1="43" y1="139" x2="45" y2="176"/><path d="M39 146 C38 156 39 166 42 173"/>';                   // shin / calf
+  const BTW_ART_BACK =
+    '<line x1="50" y1="33" x2="50" y2="55"/><line x1="50" y1="34" x2="38" y2="40"/><line x1="50" y1="41" x2="40" y2="49"/>' + // trap
+    '<path d="M24 35 C22 39 23 44 27 45 C31 43 33 39 33 36"/>' +                                            // rear delt
+    '<path d="M33 41 C32 52 39 62 49 65"/><path d="M43 46 C43 54 45 60 49 63"/>' +                          // lat
+    '<line x1="47" y1="55" x2="47" y2="72"/>' +                                                             // erector
+    '<line x1="25" y1="41" x2="27" y2="62"/><line x1="30" y1="42" x2="29" y2="60"/>' +                      // triceps
+    '<line x1="21" y1="66" x2="24" y2="90"/>' +                                                             // forearm
+    '<path class="fillmus" d="M49 73 C42 72 36 76 36 82 C37 88 44 89 49 86 Z"/><line x1="37" y1="86" x2="48" y2="86"/>' + // glute
+    '<line x1="43" y1="91" x2="44" y2="129"/><path d="M38 93 C37 106 38 120 41 128"/><line x1="47" y1="100" x2="46" y2="126"/>' + // hamstring
+    '<path d="M41 141 C39 151 40 163 43 171"/><path d="M46 141 C47 151 46 161 44 169"/><line x1="44" y1="141" x2="44" y2="169"/>' + // calf
+    '<line x1="43" y1="172" x2="44" y2="183"/>';                                                            // achilles
+  const BTW_ART_SIDE =
+    '<path d="M39 31 C35 33 34 38 37 41"/>' +                                                               // delt
+    '<path d="M41 35 C39 40 40 46 43 49"/>' +                                                               // pec edge
+    '<line x1="45" y1="50" x2="46" y2="65"/>' +                                                             // ab line
+    '<line x1="44" y1="46" x2="47" y2="48"/><line x1="44" y1="49" x2="47" y2="51"/>' +                      // serratus
+    '<line x1="36" y1="40" x2="36" y2="60"/><line x1="40" y1="40" x2="40" y2="60"/>' +                      // biceps
+    '<line x1="35" y1="65" x2="37" y2="88"/>' +                                                             // forearm
+    '<path class="fillmus" d="M58 66 C62 65 68 68 66 74 C63 78 59 76 58 72 Z"/>' +                          // glute
+    '<line x1="50" y1="90" x2="51" y2="130"/><line x1="45" y1="90" x2="46" y2="128"/>' +                    // thigh
+    '<path d="M55 143 C58 151 57 163 54 171"/><line x1="46" y1="140" x2="47" y2="178"/>';                   // calf / shin
+  function btwMuscleArt(v){
+    if(btwIsSide(v)) return '<g class="btw-bz-art">' + BTW_ART_SIDE + '</g>';
+    const half = (v === 'back') ? BTW_ART_BACK : BTW_ART_FRONT;
+    return '<g class="btw-bz-art">' + half + '<g transform="matrix(-1,0,0,1,100,0)">' + half + '</g></g>';
+  }
+
   // Body pain map: the patient taps where it hurts and how much, and the
   // therapist card mirrors it as a colour-coded map plus a summary. Shown only
   // for the physical audiences (sports / fitness / physio / kinesiology).
@@ -5070,7 +5121,7 @@
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(fr()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
       // Right side is the left profile mirrored, so both lateral views share one geometry.
       const flip = (v === 'right') ? ' transform="translate(100,0) scale(-1,1)"' : '';
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></g></svg>';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + btwMuscleArt(v) + regs + '</g></g></svg>';
     }
     function paint(){
       [fig, figT].forEach(function(f){ if(!f) return; f.querySelectorAll('.btw-bz').forEach(function(el){
@@ -5329,7 +5380,7 @@
       const base = B.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('');
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(frL()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
       const flip = (v === 'right') ? ' transform="translate(100,0) scale(-1,1)"' : '';
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + regs + '</g></g></svg>';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs><clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + btwMuscleArt(v) + regs + '</g></g></svg>';
     }
     function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ const key = view + ':' + el.getAttribute('data-zone'); el.style.fill = FILL[state[key] || 0]; if(!readOnly && key === selected){ el.style.stroke = 'var(--ink)'; el.style.strokeWidth = '1.6'; el.style.strokeOpacity = '.85'; } else { el.style.stroke = 'none'; } }); }
     function summary(){
