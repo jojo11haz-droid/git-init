@@ -1960,8 +1960,8 @@
                 </div>
                 <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path id="btwMkTrend" d="M8,42 L70,38 L132,32 L194,22 L246,14" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle id="btwMkTrendDot" cx="246" cy="14" r="3.5" fill="#1E4C86"></circle></svg>
                 <div class="btw-mk-insights">
-                  <div class="btw-mk-ins"><div class="l">Mood direction</div><div class="v" id="btwMkMoodDir" style="color:var(--moss);">↑ improving</div></div>
-                  <div class="btw-mk-ins"><div class="l">Tied to lower mood</div><div class="v" id="btwMkTiedTo">Work</div></div>
+                  <div class="btw-mk-ins"><div class="l" id="btwMkMoodDirLabel">Mood direction</div><div class="v" id="btwMkMoodDir" style="color:var(--moss);">↑ improving</div></div>
+                  <div class="btw-mk-ins"><div class="l" id="btwMkTiedToLabel">Tied to lower mood</div><div class="v" id="btwMkTiedTo">Work</div></div>
                 </div>
                 <div class="btw-mk-tbody" id="btwMkBodyMirror" hidden>
                   <div class="l">Pain map · from their check-in</div>
@@ -4885,7 +4885,7 @@
       amy: {
         label:{en:'AI summary · Amy',fr:'Résumé IA · Amy'},
         summary:{en:'Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.',fr:'Semaine difficile. Le stress au travail l’a tenue éveillée plusieurs nuits. Point positif : elle a renoué avec une vieille amie la fin de semaine. Aucun enjeu de sécurité.'},
-        dir:{en:'↑ improving',fr:'↑ en hausse'}, dirColor:'moss',
+        dir:{en:'↑ improving',fr:'↑ en hausse'}, dirPain:{en:'↓ easing',fr:'↓ en baisse'}, dirColor:'moss',
         tied:{en:'Work',fr:'Travail'}, ys:[42,38,32,22,14]
       },
       ben: {
@@ -4934,10 +4934,16 @@
     }
     function render(){
       const p = PT[cur]; if(!p) return;
+      const pm = (typeof painMode === 'function') && painMode();
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
       if(sumLabel) sumLabel.textContent = L(p.label);
       if(sumText) sumText.textContent = localize(p.summary);
-      if(moodDir){ moodDir.textContent = L(p.dir); moodDir.style.color = (p.dirColor === 'moss') ? 'var(--moss)' : 'var(--ink-soft)'; }
+      // In pain mode the trend/topic tiles read as pain, not mood.
+      const dirLabel = document.getElementById('btwMkMoodDirLabel');
+      if(dirLabel) dirLabel.textContent = pm ? (typeof t==='function'?t('Pain trend'):'Pain trend') : (typeof t==='function'?t('Mood direction'):'Mood direction');
+      const tiedLabel = document.getElementById('btwMkTiedToLabel');
+      if(tiedLabel) tiedLabel.textContent = pm ? (typeof t==='function'?t('Tied to more pain'):'Tied to more pain') : (typeof t==='function'?t('Tied to lower mood'):'Tied to lower mood');
+      if(moodDir){ moodDir.textContent = L(pm && p.dirPain ? p.dirPain : p.dir); moodDir.style.color = (p.dirColor === 'moss') ? 'var(--moss)' : 'var(--ink-soft)'; }
       if(tiedTo) tiedTo.textContent = localize(p.tied);
       animateTrend(p.ys);
     }
