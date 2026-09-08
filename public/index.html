@@ -737,6 +737,12 @@
     background:var(--moss);
     color:#fff;
   }
+  /* On phones the pill wraps to two rows; let the tabs stretch to fill each
+     row so there's no empty gap after the last tab. */
+  @media (max-width:520px){
+    .btw-aud{display:flex;width:100%;}
+    .btw-aud-btn{flex:1 1 auto;text-align:center;}
+  }
   /* Sub-mode slider shown only inside the Schools audience */
   .btw-submode{
     display:none;
