@@ -4567,6 +4567,7 @@
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
+    if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
@@ -4897,13 +4898,24 @@
         if(k < 1){ trendRAF = requestAnimationFrame(step); } else { curYs = target.slice(); drawTrend(curYs); trendRAF = null; }
       })(t0);
     }
+    // Let the active audience (physio / kinesiology / etc.) override the sample
+    // summary and topic, so the therapist demo does not stay therapy-flavoured.
+    function localize(o){
+      const d = (typeof audDicts === 'function') ? audDicts() : null;
+      const key = o.en;
+      if(d){
+        if(FR() && d[1][key]) return d[1][key];
+        if(!FR() && d[0][key]) return d[0][key];
+      }
+      return L(o);
+    }
     function render(){
       const p = PT[cur]; if(!p) return;
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
       if(sumLabel) sumLabel.textContent = L(p.label);
-      if(sumText) sumText.textContent = L(p.summary);
+      if(sumText) sumText.textContent = localize(p.summary);
       if(moodDir){ moodDir.textContent = L(p.dir); moodDir.style.color = (p.dirColor === 'moss') ? 'var(--moss)' : 'var(--ink-soft)'; }
-      if(tiedTo) tiedTo.textContent = L(p.tied);
+      if(tiedTo) tiedTo.textContent = localize(p.tied);
       animateTrend(p.ys);
     }
     rows.forEach(r => r.addEventListener('click', ()=>{ cur = r.getAttribute('data-pt'); render(); }));
