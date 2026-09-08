@@ -4905,26 +4905,12 @@
   // Facing left (front of the body toward smaller x). The near-side arm hangs
   // down the front so it reads as a distinct limb rather than blending into the
   // trunk. Chest and seat bumps give the torso a recognizable side S-curve.
+  // A single smooth contour for the profile (head, back, buttock, leg, foot,
+  // then up the front) plus a separate arm shape, so it reads as an actual
+  // person in side view rather than stacked blocks. Facing left (front = -x).
   const BTW_SIDE_BASE = [
-    {el:'ellipse', a:{cx:50,cy:14,rx:9.5,ry:11.5}},       // head
-    {el:'ellipse', a:{cx:41,cy:15,rx:4,ry:5.5}},          // face / brow forward
-    {el:'ellipse', a:{cx:38,cy:18,rx:2.4,ry:2.2}},        // nose
-    {el:'rect', a:{x:45,y:23,width:10,height:10,rx:4}},    // neck
-    {el:'rect', a:{x:40,y:30,width:25,height:42,rx:12}},   // trunk
-    {el:'ellipse', a:{cx:41,cy:41,rx:5,ry:9}},            // chest front curve
-    {el:'ellipse', a:{cx:63,cy:73,rx:6.5,ry:8}},          // seat / buttock curve
-    {el:'rect', a:{x:41,y:70,width:24,height:16,rx:9}},    // pelvis
-    // near-side arm, hanging down the front so it reads as a distinct limb
-    {el:'ellipse', a:{cx:46,cy:33,rx:6.5,ry:6}},          // shoulder
-    {el:'rect', a:{x:33,y:34,width:10,height:30,rx:5}},    // upper arm
-    {el:'rect', a:{x:33,y:62,width:9,height:27,rx:4.5}},   // forearm
-    {el:'ellipse', a:{cx:38,cy:93,rx:6,ry:7}},            // hand
-    // near-side leg
-    {el:'rect', a:{x:43,y:85,width:19,height:50,rx:9}},    // thigh
-    {el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}},           // knee
-    {el:'rect', a:{x:44,y:139,width:16,height:47,rx:7}},   // shin
-    {el:'ellipse', a:{cx:59,cy:151,rx:5,ry:9}},           // calf bulge back
-    {el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}}    // foot forward
+    {el:'path', a:{d:'M49 4 C54 4 58 9 58 16 C58 21 56 26 55 30 C55 33 59 33 60 36 C61 41 61 46 61 51 C61 57 60 60 60 64 C60 69 63 73 66 77 C68 81 64 85 59 87 C58 101 58 118 57 130 C56 137 59 145 60 153 C60 166 56 172 55 178 C55 184 56 188 57 191 L58 194 L31 195 L31 189 C36 186 42 185 45 183 C46 170 46 150 46 140 C46 137 47 135 47 132 C46 120 43 105 43 92 C43 87 42 81 41 75 C40 69 39 64 39 57 C39 50 38 46 38 43 C38 39 39 36 42 34 C44 32 45 31 46 29 C47 27 46 25 44 23 C42 22 40 21 38 20 C36 19 36 17 37 16 C38 13 40 9 43 7 C45 5 47 4 49 4 Z'}},   // body
+    {el:'path', a:{d:'M45 33 C41 33 38 37 37 43 C36 56 36 70 37 82 C37 90 38 98 41 101 C44 102 46 97 47 90 C48 76 48 60 48 46 C48 40 48 35 45 33 Z'}}   // near arm
   ];
   // Torso/leg regions first, then the arm last so the near arm sits on top.
   const BTW_SIDE_ZONES = [
@@ -4939,10 +4925,10 @@
     {id:'knee', el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
     {id:'calf', el:'rect', a:{x:44,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
     {id:'foot', el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'},
-    {id:'shoulder', el:'ellipse', a:{cx:46,cy:33,rx:6.5,ry:6}, en:'{S} shoulder', fr:'épaule {S}'},
-    {id:'uarm', el:'rect', a:{x:33,y:37,width:10,height:25,rx:5}, en:'{S} upper arm', fr:'bras {S}'},
-    {id:'forearm', el:'rect', a:{x:33,y:62,width:9,height:26,rx:4.5}, en:'{S} forearm', fr:'avant-bras {S}'},
-    {id:'hand', el:'ellipse', a:{cx:38,cy:93,rx:6,ry:7}, en:'{S} hand', fr:'main {S}'}
+    {id:'shoulder', el:'ellipse', a:{cx:46,cy:34,rx:6.5,ry:6}, en:'{S} shoulder', fr:'épaule {S}'},
+    {id:'uarm', el:'rect', a:{x:38,y:39,width:10,height:24,rx:5}, en:'{S} upper arm', fr:'bras {S}'},
+    {id:'forearm', el:'rect', a:{x:38,y:63,width:9,height:27,rx:4.5}, en:'{S} forearm', fr:'avant-bras {S}'},
+    {id:'hand', el:'ellipse', a:{cx:43,cy:97,rx:6,ry:6.5}, en:'{S} hand', fr:'main {S}'}
   ];
   function btwSideZones(v){
     const we = (v === 'right') ? 'right' : 'left';
@@ -4987,11 +4973,11 @@
     '<path d="M41 35 C39 40 40 46 43 49"/>' +                                                               // pec edge
     '<line x1="45" y1="50" x2="46" y2="65"/>' +                                                             // ab line
     '<line x1="44" y1="46" x2="47" y2="48"/><line x1="44" y1="49" x2="47" y2="51"/>' +                      // serratus
-    '<line x1="36" y1="40" x2="36" y2="60"/><line x1="40" y1="40" x2="40" y2="60"/>' +                      // biceps
-    '<line x1="35" y1="65" x2="37" y2="88"/>' +                                                             // forearm
-    '<path class="fillmus" d="M58 66 C62 65 68 68 66 74 C63 78 59 76 58 72 Z"/>' +                          // glute
-    '<line x1="50" y1="90" x2="51" y2="130"/><line x1="45" y1="90" x2="46" y2="128"/>' +                    // thigh
-    '<path d="M55 143 C58 151 57 163 54 171"/><line x1="46" y1="140" x2="47" y2="178"/>';                   // calf / shin
+    '<line x1="41" y1="42" x2="41" y2="62"/><line x1="44" y1="44" x2="44" y2="62"/>' +                      // biceps
+    '<line x1="41" y1="66" x2="42" y2="88"/>' +                                                             // forearm
+    '<path class="fillmus" d="M59 67 C63 66 67 69 66 74 C64 78 60 76 59 72 Z"/>' +                          // glute
+    '<line x1="50" y1="92" x2="51" y2="128"/><line x1="45" y1="92" x2="46" y2="126"/>' +                    // thigh
+    '<path d="M56 146 C59 153 58 163 55 170"/><line x1="47" y1="142" x2="48" y2="176"/>';                   // calf / shin
   function btwMuscleArt(v){
     if(btwIsSide(v)) return '<g class="btw-bz-art">' + BTW_ART_SIDE + '</g>';
     const half = (v === 'back') ? BTW_ART_BACK : BTW_ART_FRONT;
