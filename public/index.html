@@ -4927,8 +4927,9 @@
     {id:'hip', el:'rect', a:{x:42,y:71,width:18,height:14,rx:8}, en:'{S} hip / groin', fr:'hanche / aine {S}'},
     {id:'thigh', el:'rect', a:{x:43,y:86,width:19,height:46,rx:9}, en:'{S} outer thigh (IT band)', fr:'cuisse externe {S} (bandelette)'},
     {id:'knee', el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
-    {id:'calf', el:'rect', a:{x:44,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
-    {id:'foot', el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'},
+    {id:'calf', el:'rect', a:{x:44,y:139,width:16,height:43,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
+    {id:'foot', el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}, en:'{S} foot', fr:'pied {S}'},
+    {id:'ankle', el:'ellipse', a:{cx:49,cy:183,rx:5.5,ry:5}, en:'{S} ankle', fr:'cheville {S}'},
     {id:'shoulder', el:'ellipse', a:{cx:49,cy:36,rx:6,ry:5}, en:'{S} shoulder', fr:'épaule {S}'},
     {id:'uarm', el:'ellipse', a:{cx:40,cy:49,rx:7,ry:6}, en:'{S} upper arm', fr:'bras {S}'},
     {id:'forearm', el:'ellipse', a:{cx:29,cy:61,rx:7,ry:6}, en:'{S} forearm', fr:'avant-bras {S}'},
@@ -5069,7 +5070,9 @@
         {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
         {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
         {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
-        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}},
+        {id:'l_ankle', en:'left ankle', fr:'cheville gauche', el:'ellipse', a:{cx:42,cy:179,rx:5,ry:5}},
+        {id:'r_ankle', en:'right ankle', fr:'cheville droite', el:'ellipse', a:{cx:58,cy:179,rx:5,ry:5}}
       ], [
         {id:'l_arm', en:'left arm (biceps)', fr:'bras gauche (biceps)'},
         {id:'r_arm', en:'right arm (biceps)', fr:'bras droit (biceps)'},
@@ -5092,7 +5095,9 @@
         {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
         {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
         {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
-        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}},
+        {id:'l_ankle', en:'left ankle', fr:'cheville gauche', el:'ellipse', a:{cx:42,cy:179,rx:5,ry:5}},
+        {id:'r_ankle', en:'right ankle', fr:'cheville droite', el:'ellipse', a:{cx:58,cy:179,rx:5,ry:5}}
       ], [
         {id:'l_arm', en:'left arm (triceps)', fr:'bras gauche (triceps)'},
         {id:'r_arm', en:'right arm (triceps)', fr:'bras droit (triceps)'},
@@ -5195,7 +5200,8 @@
       [/knee/, 'front', ['l_knee','r_knee']],
       [/quad|thigh/, 'front', ['l_thigh','r_thigh']],
       [/shin/, 'front', ['l_shin','r_shin']],
-      [/ankle|foot|feet|heel/, 'front', ['l_foot','r_foot']],
+      [/ankle/, 'front', ['l_ankle','r_ankle']],
+      [/foot|feet|heel/, 'front', ['l_foot','r_foot']],
       [/shoulder|delt/, 'front', ['l_shoulder','r_shoulder']],
       [/neck/, 'front', ['neck']],
       [/chest|pec/, 'front', ['chest']],
@@ -5289,7 +5295,9 @@
         {id:'l_shin', en:'left shin', fr:'tibia gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
         {id:'r_shin', en:'right shin', fr:'tibia droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
         {id:'l_foot', en:'left foot', fr:'pied gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
-        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+        {id:'r_foot', en:'right foot', fr:'pied droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}},
+        {id:'l_ankle', en:'left ankle', fr:'cheville gauche', el:'ellipse', a:{cx:42,cy:179,rx:5,ry:5}},
+        {id:'r_ankle', en:'right ankle', fr:'cheville droite', el:'ellipse', a:{cx:58,cy:179,rx:5,ry:5}}
       ], [
         {id:'l_arm', en:'left arm (biceps)', fr:'bras gauche (biceps)'},
         {id:'r_arm', en:'right arm (biceps)', fr:'bras droit (biceps)'},
@@ -5312,7 +5320,9 @@
         {id:'l_calf', en:'left calf', fr:'mollet gauche', el:'rect', a:{x:38,y:138,width:10,height:42,rx:5}},
         {id:'r_calf', en:'right calf', fr:'mollet droit', el:'rect', a:{x:52,y:138,width:10,height:42,rx:5}},
         {id:'l_heel', en:'left heel', fr:'talon gauche', el:'rect', a:{x:36,y:180,width:12,height:13,rx:4}},
-        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}}
+        {id:'r_heel', en:'right heel', fr:'talon droit', el:'rect', a:{x:52,y:180,width:12,height:13,rx:4}},
+        {id:'l_ankle', en:'left ankle', fr:'cheville gauche', el:'ellipse', a:{cx:42,cy:179,rx:5,ry:5}},
+        {id:'r_ankle', en:'right ankle', fr:'cheville droite', el:'ellipse', a:{cx:58,cy:179,rx:5,ry:5}}
       ], [
         {id:'l_arm', en:'left arm (triceps)', fr:'bras gauche (triceps)'},
         {id:'r_arm', en:'right arm (triceps)', fr:'bras droit (triceps)'},
