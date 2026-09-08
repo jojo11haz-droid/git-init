@@ -4638,6 +4638,10 @@
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(window.__btwScoreMode) window.__btwScoreMode();
+    // Refresh the signed-in dashboard too: the pane eyebrow ("Therapist view"),
+    // caseload wording and digest are rendered dynamically, so they need a
+    // re-render to follow the audience, the same way setLang does.
+    try { renderAll(); renderAuthState(); } catch(e){}
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
