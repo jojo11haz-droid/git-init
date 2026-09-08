@@ -4908,9 +4908,9 @@
   // A single smooth contour for the profile (head, back, buttock, leg, foot,
   // then up the front) plus a separate arm shape, so it reads as an actual
   // person in side view rather than stacked blocks. Facing left (front = -x).
-  // Narrow arm hanging in front, back edge ~x44, so a strip of front torso
-  // (chest + abs) stays visible beside it.
-  const BTW_SIDE_ARM_D = 'M44 37 C40 38 37 44 37 54 C36 66 36 79 38 90 C39 97 41 99 43 95 C44 84 44 70 43 57 C44 49 45 43 44 37 Z';
+  // Arm bent forward and away from the body (reaching down-forward) so it reads
+  // as a separate raised limb and the whole front torso — chest and abs — shows.
+  const BTW_SIDE_ARM_D = 'M50 33 C53 35 52 40 48 43 C43 47 37 52 32 58 C28 62 25 66 23 70 C22 73 25 74 28 72 C33 67 38 62 43 56 C47 52 50 47 51 42 C53 39 52 34 50 33 Z';
   const BTW_SIDE_BASE = [
     {el:'path', a:{d:'M55 26 C58 30 60 33 60 37 C61 41 61 46 61 51 C61 57 60 60 60 64 C60 68 61 72 62 76 C63 80 62 84 59 87 C58 101 58 118 57 130 C56 137 59 145 60 153 C60 166 56 172 55 178 C55 184 56 188 57 191 L58 194 L31 195 L31 189 C36 186 42 185 45 183 C46 170 46 150 46 140 C46 137 47 135 47 132 C46 120 43 105 43 92 C43 87 42 81 41 75 C40 69 39 64 39 57 C39 50 38 46 38 43 C38 39 39 36 42 34 C44 32 45 31 46 28 C49 26 52 26 55 26 Z'}},   // neck + torso + legs
     {el:'ellipse', a:{cx:50,cy:14,rx:11,ry:12}},   // head — plain circle, no face
@@ -4929,10 +4929,10 @@
     {id:'knee', el:'ellipse', a:{cx:52,cy:135,rx:8,ry:7}, en:'{S} knee', fr:'genou {S}'},
     {id:'calf', el:'rect', a:{x:44,y:139,width:16,height:45,rx:7}, en:'{S} calf / shin', fr:'mollet / tibia {S}'},
     {id:'foot', el:'rect', a:{x:31,y:185,width:28,height:11,rx:4}, en:'{S} foot / ankle', fr:'pied / cheville {S}'},
-    {id:'shoulder', el:'ellipse', a:{cx:44,cy:35,rx:6,ry:5.5}, en:'{S} shoulder', fr:'épaule {S}'},
-    {id:'uarm', el:'rect', a:{x:37,y:42,width:8,height:21,rx:4}, en:'{S} upper arm', fr:'bras {S}'},
-    {id:'forearm', el:'rect', a:{x:37,y:64,width:7,height:25,rx:3.5}, en:'{S} forearm', fr:'avant-bras {S}'},
-    {id:'hand', el:'ellipse', a:{cx:41,cy:96,rx:5.5,ry:6.5}, en:'{S} hand', fr:'main {S}'}
+    {id:'shoulder', el:'ellipse', a:{cx:49,cy:36,rx:6,ry:5}, en:'{S} shoulder', fr:'épaule {S}'},
+    {id:'uarm', el:'ellipse', a:{cx:40,cy:49,rx:7,ry:6}, en:'{S} upper arm', fr:'bras {S}'},
+    {id:'forearm', el:'ellipse', a:{cx:29,cy:61,rx:7,ry:6}, en:'{S} forearm', fr:'avant-bras {S}'},
+    {id:'hand', el:'ellipse', a:{cx:24,cy:71,rx:5,ry:5}, en:'{S} hand', fr:'main {S}'}
   ];
   function btwSideZones(v){
     const we = (v === 'right') ? 'right' : 'left';
@@ -4980,15 +4980,16 @@
   // muscled weight and separation lines as the front/back views.
   const BTW_ART_SIDE_TORSO =
     '<path d="M53 43 C56 51 58 59 58 65"/>' +                                                               // lat / back edge
-    '<path class="fillmus" d="M45 36 C44 41 46 46 49 48 C50 45 50 40 48 37 C47 36 46 36 45 36 Z"/>' +       // pec
-    '<path d="M45 50 C44 57 44 64 46 70"/>' +                                                               // rectus front edge
-    '<line x1="48" y1="50" x2="48" y2="69"/>' +                                                             // linea alba
-    '<line x1="45" y1="54" x2="51" y2="54"/><line x1="45" y1="60" x2="51" y2="60"/><line x1="45" y1="66" x2="51" y2="66"/>'; // ab rows
+    '<path class="fillmus" d="M40 35 C39 41 41 47 45 49 C48 46 48 40 46 36 C44 35 42 35 40 35 Z"/>' +       // pec
+    '<path d="M45 50 L48 52 L45 54 L48 56 L45 58"/>' +                                                      // serratus
+    '<path d="M40 51 C39 58 39 65 41 71"/><line x1="43" y1="51" x2="43" y2="70"/>' +                        // rectus edge + linea alba
+    '<line x1="40" y1="55" x2="47" y2="55"/><line x1="40" y1="61" x2="47" y2="61"/><line x1="40" y1="67" x2="47" y2="67"/>' + // ab rows
+    '<line x1="47" y1="61" x2="51" y2="65"/><line x1="47" y1="66" x2="51" y2="70"/>';                       // obliques
   const BTW_ART_SIDE_ARM =
-    '<path class="fillmus" d="M42 33 C38 35 37 41 40 44 C43 43 46 39 47 34 C46 32 44 32 42 33 Z"/>' +       // deltoid
-    '<path class="fillmus" d="M39 45 C37 52 38 60 40 63 C43 61 44 53 43 45 C42 43 40 43 39 45 Z"/>' +       // biceps
-    '<path class="fillmus" d="M39 67 C37 75 38 84 40 90 C43 88 44 79 43 69 C42 66 40 66 39 67 Z"/>' +       // forearm
-    '<line x1="40" y1="49" x2="41" y2="61"/><line x1="40" y1="70" x2="41" y2="87"/>';                       // striations
+    '<path class="fillmus" d="M50 33 C46 35 45 40 47 44 C51 43 53 38 53 34 C52 33 51 33 50 33 Z"/>' +       // deltoid
+    '<path class="fillmus" d="M46 43 C41 48 36 53 33 58 C35 60 40 56 45 51 C48 48 48 45 46 43 Z"/>' +       // biceps
+    '<path class="fillmus" d="M32 58 C28 62 25 66 23 70 C25 72 30 68 36 62 C38 60 36 58 32 58 Z"/>' +       // forearm
+    '<line x1="42" y1="47" x2="37" y2="54"/><line x1="30" y1="62" x2="26" y2="67"/>';                       // striations
   const BTW_ART_SIDE_LEG =
     '<path class="fillmus" d="M57 68 C60 67 62 70 61 74 C60 77 57 76 57 72 Z"/>' +                          // glute
     '<path class="fillmus" d="M44 88 C42 101 43 118 46 130 C50 129 51 110 50 89 C48 87 46 87 44 88 Z"/>' +  // quadriceps
