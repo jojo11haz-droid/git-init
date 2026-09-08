@@ -2948,6 +2948,7 @@
     "easing":"en baisse","worsening":"en hausse","avg pain":"douleur moy.","pain":"douleur","No pain":"Aucune",
     "Minimal":"Minimale","Mild":"Légère","Moderate":"Modérée","High pain":"Élevée","Severe":"Sévère",
     "Tied to more pain":"Associé à plus de douleur","Tied to less pain":"Associé à moins de douleur",
+    "Pain by month":"Douleur par mois","Pain distribution":"Répartition de la douleur","Pain by day of week":"Douleur par jour de semaine","Avg pain":"Douleur moy.","with a pain rating":"avec une douleur","more pain":"plus de douleur","less pain":"moins de douleur",
     "Check-in rhythm":"Rythme des suivis","week":"sem.","days apart":"jours d'intervalle","last":"dernier","several a day":"plusieurs par jour",
     "Delete patient":"Supprimer le patient","Permanently delete":"Supprimer définitivement","Delete":"Supprimer",
     "This removes the patient and all their check-ins, summaries, voice memos, and alerts. This cannot be undone.":"Cela supprime le patient ainsi que tous ses suivis, résumés, mémos vocaux et alertes. Cette action est irréversible.",
@@ -7248,7 +7249,7 @@
     if(!p.last_check_in_at) return esc(t('No check-ins yet'));
     const bits = [ esc(agoLabel(p.last_check_in_at)) ];
     if((p.new_check_in_count||0) > 0) bits.push('<strong style="color:var(--moss);">' + esc(p.new_check_in_count + ' ' + t('new')) + '</strong>');
-    if(p.last_mood != null) bits.push(esc(t('mood') + ' ' + moodWord(p.last_mood)));
+    if(p.last_mood != null) bits.push(esc((painMode()?t('pain'):t('mood')) + ' ' + scoreWord(p.last_mood)));
     return bits.join(' · ');
   }
   // Active-patient cap for the signed-in clinician, mirrored from the server's
@@ -7423,7 +7424,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('since last session'))}` +
-      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${esc(moodWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
+      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
@@ -7717,42 +7718,46 @@
     const list = state.checkIns || [];
     if(!list.length){ body.innerHTML = '<div class="btw-stats-empty">'+esc(t('No check-ins yet, nothing to break down.'))+'</div>'; return; }
     const s = computeAdvancedStats(list);
+    const pm = painMode();
     const fmtDate = (ts)=> new Date(ts).toLocaleDateString(curLang==='fr'?'fr-CA':'en-CA', {year:'numeric',month:'short',day:'numeric'});
     const out = [];
     // Overview tiles.
     const spanMonths = s.spanDays!=null ? Math.max(1, Math.round(s.spanDays/30)) : null;
     out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Overview'))+'</div><div class="btw-stats-tiles">'
-      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Total check-ins'))+'</div><div class="v">'+s.n+'</div>'+(s.ratedN<s.n?'<div class="s">'+s.ratedN+' '+esc(t('with a mood'))+'</div>':'')+'</div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Total check-ins'))+'</div><div class="v">'+s.n+'</div>'+(s.ratedN<s.n?'<div class="s">'+s.ratedN+' '+esc(pm?t('with a pain rating'):t('with a mood'))+'</div>':'')+'</div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Tracking since'))+'</div><div class="v" style="font-size:15px">'+(s.first?esc(fmtDate(s.first)):'—')+'</div>'+(spanMonths?'<div class="s">'+esc((spanMonths+' '+(spanMonths===1?t('month'):t('months'))))+'</div>':'')+'</div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Active weeks'))+'</div><div class="v">'+(s.activeWeeks||0)+(s.spanWeeks?'<span style="font-size:12px;color:var(--ink-soft);font-weight:400"> / '+s.spanWeeks+'</span>':'')+'</div></div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Longest streak'))+'</div><div class="v">'+(s.longestStreak||0)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(s.longestStreak===1?t('week'):t('weeks'))+'</span></div>'+(s.currentStreak?'<div class="s">'+esc(t('current'))+': '+s.currentStreak+' '+esc(s.currentStreak===1?t('week'):t('weeks'))+'</div>':'')+'</div>'
       + '</div></div>');
     // Mood by month.
     if(s.months.length){
-      const rows = s.months.map(mo=>'<div class="btw-stats-row"><span class="k">'+esc(monthName(mo.m))+(String(mo.y).slice(2))+'</span>'+statBar(mo.avg/10)+'<span class="val">'+esc(moodWord(mo.avg))+' ('+mo.avg.toFixed(1)+')</span></div>').join('');
-      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood by month'))+'</div>'+rows+'</div>');
+      const rows = s.months.map(mo=>'<div class="btw-stats-row"><span class="k">'+esc(monthName(mo.m))+(String(mo.y).slice(2))+'</span>'+statBar(mo.avg/10)+'<span class="val">'+esc(scoreWord(mo.avg))+' ('+mo.avg.toFixed(1)+')</span></div>').join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(pm?t('Pain by month'):t('Mood by month'))+'</div>'+rows+'</div>');
     }
     // Mood distribution.
     if(s.ratedN){
       const maxC = Math.max(...s.dist.map(d=>d.count),1);
-      const rows = s.dist.map(d=>'<div class="btw-stats-row"><span class="k">'+esc(moodWord((d.lo+d.hi)/2))+'</span>'+statBar(d.count/maxC)+'<span class="val">'+d.count+'</span></div>').join('');
-      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood distribution'))+'</div>'+rows+'</div>');
+      const rows = s.dist.map(d=>'<div class="btw-stats-row"><span class="k">'+esc(scoreWord((d.lo+d.hi)/2))+'</span>'+statBar(d.count/maxC)+'<span class="val">'+d.count+'</span></div>').join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(pm?t('Pain distribution'):t('Mood distribution'))+'</div>'+rows+'</div>');
     }
     // By day of week.
     const activeWd = s.weekdays.filter(w=>w.n>0);
     if(activeWd.length){
-      const rows = s.weekdays.map(w=>{ if(!w.n) return ''; const cls = (s.bestWd&&w.i===s.bestWd.i)?' best':((s.worstWd&&w.i===s.worstWd.i&&s.bestWd.i!==s.worstWd.i)?' worst':''); return '<div class="btw-stats-row'+cls+'"><span class="k">'+esc(wdayName(w.i))+'</span>'+statBar(w.avg/10)+'<span class="val">'+esc(moodWord(w.avg))+' ('+w.avg.toFixed(1)+') · '+w.n+'</span></div>'; }).join('');
-      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Mood by day of week'))+'</div>'+rows+'</div>');
+      const rows = s.weekdays.map(w=>{ if(!w.n) return ''; const cls = (s.bestWd&&w.i===s.bestWd.i)?' best':((s.worstWd&&w.i===s.worstWd.i&&s.bestWd.i!==s.worstWd.i)?' worst':''); return '<div class="btw-stats-row'+cls+'"><span class="k">'+esc(wdayName(w.i))+'</span>'+statBar(w.avg/10)+'<span class="val">'+esc(scoreWord(w.avg))+' ('+w.avg.toFixed(1)+') · '+w.n+'</span></div>'; }).join('');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(pm?t('Pain by day of week'):t('Mood by day of week'))+'</div>'+rows+'</div>');
     }
     // Themes in depth.
     if(s.themes.length){
       const rows = s.themes.map(th=>{
         const color = tagColors[th.tag]||tagColors.Other;
         let delta = '';
-        if(th.avg!=null && s.avg!=null){ const d=th.avg-s.avg; if(d>=0.5) delta='<span class="up">↑ '+esc(t('better'))+'</span>'; else if(d<=-0.5) delta='<span class="down">↓ '+esc(t('lower'))+'</span>'; else delta='<span style="color:var(--ink-soft)">'+esc(t('typical'))+'</span>'; }
-        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(moodWord(th.avg))+' ('+th.avg.toFixed(1)+')':'—')+'</td><td>'+delta+'</td></tr>';
+        if(th.avg!=null && s.avg!=null){ const d=th.avg-s.avg;
+          if(d>=0.5) delta = pm ? '<span class="down">↑ '+esc(t('more pain'))+'</span>' : '<span class="up">↑ '+esc(t('better'))+'</span>';
+          else if(d<=-0.5) delta = pm ? '<span class="up">↓ '+esc(t('less pain'))+'</span>' : '<span class="down">↓ '+esc(t('lower'))+'</span>';
+          else delta='<span style="color:var(--ink-soft)">'+esc(t('typical'))+'</span>'; }
+        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(scoreWord(th.avg))+' ('+th.avg.toFixed(1)+')':'—')+'</td><td>'+delta+'</td></tr>';
       }).join('');
-      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Themes in depth'))+'</div><table class="btw-stats-table"><thead><tr><th>'+esc(t('Theme'))+'</th><th>'+esc(t('Count'))+'</th><th>'+esc(t('Share'))+'</th><th>'+esc(t('Avg mood'))+'</th><th>'+esc(t('vs overall'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
+      out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Themes in depth'))+'</div><table class="btw-stats-table"><thead><tr><th>'+esc(t('Theme'))+'</th><th>'+esc(t('Count'))+'</th><th>'+esc(t('Share'))+'</th><th>'+esc(pm?t('Avg pain'):t('Avg mood'))+'</th><th>'+esc(t('vs overall'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
     }
     // Rhythm & safety.
     const rhythmBits = [];
@@ -7819,7 +7824,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('so far'))}` +
-      (avgMood ? ` · ${esc(t('avg mood'))} <strong>${esc(moodWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
+      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
