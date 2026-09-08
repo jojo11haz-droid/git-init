@@ -6356,7 +6356,12 @@
       btn.disabled = true;
       try{
         const body = { name, email, password: pw, plan: selectedPlan };
-        if(proSignup === 'coach') body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
+        if(proSignup === 'coach'){
+          body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
+          // Tell the server which coach-type discipline this is (sports / physio
+          // / kinesiology) so it tailors the welcome email and the app copy.
+          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'sports') body.discipline = curAudience;
+        }
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
         // Same as every plan: if billing is on, start the 14-day trial by
@@ -7037,11 +7042,18 @@
     });
     presetTags = [...picker.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
   }
+  // The account's discipline (stored server-side for real accounts; the
+  // marketing audience for the signed-out demo) picks the check-in topics.
+  function painDiscipline(){
+    if(isPatient()) return (state.patient && state.patient.clinician_discipline) || null;
+    if(state.me) return state.me.discipline || null;
+    return (typeof curAudience !== 'undefined') ? curAudience : null;
+  }
   function syncComposerTags(){
-    // Sports gets the mixed body+mind set; other coach/trainer contexts stay
-    // physical; therapy stays emotional.
-    const want = (typeof curAudience !== 'undefined' && curAudience === 'sports') ? 'mixed'
-      : (painMapContext() ? 'phys' : 'therapy');
+    // Sports blends body + mind; other coach/trainer contexts (physio,
+    // kinesiology, fitness) stay physical; therapy stays emotional.
+    let want = 'therapy';
+    if(painMapContext()) want = (painDiscipline() === 'sports') ? 'mixed' : 'phys';
     if(want !== _composerTagSet) renderComposerTags(want);
   }
 
