@@ -4778,7 +4778,9 @@
       fr: [[2,'presque aucune douleur'],[4,'un peu endolori'],[6,'endolori, journée difficile'],[8,'vraiment douloureux'],[10,'douleur sévère en ce moment']]
     };
     const mlabel = document.querySelector('#btwMkComposer .btw-mk-mlabel') || document.querySelector('.btw-mk-mlabel');
-    function painDemo(){ return typeof painMode === 'function' && painMode(); }
+    // Marketing demo: follow the audience toggle, not a signed-in account's
+    // real discipline, so previewing physio/kinesiology always reads as pain.
+    function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology'); }
     function pick(table, v){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
       const rows = table[l];
@@ -5005,7 +5007,10 @@
     }
     function render(){
       const p = PT[cur]; if(!p) return;
-      const pm = (typeof painMode === 'function') && painMode();
+      // Marketing demo: pain-mode follows the audience toggle (curAudience), not
+      // a signed-in account's real discipline, so the physio/kine preview reads
+      // as pain even when a therapist account is viewing the page.
+      const pm = (typeof curAudience !== 'undefined') && (curAudience === 'physio' || curAudience === 'kinesiology');
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
       if(sumLabel) sumLabel.textContent = L(p.label);
       if(sumText) sumText.textContent = localize(p.summary);
