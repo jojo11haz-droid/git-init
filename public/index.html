@@ -4532,6 +4532,11 @@
   }
   const OST_EN = btwOsteoDict(PHYSIO_EN, false);
   const OST_FR = btwOsteoDict(PHYSIO_FR, true);
+  // "sports physiotherapists" is a physio-only line; kine/osteo keep the plain form.
+  KIN_EN["For therapists, counsellors & anyone on their own"] = "For kinesiologists & anyone on their own";
+  KIN_FR["For therapists, counsellors & anyone on their own"] = "Pour les kinésiologues et tous ceux qui veulent l'utiliser seuls";
+  OST_EN["For therapists, counsellors & anyone on their own"] = "For osteopaths & anyone on their own";
+  OST_FR["For therapists, counsellors & anyone on their own"] = "Pour les ostéopathes et tous ceux qui veulent l'utiliser seuls";
 
   const HERO_THREAD = {
     therapy:{
