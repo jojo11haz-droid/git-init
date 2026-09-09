@@ -1789,6 +1789,7 @@
         <button type="button" class="btw-aud-btn" data-aud="fitness">Fitness</button>
         <button type="button" class="btw-aud-btn" data-aud="physio">Physio</button>
         <button type="button" class="btw-aud-btn" data-aud="kinesiology">Kinesiology</button>
+        <button type="button" class="btw-aud-btn" data-aud="osteo">Osteopathy</button>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
@@ -2713,7 +2714,7 @@
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Guidance":"Orientation","Classroom":"Classe",
+    "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -3211,6 +3212,14 @@
       btwResetEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
       btwContactEmail: {en:'you@yourclinic.ca', fr:'vous@votreclinique.ca'},
       btwContactMessage: {en:"How many kinesiologists? Anything you'd like to know?", fr:"Combien de kinésiologues? Quelque chose à savoir?"}
+    },
+    osteo: {
+      btwSuName: {en:'Jamie Rivera, Osteopath', fr:'Jamie Rivera, ostéo'},
+      btwContactName: {en:'Jamie Rivera, Osteopath', fr:'Jamie Rivera, ostéo'},
+      btwSuEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
+      btwResetEmail: {en:'jamie@yourclinic.ca', fr:'jamie@yourclinic.ca'},
+      btwContactEmail: {en:'you@yourclinic.ca', fr:'vous@votreclinique.ca'},
+      btwContactMessage: {en:"How many osteopaths? Anything you'd like to know?", fr:"Combien d'ostéopathes? Quelque chose à savoir?"}
     }
   };
   const PH_AUD_IDS = ['btwSuName','btwContactName','btwSuEmail','btwResetEmail','btwContactEmail','btwContactMessage'];
@@ -3223,6 +3232,7 @@
     if(curAudience === 'fitness') return [FITNESS_EN, FITNESS_FR];
     if(curAudience === 'physio') return [PHYSIO_EN, PHYSIO_FR];
     if(curAudience === 'kinesiology') return [KIN_EN, KIN_FR];
+    if(curAudience === 'osteo') return [OST_EN, OST_FR];
     return null;
   }
   function t(en){
@@ -4500,6 +4510,29 @@
   const KIN_EN = btwKinDict(PHYSIO_EN, false);
   const KIN_FR = btwKinDict(PHYSIO_FR, true);
 
+  // Osteopathy reuses the physio treatment too (same clinic pricing, pain map,
+  // coach-type account); swap the profession word so it reads right.
+  function btwOsteoDict(dict, fr){
+    const map = fr ? [
+      [/Physiothérapeutes/g,'Ostéopathes'],[/physiothérapeutes/g,'ostéopathes'],
+      [/Physiothérapeute/g,'Ostéopathe'],[/physiothérapeute/g,'ostéopathe'],
+      [/Physiothérapie/g,'Ostéopathie'],[/physiothérapie/g,'ostéopathie'],
+      [/Physios/g,'Ostéopathes'],[/physios/g,'ostéopathes'],
+      [/Physio/g,'Ostéopathe'],[/physio/g,'ostéopathe']
+    ] : [
+      [/Physiotherapists/g,'Osteopaths'],[/physiotherapists/g,'osteopaths'],
+      [/Physiotherapist/g,'Osteopath'],[/physiotherapist/g,'osteopath'],
+      [/Physiotherapy/g,'Osteopathy'],[/physiotherapy/g,'osteopathy'],
+      [/Physios/g,'Osteopaths'],[/physios/g,'osteopaths'],
+      [/Physio/g,'Osteopath'],[/physio/g,'osteopath']
+    ];
+    const out = {};
+    for(const k in dict){ let v = dict[k]; for(const pair of map) v = v.replace(pair[0], pair[1]); out[k] = v; }
+    return out;
+  }
+  const OST_EN = btwOsteoDict(PHYSIO_EN, false);
+  const OST_FR = btwOsteoDict(PHYSIO_FR, true);
+
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -4589,7 +4622,7 @@
   function renderHeroThread(){
     const host = document.getElementById('btwHeroThread'); if(!host) return;
     const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
-      : (curAudience === 'kinesiology') ? 'physio'
+      : (curAudience === 'kinesiology' || curAudience === 'osteo') ? 'physio'
       : curAudience;
     const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
     const d = A[curLang] || A.en;
@@ -4642,7 +4675,7 @@
             : (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn))
         : curAudience === 'fitness'
         ? (curLang === 'fr' ? heroFitnessFr : heroFitnessEn)
-        : (curAudience === 'physio' || curAudience === 'kinesiology')
+        : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo')
         ? (curLang === 'fr' ? heroPhysioFr : heroPhysioEn)
         : (curLang === 'fr' ? heroFr : heroEn);
     }
@@ -4692,7 +4725,7 @@
   }
 
   function setAudience(a){
-    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology') ? a : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
@@ -4727,7 +4760,7 @@
   function maybeCoachAudience(){
     if(!state.me) return;
     if(state.me.account_type === 'coach'){
-      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology') ? state.me.discipline : 'sports';
+      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo') ? state.me.discipline : 'sports';
       if(curAudience !== want) setAudience(want);
     }
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
@@ -4844,7 +4877,7 @@
     const mlabel = document.querySelector('#btwMkComposer .btw-mk-mlabel') || document.querySelector('.btw-mk-mlabel');
     // Marketing demo: follow the audience toggle, not a signed-in account's
     // real discipline, so previewing physio/kinesiology always reads as pain.
-    function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology'); }
+    function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo'); }
     function pick(table, v){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
       const rows = table[l];
@@ -5074,7 +5107,7 @@
       // Marketing demo: pain-mode follows the audience toggle (curAudience), not
       // a signed-in account's real discipline, so the physio/kine preview reads
       // as pain even when a therapist account is viewing the page.
-      const pm = (typeof curAudience !== 'undefined') && (curAudience === 'physio' || curAudience === 'kinesiology');
+      const pm = (typeof curAudience !== 'undefined') && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo');
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
       if(sumLabel) sumLabel.textContent = L(p.label);
       if(sumText) sumText.textContent = localize(p.summary);
@@ -5373,7 +5406,7 @@
       render();
     }); });
     if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
-    const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1 };
+    const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
     function refresh(){
       const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
       if(wrap) wrap.hidden = !on;
@@ -5669,6 +5702,7 @@
     sports:  { plan: 'team_premium',    acct: 'coach' },
     physio:  { plan: 'team_premium',    acct: 'coach' },
     kinesiology: { plan: 'team_premium', acct: 'coach' },
+    osteo:   { plan: 'team_premium',    acct: 'coach' },
     schools: { plan: 'school_premium',  acct: 'school' },
     fitness: { plan: 'trainer_premium', acct: 'trainer' }
   };
@@ -6044,7 +6078,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
@@ -6437,6 +6471,7 @@
     if(curAudience === 'sports')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'physio')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'kinesiology') return COACH_PLAN_FROM[p] || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'osteo')    return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
     if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
     if(curAudience === 'fitness')  return TRAINER_PLAN_FROM[p] || (p.indexOf('trainer_') === 0 ? p : 'trainer_monthly');
@@ -6458,7 +6493,7 @@
       openBilling(); return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -6467,7 +6502,7 @@
       selectedPlan = COACH_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('team_') === 0 ? plan : 'team_monthly');
       teamField.style.display = '';
       nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = (curAudience === 'physio') ? 'Your physio account' : (curAudience === 'kinesiology') ? 'Your kinesiology account' : 'Your coach account';
+      if(eyebrow) eyebrow.textContent = (curAudience === 'physio') ? 'Your physio account' : (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : 'Your coach account';
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
       selectedPlan = MENTOR_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('mentor_') === 0 ? plan : 'mentor_monthly');
@@ -6541,7 +6576,7 @@
           body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
           // Tell the server which coach-type discipline this is (sports / physio
           // / kinesiology) so it tailors the welcome email and the app copy.
-          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'sports') body.discipline = curAudience;
+          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'sports') body.discipline = curAudience;
         }
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
@@ -7347,7 +7382,7 @@
   }
   // Physio and kinesiology track pain instead of mood: the 0-10 scalar means
   // pain (higher = worse) and the trend reads the other way (less pain = better).
-  function painMode(){ const d = painDiscipline(); return d === 'physio' || d === 'kinesiology'; }
+  function painMode(){ const d = painDiscipline(); return d === 'physio' || d === 'kinesiology' || d === 'osteo'; }
   function painWord(n){
     if(n == null) return '';
     if(n <= 2) return t('Minimal');
@@ -8054,10 +8089,11 @@
     else if (['fitness','trainer','trainers','gym','coaching','pt'].includes(forParam)) _startAud = 'fitness';
     else if (['physio','physio therapy','physiotherapy','physiotherapist','physical-therapy','physicaltherapy'].includes(forParam)) _startAud = 'physio';
     else if (['kinesiology','kinesiologist','kin','kinesiologie','kinésiologie','kinésiologue'].includes(forParam)) _startAud = 'kinesiology';
+    else if (['osteo','osteopath','osteopathy','osteopaths','osteopathic','osteopathe','ostéopathe','ostéopathie','ostéo'].includes(forParam)) _startAud = 'osteo';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   try {

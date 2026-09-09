@@ -419,6 +419,8 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
       ? `Your clinic account is confirmed and ready. Add your patients and you'll see how their recovery is going between appointments — a quick note when pain flares or an exercise is hard, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'kinesiology'
       ? `Your kinesiology account is confirmed and ready. Add your clients and you'll see how they're moving between sessions — a quick note when something bothers them, plus a body pain map showing exactly where it hurts and how much.`
+    : discipline === 'osteo'
+      ? `Your osteopathy account is confirmed and ready. Add your patients and you'll see how they're doing between appointments — a quick note when pain flares or something feels off, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'fitness'
       ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions — soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
     : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
@@ -502,7 +504,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     const { name, email, password, teamName } = req.body || {};
     // Coaches, physios and kinesiologists all use this route (all coach-type
     // accounts); the discipline just tailors the welcome email and the app copy.
-    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology'];
+    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo'];
     const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
