@@ -4658,9 +4658,14 @@
     b.addEventListener('click', ()=> setSchoolMode(b.dataset.mode));
   });
   // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
+  // A "coach" account carries a discipline (sports, physio or kinesiology), so route
+  // physio/kine accounts to their own wording instead of the generic sports one.
   function maybeCoachAudience(){
     if(!state.me) return;
-    if(state.me.account_type === 'coach' && curAudience !== 'sports' && curAudience !== 'physio' && curAudience !== 'kinesiology') setAudience('sports');
+    if(state.me.account_type === 'coach'){
+      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology') ? state.me.discipline : 'sports';
+      if(curAudience !== want) setAudience(want);
+    }
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
     else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
     else if(state.me.account_type === 'trainer' && curAudience !== 'fitness') setAudience('fitness');
