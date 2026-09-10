@@ -2539,6 +2539,10 @@
       <div class="btw-modal-eyebrow">Owner · Licence review</div>
       <h2>Verify clinicians</h2>
       <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
+      <div class="btw-aud" style="margin-bottom:14px;">
+        <button type="button" class="btw-aud-btn active" id="btwAdminTabTherapist" data-admintab="therapist">Therapists</button>
+        <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physios</button>
+      </div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
     </div>
@@ -6371,9 +6375,27 @@
     try{ renderAdminList(await api('GET', '/api/admin/clinicians')); }
     catch(e){ err.textContent = e.message; list.innerHTML = ''; }
   }
+  // Two tabs so therapist and physio reviews don't get mixed up. The review
+  // list holds both (therapists and pending physio coaches); we split by type.
+  let _adminRows = [];
+  let _adminTab = 'therapist';
+  function adminRowsFor(tab){
+    return _adminRows.filter(c => tab === 'physio' ? (c.account_type === 'coach') : (c.account_type === 'therapist'));
+  }
+  function adminPending(tab){ return adminRowsFor(tab).filter(c => !c.licence_verified).length; }
   function renderAdminList(rows){
+    _adminRows = Array.isArray(rows) ? rows : [];
+    renderAdminTab();
+  }
+  function renderAdminTab(){
+    const tBtn = document.getElementById('btwAdminTabTherapist');
+    const pBtn = document.getElementById('btwAdminTabPhysio');
+    const tN = adminPending('therapist'), pN = adminPending('physio');
+    if(tBtn){ tBtn.textContent = 'Therapists' + (tN ? ' (' + tN + ')' : ''); tBtn.classList.toggle('active', _adminTab === 'therapist'); }
+    if(pBtn){ pBtn.textContent = 'Physios' + (pN ? ' (' + pN + ')' : ''); pBtn.classList.toggle('active', _adminTab === 'physio'); }
     const list = document.getElementById('btwAdminList');
-    if(!rows || !rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No clinician accounts yet.</div>'; return; }
+    const rows = adminRowsFor(_adminTab);
+    if(!rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No ' + (_adminTab === 'physio' ? 'physio' : 'therapist') + ' accounts yet.</div>'; return; }
     list.innerHTML = rows.map(c=>{
       const verified = !!c.licence_verified;
       const reviewed = !!c.licence_reviewed_at;
@@ -6406,6 +6428,7 @@
     }catch(e){ err.textContent = e.message; }
   }
   document.getElementById('btwAdminBtn').addEventListener('click', openAdmin);
+  document.querySelectorAll('[data-admintab]').forEach(b=> b.addEventListener('click', ()=>{ _adminTab = b.getAttribute('data-admintab'); renderAdminTab(); }));
 
   document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
     try{
