@@ -2448,9 +2448,11 @@
                 <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
                 <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
                 <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
+                <option value="OPPQ">Physiothérapie du Québec (OPPQ)</option>
               </optgroup>
               <optgroup label="United States">
                 <option value="US-Psychologist">Licensed Psychologist (state board)</option>
+                <option value="US-PT">Licensed Physical Therapist (state board)</option>
                 <option value="US-LCSW">Licensed Clinical Social Worker (LCSW)</option>
                 <option value="US-LPC">Licensed Professional Counselor (LPC)</option>
                 <option value="US-LMFT">Licensed Marriage &amp; Family Therapist (LMFT)</option>
@@ -6444,6 +6446,7 @@
   const planLabels = {solo_monthly:'Solo, $99.99 CAD/month', solo_annual:'Solo Annual, $79.99 CAD/month (billed yearly)'};
   let selectedPlan = 'solo_monthly';
   let proSignup = null; // 'coach' (sports) | 'mentor' (recovery) | 'school' (schools) | null (therapist)
+  let proNeedsLicence = false; // physio is a coach account but is licence-verified
   const COACH_PLAN_FROM = {solo_monthly:'team_monthly', solo_annual:'team_annual'};
   const MENTOR_PLAN_FROM = {solo_monthly:'mentor_monthly', solo_annual:'mentor_annual'};
   const SCHOOL_PLAN_FROM = {solo_monthly:'school_monthly', solo_annual:'school_annual'};
@@ -6499,15 +6502,25 @@
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
     proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    // Physio is regulated: it's a coach account but goes through the licence
+    // step and manual review, like a therapist. Other coaches stay one-step.
+    proNeedsLicence = (curAudience === 'physio');
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
     if(proSignup === 'coach'){
-      // Coaches sign up in one step: no licence, no verification.
       selectedPlan = COACH_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('team_') === 0 ? plan : 'team_monthly');
-      teamField.style.display = '';
-      nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = (curAudience === 'physio') ? 'Your physio account' : (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : 'Your coach account';
+      if(proNeedsLicence){
+        // Physio: multi-step (account → licence → review), practice captured in step 2.
+        teamField.style.display = 'none';
+        nextBtn.textContent = 'Continue';
+        if(eyebrow) eyebrow.textContent = 'Step 1 of 3 · Account';
+      } else {
+        // Sports / kinesiology / osteopathy sign up in one step: no verification.
+        teamField.style.display = '';
+        nextBtn.textContent = 'Create account';
+        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : 'Your coach account';
+      }
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
       selectedPlan = MENTOR_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('mentor_') === 0 ? plan : 'mentor_monthly');
@@ -6571,7 +6584,7 @@
     if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = 'That email address looks incomplete.'; return; }
     if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
     err.textContent = '';
-    if(proSignup){
+    if(proSignup && !proNeedsLicence){
       // One-step coach/mentor signup: create the account and go to the dashboard.
       const btn = document.getElementById('btwStep1Next');
       btn.disabled = true;
@@ -6642,16 +6655,24 @@
     err.textContent = '';
     submitBtn.disabled = true;
     try{
-      const data = await api('POST', '/api/auth/signup', {
+      // Physio is a coach account that verifies, so it posts to the coach route
+      // with its discipline; a therapist posts to the therapist route.
+      const coachLicence = (proSignup === 'coach' && proNeedsLicence);
+      const practiceName = document.getElementById('btwSuPractice').value.trim() || null;
+      const body = {
         name: document.getElementById('btwSuName').value.trim(),
         email: document.getElementById('btwSuEmail').value.trim(),
         password: document.getElementById('btwSuPassword').value,
         licenceNumber: document.getElementById('btwSuLicence').value.trim(),
         licenceOrder: document.getElementById('btwSuOrder').value,
         province: document.getElementById('btwSuProvince').value,
-        practiceName: document.getElementById('btwSuPractice').value.trim() || null,
+        practiceName,
         plan: selectedPlan
-      });
+      };
+      if(coachLicence){ body.discipline = 'physio'; body.teamName = practiceName; }
+      const data = await api('POST', coachLicence ? '/api/auth/coach/signup' : '/api/auth/signup', body);
+      // A verified owner account may return a checkout link; honour it.
+      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
       billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
