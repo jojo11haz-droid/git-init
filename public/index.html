@@ -2442,13 +2442,43 @@
           <div class="btw-form-field">
             <label>Professional order, college, or state board</label>
             <select id="btwSuOrder">
-              <optgroup label="Canada">
+              <optgroup label="Canada · Psychology &amp; therapy">
                 <option value="OPQ">Ordre des psychologues du Québec (OPQ)</option>
-                <option value="OTSTCFQ">OTSTCFQ, social work, couple &amp; family therapy</option>
-                <option value="OCCOQ">Conseillers d'orientation (OCCOQ)</option>
-                <option value="OIIQ">Infirmières et infirmiers (OIIQ)</option>
                 <option value="CRPO">Psychotherapists of Ontario (CRPO)</option>
+                <option value="CPO-ON">College of Psychologists of Ontario</option>
+                <option value="CAP-AB">College of Alberta Psychologists</option>
+                <option value="CPBC">College of Psychologists of British Columbia</option>
+                <option value="CPMB">College of Psychologists of Manitoba</option>
+                <option value="SCP-SK">Saskatchewan College of Psychologists</option>
+                <option value="CPNB">College of Psychologists of New Brunswick</option>
+                <option value="NSBEP">Nova Scotia Board of Examiners in Psychology</option>
+                <option value="PEIPRB">PEI Psychologists Registration Board</option>
+                <option value="NLPB">Newfoundland &amp; Labrador Psychology Board</option>
+                <option value="CA-Psychology">Psychologist / therapist — other provincial college</option>
+              </optgroup>
+              <optgroup label="Canada · Social work &amp; counselling">
+                <option value="OTSTCFQ">OTSTCFQ — social work, couple &amp; family therapy (QC)</option>
+                <option value="OCCOQ">Conseillers d'orientation du Québec (OCCOQ)</option>
+                <option value="OCSWSSW">Social Workers of Ontario (OCSWSSW)</option>
+                <option value="CA-SocialWork">Social worker — other provincial college</option>
+                <option value="CA-Counselling">Counselling therapist — provincial college</option>
+              </optgroup>
+              <optgroup label="Canada · Physiotherapy">
                 <option value="OPPQ">Physiothérapie du Québec (OPPQ)</option>
+                <option value="CPO-PT-ON">College of Physiotherapists of Ontario</option>
+                <option value="CPA-AB">College of Physiotherapists of Alberta</option>
+                <option value="CPTBC">College of Physical Therapists of British Columbia</option>
+                <option value="CPM-MB">College of Physiotherapists of Manitoba</option>
+                <option value="SCPT-SK">Saskatchewan College of Physical Therapists</option>
+                <option value="CPTNB">College of Physiotherapists of New Brunswick</option>
+                <option value="NSCP">Nova Scotia College of Physiotherapists</option>
+                <option value="PEI-PT">Prince Edward Island physiotherapy regulator</option>
+                <option value="NL-PT">Newfoundland &amp; Labrador physiotherapy regulator</option>
+                <option value="CA-Physio">Physiotherapist — other provincial college</option>
+              </optgroup>
+              <optgroup label="Canada · Nursing">
+                <option value="OIIQ">Infirmières et infirmiers du Québec (OIIQ)</option>
+                <option value="CA-Nursing">Nurse — provincial college</option>
               </optgroup>
               <optgroup label="United States">
                 <option value="US-Psychologist">Licensed Psychologist (state board)</option>
@@ -6538,6 +6568,8 @@
         teamField.style.display = 'none';
         nextBtn.textContent = 'Continue';
         if(eyebrow) eyebrow.textContent = 'Step 1 of 3 · Account';
+        // Default the order picker to a physiotherapy college, not a psychology one.
+        const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = 'CA-Physio';
       } else {
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
