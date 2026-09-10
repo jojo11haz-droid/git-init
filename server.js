@@ -496,20 +496,26 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 });
 
 // Coach signup: a coach is a clinician account with account_type='coach'.
-// No professional licence and no verification step — a coach can use the
-// roster and check-in tools immediately. Like every plan, the 14-day trial
-// takes a card up front when Stripe is configured (checkoutUrl below).
+// Sports, kinesiology and osteopathy hold no professional licence and use the
+// roster/check-in tools immediately, with the 14-day trial taking a card up
+// front. Physiotherapy is regulated, so a physio account comes through with a
+// licence number, stays unverified (no data, no billing) until the owner
+// reviews it against the order's registry, and skips checkout until then.
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
-    const { name, email, password, teamName } = req.body || {};
-    // Coaches, physios and kinesiologists all use this route (all coach-type
-    // accounts); the discipline just tailors the welcome email and the app copy.
+    const { name, email, password, teamName, licenceNumber, licenceOrder, province } = req.body || {};
     const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo'];
     const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    // Physio is a regulated profession, so it needs a licence and manual review.
+    // The owner's free-access account skips verification (for testing every flow).
+    const needsLicence = discipline === 'physio' && !isFreeAccess(email.trim());
+    if (needsLicence && (!licenceNumber || !licenceNumber.trim())) {
+      return res.status(400).json({ error: 'A professional licence/order number is required.' });
+    }
 
     if (await getClinicianByEmail(email.trim())) {
       return res.status(409).json({ error: 'An account with this email already exists.' });
@@ -521,21 +527,29 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
       passwordHash: await hashPassword(password),
       teamName: typeof teamName === 'string' ? teamName.trim() : null,
       plan,
-      discipline
+      discipline,
+      licenceVerified: !needsLicence,
+      licenceNumber: needsLicence ? licenceNumber.trim() : null,
+      licenceOrder: needsLicence && typeof licenceOrder === 'string' ? licenceOrder.trim() : null,
+      province: needsLicence && typeof province === 'string' ? province.trim() : null
     });
     await startSession(res, req, coach.id);
-    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: 'pro', discipline });
+    const pending = !coach.licence_verified;
+    // A pending physio gets the review email; everyone else gets the ready email.
+    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: pending ? 'therapist' : 'pro', discipline });
 
-    // Start the 14-day trial with a card on file, same as every other plan.
-    // Null when Stripe or this plan's price isn't configured (dev/no-Stripe).
+    // Start the 14-day trial with a card on file — but not for a pending physio:
+    // like a therapist, billing waits until the licence is approved.
     let checkoutUrl = null;
-    try { checkoutUrl = await startClinicianCheckout(coach, plan, siteOrigin(req)); }
-    catch (e) { console.error('Could not start checkout:', e.message); }
+    if (!pending) {
+      try { checkoutUrl = await startClinicianCheckout(coach, plan, siteOrigin(req)); }
+      catch (e) { console.error('Could not start checkout:', e.message); }
+    }
 
     res.status(201).json({
       clinician: coach,
       checkoutUrl,
-      verificationRequired: false,
+      verificationRequired: pending,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
       freeAccess: isFreeAccess(coach.email)
     });

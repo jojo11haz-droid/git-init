@@ -192,16 +192,18 @@ export async function createClinician({ name, email, passwordHash, licenceNumber
   return rows[0];
 }
 
-// A coach account is a clinician row with account_type='coach'. Coaches don't
-// hold a professional licence, so there's nothing to review: the account is
-// created already verified and can use the roster/check-in tools immediately.
-// The team name is stored in practice_name, reusing the existing column.
-export async function createCoach({ name, email, passwordHash, teamName, plan, discipline }) {
+// A coach account is a clinician row with account_type='coach'. Most coach-type
+// disciplines (sports, kinesiology, osteopathy) hold no professional licence, so
+// there's nothing to review: created already verified, usable immediately. Physio
+// is regulated, so it comes through with licenceVerified=false and a licence on
+// file, and goes through the same manual review as a therapist before it's active.
+// The team/clinic name is stored in practice_name, reusing the existing column.
+export async function createCoach({ name, email, passwordHash, teamName, plan, discipline, licenceVerified = true, licenceNumber = null, licenceOrder = null, province = null }) {
   const { rows } = await pool.query(
-    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, practice_name, plan, discipline)
-     VALUES ($1, lower($2), $3, 'coach', true, $4, $5, $6)
+    `INSERT INTO clinicians (name, email, password_hash, account_type, licence_verified, licence_number, licence_order, province, practice_name, plan, discipline)
+     VALUES ($1, lower($2), $3, 'coach', $4, $5, $6, $7, $8, $9, $10)
      RETURNING ${CLINICIAN_PUBLIC_COLS}`,
-    [name, email, passwordHash, teamName || null, plan || null, discipline || null]
+    [name, email, passwordHash, licenceVerified, licenceNumber, licenceOrder, province, teamName || null, plan || null, discipline || null]
   );
   return rows[0];
 }
@@ -256,7 +258,7 @@ export async function createTrainer({ name, email, passwordHash, plan }) {
 export async function listCliniciansForReview() {
   const { rows } = await pool.query(
     `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians
-     WHERE account_type = 'therapist'
+     WHERE account_type = 'therapist' OR (account_type = 'coach' AND discipline = 'physio')
      ORDER BY licence_verified ASC, licence_reviewed_at IS NOT NULL ASC, created_at DESC`
   );
   return rows;
