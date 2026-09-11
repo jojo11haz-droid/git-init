@@ -1662,10 +1662,13 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
 
     // Hand back a Stripe Checkout URL so the client can send them to pay. If
     // Stripe isn't configured, checkoutUrl is null and the account is simply
-    // created for free (dev/no-Stripe mode).
+    // created for free (dev/no-Stripe mode). Free-access (owner/comp) accounts
+    // skip checkout entirely — they never owe a subscription.
     let checkoutUrl = null;
-    try { checkoutUrl = await startPatientCheckout(patient, plan, siteOrigin(req)); }
-    catch (e) { console.error('Could not start checkout:', e.message); }
+    if (!isFreeAccess(patient.email)) {
+      try { checkoutUrl = await startPatientCheckout(patient, plan, siteOrigin(req)); }
+      catch (e) { console.error('Could not start checkout:', e.message); }
+    }
 
     res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
