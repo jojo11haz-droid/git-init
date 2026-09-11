@@ -937,6 +937,11 @@
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
   .btw-bodyov{margin:2px 0 18px;padding:14px 16px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;}
   .btw-bodyov-l{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
+  .btw-bodyov-top{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+  .btw-bodyov-topl{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:7px;}
+  .btw-bodyov-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:3px 0;}
+  .btw-bodyov-area{font-size:13px;font-weight:600;color:var(--ink);text-transform:capitalize;}
+  .btw-bodyov-meta{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
   .btw-ci-pain{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
   .btw-ci-pain .l{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
   .btw-mk-sub{font-size:11px;color:var(--ink-soft);margin-bottom:9px;}
@@ -2978,7 +2983,7 @@
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet, add your first patient to start receiving check-ins.":"Aucun patient pour l'instant, ajoutez votre premier patient pour commencer à recevoir des suivis.",
     "No check-ins yet for":"Aucun suivi pour l'instant pour",
-    "check-in":"suivi","check-ins":"suivis",
+    "check-in":"suivi","check-ins":"suivis","Most affected areas":"Zones les plus touchées","up to":"jusqu'à",
     "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
     "Mood direction":"Direction de l'humeur","improving":"en hausse","declining":"en baisse","holding steady":"stable",
     "avg so far, more check-ins reveal the trend":"moyenne jusqu'ici, d'autres suivis révéleront la tendance",
@@ -5686,7 +5691,13 @@
       el: root,
       getMap: function(){ return Object.keys(state).length ? Object.assign({}, state) : null; },
       setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; selected = null; render(); },
-      clear: function(){ state = {}; selected = null; render(); }
+      clear: function(){ state = {}; selected = null; render(); },
+      // Human label for a "view:id" pain-map key, e.g. "front:r_knee" -> "right knee".
+      labelFor: function(key){
+        const p = String(key).split(':');
+        const z = zonesFor(p[0] || 'front').find(function(zz){ return zz.id === p[1]; });
+        return z ? (frL() ? z.fr : z.en) : (p[1] || key);
+      }
     };
   }
   document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
@@ -7944,11 +7955,11 @@
     if(!host) return;
     const list = state.checkIns || [];
     if(!painMapContext() || !list.length){ host.style.display='none'; host.innerHTML=''; return; }
-    const merged = {};
+    const merged = {}, freq = {};
     list.forEach(function(c){
       const pm = c.painMap;
       if(pm && typeof pm === 'object'){
-        for(const k in pm){ const v = pm[k]; if(typeof v === 'number' && v > 0 && (!merged[k] || v > merged[k])) merged[k] = v; }
+        for(const k in pm){ const v = pm[k]; if(typeof v === 'number' && v > 0){ if(!merged[k] || v > merged[k]) merged[k] = v; freq[k] = (freq[k] || 0) + 1; } }
       }
     });
     if(!Object.keys(merged).length){ host.style.display='none'; host.innerHTML=''; return; }
@@ -7956,6 +7967,21 @@
     const bm = btwCreateBodyMap({ readOnly:true });
     bm.setMap(merged);
     host.appendChild(bm.el);
+    // Ranked "most affected areas": the physio's at-a-glance read of where and
+    // how much, ordered by how often a spot comes up, then by peak intensity.
+    const ranked = Object.keys(merged).map(function(k){ return { max: merged[k], n: freq[k] || 0, label: bm.labelFor(k) }; })
+      .sort(function(a,b){ return (b.n - a.n) || (b.max - a.max); }).slice(0, 4);
+    if(ranked.length){
+      const rows = ranked.map(function(r){
+        const times = r.n + ' ' + (r.n === 1 ? t('check-in') : t('check-ins'));
+        return '<div class="btw-bodyov-row"><span class="btw-bodyov-area">' + esc(r.label) + '</span>'
+          + '<span class="btw-bodyov-meta">' + esc(times) + ' · ' + esc(t('up to')) + ' ' + r.max + '/10</span></div>';
+      }).join('');
+      const top = document.createElement('div');
+      top.className = 'btw-bodyov-top';
+      top.innerHTML = '<div class="btw-bodyov-topl">' + esc(t('Most affected areas')) + '</div>' + rows;
+      host.appendChild(top);
+    }
     host.style.display = '';
   }
 
