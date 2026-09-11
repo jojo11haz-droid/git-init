@@ -1559,7 +1559,12 @@ function requireClinicianSubscription(req, res, next) {
 // has been confirmed by the owner. The owner's own (free-access) account is
 // treated as verified so they can always use and administer the site.
 function clinicianVerified(c) {
-  return !!c && (isFreeAccess(c.email) || c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer' || !!c.licence_verified);
+  if (!c) return false;
+  if (isFreeAccess(c.email) || !!c.licence_verified) return true;
+  // Coach/mentor/school/trainer accounts self-verify — except physio, which is
+  // regulated and must have its licence reviewed like a therapist.
+  if (c.account_type === 'coach') return c.discipline !== 'physio';
+  return c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer';
 }
 function requireVerifiedClinician(req, res, next) {
   if (!clinicianVerified(req.clinician)) {
