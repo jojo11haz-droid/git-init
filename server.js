@@ -820,7 +820,8 @@ app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
 // registry before approving. Only then can the clinician reach patient data.
 app.get('/api/admin/clinicians', requireDb, requireAuth, requireOwner, async (req, res) => {
   try {
-    res.json(await listCliniciansForReview());
+    // Free-access/owner accounts are always verified, so keep them out of the queue.
+    res.json((await listCliniciansForReview()).filter(c => !isFreeAccess(c.email)));
   } catch (err) {
     console.error('Error listing clinicians for review:', err);
     res.status(500).json({ error: 'Could not load clinicians.' });
@@ -1519,10 +1520,13 @@ function subActive(status) {
   return status === 'active' || status === 'trialing' || status === 'canceling';
 }
 // Owner/comp accounts that always get in free (e.g. the site owner using their
-// own site). Set FREE_ACCESS_EMAILS to a comma-separated list; defaults to the
-// owner's address.
-const FREE_ACCESS_EMAILS = (process.env.FREE_ACCESS_EMAILS || 'jojo11haz@gmail.com')
-  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+// own site). The owner's address is always free-access; FREE_ACCESS_EMAILS adds
+// more (comma-separated) and can never drop the owner, so an env misconfig can't
+// lock the owner out of their own site.
+const OWNER_EMAIL = 'jojo11haz@gmail.com';
+const FREE_ACCESS_EMAILS = [OWNER_EMAIL]
+  .concat((process.env.FREE_ACCESS_EMAILS || '').split(','))
+  .map(e => e.trim().toLowerCase()).filter(Boolean);
 function isFreeAccess(email) {
   return !!email && FREE_ACCESS_EMAILS.includes(String(email).toLowerCase());
 }
