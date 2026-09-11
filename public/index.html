@@ -1807,6 +1807,7 @@
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
+          <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
       </div>
@@ -2752,6 +2753,7 @@
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
+    "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
@@ -5863,6 +5865,9 @@
     if(accountBtn) accountBtn.style.display = signedIn ? '' : 'none';
     const menuSettings = document.getElementById('btwMenuSettings');
     if(menuSettings) menuSettings.style.display = asPatient ? '' : 'none';
+    // Anyone signed in can download a copy of their own data.
+    const dlData = document.getElementById('btwDownloadData');
+    if(dlData) dlData.style.display = signedIn ? '' : 'none';
     document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
     const adminBtn = document.getElementById('btwAdminBtn');
@@ -6110,6 +6115,48 @@
     renderAuthState();
     renderAll();
   });
+
+  // Download a copy of your own data as a JSON file. Assembled from the same
+  // endpoints the app already uses, so a patient gets their profile, check-ins
+  // and future-self notes; a clinician gets their profile and caseload.
+  async function downloadMyData(){
+    const dl = document.getElementById('btwDownloadData');
+    const orig = dl ? dl.textContent : '';
+    if(dl){ dl.disabled = true; dl.textContent = t('Preparing…'); }
+    try{
+      let payload;
+      if(isPatient()){
+        const [me, checkIns, notes] = await Promise.all([
+          pApi('GET', '/api/patient/me').catch(()=>null),
+          pApi('GET', '/api/patient/check-ins').catch(()=>[]),
+          pApi('GET', '/api/patient/future-notes').catch(()=>[])
+        ]);
+        payload = { exported_at: new Date().toISOString(), account_type: 'patient',
+          profile: (me && me.patient) || null, check_ins: checkIns || [], future_notes: notes || [] };
+      } else if(isTherapist()){
+        const [me, caseload] = await Promise.all([
+          api('GET', '/api/auth/me').catch(()=>null),
+          api('GET', '/api/patients').catch(()=>[])
+        ]);
+        payload = { exported_at: new Date().toISOString(),
+          account_type: (state.me && state.me.account_type) || 'clinician',
+          profile: (me && me.clinician) || null, caseload: caseload || [] };
+      } else { return; }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'between-my-data-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    }catch(e){
+      alert(t('Could not prepare your data. Please try again.'));
+    }finally{
+      if(dl){ dl.disabled = false; dl.textContent = orig; }
+    }
+  }
+  const dlBtn = document.getElementById('btwDownloadData');
+  if(dlBtn) dlBtn.addEventListener('click', downloadMyData);
 
   // --- login modal ---
   const loginOverlay = document.getElementById('btwLoginOverlay');
