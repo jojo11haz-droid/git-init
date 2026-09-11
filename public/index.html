@@ -2152,6 +2152,7 @@
         <button type="button" id="btwMoodSkip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Not sure? Let AI estimate it</button>
         <span id="btwMoodSkipNote" style="display:none;color:var(--ink-soft);"></span>
       </div>
+      <div class="btw-mk-airead" id="btwComposeRead" style="margin:-2px 0 14px;"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwComposeReadVal"></span></div>
 
       <div class="btw-field-label">What's going on? (tap any that fit)</div>
       <div class="btw-tags" id="btwTagPicker">
@@ -7400,6 +7401,7 @@
     const skipBtn = document.getElementById('btwMoodSkip');
     const note = document.getElementById('btwMoodSkipNote');
     moodEl.disabled = v;
+    if(typeof renderAiRead === 'function') renderAiRead();
     if(v){
       moodValEl.textContent = '—';
       if(skipBtn) skipBtn.style.display = 'none';
@@ -7425,8 +7427,31 @@
     const em = painMode() ? ('<span class="btw-mv-e">' + (SCORE_EMOJI[n] || '') + '</span>') : '';
     moodValEl.innerHTML = em + '<span class="btw-mv-w">' + esc(scoreWord(n)) + '</span><span class="btw-mv-n">(' + n + '/10)</span>';
   }
-  moodEl.addEventListener('input', ()=>{ if(moodSkipped) moodSkipped = false; renderMoodVal(); });
-  renderMoodVal();
+  // Live "AI reads" line, like the demo: it reflects the slider level and the
+  // tapped topics into a short phrase, e.g. "getting by, a mixed day, mostly
+  // work and sleep" (or a pain read for physio/kine/osteo).
+  const AIREAD_MOOD = { en:[[2,'really struggling today'],[4,'low energy and worn down'],[6,'getting by, a mixed day'],[8,'feeling pretty steady'],[10,'in a good place today']],
+                        fr:[[2,'vraiment en difficulté'],[4,"peu d'énergie, journée éprouvante"],[6,'ça va, journée en dents de scie'],[8,'plutôt stable'],[10,'dans un bon moment']] };
+  const AIREAD_PAIN = { en:[[2,'barely any pain today'],[4,'a bit sore'],[6,'sore, a rough day'],[8,'in real pain today'],[10,'severe pain right now']],
+                        fr:[[2,'presque aucune douleur'],[4,'un peu endolori'],[6,'endolori, journée difficile'],[8,'vraiment douloureux'],[10,'douleur sévère en ce moment']] };
+  const AIREAD_LEAD = { en:', mostly ', fr:', surtout ' };
+  const AIREAD_CONJ = { en:'and', fr:'et' };
+  function aiHumanJoin(arr, conj){ if(arr.length<=1) return arr[0]||''; if(arr.length===2) return arr[0]+' '+conj+' '+arr[1]; return arr.slice(0,-1).join(', ')+' '+conj+' '+arr[arr.length-1]; }
+  function renderAiRead(){
+    const el = document.getElementById('btwComposeReadVal'); if(!el) return;
+    const l = (curLang==='fr') ? 'fr' : 'en';
+    if(moodSkipped){ el.textContent = (l==='fr') ? 'envoyez votre suivi pour une lecture' : 'send your check-in for a read'; return; }
+    const rows = (painMode() ? AIREAD_PAIN : AIREAD_MOOD)[l];
+    const n = parseInt(moodEl.value,10) || 5;
+    let base = rows[rows.length-1][1];
+    for(const r of rows){ if(n <= r[0]){ base = r[1]; break; } }
+    const tags = [...(state.selectedTags||[])].map(tg => String(t(tg)).toLowerCase());
+    const clause = tags.length ? (AIREAD_LEAD[l] + aiHumanJoin(tags, AIREAD_CONJ[l])) : '';
+    el.textContent = base + clause;
+  }
+  window.__btwComposeRead = renderAiRead;
+  moodEl.addEventListener('input', ()=>{ if(moodSkipped) moodSkipped = false; renderMoodVal(); renderAiRead(); });
+  renderMoodVal(); renderAiRead();
   document.getElementById('btwMoodSkip').addEventListener('click', ()=> setMoodSkipped(true));
 
   // Delegated so it keeps working when the preset set is rebuilt (physio vs
@@ -7438,6 +7463,7 @@
       const tg = el.dataset.tag;
       if(state.selectedTags.has(tg)){ state.selectedTags.delete(tg); el.classList.remove('active'); }
       else { state.selectedTags.add(tg); el.classList.add('active'); }
+      renderAiRead();
     });
   }
 
@@ -7608,6 +7634,7 @@
     set('btwMoodChartTitle', pm ? t('Pain trend') : t('Mood trend'));
     const skip = document.getElementById('btwMoodSkipRow'); if(skip) skip.style.display = pm ? 'none' : '';
     if(typeof renderMoodVal === 'function') renderMoodVal();
+    if(typeof renderAiRead === 'function') renderAiRead();
   }
   window.__btwScoreMode = applyScoreMode;
   // Warning-triangle icon marking a patient in a critical situation.
