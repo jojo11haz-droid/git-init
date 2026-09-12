@@ -2155,6 +2155,7 @@
       <div class="btw-mk-airead" id="btwComposeRead" style="margin:-2px 0 14px;"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwComposeReadVal"></span></div>
 
       <div class="btw-field-label">What's going on? (tap any that fit)</div>
+      <div class="btw-mk-moodmode" id="btwComposeTopicMode" style="margin:0 0 9px;"><button type="button" class="btw-mk-modebtn active" data-tmode="self">I'll pick</button><button type="button" class="btw-mk-modebtn" data-tmode="ai">Not sure</button></div>
       <div class="btw-tags" id="btwTagPicker">
         <div class="btw-tag" data-tag="Sleep">Sleep</div>
         <div class="btw-tag" data-tag="Work">Work</div>
@@ -2171,6 +2172,7 @@
         <div class="btw-tag btw-tag-add" id="btwTagAdd">+ Something else</div>
         <input class="btw-tag-input" id="btwTagInput" type="text" maxlength="24" autocomplete="off" placeholder="Type it and press enter" style="display:none;">
       </div>
+      <div class="btw-mk-airnote" id="btwComposeTopicNote" style="display:none;margin-top:8px;"></div>
 
       <div id="btwComposePain" class="btw-compose-pain" style="display:none;">
         <div class="btw-field-label">Where does it hurt or feel sore?</div>
@@ -3147,7 +3149,9 @@
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "Gone quiet":"Devenus silencieux","No check-in in the last few days":"Aucun suivi depuis quelques jours",
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
-    "AI reads":"L'IA perçoit",
+    "AI reads":"L'IA perçoit","Between estimates":"Between estime",
+    "Between will name the topic from your check-in.":"Between nommera le sujet à partir de votre suivi.",
+    "No topic is set unless you tap one — turn on AI summaries to have Between name it.":"Aucun sujet n'est défini sauf si vous en touchez un — activez les résumés IA pour que Between le nomme.",
     "Move the slider. Between reads how you're feeling from what you share.":"Bougez le curseur. Between perçoit comment vous allez d'après ce que vous partagez.",
     "Edit this, then send to see Between read it.":"Modifiez ceci, puis envoyez pour voir Between l'interpréter.",
     "I'll set it":"Je l'indique","Let Between estimate":"Laisser Between estimer",
@@ -7472,6 +7476,37 @@
     });
   }
 
+  // Topic source, like the demo: "I'll pick" keeps the chips tappable; "Not sure"
+  // hands the topic to the AI, which names it from the check-in (when AI is on).
+  let composeTopicAi = false;
+  function syncComposeTopic(){
+    document.querySelectorAll('#btwComposeTopicMode .btw-mk-modebtn').forEach(function(b){
+      b.classList.toggle('active', (b.getAttribute('data-tmode') === 'ai') === composeTopicAi);
+    });
+    const picker = document.getElementById('btwTagPicker');
+    if(picker){ picker.style.opacity = composeTopicAi ? '.4' : ''; picker.style.pointerEvents = composeTopicAi ? 'none' : ''; }
+    const note = document.getElementById('btwComposeTopicNote');
+    if(note){
+      if(composeTopicAi){
+        const aiOn = !!(state.patient && state.patient.ai_consent_enabled);
+        note.style.display = '';
+        note.textContent = aiOn ? t('Between will name the topic from your check-in.') : t('No topic is set unless you tap one — turn on AI summaries to have Between name it.');
+      } else { note.style.display = 'none'; }
+    }
+  }
+  function setComposeTopicAi(v){
+    composeTopicAi = !!v;
+    if(composeTopicAi){
+      state.selectedTags.clear();
+      document.querySelectorAll('#btwTagPicker .btw-tag[data-tag].active').forEach(el=>el.classList.remove('active'));
+      renderAiRead();
+    }
+    syncComposeTopic();
+  }
+  document.querySelectorAll('#btwComposeTopicMode .btw-mk-modebtn').forEach(function(b){
+    b.addEventListener('click', function(){ setComposeTopicAi(b.getAttribute('data-tmode') === 'ai'); });
+  });
+
   // For physio/fitness/sports/kinesiology (coach/trainer contexts) the check-in
   // topics are physical; therapy keeps the emotional set. Rebuilt in place so
   // the picker matches whoever is checking in.
@@ -7635,7 +7670,7 @@
     const set = (id, txt)=>{ const e = document.getElementById(id); if(e) e.textContent = txt; };
     set('btwMoodLabel', pm ? t('Pain right now') : t('Mood right now'));
     set('btwMoodLow', pm ? t('No pain') : t('Low'));
-    set('btwMoodHigh', pm ? t('Severe') : t('High'));
+    set('btwMoodHigh', pm ? t('Severe') : t('Great'));
     set('btwMoodChartTitle', pm ? t('Pain trend') : t('Mood trend'));
     const skip = document.getElementById('btwMoodSkipRow'); if(skip) skip.style.display = pm ? 'none' : '';
     const cmode = document.getElementById('btwComposeMoodMode'); if(cmode) cmode.style.display = pm ? 'none' : '';
@@ -8314,6 +8349,7 @@
       document.querySelectorAll('.btw-tag-custom').forEach(el=>el.remove());
       showTagInput(false);
       moodEl.value = 5; setMoodSkipped(false);
+      if(typeof setComposeTopicAi === 'function') setComposeTopicAi(false);
       if(composeBodyMap) composeBodyMap.clear();
 
       if(isPatient()) await loadPatientCheckIns();
