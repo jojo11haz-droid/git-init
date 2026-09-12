@@ -5748,11 +5748,66 @@
     const VIEWS = { front:1, back:1, left:1, right:1 };
     views.querySelectorAll('.btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ view = VIEWS[b.dataset.view] ? b.dataset.view : 'front'; selected = null; views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x === b); }); render(); }); });
     render();
+    // Live read from the typed check-in, like the marketing demo: "sore knee",
+    // "tight left hamstring", "lower back pain" light up that region and pick
+    // the level from how strong the wording is. Specific phrases first.
+    const BODY_KEYWORDS = [
+      [/lower back|low back|lumbar|bas du dos|lombaire/, 'back', ['lower_back']],
+      [/upper back|\btraps?\b|\blats?\b|haut du dos|trap[eè]ze/, 'back', ['upper_back']],
+      [/glute|buttock|\bbutt\b|fessier/, 'back', ['glutes']],
+      [/hamstring|ischio/, 'back', ['l_thigh','r_thigh']],
+      [/calf|calves|mollet/, 'back', ['l_calf','r_calf']],
+      [/\bback\b|\bdos\b/, 'back', ['lower_back']],
+      [/knee|genou/, 'front', ['l_knee','r_knee']],
+      [/quad|thigh|cuisse|quadriceps/, 'front', ['l_thigh','r_thigh']],
+      [/shin|tibia/, 'front', ['l_shin','r_shin']],
+      [/ankle|cheville/, 'front', ['l_ankle','r_ankle']],
+      [/foot|feet|heel|\bpied|talon/, 'front', ['l_foot','r_foot']],
+      [/shoulder|delt|[ée]paule/, 'front', ['l_shoulder','r_shoulder']],
+      [/neck|\bcou\b|nuque/, 'front', ['neck']],
+      [/chest|pec|poitrine/, 'front', ['chest']],
+      [/\babs\b|core|stomach|belly|abdo|ventre|tronc/, 'front', ['abs']],
+      [/\bhip|groin|hanche|aine/, 'front', ['hips']],
+      [/elbow|forearm|coude|avant-bras/, 'front', ['l_fore','r_fore']],
+      [/wrist|hand|poignet|\bmain/, 'front', ['l_hand','r_hand']],
+      [/bicep|tricep|\barm\b|\bbras\b/, 'front', ['l_arm','r_arm']]
+    ];
+    function fromText(text){
+      if(readOnly || !text) return false;
+      const s = ' ' + String(text).toLowerCase() + ' ';
+      let lvl = /sore|hurt|pain|ach|tight|stiff|strain|injur|swollen|twinge|douleur|douloureu|mal|endolori|raide|tendu|blessure|enfl/.test(s) ? 5 : 3;
+      if(/really|very| so | a lot|badly|killing|worst|sharp|can.?t|vraiment|tr[eè]s|beaucoup|atroce|pire|aigu[eë]?/.test(s)) lvl = 8;
+      const hasL = /\bleft\b|\bgauche\b/.test(s), hasR = /\bright\b|\bdroit/.test(s);
+      const sideSel = (hasL && !hasR) ? 'l' : (hasR && !hasL ? 'r' : 'both');
+      let matched = false;
+      BODY_KEYWORDS.forEach(function(k){
+        if(k[0].test(s)){
+          matched = true;
+          k[2].forEach(function(id){
+            if(sideSel !== 'both' && (id.indexOf('l_') === 0 || id.indexOf('r_') === 0)){
+              if(sideSel === 'l' && id.indexOf('l_') !== 0) return;
+              if(sideSel === 'r' && id.indexOf('r_') !== 0) return;
+            }
+            state[k[1] + ':' + id] = lvl;
+          });
+        }
+      });
+      if(matched){
+        const frontHas = Object.keys(state).some(function(kk){ return kk.indexOf('front:') === 0; });
+        const backHas = Object.keys(state).some(function(kk){ return kk.indexOf('back:') === 0; });
+        if(view === 'front' && !frontHas && backHas){ view = 'back'; }
+        else if(view === 'back' && !backHas && frontHas){ view = 'front'; }
+        views.querySelectorAll('.btw-mk-modebtn').forEach(function(x){ x.classList.toggle('active', x.dataset.view === view); });
+        render();
+      }
+      return matched;
+    }
     return {
       el: root,
       getMap: function(){ return Object.keys(state).length ? Object.assign({}, state) : null; },
       setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; selected = null; render(); },
       clear: function(){ state = {}; selected = null; render(); },
+      fromText: fromText,
       // Human label for a "view:id" pain-map key, e.g. "front:r_knee" -> "right knee".
       labelFor: function(key){
         const p = String(key).split(':');
@@ -7603,6 +7658,7 @@
       let transcript = '';
       for(let i=0;i<e.results.length;i++){ transcript += e.results[i][0].transcript; }
       textEl.value = transcript;
+      composeBodyFromText();
     };
     recognition.onend = ()=>{ recognizing = false; micBtn.classList.remove('recording'); };
     micBtn.addEventListener('click', ()=>{
@@ -7614,6 +7670,13 @@
       }
     });
   }
+  // Live body map from the typed check-in, like the demo: as the person writes
+  // "sore left knee" or "tight lower back", that region lights up on the map.
+  // Only for the physical audiences that show the map.
+  function composeBodyFromText(){
+    if(composeBodyMap && painMapContext() && composeBodyMap.fromText) composeBodyMap.fromText(textEl.value);
+  }
+  textEl.addEventListener('input', composeBodyFromText);
 
   function fmtTimeParts(ts){
     const d = new Date(ts);
