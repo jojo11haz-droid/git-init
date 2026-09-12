@@ -163,6 +163,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAU
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'patient';
+ALTER TABLE future_notes ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'note';
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
 `;
@@ -858,17 +859,17 @@ export async function deleteAllCheckIns(patientId) {
 // --- Future-self notes ---
 // A patient's private encouragement to themselves, surfaced back to them on a
 // hard day. Private to the patient — never exposed on the clinician side.
-export async function createFutureNote(patientId, body) {
+export async function createFutureNote(patientId, body, kind = 'note') {
   const { rows } = await pool.query(
-    `INSERT INTO future_notes (patient_id, body) VALUES ($1, $2) RETURNING id, body, created_at`,
-    [patientId, body]
+    `INSERT INTO future_notes (patient_id, body, kind) VALUES ($1, $2, $3) RETURNING id, body, kind, created_at`,
+    [patientId, body, kind]
   );
   return rows[0];
 }
 
 export async function listFutureNotes(patientId) {
   const { rows } = await pool.query(
-    `SELECT id, body, created_at FROM future_notes WHERE patient_id = $1 ORDER BY created_at DESC`,
+    `SELECT id, body, kind, created_at FROM future_notes WHERE patient_id = $1 ORDER BY created_at DESC`,
     [patientId]
   );
   return rows;
