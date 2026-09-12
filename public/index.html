@@ -2146,7 +2146,7 @@
         <span class="btw-mk-moodpill" id="btwMoodVal">Okay (5/10)</span>
       </div>
       <div class="btw-mk-moodmode" id="btwComposeMoodMode"><button type="button" class="btw-mk-modebtn active" data-cmode="self">I'll set it</button><button type="button" class="btw-mk-modebtn" data-cmode="ai">Let Between estimate</button></div>
-      <div class="btw-mk-slider" id="btwMoodSlider"><div class="fill" id="btwMoodFill" style="width:44%;"></div><input type="range" id="btwMood" min="1" max="10" value="5" class="btw-mk-range" aria-label="Mood right now"></div>
+      <div class="btw-mk-slider" id="btwMoodSlider"><div class="fill" id="btwMoodFill" style="width:44%;"></div><input type="range" id="btwMood" min="1" max="10" step="any" value="5" class="btw-mk-range" aria-label="Mood right now"></div>
       <div class="btw-mk-scale"><span id="btwMoodLow">Low</span><span id="btwMoodHigh">High</span></div>
       <div style="margin:3px 0 10px;font-size:11px;" id="btwMoodSkipRow">
         <button type="button" id="btwMoodSkip" style="display:none;"></button>
@@ -7543,11 +7543,14 @@
   const SCORE_EMOJI = ['','🙂','🙂','😐','😐','😕','😟','😧','😖','😫','😭'];
   function renderMoodVal(){
     if(moodSkipped){ moodValEl.textContent = curLang==='fr' ? 'Between estime' : 'Between estimates'; return; }
-    const n = parseInt(moodEl.value, 10) || 0;
+    // Drag is continuous (step="any"): the fill tracks the raw thumb position
+    // for a smooth glide, while the pill and stored score round to a whole 1-10.
+    const raw = parseFloat(moodEl.value); const rawv = isNaN(raw) ? 5 : Math.min(10, Math.max(1, raw));
+    const n = Math.round(rawv);
     // Demo-style pill: "Okay (5/10)" for mood, "Moderate (5/10)" for pain.
     moodValEl.textContent = scoreWord(n) + ' (' + n + '/10)';
     const fill = document.getElementById('btwMoodFill');
-    if(fill) fill.style.width = (((n - 1) / 9) * 100) + '%';
+    if(fill) fill.style.width = (((rawv - 1) / 9) * 100) + '%';
   }
   function syncMoodModePills(){
     document.querySelectorAll('#btwComposeMoodMode .btw-mk-modebtn').forEach(function(b){
@@ -7573,7 +7576,7 @@
     const l = (curLang==='fr') ? 'fr' : 'en';
     if(moodSkipped){ el.textContent = (l==='fr') ? 'envoyez votre suivi pour une lecture' : 'send your check-in for a read'; return; }
     const rows = (painMode() ? AIREAD_PAIN : AIREAD_MOOD)[l];
-    const n = parseInt(moodEl.value,10) || 5;
+    const n = Math.round(parseFloat(moodEl.value)) || 5;
     let base = rows[rows.length-1][1];
     for(const r of rows){ if(n <= r[0]){ base = r[1]; break; } }
     const tags = [...(state.selectedTags||[])].map(tg => String(t(tg)).toLowerCase());
@@ -8460,7 +8463,7 @@
     const p = selectedPatient();
     if(!isPatient() && !p) return;
     const text = textEl.value.trim();
-    const mood = moodSkipped ? null : parseInt(moodEl.value,10);
+    const mood = moodSkipped ? null : Math.round(parseFloat(moodEl.value));
     const manualTags = [...state.selectedTags];
     const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
     if(!text && manualTags.length===0 && !painMap){
