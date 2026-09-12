@@ -7533,7 +7533,13 @@
   // The account's discipline (stored server-side for real accounts; the
   // marketing audience for the signed-out demo) picks the check-in topics.
   function painDiscipline(){
-    if(isPatient()) return (state.patient && state.patient.clinician_discipline) || null;
+    if(isPatient()){
+      // Invited patient: follow their clinician's discipline. Solo/self-serve
+      // patient (no clinician): follow the audience they picked, so choosing
+      // Physio/Kinesiology/Osteopathy gives a pain-based check-in, not mood.
+      if(state.patient && state.patient.clinician_account_type) return state.patient.clinician_discipline || null;
+      return (typeof curAudience !== 'undefined') ? curAudience : null;
+    }
     if(state.me) return state.me.discipline || null;
     return (typeof curAudience !== 'undefined') ? curAudience : null;
   }
@@ -8303,8 +8309,18 @@
   // (sports, fitness, physio) on both the clinician and patient sides.
   let composeBodyMap = null;
   (function(){ const host = document.getElementById('btwComposePain'); if(host){ composeBodyMap = btwCreateBodyMap({}); host.appendChild(composeBodyMap.el); } })();
+  // Body/pain audiences: physio, kinesiology, osteopathy and sports are coach
+  // accounts; fitness is a trainer. All get the body map in the composer.
+  const BODY_AUDIENCES = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
   function painMapContext(){
-    const at = isPatient() ? (state.patient && state.patient.clinician_account_type) : (state.me && state.me.account_type);
+    if(isPatient()){
+      const at = state.patient && state.patient.clinician_account_type;
+      // Invited patient: follow their clinician's account type. Solo patient
+      // (no clinician): follow the audience they picked.
+      if(at) return at === 'coach' || at === 'trainer';
+      return !!BODY_AUDIENCES[(typeof curAudience !== 'undefined') ? curAudience : 'therapy'];
+    }
+    const at = state.me && state.me.account_type;
     return at === 'coach' || at === 'trainer';
   }
   function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); applyScoreMode(); }
