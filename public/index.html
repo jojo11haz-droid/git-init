@@ -887,7 +887,8 @@
   .btw-mk-slider.disabled{opacity:.5;}
   .btw-mk-slider.disabled .btw-mk-range{cursor:not-allowed;}
   .btw-mk-slider{position:relative;height:6px;border-radius:3px;background:var(--line);margin:11px 0 7px;}
-  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));}
+  .btw-mk-slider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--amber),var(--moss));transition:width .12s ease-out;}
+  @media (prefers-reduced-motion:reduce){ .btw-mk-slider .fill{transition:none;} }
   /* The native range thumb IS the handle (styled directly), so iOS never draws
      its own thumb on top. Track is transparent; the custom .fill shows through.
      Input height == thumb size and is centered on the 6px track so the handle
@@ -1941,7 +1942,7 @@
                     <div class="btw-mk-bodyfig" id="btwMkBodyFig"></div>
                     <div class="btw-mk-bodyside">
                       <div class="btw-pain-cur" id="btwMkPainCur"><span class="e">😐</span><span class="n">4</span><span class="s">/10</span></div>
-                      <input type="range" min="1" max="10" step="1" value="4" id="btwMkPainLevel" class="btw-pain-range" aria-label="Pain level">
+                      <input type="range" min="1" max="10" step="any" value="4" id="btwMkPainLevel" class="btw-pain-range" aria-label="Pain level">
                       <div class="btw-pain-ends"><span>1 · mild</span><span>10 · worst</span></div>
                       <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
                     </div>
@@ -5504,7 +5505,8 @@
     }
     function updBrush(){
       if(!levelEl) return;
-      brush = parseInt(levelEl.value, 10) || 1;
+      // Continuous drag, but each spot stores a whole 1-10 pain level.
+      brush = Math.min(10, Math.max(1, Math.round(parseFloat(levelEl.value)))) || 1;
       if(curEl){ curEl.querySelector('.e').textContent = EMOJI[brush]; curEl.querySelector('.n').textContent = brush; curEl.style.setProperty('--pc', FILL[brush]); }
       levelEl.style.setProperty('--pc', FILL[brush]);
       // Slider drives the picked spot live: drag it and that area on the body changes.
@@ -5713,14 +5715,15 @@
       side.className = 'btw-mk-bodyside';
       const cur = document.createElement('div'); cur.className = 'btw-pain-cur';
       cur.innerHTML = '<span class="e"></span><span class="n"></span><span class="s">/10</span>';
-      const rng = document.createElement('input'); rng.type = 'range'; rng.min = '1'; rng.max = '10'; rng.step = '1'; rng.value = String(brush);
+      const rng = document.createElement('input'); rng.type = 'range'; rng.min = '1'; rng.max = '10'; rng.step = 'any'; rng.value = String(brush);
       rng.className = 'btw-pain-range'; rng.setAttribute('aria-label', frL()?'Niveau de douleur':'Pain level');
       const ends = document.createElement('div'); ends.className = 'btw-pain-ends';
       ends.innerHTML = '<span>1 · ' + esc(frL()?'léger':'mild') + '</span><span>10 · ' + esc(frL()?'pire':'worst') + '</span>';
       const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'btw-mk-bodyclear'; clr.textContent = frL()?'Effacer':'Clear';
       clr.addEventListener('click', function(){ state = {}; selected = null; render(); });
       function updBrush(){
-        brush = parseInt(rng.value, 10) || 1;
+        // Continuous drag, but each spot stores a whole 1-10 pain level.
+        brush = Math.min(10, Math.max(1, Math.round(parseFloat(rng.value)))) || 1;
         cur.querySelector('.e').textContent = EMOJI[brush]; cur.querySelector('.n').textContent = brush;
         side.style.setProperty('--pc', FILL[brush]);
         // Slider drives the picked spot live: drag it and that area on the body changes.
