@@ -2893,7 +2893,7 @@
     "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
       "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
     // therapist pane
-    "Therapist view":"Vue thérapeute","Caseload":"Clientèle",
+    "Therapist view":"Vue thérapeute","Individual view":"Vue individuelle","Caseload":"Clientèle",
     "AI summary · Amy":"Résumé IA · Amy",
     "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Semaine difficile. Le stress au travail l'a empêchée de dormir plusieurs nuits. Un point positif : elle a renoué avec une vieille amie la fin de semaine. Aucun signal de sécurité.",
     "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Sélectionnez un patient pour voir sa chronologie et ses tendances.",
@@ -6030,7 +6030,9 @@
     dashGrid.classList.toggle('btw-role-patient', asPatient);
     dashGrid.classList.toggle('btw-role-therapist', asTherapist);
     const therapistEyebrow = document.getElementById('btwTherapistPaneEyebrow');
-    if(therapistEyebrow) therapistEyebrow.textContent = asTherapist ? (t('Therapist view') + ' · ' + name) : t('Therapist view');
+    // A patient only ever sees their own trends here, never a clinician's view,
+    // so label this pane for the individual rather than "Therapist/Coach view".
+    if(therapistEyebrow) therapistEyebrow.textContent = asTherapist ? (t('Therapist view') + ' · ' + name) : t('Individual view');
     applyRoleLabels();
   }
 
