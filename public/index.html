@@ -2194,7 +2194,7 @@
 
       <div style="margin:14px 0 4px;">
         <button type="button" id="btwOpenFuture" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--moss);text-decoration:underline;cursor:pointer;">Leave a note for a harder day
-        <div style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.</div>
+        <div id="btwFutureHint" style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.</div>
       </div>
 
       <div class="btw-disclaimer">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
@@ -2613,7 +2613,7 @@
       <button class="btw-modal-close" data-close="btwFutureOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Just for you</div>
       <h2>A note for a harder day</h2>
-      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.</div>
+      <div id="btwFutureModalDesc" style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.</div>
       <textarea id="btwFutureText" class="btw-textarea" placeholder="You've gotten through this before. Remember that a walk and a good night's sleep usually turn things around…" style="min-height:90px;"></textarea>
       <div class="btw-form-error" id="btwFutureError"></div>
       <button class="btw-modal-continue" id="btwFutureSave">Save this note</button>
@@ -2994,6 +2994,8 @@
     "Thanks, close this":"Merci, fermer",
     "Just for you":"Rien que pour vous","A note for a harder day":"Une note pour un jour plus difficile",
     "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre thérapeute ne les voit jamais.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, always.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, toujours.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you, always.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées, toujours.",
     "Save this note":"Enregistrer cette note",
     "See both sides":"Les deux côtés",
     "One tool, two views. Your clients check in in seconds, and you get the full picture before they arrive.":"Un outil, deux points de vue. Vos clients font un suivi en quelques secondes, et vous avez le portrait complet avant leur arrivée.",
@@ -6034,6 +6036,15 @@
       ? t('Your own history and trends, updating each time you check in.')
       : t('Auto-updating as check-ins come in. Select a patient to see their timeline and trends.'));
     set('btwOpenData', patient ? t('View my data & AI settings') : t('View patient data & AI settings'));
+    // A solo individual has no clinician, so the private-note copy must not
+    // mention a therapist. Invited patients keep the clinician-named wording.
+    const soloIndividual = patient && !(state.patient && state.patient.clinician_account_type);
+    set('btwFutureHint', soloIndividual
+      ? t('Write something kind to your future self. On a low day, Between shows it back to you. Private to you, always.')
+      : t('Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.'));
+    set('btwFutureModalDesc', soloIndividual
+      ? t('On a good day, leave a few words for your future self, what helps, what to remember, why you\'re doing this. When you check in on a low day, Between shows one of these back to you. These are private to you, always.')
+      : t('On a good day, leave a few words for your future self, what helps, what to remember, why you\'re doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.'));
     const proc = document.querySelector('#btwProcessing .btw-processing-label');
     if(proc) proc.textContent = patient ? t('Saving your check-in…') : t('Summarizing for your therapist…');
     const crisisBox = document.getElementById('btwCrisis');
