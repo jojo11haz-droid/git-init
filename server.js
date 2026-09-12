@@ -1915,7 +1915,10 @@ app.post('/api/patient/future-notes', requireDb, requirePatientAuth, requirePati
     const body = (req.body && typeof req.body.body === 'string') ? req.body.body.trim() : '';
     if (!body) return res.status(400).json({ error: 'Write a few words first.' });
     if (body.length > 1000) return res.status(400).json({ error: 'That note is a bit long — keep it under 1000 characters.' });
-    res.status(201).json(await createFutureNote(req.patient.id, body));
+    // 'note' is the emotional keepsake; 'helps' and 'goal' are the physio /
+    // rehab prompts (what eased the pain, what you're working back toward).
+    const kind = ['note', 'helps', 'goal'].includes((req.body || {}).kind) ? req.body.kind : 'note';
+    res.status(201).json(await createFutureNote(req.patient.id, body, kind));
   } catch (err) {
     console.error('Error creating future note:', err);
     res.status(500).json({ error: 'Could not save your note.' });
