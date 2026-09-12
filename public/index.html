@@ -2141,15 +2141,15 @@
         <div id="btwFutureCardDate" style="font-size:11px;color:#8a7a4a;margin-top:8px;"></div>
         <button type="button" id="btwFutureCardDismiss" style="background:none;border:none;padding:0;margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Thanks, close this</button>
       </div>
-      <div class="btw-field-label" id="btwMoodLabel">Mood right now</div>
-      <div class="btw-mood-row">
-        <span style="font-size:11px;color:var(--ink-soft)" id="btwMoodLow">Low</span>
-        <input type="range" id="btwMood" min="1" max="10" value="5">
-        <span style="font-size:11px;color:var(--ink-soft)" id="btwMoodHigh">High</span>
-        <span class="btw-mood-val" id="btwMoodVal">5</span>
+      <div class="btw-mk-moodhead" style="margin-bottom:2px;">
+        <span id="btwMoodLabel" style="font-size:11px;color:var(--ink-soft);">Mood right now</span>
+        <span class="btw-mk-moodpill" id="btwMoodVal">Okay (5/10)</span>
       </div>
-      <div style="margin:-6px 0 12px;font-size:11px;" id="btwMoodSkipRow">
-        <button type="button" id="btwMoodSkip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">Not sure? Let AI estimate it</button>
+      <div class="btw-mk-moodmode" id="btwComposeMoodMode"><button type="button" class="btw-mk-modebtn active" data-cmode="self">I'll set it</button><button type="button" class="btw-mk-modebtn" data-cmode="ai">Let Between estimate</button></div>
+      <div class="btw-mk-slider" id="btwMoodSlider"><div class="fill" id="btwMoodFill" style="width:44%;"></div><input type="range" id="btwMood" min="1" max="10" value="5" class="btw-mk-range" aria-label="Mood right now"></div>
+      <div class="btw-mk-scale"><span id="btwMoodLow">Low</span><span id="btwMoodHigh">High</span></div>
+      <div style="margin:3px 0 10px;font-size:11px;" id="btwMoodSkipRow">
+        <button type="button" id="btwMoodSkip" style="display:none;"></button>
         <span id="btwMoodSkipNote" style="display:none;color:var(--ink-soft);"></span>
       </div>
       <div class="btw-mk-airead" id="btwComposeRead" style="margin:-2px 0 14px;"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwComposeReadVal"></span></div>
@@ -7398,22 +7398,17 @@
   let moodSkipped = false;
   function setMoodSkipped(v){
     moodSkipped = v;
-    const skipBtn = document.getElementById('btwMoodSkip');
     const note = document.getElementById('btwMoodSkipNote');
     moodEl.disabled = v;
+    if(typeof syncMoodModePills === 'function') syncMoodModePills();
     if(typeof renderAiRead === 'function') renderAiRead();
     if(v){
-      moodValEl.textContent = '—';
-      if(skipBtn) skipBtn.style.display = 'none';
+      if(moodValEl) moodValEl.textContent = t('Between estimates');
       const aiOn = !!(state.patient && state.patient.ai_consent_enabled);
       note.style.display = '';
-      note.innerHTML = esc(aiOn ? t('AI will estimate your mood from your note.') : t('No mood will be recorded.')) +
-        ' <button type="button" id="btwMoodUnskip" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11px;color:var(--moss);text-decoration:underline;cursor:pointer;">' + esc(t('set it myself')) + '</button>';
-      const un = document.getElementById('btwMoodUnskip');
-      if(un) un.addEventListener('click', ()=> setMoodSkipped(false));
+      note.textContent = aiOn ? t('AI will estimate your mood from your note.') : t('No mood will be recorded.');
     } else {
       renderMoodVal();
-      if(skipBtn) skipBtn.style.display = '';
       note.style.display = 'none';
     }
   }
@@ -7421,12 +7416,22 @@
   // high = good, pain reads high = worse, so the emoji flips between the two.
   const SCORE_EMOJI = ['','🙂','🙂','😐','😐','😕','😟','😧','😖','😫','😭'];
   function renderMoodVal(){
-    if(moodSkipped){ moodValEl.textContent = '—'; return; }
+    if(moodSkipped){ moodValEl.textContent = curLang==='fr' ? 'Between estime' : 'Between estimates'; return; }
     const n = parseInt(moodEl.value, 10) || 0;
-    // Match the demo: the pain slider carries an emoji face; mood is a word pill.
-    const em = painMode() ? ('<span class="btw-mv-e">' + (SCORE_EMOJI[n] || '') + '</span>') : '';
-    moodValEl.innerHTML = em + '<span class="btw-mv-w">' + esc(scoreWord(n)) + '</span><span class="btw-mv-n">(' + n + '/10)</span>';
+    // Demo-style pill: "Okay (5/10)" for mood, "Moderate (5/10)" for pain.
+    moodValEl.textContent = scoreWord(n) + ' (' + n + '/10)';
+    const fill = document.getElementById('btwMoodFill');
+    if(fill) fill.style.width = (((n - 1) / 9) * 100) + '%';
   }
+  function syncMoodModePills(){
+    document.querySelectorAll('#btwComposeMoodMode .btw-mk-modebtn').forEach(function(b){
+      b.classList.toggle('active', (b.getAttribute('data-cmode') === 'ai') === moodSkipped);
+    });
+    const sl = document.getElementById('btwMoodSlider'); if(sl) sl.classList.toggle('disabled', moodSkipped);
+  }
+  document.querySelectorAll('#btwComposeMoodMode .btw-mk-modebtn').forEach(function(b){
+    b.addEventListener('click', function(){ setMoodSkipped(b.getAttribute('data-cmode') === 'ai'); });
+  });
   // Live "AI reads" line, like the demo: it reflects the slider level and the
   // tapped topics into a short phrase, e.g. "getting by, a mixed day, mostly
   // work and sleep" (or a pain read for physio/kine/osteo).
@@ -7633,6 +7638,8 @@
     set('btwMoodHigh', pm ? t('Severe') : t('High'));
     set('btwMoodChartTitle', pm ? t('Pain trend') : t('Mood trend'));
     const skip = document.getElementById('btwMoodSkipRow'); if(skip) skip.style.display = pm ? 'none' : '';
+    const cmode = document.getElementById('btwComposeMoodMode'); if(cmode) cmode.style.display = pm ? 'none' : '';
+    if(pm && typeof setMoodSkipped === 'function' && moodSkipped) setMoodSkipped(false);
     if(typeof renderMoodVal === 'function') renderMoodVal();
     if(typeof renderAiRead === 'function') renderAiRead();
   }
