@@ -513,9 +513,9 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
-    // Physio is a regulated profession, so it needs a licence and manual review.
-    // The owner's free-access account skips verification (for testing every flow).
-    const needsLicence = discipline === 'physio' && !isFreeAccess(email.trim());
+    // Physio and nutrition are regulated professions, so they need a licence and
+    // manual review. The owner's free-access account skips it (to test each flow).
+    const needsLicence = (discipline === 'physio' || discipline === 'nutrition') && !isFreeAccess(email.trim());
     if (needsLicence && (!licenceNumber || !licenceNumber.trim())) {
       return res.status(400).json({ error: 'A professional licence/order number is required.' });
     }
@@ -1564,9 +1564,9 @@ function requireClinicianSubscription(req, res, next) {
 function clinicianVerified(c) {
   if (!c) return false;
   if (isFreeAccess(c.email) || !!c.licence_verified) return true;
-  // Coach/mentor/school/trainer accounts self-verify — except physio, which is
-  // regulated and must have its licence reviewed like a therapist.
-  if (c.account_type === 'coach') return c.discipline !== 'physio';
+  // Coach/mentor/school/trainer accounts self-verify — except physio and
+  // nutrition, which are regulated and reviewed like a therapist.
+  if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition';
   return c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer';
 }
 function requireVerifiedClinician(req, res, next) {

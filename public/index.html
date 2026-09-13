@@ -2554,6 +2554,13 @@
                 <option value="NL-PT">Newfoundland &amp; Labrador physiotherapy regulator</option>
                 <option value="CA-Physio">Physiotherapist — other provincial college</option>
               </optgroup>
+              <optgroup label="Canada · Dietetics &amp; nutrition">
+                <option value="ODNQ">Diététistes-nutritionnistes du Québec (ODNQ)</option>
+                <option value="CDO-Diet">College of Dietitians of Ontario</option>
+                <option value="CDA-Diet">College of Dietitians of Alberta</option>
+                <option value="CDBC-Diet">College of Dietitians of British Columbia</option>
+                <option value="CA-Dietitian">Dietitian / nutritionist — other provincial college</option>
+              </optgroup>
               <optgroup label="Canada · Nursing">
                 <option value="OIIQ">Infirmières et infirmiers du Québec (OIIQ)</option>
                 <option value="CA-Nursing">Nurse — provincial college</option>
@@ -2657,6 +2664,7 @@
       <div class="btw-aud" style="margin-bottom:14px;">
         <button type="button" class="btw-aud-btn active" id="btwAdminTabTherapist" data-admintab="therapist">Therapists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physios</button>
+        <button type="button" class="btw-aud-btn" id="btwAdminTabNutrition" data-admintab="nutrition">Nutritionists</button>
       </div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
@@ -6893,7 +6901,11 @@
   let _adminRows = [];
   let _adminTab = 'therapist';
   function adminRowsFor(tab){
-    return _adminRows.filter(c => tab === 'physio' ? (c.account_type === 'coach') : (c.account_type === 'therapist'));
+    return _adminRows.filter(c => {
+      if(tab === 'physio') return c.account_type === 'coach' && c.discipline === 'physio';
+      if(tab === 'nutrition') return c.account_type === 'coach' && c.discipline === 'nutrition';
+      return c.account_type === 'therapist';
+    });
   }
   function adminPending(tab){ return adminRowsFor(tab).filter(c => !c.licence_verified).length; }
   function renderAdminList(rows){
@@ -6903,12 +6915,14 @@
   function renderAdminTab(){
     const tBtn = document.getElementById('btwAdminTabTherapist');
     const pBtn = document.getElementById('btwAdminTabPhysio');
-    const tN = adminPending('therapist'), pN = adminPending('physio');
+    const nBtn = document.getElementById('btwAdminTabNutrition');
+    const tN = adminPending('therapist'), pN = adminPending('physio'), nN = adminPending('nutrition');
     if(tBtn){ tBtn.textContent = 'Therapists' + (tN ? ' (' + tN + ')' : ''); tBtn.classList.toggle('active', _adminTab === 'therapist'); }
     if(pBtn){ pBtn.textContent = 'Physios' + (pN ? ' (' + pN + ')' : ''); pBtn.classList.toggle('active', _adminTab === 'physio'); }
+    if(nBtn){ nBtn.textContent = 'Nutritionists' + (nN ? ' (' + nN + ')' : ''); nBtn.classList.toggle('active', _adminTab === 'nutrition'); }
     const list = document.getElementById('btwAdminList');
     const rows = adminRowsFor(_adminTab);
-    if(!rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No ' + (_adminTab === 'physio' ? 'physio' : 'therapist') + ' accounts yet.</div>'; return; }
+    if(!rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No ' + (_adminTab === 'physio' ? 'physio' : _adminTab === 'nutrition' ? 'nutritionist' : 'therapist') + ' accounts yet.</div>'; return; }
     list.innerHTML = rows.map(c=>{
       const verified = !!c.licence_verified;
       const reviewed = !!c.licence_reviewed_at;
@@ -7041,7 +7055,7 @@
     proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     // Physio is regulated: it's a coach account but goes through the licence
     // step and manual review, like a therapist. Other coaches stay one-step.
-    proNeedsLicence = (curAudience === 'physio');
+    proNeedsLicence = (curAudience === 'physio' || curAudience === 'nutrition');
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -7052,8 +7066,8 @@
         teamField.style.display = 'none';
         nextBtn.textContent = 'Continue';
         if(eyebrow) eyebrow.textContent = 'Step 1 of 3 · Account';
-        // Default the order picker to a physiotherapy college, not a psychology one.
-        const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = 'CA-Physio';
+        // Default the order picker to the right profession, not a psychology one.
+        const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = (curAudience === 'nutrition') ? 'CA-Dietitian' : 'CA-Physio';
       } else {
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
@@ -7208,7 +7222,7 @@
         practiceName,
         plan: selectedPlan
       };
-      if(coachLicence){ body.discipline = 'physio'; body.teamName = practiceName; }
+      if(coachLicence){ body.discipline = (curAudience === 'nutrition') ? 'nutrition' : 'physio'; body.teamName = practiceName; }
       const data = await api('POST', coachLicence ? '/api/auth/coach/signup' : '/api/auth/signup', body);
       // A verified owner account may return a checkout link; honour it.
       if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
