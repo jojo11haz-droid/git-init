@@ -4923,6 +4923,33 @@
     if(location.pathname === want && search === location.search) return;
     try { history[push ? 'pushState' : 'replaceState']({ aud: curAudience }, '', want + search); } catch(e){}
   }
+  // Per-field <title>/description/canonical, matching what the server injects,
+  // so in-app field switches keep the tab title and meta in step. (Same English
+  // copy the crawler sees; the server is the source of truth on first load.)
+  const SITE_ORIGIN = 'https://betweenpsych.com';
+  const FIELD_HEAD = {
+    therapy: { title: 'Between — Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.' },
+    physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
+    kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
+    osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
+    sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
+    fitness: { title: 'Between — Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
+    recovery: { title: 'Between — Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
+    schools: { title: 'Between — Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' }
+  };
+  function applyFieldHead(){
+    const m = FIELD_HEAD[curAudience] || FIELD_HEAD.therapy;
+    try {
+      document.title = m.title;
+      const d = document.querySelector('meta[name="description"]'); if(d) d.setAttribute('content', m.desc);
+      const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', SITE_ORIGIN + (AUD_TO_PATH[curAudience] || '/'));
+      const ot = document.querySelector('meta[property="og:title"]'); if(ot) ot.setAttribute('content', m.title);
+      const od = document.querySelector('meta[property="og:description"]'); if(od) od.setAttribute('content', m.desc);
+      const ou = document.querySelector('meta[property="og:url"]'); if(ou) ou.setAttribute('content', SITE_ORIGIN + (AUD_TO_PATH[curAudience] || '/'));
+      const tt = document.querySelector('meta[name="twitter:title"]'); if(tt) tt.setAttribute('content', m.title);
+      const td = document.querySelector('meta[name="twitter:description"]'); if(td) td.setAttribute('content', m.desc);
+    } catch(e){}
+  }
   function setAudience(a, opts){
     curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
@@ -4936,6 +4963,7 @@
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(window.__btwScoreMode) window.__btwScoreMode();
+    applyFieldHead();
     // A visitor-picked field is a real navigation, so give it a URL + history
     // entry. Programmatic calls (back/forward, coach snap) pass fromUrl to skip.
     if(!(opts && opts.fromUrl)) syncUrlForAudience(true);
@@ -8652,8 +8680,9 @@
   curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
-  // without adding a history entry.
+  // without adding a history entry, and set the tab title/meta to match.
   syncUrlForAudience(false);
+  applyFieldHead();
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   syncAudSelLabel();

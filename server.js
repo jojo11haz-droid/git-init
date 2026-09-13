@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
@@ -2039,10 +2040,40 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 });
 
 // Each field has its own marketing URL (/physio, /sports, …). They're the same
-// single-page app, so serve index.html and let the client read the path.
+// single-page app; we serve index.html with the title, description and
+// canonical/social tags swapped for that field so each URL is its own search
+// result. /therapy is the default (canonical "/"), so it serves the base file.
 const FIELD_PATHS = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/sports', '/fitness', '/addiction', '/schools'];
+const SITE_URL = 'https://betweenpsych.com';
+const DEFAULT_TITLE = 'Between — Between-session check-ins for therapy';
+const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
+const DEFAULT_DESC_SHORT = 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session.';
+const FIELD_META = {
+  '/physio': { title: 'Between — Between-visit pain check-ins for physiotherapy', description: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
+  '/kinesiology': { title: 'Between — Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
+  '/osteopathy': { title: 'Between — Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
+  '/sports': { title: 'Between — Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
+  '/fitness': { title: 'Between — Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
+  '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
+  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' }
+};
+let _indexHtmlCache = null;
+function baseIndexHtml() {
+  if (_indexHtmlCache === null) _indexHtmlCache = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  return _indexHtmlCache;
+}
 app.get(FIELD_PATHS, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const meta = FIELD_META[req.path];
+  // /therapy is the default and canonical to "/", so it uses the base file.
+  if (!meta) return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const title = escapeHtml(meta.title);
+  const desc = escapeHtml(meta.description);
+  const html = baseIndexHtml()
+    .split(DEFAULT_TITLE).join(title)                 // <title> + og:title + twitter:title
+    .replace(DEFAULT_DESC_LONG, desc)                 // meta description (replace the longer one first)
+    .split(DEFAULT_DESC_SHORT).join(desc)             // og:description + twitter:description
+    .split(SITE_URL + '/"').join(SITE_URL + req.path + '"'); // canonical + og:url
+  res.type('html').send(html);
 });
 
 // Simple health check — useful for most hosting platforms' uptime checks
