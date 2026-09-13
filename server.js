@@ -2038,6 +2038,13 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
   }
 });
 
+// Each field has its own marketing URL (/physio, /sports, …). They're the same
+// single-page app, so serve index.html and let the client read the path.
+const FIELD_PATHS = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/sports', '/fitness', '/addiction', '/schools'];
+app.get(FIELD_PATHS, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Simple health check — useful for most hosting platforms' uptime checks
 app.get('/health', (req, res) => res.json({ ok: true }));
 

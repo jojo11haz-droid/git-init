@@ -54,14 +54,14 @@
   }
   .btw-header{
     max-width:1200px;
-    margin:0 auto 22px;
+    margin:0 auto 18px;
     display:flex;
     align-items:baseline;
     justify-content:space-between;
     flex-wrap:wrap;
-    gap:10px;
+    gap:10px 16px;
     border-bottom:1px solid var(--line);
-    padding-bottom:16px;
+    padding-bottom:14px;
   }
   .btw-title{
     font-family:var(--font-display);
@@ -1264,9 +1264,10 @@
     margin:0 auto;
   }
   /* "Who's it for?" chooser: the front door to every field, above the hero. */
-  .btw-chooser{max-width:960px;margin:0 auto;padding:30px 0 8px;}
-  .btw-chooser-head{text-align:center;margin-bottom:16px;}
-  .btw-chooser-sub{font-size:14px;color:var(--ink-soft);margin:6px 0 0;line-height:1.5;}
+  .btw-chooser{max-width:960px;margin:0 auto;padding:22px 0 6px;}
+  .btw-chooser-head{text-align:center;margin-bottom:14px;}
+  .btw-chooser-title{font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);margin:0;}
+  .btw-chooser-sub{font-size:13.5px;color:var(--ink-soft);margin:5px 0 0;line-height:1.5;}
   .btw-chooser-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
   @media (max-width:820px){.btw-chooser-grid{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:460px){.btw-chooser-grid{grid-template-columns:1fr;}}
@@ -1862,7 +1863,7 @@
 
       <section class="btw-chooser" id="btwChooser" aria-label="Who's it for?">
         <div class="btw-chooser-head">
-          <div class="btw-section-label">Who's it for?</div>
+          <h2 class="btw-chooser-title">Who's it for?</h2>
           <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
         </div>
         <div class="btw-chooser-grid">
@@ -4909,7 +4910,20 @@
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
   }
-  function setAudience(a){
+  // Each field has a real URL: therapy is the root, the rest are /physio etc.
+  const AUD_TO_PATH = { therapy:'/', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools' };
+  const PATH_TO_AUD = { '/therapy':'therapy', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools' };
+  function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
+  // Keep the address bar on the current field. push=true adds a history entry
+  // (a real navigation the visitor did); otherwise it just corrects the URL.
+  function syncUrlForAudience(push){
+    const want = AUD_TO_PATH[curAudience] || '/';
+    let search = location.search;
+    try { const sp = new URLSearchParams(location.search); sp.delete('for'); const s = sp.toString(); search = s ? ('?' + s) : ''; } catch(e){}
+    if(location.pathname === want && search === location.search) return;
+    try { history[push ? 'pushState' : 'replaceState']({ aud: curAudience }, '', want + search); } catch(e){}
+  }
+  function setAudience(a, opts){
     curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
@@ -4922,6 +4936,9 @@
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(window.__btwScoreMode) window.__btwScoreMode();
+    // A visitor-picked field is a real navigation, so give it a URL + history
+    // entry. Programmatic calls (back/forward, coach snap) pass fromUrl to skip.
+    if(!(opts && opts.fromUrl)) syncUrlForAudience(true);
     // Refresh the signed-in dashboard too: the pane eyebrow ("Therapist view"),
     // caseload wording and digest are rendered dynamically, so they need a
     // re-render to follow the audience, the same way setLang does.
@@ -4933,6 +4950,11 @@
   // Homepage "Who's it for?" cards switch into the chosen field, same as a tab.
   document.querySelectorAll('.btw-chooser-card').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
+  });
+  // Back/forward between field URLs: follow the address bar, don't re-push it.
+  window.addEventListener('popstate', function(){
+    const aud = audFromPath() || 'therapy';
+    if(aud !== curAudience) setAudience(aud, { fromUrl: true });
   });
   // Compact header field dropdown: open on the button, close on pick or outside.
   (function(){
@@ -8613,8 +8635,10 @@
   // and is remembered, so an outreach link opens straight in the right view;
   // otherwise fall back to the saved choice, then the therapy default.
   let _startAud = null;
+  // A real field URL (/physio) wins; then a ?for= deep link; then the saved choice.
+  try { _startAud = audFromPath(); } catch(e){}
   try {
-    const forParam = (new URLSearchParams(location.search).get('for') || '').toLowerCase();
+    const forParam = _startAud ? '' : (new URLSearchParams(location.search).get('for') || '').toLowerCase();
     if (['sports','sport','coach','team','teams'].includes(forParam)) _startAud = 'sports';
     else if (['recovery','addiction','mentor','sobriety'].includes(forParam)) _startAud = 'recovery';
     else if (['schools','school','student','students','staff'].includes(forParam)) _startAud = 'schools';
@@ -8627,6 +8651,9 @@
   try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo') ? s : 'therapy'; } } catch(e){}
   curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
+  // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
+  // without adding a history entry.
+  syncUrlForAudience(false);
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   syncAudSelLabel();
