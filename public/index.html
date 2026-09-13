@@ -1837,6 +1837,7 @@
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="sports" role="menuitem">Sports</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="fitness" role="menuitem">Fitness</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="nutrition" role="menuitem">Nutrition</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="recovery" role="menuitem">Addiction</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="schools" role="menuitem">Schools</button>
         </div>
@@ -1879,6 +1880,7 @@
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
           <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
           <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
           <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
         </div>
@@ -2844,6 +2846,7 @@
     "Recovery between treatments":"La récupération entre les traitements",
     "How players are between practices, games and tournaments":"L'état des joueurs entre les entraînements, les matchs et les tournois",
     "Clients between workouts":"Les clients entre les entraînements",
+    "Nutrition":"Nutrition","Energy and eating between sessions":"L'énergie et l'alimentation entre les séances",
     "Support between meetings":"Du soutien entre les rencontres",
     "Students between check-ins":"Les élèves entre les suivis",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
@@ -3372,6 +3375,7 @@
   function audDicts(){
     if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
     if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
+    if(curAudience === 'nutrition') return [NUTRITION_EN, NUTRITION_FR];
     if(curAudience === 'schools') return curSchoolMode === 'classroom' ? [SCHOOLS_CLASS_EN, SCHOOLS_CLASS_FR] : [SCHOOLS_EN, SCHOOLS_FR];
     if(curAudience === 'fitness') return [FITNESS_EN, FITNESS_FR];
     if(curAudience === 'physio') return [PHYSIO_EN, PHYSIO_FR];
@@ -3872,6 +3876,65 @@
     "Patient consent":"Consentement du membre",
     "Patient data":"Données du membre",
     "Remove this patient":"Retirer ce membre"
+  };
+  // --- audience: nutrition (dietitians / nutritionists) --------------------
+  // Non-body, mood-style check-ins about energy, cravings and how the plan's
+  // going. The clinician is a "nutritionist" and their people are "clients".
+  const NUTRITION_EN = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "A simple way to see how your clients are eating and feeling between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.",
+    "For therapists, counsellors & anyone on their own":"For nutritionists, dietitians & anyone on their own",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and a trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.",
+    "Not a therapist? You can use Between on your own":"Not a nutritionist? You can use Between on your own",
+    "You don't need a therapist to use Between.":"You don't need a nutritionist to use Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it as a private diary. Check in whenever something comes up and watch your own energy, cravings and patterns over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a nutritionist.",
+    "Pricing for therapists and patients":"Pricing for nutritionists and clients",
+    "For therapists & practices":"For nutritionists & practices",
+    "I'm a therapist":"I'm a nutritionist",
+    "I'm a patient":"I'm a client",
+    "Invited by your therapist?":"Invited by your nutritionist?",
+    "Invited by your therapist":"Invited by your nutritionist",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Your check-ins are shared with your nutritionist as short summaries, not always the raw recording.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"You can turn this off and still send check-ins, they'll go to your nutritionist as you typed or recorded them, without AI analysis.",
+    "Summarizing for your therapist…":"Summarizing for your nutritionist…",
+    "Your therapist has also been notified.":"Your nutritionist has also been notified.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your nutritionist never sees these.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your nutritionist never sees them.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Enter the invite code your nutritionist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.",
+    "Enter the invite code from your therapist.":"Enter the invite code from your nutritionist.",
+    "Therapist view":"Nutritionist view",
+    "Patient view":"Client view",
+    "Work":"Meals","Conflict":"Digestion","Panic":"Hydration","Family":"Energy","Money":"Snacking","Loneliness":"Stress","Anger":"Habits"
+  };
+  const NUTRITION_FR = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "Une façon simple de voir comment vos clients mangent et se sentent entre les séances. Ils envoient une note sur le vif et vous recevez un court résumé avant le prochain rendez-vous.",
+    "For therapists, counsellors & anyone on their own":"Pour nutritionnistes, diététistes et les particuliers",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Vos clients font un suivi sur le vif avec une note vocale ou un texto. Between en fait un résumé clair et une tendance, prêts dans votre tableau de bord avant la prochaine séance. Vous arrivez en connaissant déjà leur semaine.",
+    "Not a therapist? You can use Between on your own":"Pas un nutritionniste? Vous pouvez utiliser Between par vous-même",
+    "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un nutritionniste pour utiliser Between.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que quelque chose survient et observez votre énergie, vos envies et vos habitudes au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un nutritionniste ou non.",
+    "Pricing for therapists and patients":"Tarifs pour nutritionnistes et clients",
+    "For therapists & practices":"Pour nutritionnistes et cliniques",
+    "I'm a therapist":"Je suis nutritionniste",
+    "I'm a patient":"Je suis un client",
+    "Invited by your therapist?":"Invité par votre nutritionniste?",
+    "Invited by your therapist":"Invité par votre nutritionniste",
+    "Your check-ins are shared with your therapist as short summaries, not always the raw recording.":"Vos suivis sont partagés avec votre nutritionniste sous forme de courts résumés, pas toujours l'enregistrement brut.",
+    "You can turn this off and still send check-ins, they'll go to your therapist as you typed or recorded them, without AI analysis.":"Vous pouvez le désactiver et envoyer quand même vos suivis, ils iront à votre nutritionniste tels que saisis ou enregistrés, sans analyse par IA.",
+    "Summarizing for your therapist…":"Résumé pour votre nutritionniste…",
+    "Your therapist has also been notified.":"Votre nutritionniste a aussi été avisé.",
+    "Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.":"Écrivez un mot bienveillant à votre futur vous. Lors d'un jour difficile, Between vous le remontre. Privé, votre nutritionniste ne les voit jamais.",
+    "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre nutritionniste ne les voit jamais.",
+    "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Entrez le code d'invitation que votre nutritionniste vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
+    "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre nutritionniste.",
+    "Therapist view":"Vue du nutritionniste",
+    "Patient view":"Vue du client",
+    "Work":"Repas","Conflict":"Digestion","Panic":"Hydratation","Family":"Énergie","Money":"Grignotage","Loneliness":"Stress","Anger":"Habitudes"
   };
 
   function pickCopy(key){
@@ -4911,14 +4974,14 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Therapy', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy' };
+  const AUD_LABEL = { therapy:'Therapy', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
-  const AUD_TO_PATH = { therapy:'/', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools' };
-  const PATH_TO_AUD = { '/therapy':'therapy', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools' };
+  const AUD_TO_PATH = { therapy:'/', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
+  const PATH_TO_AUD = { '/therapy':'therapy', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
   function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
   // Keep the address bar on the current field. push=true adds a history entry
   // (a real navigation the visitor did); otherwise it just corrects the URL.
@@ -4941,7 +5004,8 @@
     sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
     fitness: { title: 'Between — Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
     recovery: { title: 'Between — Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
-    schools: { title: 'Between — Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' }
+    schools: { title: 'Between — Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' },
+    nutrition: { title: 'Between — Between-session check-ins for nutritionists', desc: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
   };
   function applyFieldHead(){
     const m = FIELD_HEAD[curAudience] || FIELD_HEAD.therapy;
@@ -4957,7 +5021,7 @@
     } catch(e){}
   }
   function setAudience(a, opts){
-    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
+    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'nutrition') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
@@ -5023,7 +5087,7 @@
   function maybeCoachAudience(){
     if(!state.me) return;
     if(state.me.account_type === 'coach'){
-      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo') ? state.me.discipline : 'sports';
+      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo' || state.me.discipline === 'nutrition') ? state.me.discipline : 'sports';
       if(curAudience !== want) setAudience(want);
     }
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
@@ -6029,6 +6093,7 @@
     physio:  { plan: 'team_premium',    acct: 'coach' },
     kinesiology: { plan: 'team_premium', acct: 'coach' },
     osteo:   { plan: 'team_premium',    acct: 'coach' },
+    nutrition: { plan: 'team_premium',  acct: 'coach' },
     schools: { plan: 'school_premium',  acct: 'school' },
     fitness: { plan: 'trainer_premium', acct: 'trainer' }
   };
@@ -6507,7 +6572,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'nutrition') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
@@ -6921,6 +6986,7 @@
     if(curAudience === 'physio')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'kinesiology') return COACH_PLAN_FROM[p] || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'osteo')    return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'nutrition') return COACH_PLAN_FROM[p]  || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
     if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
     if(curAudience === 'fitness')  return TRAINER_PLAN_FROM[p] || (p.indexOf('trainer_') === 0 ? p : 'trainer_monthly');
@@ -6942,7 +7008,7 @@
       openBilling(); return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     // Physio is regulated: it's a coach account but goes through the licence
     // step and manual review, like a therapist. Other coaches stay one-step.
     proNeedsLicence = (curAudience === 'physio');
@@ -6962,7 +7028,7 @@
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
         nextBtn.textContent = 'Create account';
-        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : 'Your coach account';
+        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account';
       }
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
@@ -7037,7 +7103,7 @@
           body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
           // Tell the server which coach-type discipline this is (sports / physio
           // / kinesiology) so it tailors the welcome email and the app copy.
-          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'sports') body.discipline = curAudience;
+          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'sports' || curAudience === 'nutrition') body.discipline = curAudience;
         }
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
@@ -8592,16 +8658,22 @@
   // Body/pain audiences: physio, kinesiology, osteopathy and sports are coach
   // accounts; fitness is a trainer. All get the body map in the composer.
   const BODY_AUDIENCES = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
+  // Coach disciplines that do NOT use the body map (nutrition is mood-style).
+  const NON_BODY_DISCIPLINES = { nutrition:1 };
+  function coachTypeHasBody(at, disc){
+    if(at === 'trainer') return true;                 // fitness
+    if(at === 'coach') return !NON_BODY_DISCIPLINES[disc]; // every coach but nutrition
+    return false;
+  }
   function painMapContext(){
     if(isPatient()){
       const at = state.patient && state.patient.clinician_account_type;
-      // Invited patient: follow their clinician's account type. Solo patient
-      // (no clinician): follow the audience they picked.
-      if(at) return at === 'coach' || at === 'trainer';
+      // Invited patient: follow their clinician's account type and discipline.
+      // Solo patient (no clinician): follow the audience they picked.
+      if(at) return coachTypeHasBody(at, state.patient && state.patient.clinician_discipline);
       return !!BODY_AUDIENCES[(typeof curAudience !== 'undefined') ? curAudience : 'therapy'];
     }
-    const at = state.me && state.me.account_type;
-    return at === 'coach' || at === 'trainer';
+    return coachTypeHasBody(state.me && state.me.account_type, state.me && state.me.discipline);
   }
   function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); applyScoreMode(); }
   window.__btwUpdateComposePain = updateComposePain;
@@ -8680,10 +8752,11 @@
     else if (['physio','physio therapy','physiotherapy','physiotherapist','physical-therapy','physicaltherapy'].includes(forParam)) _startAud = 'physio';
     else if (['kinesiology','kinesiologist','kin','kinesiologie','kinésiologie','kinésiologue'].includes(forParam)) _startAud = 'kinesiology';
     else if (['osteo','osteopath','osteopathy','osteopaths','osteopathic','osteopathe','ostéopathe','ostéopathie','ostéo'].includes(forParam)) _startAud = 'osteo';
+    else if (['nutrition','nutritionist','nutritionists','dietitian','dietician','dietitians','nutritionniste','diététiste','dieteticienne','nutritionnistes'].includes(forParam)) _startAud = 'nutrition';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'nutrition') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
   // without adding a history entry, and set the tab title/meta to match.
