@@ -3913,6 +3913,8 @@
     "Do my patients pay anything?":"Do my clients pay anything?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not for your caseload. When you invite a client in as their nutritionist, Between is covered by your seat and they're never billed. Clients only pay if they choose to buy a Personal plan and use Between on their own, independent of any nutritionist.",
     "Where is my patients' data stored?":"Where is my clients' data stored?",
+    "Rough week, work stress kept me up again.":"Tough week, skipped meals and my energy crashed.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Tough week. Skipped meals and stress-snacked most nights. One bright spot: she hit her protein goal on the weekend. No safety concerns flagged.",
     "Work":"Meals","Conflict":"Digestion","Panic":"Hydration","Family":"Energy","Money":"Snacking","Loneliness":"Stress","Anger":"Habits"
   };
   const NUTRITION_FR = {
@@ -3948,6 +3950,8 @@
     "Do my patients pay anything?":"Mes clients paient-ils quelque chose ?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas pour votre clientèle. Quand vous invitez un client en tant que son nutritionniste, Between est couvert par votre siège et il n'est jamais facturé. Un client ne paie que s'il choisit un forfait Personnel et utilise Between de son côté, indépendamment de tout nutritionniste.",
     "Where is my patients' data stored?":"Où sont stockées les données de mes clients ?",
+    "Rough week, work stress kept me up again.":"Semaine difficile, repas sautés et panne d'énergie.",
+    "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Semaine difficile. Repas sautés et grignotage de stress la plupart des soirs. Point positif : elle a atteint son objectif de protéines la fin de semaine. Aucune préoccupation signalée.",
     "Work":"Repas","Conflict":"Digestion","Panic":"Hydratation","Family":"Énergie","Money":"Grignotage","Loneliness":"Stress","Anger":"Habitudes"
   };
 
@@ -4771,6 +4775,18 @@
         {cls:"rough",voice:true,when:"Jeu · 23:40",text:"Impossible de décrocher après le travail."},
         {cls:"good",when:"Sam · 15:20",text:"Vu un vieil ami. Je me sens plus légère."},
         {cls:"mid",when:"Lun · 8:05",text:"Anxieuse à l'idée de la semaine."}]}
+    },
+    nutrition:{
+      en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Good start, then a couple of off days. Skipped lunch midweek and energy dipped, but hit her protein goal and meal prepped on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
+        {cls:"good",when:"Wed · 7:12a",text:"Hit my protein at every meal today."},
+        {cls:"rough",voice:true,when:"Thu · 1:40p",text:"Skipped lunch, energy crashed by 3."},
+        {cls:"good",when:"Sat · 3:20p",text:"Meal prepped for the week. Feeling on track."},
+        {cls:"mid",when:"Mon · 8:05a",text:"Cravings hit hard last night."}]},
+      fr:{last:"Dernière séance",next:"Prochaine séance",day:"Mar",day2:"Mar",ai:"Résumé IA",since:"Depuis la dernière séance",waiting:"En attente avant mar.",flag:"1 signalé",summary:"Bon début, puis quelques jours difficiles. Dîner sauté en milieu de semaine et énergie en baisse, mais objectif de protéines atteint et repas préparés la fin de semaine.",aria:"Une semaine d'une séance à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mer · 7:12",text:"Protéines à chaque repas aujourd'hui."},
+        {cls:"rough",voice:true,when:"Jeu · 13:40",text:"Dîner sauté, panne d'énergie vers 15 h."},
+        {cls:"good",when:"Sam · 15:20",text:"Repas préparés pour la semaine. Sur la bonne voie."},
+        {cls:"mid",when:"Lun · 8:05",text:"Fortes envies hier soir."}]}
     },
     physio:{
       en:{last:"Last appointment",next:"Next appointment",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last appointment",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Sore knee early in the week, then easing. Skipped a couple of exercises, but walked pain-free on the weekend.",aria:"A week from last appointment to next appointment, with four check-ins that gather into a short summary.",checkins:[
