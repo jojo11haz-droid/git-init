@@ -766,7 +766,7 @@
   .btw-audsel-item{text-align:left;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--ink);background:none;border:none;border-radius:8px;padding:8px 11px;cursor:pointer;transition:background .15s ease;}
   .btw-audsel-item:hover{background:var(--panel);}
   .btw-audsel-item.active{background:var(--moss-light);color:var(--moss);font-weight:600;}
-  @media (max-width:520px){ .btw-audsel-menu{right:0;left:auto;} }
+  @media (max-width:520px){ .btw-audsel-menu{left:0;right:auto;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;} }
   /* Sub-mode slider shown only inside the Schools audience */
   .btw-submode{
     display:none;
