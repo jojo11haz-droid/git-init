@@ -424,6 +424,8 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
       ? `Your osteopathy account is confirmed and ready. Add your patients and you'll see how they're doing between appointments — a quick note when pain flares or something feels off, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'fitness'
       ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions — soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
+    : discipline === 'nutrition'
+      ? `Your nutrition account is confirmed and ready. Add your clients and you'll see how they're doing between sessions — energy, cravings and how the plan is going, summarized before the next appointment.`
     : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const body = kind === 'therapist'
     ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
@@ -505,7 +507,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, teamName, licenceNumber, licenceOrder, province } = req.body || {};
-    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo'];
+    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo', 'nutrition'];
     const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
@@ -2043,7 +2045,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 // single-page app; we serve index.html with the title, description and
 // canonical/social tags swapped for that field so each URL is its own search
 // result. /therapy is the default (canonical "/"), so it serves the base file.
-const FIELD_PATHS = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/sports', '/fitness', '/addiction', '/schools'];
+const FIELD_PATHS = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
 const DEFAULT_TITLE = 'Between — Between-session check-ins for therapy';
 const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
@@ -2055,7 +2057,8 @@ const FIELD_META = {
   '/sports': { title: 'Between — Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
   '/fitness': { title: 'Between — Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
   '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
-  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' }
+  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' },
+  '/nutrition': { title: 'Between — Between-session check-ins for nutritionists', description: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
 };
 let _indexHtmlCache = null;
 function baseIndexHtml() {
