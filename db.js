@@ -259,7 +259,7 @@ export async function createTrainer({ name, email, passwordHash, plan }) {
 export async function listCliniciansForReview() {
   const { rows } = await pool.query(
     `SELECT ${CLINICIAN_PUBLIC_COLS} FROM clinicians
-     WHERE account_type = 'therapist' OR (account_type = 'coach' AND discipline = 'physio')
+     WHERE account_type = 'therapist' OR (account_type = 'coach' AND discipline IN ('physio', 'nutrition'))
      ORDER BY licence_verified ASC, licence_reviewed_at IS NOT NULL ASC, created_at DESC`
   );
   return rows;
