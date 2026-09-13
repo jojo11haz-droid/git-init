@@ -1250,6 +1250,18 @@
     max-width:1200px;
     margin:0 auto;
   }
+  /* "Who's it for?" chooser: the front door to every field, above the hero. */
+  .btw-chooser{max-width:960px;margin:0 auto;padding:30px 0 8px;}
+  .btw-chooser-head{text-align:center;margin-bottom:16px;}
+  .btw-chooser-sub{font-size:14px;color:var(--ink-soft);margin:6px 0 0;line-height:1.5;}
+  .btw-chooser-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:820px){.btw-chooser-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:460px){.btw-chooser-grid{grid-template-columns:1fr;}}
+  .btw-chooser-card{display:flex;flex-direction:column;gap:4px;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper);cursor:pointer;font-family:var(--font-body);transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;}
+  .btw-chooser-card:hover{border-color:var(--moss);box-shadow:0 6px 16px rgba(30,76,134,.10);}
+  .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);}
+  .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
+  .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   .btw-hero{
     display:block;
     padding:16px 0 40px;
@@ -1831,6 +1843,23 @@
 
   <div class="btw-view active" id="btwViewHome">
     <div class="btw-home">
+
+      <section class="btw-chooser" id="btwChooser" aria-label="Who's it for?">
+        <div class="btw-chooser-head">
+          <div class="btw-section-label">Who's it for?</div>
+          <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
+        </div>
+        <div class="btw-chooser-grid">
+          <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Therapy</span><span class="h">Mood check-ins between sessions</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
+        </div>
+      </section>
 
       <section class="btw-hero">
         <div class="btw-hero-top">
@@ -2783,6 +2812,16 @@
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Who's it for?":"Pour qui ?",
+    "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
+    "Mood check-ins between sessions":"Des suivis d'humeur entre les séances",
+    "Pain and a body map between visits":"La douleur et une carte du corps entre les visites",
+    "Movement and pain between sessions":"Le mouvement et la douleur entre les séances",
+    "Recovery between treatments":"La récupération entre les traitements",
+    "How players are between practices":"L'état des joueurs entre les entraînements",
+    "Clients between workouts":"Les clients entre les entraînements",
+    "Support between meetings":"Du soutien entre les rencontres",
+    "Students between check-ins":"Les élèves entre les suivis",
     "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
@@ -4849,6 +4888,7 @@
     curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+    document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
@@ -4862,6 +4902,10 @@
     try { renderAll(); renderAuthState(); } catch(e){}
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setAudience(b.dataset.aud));
+  });
+  // Homepage "Who's it for?" cards switch into the chosen field, same as a tab.
+  document.querySelectorAll('.btw-chooser-card').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
 
@@ -8542,6 +8586,7 @@
   curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+  document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   try {
     const modeParam = (new URLSearchParams(location.search).get('mode') || '').toLowerCase();
     if(['classroom','teacher','class'].includes(modeParam)) curSchoolMode = 'classroom';
