@@ -748,6 +748,19 @@
     .btw-aud{display:flex;width:100%;}
     .btw-aud-btn{flex:1 1 auto;text-align:center;}
   }
+  /* Compact field switcher in the header (the homepage chooser is the fuller
+     front door; this stays available on every page and when scrolled). */
+  .btw-audsel{position:relative;display:inline-block;}
+  .btw-audsel-btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;transition:border-color .2s ease;}
+  .btw-audsel-btn:hover{border-color:var(--moss);}
+  .btw-audsel-lead{color:var(--ink-soft);font-weight:400;}
+  .btw-audsel-caret{color:var(--ink-soft);font-size:11px;}
+  .btw-audsel-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(26,30,28,.14);padding:6px;min-width:172px;display:none;flex-direction:column;gap:2px;}
+  .btw-audsel-menu.open{display:flex;}
+  .btw-audsel-item{text-align:left;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--ink);background:none;border:none;border-radius:8px;padding:8px 11px;cursor:pointer;transition:background .15s ease;}
+  .btw-audsel-item:hover{background:var(--panel);}
+  .btw-audsel-item.active{background:var(--moss-light);color:var(--moss);font-weight:600;}
+  @media (max-width:520px){ .btw-audsel-menu{right:0;left:auto;} }
   /* Sub-mode slider shown only inside the Schools audience */
   .btw-submode{
     display:none;
@@ -1808,15 +1821,18 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
-      <div class="btw-aud" role="group" aria-label="Use case">
-        <button type="button" class="btw-aud-btn active" data-aud="therapy">Therapy</button>
-        <button type="button" class="btw-aud-btn" data-aud="sports">Sports</button>
-        <button type="button" class="btw-aud-btn" data-aud="recovery">Addiction</button>
-        <button type="button" class="btw-aud-btn" data-aud="schools">Schools</button>
-        <button type="button" class="btw-aud-btn" data-aud="fitness">Fitness</button>
-        <button type="button" class="btw-aud-btn" data-aud="physio">Physio</button>
-        <button type="button" class="btw-aud-btn" data-aud="kinesiology">Kinesiology</button>
-        <button type="button" class="btw-aud-btn" data-aud="osteo">Osteopathy</button>
+      <div class="btw-audsel" id="btwAudSel">
+        <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
+        <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
+          <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Therapy</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="sports" role="menuitem">Sports</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="fitness" role="menuitem">Fitness</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="recovery" role="menuitem">Addiction</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="schools" role="menuitem">Schools</button>
+        </div>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
@@ -2812,6 +2828,7 @@
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "For:":"Pour :",
     "Who's it for?":"Pour qui ?",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
     "Mood check-ins between sessions":"Des suivis d'humeur entre les séances",
@@ -4871,6 +4888,7 @@
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwScoreMode) window.__btwScoreMode();
+    if(typeof syncAudSelLabel === 'function') syncAudSelLabel();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -4884,6 +4902,13 @@
     document.querySelectorAll('.btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === curSchoolMode));
   }
 
+  // The header switcher is a compact dropdown; keep its label on the current
+  // field. (The homepage "Who's it for?" cards are the fuller front door.)
+  const AUD_LABEL = { therapy:'Therapy', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy' };
+  function syncAudSelLabel(){
+    const lbl = document.getElementById('btwAudSelLabel');
+    if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
+  }
   function setAudience(a){
     curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
@@ -4891,6 +4916,7 @@
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
     translateStatic();
+    syncAudSelLabel();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
@@ -4908,6 +4934,22 @@
   document.querySelectorAll('.btw-chooser-card').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
+  // Compact header field dropdown: open on the button, close on pick or outside.
+  (function(){
+    const sel = document.getElementById('btwAudSel');
+    const btn = document.getElementById('btwAudSelBtn');
+    const menu = document.getElementById('btwAudSelMenu');
+    if(!sel || !btn || !menu) return;
+    function close(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      const open = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    menu.addEventListener('click', function(e){ if(e.target.closest('.btw-audsel-item')) close(); });
+    document.addEventListener('click', function(e){ if(!sel.contains(e.target)) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+  })();
 
   function setSchoolMode(m){
     curSchoolMode = (m === 'classroom') ? 'classroom' : 'guidance';
@@ -8587,6 +8629,7 @@
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+  syncAudSelLabel();
   try {
     const modeParam = (new URLSearchParams(location.search).get('mode') || '').toLowerCase();
     if(['classroom','teacher','class'].includes(modeParam)) curSchoolMode = 'classroom';
