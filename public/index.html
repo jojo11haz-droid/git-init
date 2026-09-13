@@ -1877,7 +1877,7 @@
           <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
-          <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
           <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
           <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
           <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
@@ -2842,7 +2842,7 @@
     "Pain and a body map between visits":"La douleur et une carte du corps entre les visites",
     "Movement and pain between sessions":"Le mouvement et la douleur entre les séances",
     "Recovery between treatments":"La récupération entre les traitements",
-    "How players are between practices":"L'état des joueurs entre les entraînements",
+    "How players are between practices, games and tournaments":"L'état des joueurs entre les entraînements, les matchs et les tournois",
     "Clients between workouts":"Les clients entre les entraînements",
     "Support between meetings":"Du soutien entre les rencontres",
     "Students between check-ins":"Les élèves entre les suivis",
@@ -3281,8 +3281,8 @@
   const heroH1 = document.getElementById('btwHeroH1');
   const heroEn = heroH1 ? heroH1.innerHTML : '';
   const heroFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
-  const heroSportsEn = 'What happens<br><em>between</em> practices<br>and games doesn\'t<br>have to stay a mystery.';
-  const heroSportsFr = 'Ce qui se passe<br><em>entre</em> les entraînements<br>et les matchs ne devrait<br>pas rester un mystère.';
+  const heroSportsEn = 'What happens<br><em>between</em> practices, games<br>and tournaments doesn\'t<br>have to stay a mystery.';
+  const heroSportsFr = 'Ce qui se passe<br><em>entre</em> les entraînements, les matchs<br>et les tournois ne devrait<br>pas rester un mystère.';
   const heroSchoolsEn = 'What happens<br><em>between</em> check-ins<br>doesn\'t have to<br>stay a mystery.';
   const heroSchoolsFr = 'Ce qui se passe<br><em>entre</em> les suivis<br>ne devrait pas<br>rester un mystère.';
   const heroSchoolsClassEn = 'What happens<br><em>between</em> classes<br>doesn\'t have to<br>stay a mystery.';
@@ -3397,7 +3397,7 @@
     "Summarizing for your therapist…":"Summarizing for your coach…",
     "Your therapist has also been notified.":"Your coach has also been notified.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
-      "Check-ins between practices and games for sports teams. A player sends a quick note the moment something happens. Between turns it into a short summary. You see the pattern before your next practice or game.",
+      "Check-ins between practices, games and tournaments for sports teams. A player sends a quick note the moment something happens. Between turns it into a short summary. You see the pattern before your next practice or game.",
     "For therapists, counsellors & anyone on their own":"For coaches, teams & anyone on their own",
     "I'm a therapist":"I'm a coach",
     "I'm a patient":"I'm a player",
@@ -3409,10 +3409,10 @@
     "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your coach never sees them.",
     "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Enter the invite code your coach gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.",
     "Enter the invite code from your therapist.":"Enter the invite code from your coach.",
-    "The important part happens between sessions.":"The important part happens between practices and games.",
+    "The important part happens between sessions.":"The important part happens between practices, games and tournaments.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Check in on your own time. Between keeps what matters for each player, so you plan the next session already knowing where their head and body are at. Log in to your roster, or start a free trial. A player's data is only ever visible to you.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
-      "Your players check in between practices and games with a quick voice memo or text, the moment something happens. Between turns it into a short read on where their head and body are at. You walk into the next session already knowing who is fresh, who is flat, and who needs a word.",
+      "Your players check in between practices, games and tournaments with a quick voice memo or text, the moment something happens. Between turns it into a short read on where their head and body are at. You walk into the next session already knowing who is fresh, who is flat, and who needs a word.",
     "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Free for 14 days. Private, secure and consent first. Built for teams.",
     "Not a therapist? You can use Between on your own":"Not a coach? You can use Between on your own",
     "Patient sends a check-in":"Player sends a check-in",
@@ -3433,14 +3433,14 @@
     "Therapist view":"Coach view",
     "Clients put it in Between the moment something happens":"Players put it in Between the moment something happens",
     "You start the session already knowing their week":"You start practice or game day already knowing their week",
-    "Voicemails and phone tag between sessions":"Voicemails and phone tag between practices and games",
+    "Voicemails and phone tag between sessions":"Voicemails and phone tag between practices, games and tournaments",
     "The first ten minutes of each session spent catching up":"The first minutes of practice spent asking how everyone is",
     "Less admin, more time":"Less asking, faster insight",
     "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":"Instead of asking every player how they feel at practice, you already know. Their check-ins are waiting for you in one place.",
     "Emails and texts you feel you have to answer":"Asking each player one by one how they're feeling",
     "A short summary you read before a session, with nothing to answer":"You see each player's week at a glance in seconds",
     "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":
-      "On a busy week Between takes the place of the emails and calls that pile up between practices and games. You spend less time on messages and more on coaching.",
+      "On a busy week Between takes the place of the emails and calls that pile up between practices, games and tournaments. You spend less time on messages and more on coaching.",
     "Built for real practice":"Built for real teams",
     "Your clients check in whichever way is easiest in the moment, by voice or a few words.":"Players check in however's easiest in the moment.",
     "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":
@@ -3452,7 +3452,7 @@
     "You don't need a therapist to use Between.":"You don't need a coach to use Between.",
     "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
       "Anyone can use it as a private diary. Check in whenever something comes up. Watch your own mood and patterns over time. On a hard day it shows you a note you left yourself on a better one. Your data stays yours whether or not you have a coach.",
-    "See what's happening between sessions.":"See what's happening between practices and games.",
+    "See what's happening between sessions.":"See what's happening between practices, games and tournaments.",
     "Pricing for therapists and patients":"Pricing for coaches and teams",
     // demo captions + example summaries
     "A patient checks in within seconds":"A player checks in within seconds",
@@ -3523,7 +3523,7 @@
     "Patient consent":"Player consent",
     "Patient data":"Player data",
     "Remove this patient":"Remove this player",
-    "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between practices and games.",
+    "Hi, I set up Between so we can check in between our sessions.":"Hi, I set up Between so we can check in between practices, games and tournaments.",
     "Enter the invite code from your therapist.":"Enter the invite code from your coach."
   };
   const SPORTS_FR = {
@@ -3531,7 +3531,7 @@
     "Summarizing for your therapist…":"Résumé en cours pour votre entraîneur…",
     "Your therapist has also been notified.":"Votre entraîneur a aussi été avisé.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
-      "Des suivis entre les entraînements et les matchs pour les équipes sportives. Un joueur envoie une note sur le vif. Between la résume. Vous voyez la tendance avant votre prochain entraînement ou match.",
+      "Des suivis entre les entraînements, les matchs et les tournois pour les équipes sportives. Un joueur envoie une note sur le vif. Between la résume. Vous voyez la tendance avant votre prochain entraînement ou match.",
     "For therapists, counsellors & anyone on their own":"Pour entraîneurs, équipes et les particuliers",
     "I'm a therapist":"Je suis entraîneur",
     "I'm a patient":"Je suis joueur",
@@ -3543,10 +3543,10 @@
     "On a good day, leave a few words for your future self, what helps, what to remember, why you're doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.":"Lors d'une bonne journée, laissez quelques mots à votre futur vous, ce qui aide, ce qu'il faut retenir, pourquoi vous faites cela. Lorsque vous faites un suivi un jour difficile, Between vous en remontre une. Elles sont privées ; votre entraîneur ne les voit jamais.",
     "Enter the invite code your therapist gave you, then create a password. Your check-ins are private to you, and AI summaries stay off unless you turn them on.":"Entrez le code d'invitation que votre entraîneur vous a donné, puis créez un mot de passe. Vos suivis vous sont privés, et les résumés IA restent désactivés à moins que vous ne les activiez.",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur.",
-    "The important part happens between sessions.":"Le plus important se passe entre les entraînements et les matchs.",
+    "The important part happens between sessions.":"Le plus important se passe entre les entraînements, les matchs et les tournois.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":"Faites un suivi à votre rythme. Between garde ce qui compte pour chaque joueur, pour que vous planifiiez la prochaine séance en sachant déjà où en sont sa tête et son corps. Connectez-vous à votre équipe, ou commencez un essai gratuit. Les données d'un joueur ne sont visibles que par vous.",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
-      "Vos joueurs font un suivi entre les entraînements et les matchs avec une note vocale ou un texto, sur le vif. Between en fait un court aperçu de leur tête et de leur corps. Vous arrivez à la prochaine séance en sachant déjà qui est en forme, qui est à plat, et qui a besoin d'un mot.",
+      "Vos joueurs font un suivi entre les entraînements, les matchs et les tournois avec une note vocale ou un texto, sur le vif. Between en fait un court aperçu de leur tête et de leur corps. Vous arrivez à la prochaine séance en sachant déjà qui est en forme, qui est à plat, et qui a besoin d'un mot.",
     "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Gratuit pendant 14 jours. Privé, sécurisé et fondé sur le consentement. Conçu pour les équipes.",
     "Not a therapist? You can use Between on your own":"Pas un entraîneur? Vous pouvez utiliser Between par vous-même",
     "Patient sends a check-in":"Le joueur envoie un suivi",
@@ -3567,14 +3567,14 @@
     "Therapist view":"Vue entraîneur",
     "Clients put it in Between the moment something happens":"Les joueurs le notent dans Between dès que quelque chose se passe",
     "You start the session already knowing their week":"Vous commencez l'entraînement ou le match en connaissant déjà leur semaine",
-    "Voicemails and phone tag between sessions":"Messages vocaux et appels manqués entre les entraînements et les matchs",
+    "Voicemails and phone tag between sessions":"Messages vocaux et appels manqués entre les entraînements, les matchs et les tournois",
     "The first ten minutes of each session spent catching up":"Les premières minutes de l'entraînement à demander comment va tout le monde",
     "Less admin, more time":"Moins à demander, un aperçu plus rapide",
     "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":"Au lieu de demander à chaque joueur comment il se sent à l'entraînement, vous le savez déjà. Leurs suivis vous attendent au même endroit.",
     "Emails and texts you feel you have to answer":"Demander à chaque joueur, un par un, comment il se sent",
     "A short summary you read before a session, with nothing to answer":"Vous voyez la semaine de chaque joueur en un coup d'œil, en quelques secondes",
     "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":
-      "Dans une semaine chargée, Between remplace les courriels et les appels qui s'accumulent entre les entraînements et les matchs. Vous passez moins de temps sur les messages et plus de temps à entraîner.",
+      "Dans une semaine chargée, Between remplace les courriels et les appels qui s'accumulent entre les entraînements, les matchs et les tournois. Vous passez moins de temps sur les messages et plus de temps à entraîner.",
     "Built for real practice":"Conçu pour de vraies équipes",
     "Your clients check in whichever way is easiest in the moment, by voice or a few words.":"Les joueurs font un suivi comme c'est le plus simple sur le moment.",
     "Private and secure by default. Patients see and control their own data, and AI analysis is opt-in and off.":
@@ -3586,7 +3586,7 @@
     "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un entraîneur pour utiliser Between.",
     "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi quand quelque chose survient. Observez votre humeur et vos tendances au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent les vôtres, avec ou sans entraîneur.",
-    "See what's happening between sessions.":"Voyez ce qui se passe entre les entraînements et les matchs.",
+    "See what's happening between sessions.":"Voyez ce qui se passe entre les entraînements, les matchs et les tournois.",
     "Pricing for therapists and patients":"Tarifs pour entraîneurs et équipes",
     // demo captions + example summaries
     "A patient checks in within seconds":"Un joueur fait un suivi en quelques secondes",
@@ -3657,7 +3657,7 @@
     "Patient consent":"Consentement du joueur",
     "Patient data":"Données du joueur",
     "Remove this patient":"Retirer ce joueur",
-    "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre les entraînements et les matchs.",
+    "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre les entraînements, les matchs et les tournois.",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre entraîneur."
   };
   // Resolve the display string for a key given the current audience + language.
@@ -4938,7 +4938,7 @@
     physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
     kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
     osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
-    sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
+    sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
     fitness: { title: 'Between — Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
     recovery: { title: 'Between — Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
     schools: { title: 'Between — Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' }
