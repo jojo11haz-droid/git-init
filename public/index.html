@@ -1831,7 +1831,7 @@
       <div class="btw-audsel" id="btwAudSel">
         <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
         <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
-          <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapy</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapist</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
@@ -1874,7 +1874,7 @@
           <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
         </div>
         <div class="btw-chooser-grid">
-          <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapy</span><span class="h">Mood check-ins between sessions</span></button>
+          <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
@@ -2844,7 +2844,7 @@
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie","Psychotherapy":"Psychothérapie","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
     "For:":"Pour :",
     "Who's it for?":"Pour qui ?",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
@@ -5012,7 +5012,7 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Psychotherapy', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
+  const AUD_LABEL = { therapy:'Psychotherapist', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
