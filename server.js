@@ -2048,8 +2048,8 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 const FIELD_PATHS = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
 const DEFAULT_TITLE = 'Between — Between-session check-ins for therapy';
-const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
-const DEFAULT_DESC_SHORT = 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session.';
+const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
+const DEFAULT_DESC_SHORT = 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session.';
 const FIELD_META = {
   '/physio': { title: 'Between — Between-visit pain check-ins for physiotherapy', description: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
   '/kinesiology': { title: 'Between — Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },

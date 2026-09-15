@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Between — Between-session check-ins for therapy</title>
-<meta name="description" content="Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.">
+<meta name="description" content="Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.">
 <link rel="canonical" href="https://betweenpsych.com/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/favicon.svg">
@@ -16,11 +16,11 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Between">
 <meta property="og:title" content="Between — Between-session check-ins for therapy">
-<meta property="og:description" content="Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session.">
+<meta property="og:description" content="Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session.">
 <meta property="og:url" content="https://betweenpsych.com/">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Between — Between-session check-ins for therapy">
-<meta name="twitter:description" content="Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session.">
+<meta name="twitter:description" content="Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -3389,6 +3389,7 @@
     if(curAudience === 'physio') return [PHYSIO_EN, PHYSIO_FR];
     if(curAudience === 'kinesiology') return [KIN_EN, KIN_FR];
     if(curAudience === 'osteo') return [OST_EN, OST_FR];
+    if(curAudience === 'therapy') return [THERAPY_EN, THERAPY_FR];
     return null;
   }
   function t(en){
@@ -4771,6 +4772,31 @@
   OST_EN["For therapists, counsellors & anyone on their own"] = "For osteopaths & anyone on their own";
   OST_FR["For therapists, counsellors & anyone on their own"] = "Pour les ostéopathes et tous ceux qui veulent l'utiliser seuls";
 
+  // Therapy is the default audience with no override dict, but its base strings
+  // say "therapist". Build an override that reads "psychotherapist" instead,
+  // derived from every therapist-mentioning string other audiences already key
+  // on (plus the French base), so we swap the word without touching the keys the
+  // other dictionaries depend on. English "therapist" -> "psychotherapist";
+  // French "thérapeute" -> "psychothérapeute".
+  const THERAPY_EN = {};
+  const THERAPY_FR = {};
+  (function(){
+    const keys = {};
+    [SPORTS_EN, FITNESS_EN, RECOVERY_EN, SCHOOLS_EN, PHYSIO_EN, NUTRITION_EN, FR].forEach(function(d){
+      for(const k in d){ if(/[Tt]herapist/.test(k) && !/physiotherapist|psychotherapist/i.test(k)) keys[k] = 1; }
+    });
+    // Single pass, capture any "psycho" prefix so an already-psychotherapist word
+    // is left alone (no lookbehind, which older iOS Safari cannot parse). Keeps
+    // the capital when the source word is capitalised.
+    function swapEN(s){ return s.replace(/(psycho)?([Tt])herapist(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Psychotherapist' : 'psychotherapist') + pl; }); }
+    function swapFR(s){ return s.replace(/(psycho)?([Tt])hérapeute(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Psychothérapeute' : 'psychothérapeute') + pl; }); }
+    Object.keys(keys).forEach(function(k){
+      THERAPY_EN[k] = swapEN(k);
+      const frv = FR[k];
+      if(frv) THERAPY_FR[k] = swapFR(frv);
+    });
+  })();
+
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -5035,7 +5061,7 @@
   // copy the crawler sees; the server is the source of truth on first load.)
   const SITE_ORIGIN = 'https://betweenpsych.com';
   const FIELD_HEAD = {
-    therapy: { title: 'Between — Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it, and therapists see the pattern before the next session. Private, consent-first, and not a crisis service.' },
+    therapy: { title: 'Between — Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.' },
     physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
     kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
     osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
