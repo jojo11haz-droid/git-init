@@ -5533,6 +5533,30 @@
   }
   function btwIsSide(v){ return v === 'left' || v === 'right'; }
 
+  // Pick the body-map region for a click from its coordinates instead of relying
+  // on SVG hit-test order: the smallest region under the point wins, so a joint
+  // beats the big muscle drawn over it; if the click lands in a gap, snap to the
+  // nearest region. Makes tapping a spot accurate and stops the misfires.
+  function btwZoneCenter(z){ const a = z.a; return z.el === 'ellipse' ? { x:a.cx, y:a.cy } : { x:a.x + a.width/2, y:a.y + a.height/2 }; }
+  function btwZoneArea(z){ const a = z.a; return z.el === 'ellipse' ? (a.rx * a.ry) : (a.width * a.height); }
+  function btwZoneContains(z, px, py){
+    const a = z.a;
+    if(z.el === 'ellipse'){ const dx = (px - a.cx)/a.rx, dy = (py - a.cy)/a.ry; return dx*dx + dy*dy <= 1; }
+    return px >= a.x && px <= a.x + a.width && py >= a.y && py <= a.y + a.height;
+  }
+  function btwPickZone(svgEl, zones, flipped, clientX, clientY){
+    if(!svgEl) return null;
+    const r = svgEl.getBoundingClientRect(); if(!r.width || !r.height) return null;
+    let px = (clientX - r.left) / r.width * 100;
+    let py = (clientY - r.top) / r.height * 198;
+    if(flipped) px = 100 - px; // the right view mirrors the group
+    const inside = zones.filter(function(z){ return btwZoneContains(z, px, py); });
+    if(inside.length){ inside.sort(function(a,b){ return btwZoneArea(a) - btwZoneArea(b); }); return inside[0]; }
+    let best = null, bestD = Infinity;
+    zones.forEach(function(z){ const c = btwZoneCenter(z); const d = (c.x-px)*(c.x-px) + (c.y-py)*(c.y-py); if(d < bestD){ bestD = d; best = z; } });
+    return (best && bestD <= 24*24) ? best : null; // ignore clicks well off the figure
+  }
+
   // Decorative muscle definition drawn under the tappable regions so the figure
   // reads like a light anatomical chart. Front/back are authored as the left
   // half and mirrored about x=50; the profile is drawn whole (the view's own
@@ -5758,8 +5782,8 @@
     }
     if(levelEl){ levelEl.addEventListener('input', updBrush); updBrush(); }
     fig.addEventListener('click', function(e){
-      const z = e.target.closest('.btw-bz'); if(!z) return;
-      const key = view + ':' + z.getAttribute('data-zone');
+      const z = btwPickZone(fig.querySelector('svg'), zonesFor(view), view === 'right', e.clientX, e.clientY); if(!z) return;
+      const key = view + ':' + z.id;
       if(selected === key){ delete state[key]; selected = null; } // tap the active spot again to clear it
       else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); }
       paint(); updateSummary();
@@ -5976,8 +6000,8 @@
       rng.addEventListener('input', updBrush);
       // Tap a spot to pick it (slider snaps to its level), tap it again to clear it.
       figWrap.addEventListener('click', function(e){
-        const z = e.target.closest('.btw-bz'); if(!z) return;
-        const key = view + ':' + z.getAttribute('data-zone');
+        const z = btwPickZone(figWrap.querySelector('svg'), zonesFor(view), view === 'right', e.clientX, e.clientY); if(!z) return;
+        const key = view + ':' + z.id;
         if(selected === key){ delete state[key]; selected = null; }
         else { selected = key; if(!state[key]) state[key] = brush; rng.value = state[key]; updBrush(); }
         paint();
