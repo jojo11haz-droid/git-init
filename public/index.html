@@ -5178,6 +5178,10 @@
     } catch(e){}
   }
   function setAudience(a, opts){
+    // A signed-in account is locked to its own field: ignore any request to
+    // switch away (dropdown, chooser card, or a field URL) and keep it pinned.
+    const _locked = accountAudience();
+    if(_locked) a = _locked;
     curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'nutrition') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
@@ -5193,7 +5197,9 @@
     applyFieldHead();
     // A visitor-picked field is a real navigation, so give it a URL + history
     // entry. Programmatic calls (back/forward, coach snap) pass fromUrl to skip.
-    if(!(opts && opts.fromUrl)) syncUrlForAudience(true);
+    // A locked account keeps its field URL corrected without a history entry.
+    if(_locked) syncUrlForAudience(false);
+    else if(!(opts && opts.fromUrl)) syncUrlForAudience(true);
     // Refresh the signed-in dashboard too: the pane eyebrow ("Therapist view"),
     // caseload wording and digest are rendered dynamically, so they need a
     // re-render to follow the audience, the same way setLang does.
@@ -5250,6 +5256,45 @@
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
     else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
     else if(state.me.account_type === 'trainer' && curAudience !== 'fitness') setAudience('fitness');
+  }
+
+  // The field an account is tied to. A subscription is for one field, so a
+  // signed-in account can't switch to another: the picker locks to this value.
+  // Returns null when nobody is signed in, or for an owner/comp account, which
+  // is allowed to preview every field for testing.
+  function accountAudience(){
+    if(ownerFreeAccess) return null;
+    if(state.me){
+      const at = state.me.account_type;
+      if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'mentor') return 'recovery';
+      if(at === 'school') return 'schools';
+      if(at === 'trainer') return 'fitness';
+      return 'therapy';
+    }
+    if(state.patient){
+      // Invited patients follow their clinician's field; a self-serve patient
+      // with no clinician is using Between for themselves, so they're locked to
+      // the individual field.
+      const at = state.patient.clinician_account_type;
+      if(at === 'coach'){ const d = state.patient.clinician_discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'mentor') return 'recovery';
+      if(at === 'school') return 'schools';
+      if(at === 'trainer') return 'fitness';
+      if(at === 'therapist') return 'therapy';
+      return 'individual';
+    }
+    return null;
+  }
+  // Hide the field picker and homepage chooser while an account is signed in,
+  // and pin the audience to that account's field.
+  function applyAudienceLock(){
+    const locked = accountAudience();
+    const sel = document.getElementById('btwAudSel');
+    if(sel) sel.style.display = locked ? 'none' : '';
+    const chooser = document.getElementById('btwChooser');
+    if(chooser) chooser.style.display = locked ? 'none' : '';
+    if(locked && curAudience !== locked) setAudience(locked, { fromUrl: true });
   }
 
   // --- app state: all server-backed, no demo data ---
@@ -6447,6 +6492,7 @@
     // so label this pane for the individual rather than "Therapist/Coach view".
     if(therapistEyebrow) therapistEyebrow.textContent = asTherapist ? (t('Therapist view') + ' · ' + name) : t('Individual view');
     applyRoleLabels();
+    applyAudienceLock();
   }
 
   // Relabel the shared dashboard for whoever's signed in, a therapist sees a
