@@ -94,6 +94,15 @@
     line-height:1.45;
     margin-top:2px;
   }
+  .btw-sub-solo{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.02em;
+    color:var(--moss);
+    max-width:430px;
+    line-height:1.45;
+    margin-top:5px;
+  }
   .btw-grid{
     max-width:1200px;
     margin:0 auto;
@@ -376,6 +385,9 @@
     margin-bottom:16px;
   }
   .btw-digest strong{color:var(--moss);}
+  .btw-week-summary{background:var(--moss-light);border:1px solid var(--moss-light);border-radius:12px;padding:12px 15px;margin-bottom:16px;}
+  .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
+  .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
   .btw-insights{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
@@ -1820,6 +1832,7 @@
     <div>
       <div class="btw-title"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
       <div class="btw-sub">A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.</div>
+      <div class="btw-sub-solo">On your own too. Keep your own check-ins and see your patterns, no clinician needed.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
@@ -2288,6 +2301,8 @@
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
 
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
+
+      <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
 
       <div class="btw-digest" id="btwDigest"></div>
 
@@ -2843,6 +2858,8 @@
     // header / nav
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
+    "On your own too. Keep your own check-ins and see your patterns, no clinician needed.":
+      "Pour vous aussi. Gardez vos propres suivis et voyez vos tendances, sans clinicien.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
     "For:":"Pour :",
@@ -3177,6 +3194,11 @@
     "Saving your check-in…":"Enregistrement de votre suivi…",
     "No check-ins yet, send your first one on the left.":"Aucun suivi pour l'instant, envoyez votre premier à gauche.",
     "so far":"jusqu'à présent",
+    "This week":"Cette semaine","this week":"cette semaine",
+    "mood mostly":"humeur surtout","pain mostly":"douleur surtout",
+    "and improving":"et en amélioration","and slipping":"et en recul","and holding steady":"et stable",
+    "came up most":"est revenu le plus souvent",
+    "check-in flagged":"suivi signalé","check-ins flagged":"suivis signalés",
     "Turn off AI summaries? Future check-ins will be stored as written, with no AI analysis.":
       "Désactiver les résumés IA? Les prochains suivis seront enregistrés tels quels, sans analyse par IA.",
     "Turn on AI summaries? An AI will write a short summary and theme tags for each check-in. You can turn this off anytime.":
@@ -8720,6 +8742,7 @@
       document.getElementById('btwPatientPaneEyebrow').textContent = t('Your check-in');
       document.getElementById('btwSend').disabled = false;
       syncConsentUi();
+      renderWeekSummary();
       renderDigestSelf();
       renderInsights();
       renderBodyOverview();
@@ -8731,6 +8754,7 @@
     }
     renderPatientList();
     renderPatientPane();
+    renderWeekSummary();
     renderDigest();
     renderInsights();
     renderBodyOverview();
@@ -8756,6 +8780,46 @@
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('so far'))}` +
       (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
+  }
+
+  // A short recap of the last 7 days, built entirely from the check-ins we
+  // already have (no extra AI call). Shown above the since-you-started digest
+  // on the patient's own dashboard and on the clinician's caseload view.
+  function renderWeekSummary(){
+    const el = document.getElementById('btwWeekSummary');
+    if(!el) return;
+    const cutoff = Date.now() - 7*86400000;
+    const week = (state.checkIns||[]).filter(c=>c.time && c.time>=cutoff);
+    if(week.length === 0){ el.style.display='none'; el.innerHTML=''; return; }
+    const n = week.length;
+    const parts = [];
+    parts.push(`<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('this week'))}`);
+    const rated = week.filter(c=>c.mood!=null).sort((a,b)=>a.time-b.time);
+    if(rated.length){
+      const avg = rated.reduce((s,c)=>s+c.mood,0)/rated.length;
+      let trend = '';
+      if(rated.length >= 2){
+        const half = Math.max(1, Math.floor(rated.length/2));
+        const early = rated.slice(0, half);
+        const late = rated.slice(rated.length-half);
+        const delta = (late.reduce((s,c)=>s+c.mood,0)/late.length) - (early.reduce((s,c)=>s+c.mood,0)/early.length);
+        // Pain is better when it goes down, mood is better when it goes up.
+        const better = painMode() ? delta < -0.6 : delta > 0.6;
+        const worse  = painMode() ? delta > 0.6  : delta < -0.6;
+        if(better) trend = ' ' + t('and improving');
+        else if(worse) trend = ' ' + t('and slipping');
+        else trend = ' ' + t('and holding steady');
+      }
+      parts.push(`${esc(painMode()?t('pain mostly'):t('mood mostly'))} <strong>${esc(scoreWord(avg))}</strong>${esc(trend)}`);
+    }
+    const counts = {};
+    week.forEach(c=>c.tags.forEach(tg=>counts[tg]=(counts[tg]||0)+1));
+    const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    if(top) parts.push(`<strong>${esc(themeName(top[0]))}</strong> ${esc(t('came up most'))}`);
+    const flagged = week.filter(c=>c.risk).length;
+    if(flagged) parts.push(`<strong>${flagged}</strong> ${esc(flagged===1?t('check-in flagged'):t('check-ins flagged'))}`);
+    el.innerHTML = `<div class="btw-week-label">${esc(t('This week'))}</div><div class="btw-week-body">${parts.join(' · ')}</div>`;
+    el.style.display = '';
   }
 
   // --- send a check-in (server stores it; AI runs server-side only if the
