@@ -94,15 +94,6 @@
     line-height:1.45;
     margin-top:2px;
   }
-  .btw-sub-solo{
-    font-family:var(--font-mono);
-    font-size:11px;
-    letter-spacing:0.02em;
-    color:var(--moss);
-    max-width:430px;
-    line-height:1.45;
-    margin-top:5px;
-  }
   .btw-grid{
     max-width:1200px;
     margin:0 auto;
@@ -1840,7 +1831,6 @@
     <div>
       <div class="btw-title"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
       <div class="btw-sub">A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.</div>
-      <div class="btw-sub-solo">On your own too. Keep your own check-ins and see your patterns, no clinician needed.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
@@ -1920,7 +1910,7 @@
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
           <div class="btw-hero-meta">Free for 14 days. Private, secure, and consent-first. Not a crisis service.</div>
-          <button type="button" class="btw-hero-solo-link" onclick="document.querySelector('.btw-solo-section').scrollIntoView({behavior:'smooth',block:'start'})">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
+          <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-aud-btn[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
         </div>
@@ -2135,32 +2125,6 @@
             <h4>Built-in safety net</h4>
             <p>Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.</p>
           </div>
-        </div>
-      </section>
-
-      <section class="btw-solo-section">
-        <div class="btw-section-label">For individuals, too</div>
-        <div class="btw-solo">
-          <h3>You don't need a therapist to use Between.</h3>
-          <p>Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.</p>
-          <div class="btw-solo-steps">
-            <div class="btw-solo-step">
-              <div class="n">01</div>
-              <h4>Check in for yourself</h4>
-              <p>A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.</p>
-            </div>
-            <div class="btw-solo-step">
-              <div class="n">02</div>
-              <h4>Watch your own patterns</h4>
-              <p>Your check-ins gather into a mood trend and the themes that keep returning, so a rough stretch is something you can see. AI summaries are optional.</p>
-            </div>
-            <div class="btw-solo-step">
-              <div class="n">03</div>
-              <h4>A note for a harder day</h4>
-              <p>Leave your future self something kind on a good day. On a low one, Between shows it back to you. Private to you, always.</p>
-            </div>
-          </div>
-          <button class="btw-hero-btn primary" onclick="window.btwOpenPatientSignup && window.btwOpenPatientSignup('patient_monthly')">Start my own check-ins</button>
         </div>
       </section>
 
@@ -2874,8 +2838,6 @@
     // header / nav
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
-    "On your own too. Keep your own check-ins and see your patterns, no clinician needed.":
-      "Pour vous aussi. Gardez vos propres suivis et voyez vos tendances, sans clinicien.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
