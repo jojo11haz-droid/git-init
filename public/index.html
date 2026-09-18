@@ -1845,6 +1845,7 @@
         <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
         <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
           <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapist</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="individual" role="menuitem">For myself</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
@@ -1888,6 +1889,7 @@
         </div>
         <div class="btw-chooser-grid">
           <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="individual"><span class="t">For myself</span><span class="h">Your own private check-ins, no clinician</span></button>
           <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
@@ -2861,7 +2863,8 @@
     "On your own too. Keep your own check-ins and see your patterns, no clinician needed.":
       "Pour vous aussi. Gardez vos propres suivis et voyez vos tendances, sans clinicien.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Your own private check-ins, no clinician":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :",
     "Who's it for?":"Pour qui ?",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
@@ -3324,6 +3327,8 @@
   const heroFitnessFr = 'Ce qui se passe<br><em>entre</em> les séances<br>ne devrait pas<br>rester un mystère.';
   const heroPhysioEn = 'What happens<br><em>between</em> appointments<br>doesn\'t have to<br>stay a mystery.';
   const heroPhysioFr = 'Ce qui se passe<br><em>entre</em> les rendez-vous<br>ne devrait pas<br>rester un mystère.';
+  const heroIndividualEn = 'What happens<br><em>between</em> your good<br>and hard days doesn\'t<br>have to stay a mystery.';
+  const heroIndividualFr = 'Ce qui se passe<br><em>entre</em> vos bons<br>et mauvais jours ne<br>devrait pas rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwLoginPassword:'Votre mot de passe',
@@ -3403,6 +3408,7 @@
 
   // The active audience's [EN, FR] override dictionaries, or null for therapy.
   function audDicts(){
+    if(curAudience === 'individual') return [INDIVIDUAL_EN, INDIVIDUAL_FR];
     if(curAudience === 'sports') return [SPORTS_EN, SPORTS_FR];
     if(curAudience === 'recovery') return [RECOVERY_EN, RECOVERY_FR];
     if(curAudience === 'nutrition') return [NUTRITION_EN, NUTRITION_FR];
@@ -3984,6 +3990,53 @@
     "Rough week, work stress kept me up again.":"Semaine difficile, repas sautés et panne d'énergie.",
     "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":"Semaine difficile. Repas sautés et grignotage de stress la plupart des soirs. Point positif : elle a atteint son objectif de protéines la fin de semaine. Aucune préoccupation signalée.",
     "Work":"Repas","Conflict":"Digestion","Panic":"Hydratation","Family":"Énergie","Money":"Grignotage","Loneliness":"Stress","Anger":"Habitudes"
+  };
+
+  // --- audience: individual (for yourself, no clinician) -------------------
+  // Between used as a private diary. There is no therapist, no caseload and no
+  // dashboard for someone else. The copy speaks to the person keeping their own
+  // check-ins, and the primary calls to action start a personal plan.
+  const INDIVIDUAL_EN = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "A simple way to keep track of yourself between the days that matter. Check in when something comes up and watch your own mood and themes take shape over time.",
+    "For therapists, counsellors & anyone on their own":"For anyone keeping track of themselves",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "You check in the moment something happens with a quick voice note or message. Between gathers each one into a clear mood trend and the themes that keep returning, so a rough stretch is something you can see. On a hard day it can even show you a note you left yourself on a better one.",
+    "Start 14-day free trial":"Start my own check-ins",
+    "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Free for 3 days. Private to you, and yours to delete anytime. Not a crisis service.",
+    "See what's happening between sessions.":"See what's happening between your good and hard days.",
+    "Patient sends a check-in":"You send a check-in",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "Stressed, anxious, or riding a win. You capture it in a quick voice note or text the moment it happens, not a week later from memory.",
+    "AI summarizes it":"AI summarizes it, if you want",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only if you turn it on, and it stays yours.",
+    "You see the pattern":"You see your own pattern",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Mood trends, recurring themes and a this-week recap gather over time, so a rough stretch is something you can look back on and see, not something you have to remember.",
+    "Effortless on both sides. A check-in takes your client under a minute, and your whole caseload comes into focus at a glance.":
+      "Effortless. A check-in takes under a minute, and your own patterns come into focus at a glance."
+  };
+  const INDIVIDUAL_FR = {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "Une façon simple de vous suivre vous-même entre les journées qui comptent. Faites un suivi quand quelque chose survient et voyez votre humeur et vos thèmes prendre forme au fil du temps.",
+    "For therapists, counsellors & anyone on their own":"Pour tous ceux qui veulent se suivre eux-mêmes",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Vous faites un suivi dès que quelque chose survient, avec une courte note vocale ou un message. Between rassemble chacun en une tendance d'humeur claire et les thèmes qui reviennent, pour qu'une période difficile devienne visible. Lors d'une journée difficile, il peut même vous remontrer une note laissée un meilleur jour.",
+    "Start 14-day free trial":"Commencer mes propres suivis",
+    "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":"Gratuit pendant 3 jours. Privé, et à vous de supprimer en tout temps. Pas un service de crise.",
+    "See what's happening between sessions.":"Voyez ce qui se passe entre vos bons et mauvais jours.",
+    "Patient sends a check-in":"Vous envoyez un suivi",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "Stressé, anxieux ou sur une bonne lancée. Vous le capturez avec une courte note vocale ou un texte au moment où ça arrive, pas une semaine plus tard de mémoire.",
+    "AI summarizes it":"L'IA le résume, si vous le voulez",
+    "A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.":
+      "Un court résumé neutre avec des étiquettes de thèmes. Jamais un diagnostic ni une interprétation. Il ne s'exécute que si vous l'activez, et il reste à vous.",
+    "You see the pattern":"Vous voyez votre propre tendance",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Les tendances d'humeur, les thèmes récurrents et un récapitulatif de la semaine se rassemblent au fil du temps, pour qu'une période difficile soit quelque chose que vous pouvez revoir, pas quelque chose à retenir.",
+    "Effortless on both sides. A check-in takes your client under a minute, and your whole caseload comes into focus at a glance.":
+      "Sans effort. Un suivi prend moins d'une minute, et vos propres tendances se dessinent d'un coup d'œil."
   };
 
   function pickCopy(key){
@@ -4832,6 +4885,18 @@
         {cls:"good",when:"Sam · 15:20",text:"Vu un vieil ami. Je me sens plus légère."},
         {cls:"mid",when:"Lun · 8:05",text:"Anxieuse à l'idée de la semaine."}]}
     },
+    individual:{
+      en:{last:"A week ago",next:"Today",day:"Tue",day2:"Tue",ai:"Your summary",since:"Your week",waiting:"This week",flag:"1 flagged",summary:"Rough start with work stress and short sleep, then it lifted. One good moment: an old friend over the weekend. You left yourself a note for the next hard day.",aria:"A week of your own check-ins gathering into a short summary.",checkins:[
+        {cls:"good",when:"Wed · 7:12a",text:"Slept better than I have in a while."},
+        {cls:"rough",voice:true,when:"Thu · 11:40p",text:"Couldn't switch off after work."},
+        {cls:"good",when:"Sat · 3:20p",text:"Saw an old friend. Felt lighter."},
+        {cls:"mid",when:"Mon · 8:05a",text:"Anxious about the week ahead."}]},
+      fr:{last:"Il y a une semaine",next:"Aujourd'hui",day:"Mar",day2:"Mar",ai:"Votre résumé",since:"Votre semaine",waiting:"Cette semaine",flag:"1 signalé",summary:"Début difficile avec le stress du travail et un sommeil court, puis ça s'est allégé. Un bon moment : un vieil ami la fin de semaine. Vous vous êtes laissé une note pour le prochain jour difficile.",aria:"Une semaine de vos propres suivis qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mer · 7:12",text:"Mieux dormi que depuis longtemps."},
+        {cls:"rough",voice:true,when:"Jeu · 23:40",text:"Impossible de décrocher après le travail."},
+        {cls:"good",when:"Sam · 15:20",text:"Vu un vieil ami. Je me sens plus légère."},
+        {cls:"mid",when:"Lun · 8:05",text:"Anxieux à l'idée de la semaine."}]}
+    },
     nutrition:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Good start, then a couple of off days. Skipped lunch midweek and energy dipped, but hit her protein goal and meal prepped on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
         {cls:"good",when:"Wed · 7:12a",text:"Hit my protein at every meal today."},
@@ -4965,7 +5030,9 @@
       n.nodeValue = repl != null ? original.replace(key, repl) : original;
     }
     if(heroH1){
-      heroH1.innerHTML = curAudience === 'sports'
+      heroH1.innerHTML = curAudience === 'individual'
+        ? (curLang === 'fr' ? heroIndividualFr : heroIndividualEn)
+        : curAudience === 'sports'
         ? (curLang === 'fr' ? heroSportsFr : heroSportsEn)
         : curAudience === 'schools'
         ? (curSchoolMode === 'classroom'
@@ -4995,6 +5062,9 @@
     // audiences already have their own volume/premium tier in the third card.
     const soloPremium = document.getElementById('btwSoloPremiumCard');
     if(soloPremium) soloPremium.style.display = (curAudience === 'therapy') ? '' : 'none';
+    // The "use it on your own" hero link is redundant on the individual page,
+    // where the whole page already speaks to self-use.
+    document.querySelectorAll('.btw-hero-solo-link').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
     renderHeroThread();
     applyCurrency();
   }
@@ -5060,14 +5130,14 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Psychotherapist', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
+  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
-  const AUD_TO_PATH = { therapy:'/', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
-  const PATH_TO_AUD = { '/therapy':'therapy', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
+  const AUD_TO_PATH = { therapy:'/', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
+  const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
   function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
   // Keep the address bar on the current field. push=true adds a history entry
   // (a real navigation the visitor did); otherwise it just corrects the URL.
@@ -5084,6 +5154,7 @@
   const SITE_ORIGIN = 'https://betweenpsych.com';
   const FIELD_HEAD = {
     therapy: { title: 'Between — Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.' },
+    individual: { title: 'Between — Private check-ins for yourself', desc: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you, and not a crisis service.' },
     physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
     kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
     osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
@@ -5107,7 +5178,7 @@
     } catch(e){}
   }
   function setAudience(a, opts){
-    curAudience = (a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'nutrition') ? a : 'therapy';
+    curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'nutrition') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
@@ -6165,8 +6236,14 @@
       }
     };
   }
-  document.getElementById('btwHeroTrial').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
-  document.getElementById('btwHomeTrialBottom').addEventListener('click', ()=> window.btwOpenSignup && window.btwOpenSignup('solo_monthly'));
+  // The individual audience has no clinician account: its trial buttons start a
+  // personal plan instead of the professional signup.
+  function btwStartPrimaryTrial(){
+    if(curAudience === 'individual'){ if(window.btwOpenPatientSignup) window.btwOpenPatientSignup('patient_monthly'); return; }
+    if(window.btwOpenSignup) window.btwOpenSignup('solo_monthly');
+  }
+  document.getElementById('btwHeroTrial').addEventListener('click', btwStartPrimaryTrial);
+  document.getElementById('btwHomeTrialBottom').addEventListener('click', btwStartPrimaryTrial);
 
   // Show/hide password: eye toggle inside password fields. Delegated so it
   // works for every .btw-pw-wrap without wiring each one up individually.
@@ -8931,9 +9008,10 @@
     else if (['osteo','osteopath','osteopathy','osteopaths','osteopathic','osteopathe','ostéopathe','ostéopathie','ostéo'].includes(forParam)) _startAud = 'osteo';
     else if (['nutrition','nutritionist','nutritionists','dietitian','dietician','dietitians','nutritionniste','diététiste','dieteticienne','nutritionnistes'].includes(forParam)) _startAud = 'nutrition';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
+    else if (['individual','myself','me','self','personal','solo','yourself'].includes(forParam)) _startAud = 'individual';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'nutrition') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'individual' || _startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'nutrition') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
   // without adding a history entry, and set the tab title/meta to match.
