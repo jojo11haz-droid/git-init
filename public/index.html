@@ -877,6 +877,9 @@
   .btw-demo-line{height:8px;border-radius:4px;background:rgba(30,76,134,0.35);margin-bottom:9px;}
   .btw-demo-tags{margin-top:12px;display:flex;gap:6px;}
   .btw-demo-tags span{background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px 10px;font-size:12px;color:var(--ink-soft);}
+  .btw-demo-self{width:300px;}
+  .btw-demo-selfspark{width:100%;height:46px;display:block;}
+  .btw-demo-selfnote{margin-top:10px;font-size:13px;line-height:1.45;color:var(--ink);}
   .btw-demo-caseload{width:300px;display:flex;flex-direction:column;gap:8px;}
   .btw-demo-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;text-align:left;}
   .btw-demo-row.flagged{border-color:var(--amber);box-shadow:0 4px 14px rgba(201,122,44,0.14);}
@@ -1294,6 +1297,11 @@
   .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
+  /* The "for yourself" option spans the full row under the nine fields, so it
+     reads as a deliberate second path rather than a single orphaned card. */
+  .btw-chooser-card-solo{grid-column:1 / -1;flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--moss-light);border-color:transparent;}
+  .btw-chooser-card-solo .h{color:var(--moss);}
+  @media (max-width:460px){.btw-chooser-card-solo{flex-direction:column;gap:4px;}}
   .btw-hero{
     display:block;
     padding:16px 0 40px;
@@ -1845,7 +1853,6 @@
         <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
         <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
           <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapist</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="individual" role="menuitem">For myself</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
@@ -1854,6 +1861,7 @@
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="nutrition" role="menuitem">Nutrition</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="recovery" role="menuitem">Addiction</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="schools" role="menuitem">Schools</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="individual" role="menuitem">For myself</button>
         </div>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
@@ -1889,7 +1897,6 @@
         </div>
         <div class="btw-chooser-grid">
           <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
-          <button type="button" class="btw-chooser-card" data-aud="individual"><span class="t">For myself</span><span class="h">Your own private check-ins, no clinician</span></button>
           <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
@@ -1898,6 +1905,7 @@
           <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
           <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
+          <button type="button" class="btw-chooser-card btw-chooser-card-solo" data-aud="individual"><span class="t">Or just for yourself</span><span class="h">Your own private check-ins, no clinician needed</span></button>
         </div>
       </section>
 
@@ -1962,12 +1970,18 @@
               <div class="btw-demo-tags"><span>Work</span><span>Sleep</span></div>
             </div>
           </div>
-          <!-- Frame 3: therapist sees the pattern -->
+          <!-- Frame 3: the pattern comes into focus. A clinician sees a caseload;
+               someone using Between for themselves sees their own week. -->
           <div class="btw-demo-frame" data-frame="2">
-            <div class="btw-demo-caseload">
+            <div class="btw-demo-caseload" data-demo-pro>
               <div class="btw-demo-row flagged"><span class="btw-demo-dot-flag"></span><span class="btw-demo-name">Amy</span><span class="btw-demo-badge">2 new</span></div>
               <div class="btw-demo-row"><span class="btw-demo-name">Ben</span><span class="btw-demo-badge">1 new</span></div>
               <div class="btw-demo-row quiet"><span class="btw-demo-name">Cara</span><span class="btw-demo-muted">quiet</span></div>
+            </div>
+            <div class="btw-demo-card btw-demo-self" data-demo-solo hidden>
+              <div class="btw-demo-cardlabel">This week</div>
+              <svg class="btw-demo-selfspark" viewBox="0 0 260 46" preserveAspectRatio="none" aria-hidden="true"><polyline points="6,34 58,38 110,24 162,26 214,12 254,9" fill="none" stroke="#1E4C86" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="38" r="3.4" fill="#C0392B"/><circle cx="254" cy="9" r="3.4" fill="#1E4C86"/></svg>
+              <div class="btw-demo-selfnote">Mood mostly okay, and climbing. Sleep came up most.</div>
             </div>
           </div>
         </div>
@@ -2864,7 +2878,7 @@
       "Pour vous aussi. Gardez vos propres suivis et voyez vos tendances, sans clinicien.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
-    "Your own private check-ins, no clinician":"Vos propres suivis privés, sans clinicien",
+    "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :",
     "Who's it for?":"Pour qui ?",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
@@ -3202,6 +3216,9 @@
     "and improving":"et en amélioration","and slipping":"et en recul","and holding steady":"et stable",
     "came up most":"est revenu le plus souvent",
     "check-in flagged":"suivi signalé","check-ins flagged":"suivis signalés",
+    "You check in within seconds":"Vous faites un suivi en quelques secondes",
+    "You watch your own pattern build":"Vous voyez votre propre tendance se dessiner",
+    "Mood mostly okay, and climbing. Sleep came up most.":"Humeur surtout correcte, et en hausse. Le sommeil est revenu le plus souvent.",
     "Turn off AI summaries? Future check-ins will be stored as written, with no AI analysis.":
       "Désactiver les résumés IA? Les prochains suivis seront enregistrés tels quels, sans analyse par IA.",
     "Turn on AI summaries? An AI will write a short summary and theme tags for each check-in. You can turn this off anytime.":
@@ -5065,6 +5082,9 @@
     // The "use it on your own" hero link is redundant on the individual page,
     // where the whole page already speaks to self-use.
     document.querySelectorAll('.btw-hero-solo-link').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
+    // "See both sides" is a two-view, clinician-and-client section that has no
+    // meaning for someone using Between only for themselves.
+    document.querySelectorAll('.btw-shots').forEach(function(s){ s.style.display = (curAudience === 'individual') ? 'none' : ''; });
     renderHeroThread();
     applyCurrency();
   }
@@ -6422,11 +6442,19 @@
     const frames = [...stage.querySelectorAll('.btw-demo-frame')];
     const dots = [...document.querySelectorAll('#btwDemoDots .btw-demo-dot')];
     const caption = document.getElementById('btwDemoCaption');
+    const solo = ()=> (typeof curAudience !== 'undefined' && curAudience === 'individual');
     const caps = [
-      ()=>t('A patient checks in within seconds'),
-      ()=>t('AI turns it into a short summary'),
-      ()=>t('You see who needs you at a glance')
+      ()=> solo() ? t('You check in within seconds') : t('A patient checks in within seconds'),
+      ()=> t('AI turns it into a short summary'),
+      ()=> solo() ? t('You watch your own pattern build') : t('You see who needs you at a glance')
     ];
+    // The last frame shows a caseload for a clinician and a personal week for
+    // someone using Between for themselves.
+    function applyDemoAudience(){
+      const s = solo();
+      stage.querySelectorAll('[data-demo-pro]').forEach(el=>{ el.hidden = s; });
+      stage.querySelectorAll('[data-demo-solo]').forEach(el=>{ el.hidden = !s; });
+    }
     let i = 0, timer = null;
     function show(n){
       i = (n + frames.length) % frames.length;
@@ -6437,8 +6465,10 @@
     function start(){ stop(); timer = setInterval(()=>show(i+1), 3000); }
     function stop(){ if(timer){ clearInterval(timer); timer = null; } }
     dots.forEach(d=> d.addEventListener('click', ()=>{ show(parseInt(d.dataset.go,10)); start(); }));
-    // Re-render the current caption when the language changes.
-    window.__btwDemoRefresh = ()=>{ if(caption) caption.textContent = caps[i](); };
+    // Re-render the caption and swap the last frame when the audience or
+    // language changes.
+    window.__btwDemoRefresh = ()=>{ applyDemoAudience(); if(caption) caption.textContent = caps[i](); };
+    applyDemoAudience();
     show(0); start();
   })();
 
