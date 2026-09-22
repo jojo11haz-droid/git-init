@@ -5253,9 +5253,10 @@
     try { localStorage.setItem('btw_individual_mode', curIndividualMode); } catch(e){}
     updateIndividualModeUI();
     // The mode changes the check-in style (body map vs mood) and the pain/mood
-    // wording, so refresh the composer and the dashboard.
+    // wording, so refresh the composer, the demo, and the dashboard.
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     if(window.__btwScoreMode) window.__btwScoreMode();
+    if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     try { renderAll(); } catch(e){}
   }
   document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>{
@@ -6445,12 +6446,45 @@
       ()=> t('AI turns it into a short summary'),
       ()=> solo() ? t('You watch your own pattern build') : t('You see who needs you at a glance')
     ];
+    // The check-in line and the theme tags in the demo are specific to each
+    // field, so a sports page shows a player's check-in, a physio page a
+    // patient's pain, and so on. For the individual field it follows the
+    // chosen tracking mode.
+    const DEMO_COPY = {
+      therapy:   { en:{ bubble:"Rough week. Work stress kept me up again.", tags:["Work","Sleep"] },        fr:{ bubble:"Semaine difficile. Le stress du travail m'a encore tenu éveillé.", tags:["Travail","Sommeil"] } },
+      physio:    { en:{ bubble:"Knee's still sore this morning.", tags:["Knee","Pain"] },                    fr:{ bubble:"Le genou est encore douloureux ce matin.", tags:["Genou","Douleur"] } },
+      sports:    { en:{ bubble:"Legs still heavy after the game.", tags:["Fatigue","Sleep"] },               fr:{ bubble:"Les jambes encore lourdes après le match.", tags:["Fatigue","Sommeil"] } },
+      fitness:   { en:{ bubble:"Skipped my workout, felt sluggish.", tags:["Energy","Motivation"] },         fr:{ bubble:"Entraînement sauté, je me sens amorphe.", tags:["Énergie","Motivation"] } },
+      nutrition: { en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } },
+      recovery:  { en:{ bubble:"Craving hit hard tonight. Sitting with it.", tags:["Craving","Support"] },   fr:{ bubble:"Forte envie ce soir. Je reste avec, sans agir.", tags:["Envie","Soutien"] } },
+      schools:   { en:{ bubble:"Rough day. Couldn't focus in class.", tags:["Focus","Stress"] },             fr:{ bubble:"Journée difficile. Impossible de me concentrer en classe.", tags:["Concentration","Stress"] } },
+      ind_mind:  { en:{ bubble:"Couldn't switch off after work.", tags:["Work","Sleep"] },                    fr:{ bubble:"Impossible de décrocher après le travail.", tags:["Travail","Sommeil"] } },
+      ind_body:  { en:{ bubble:"Knee's still sore this morning.", tags:["Knee","Pain"] },                     fr:{ bubble:"Le genou est encore douloureux ce matin.", tags:["Genou","Douleur"] } },
+      ind_sport: { en:{ bubble:"Legs still heavy after training.", tags:["Fatigue","Sleep"] },               fr:{ bubble:"Les jambes encore lourdes après l'entraînement.", tags:["Fatigue","Sommeil"] } },
+      ind_eating:{ en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } }
+    };
+    function demoKey(){
+      if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
+      if(curAudience === 'kinesiology' || curAudience === 'osteo') return 'physio';
+      return DEMO_COPY[curAudience] ? curAudience : 'therapy';
+    }
+    function demoData(){ const d = DEMO_COPY[demoKey()] || DEMO_COPY.therapy; return d[curLang] || d.en; }
+    // Fill the check-in bubble and the summary tags for the current field. Runs
+    // after translateStatic (which walks these same nodes) so it has the last say.
+    function renderDemoContent(){
+      const d = demoData();
+      const bubble = stage.querySelector('.btw-demo-bubble'); if(bubble) bubble.textContent = d.bubble;
+      const tagsEl = stage.querySelector('.btw-demo-tags'); if(tagsEl) tagsEl.innerHTML = d.tags.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
+    }
     // The last frame shows a caseload for a clinician and a personal week for
-    // someone using Between for themselves.
+    // someone using Between for themselves. Toggle display (not the hidden
+    // attribute, which an author display rule would override).
     function applyDemoAudience(){
       const s = solo();
-      stage.querySelectorAll('[data-demo-pro]').forEach(el=>{ el.hidden = s; });
-      stage.querySelectorAll('[data-demo-solo]').forEach(el=>{ el.hidden = !s; });
+      // Drop the initial hidden attribute so an empty display falls back to the
+      // stylesheet (flex for the caseload, block for the self card).
+      stage.querySelectorAll('[data-demo-pro]').forEach(el=>{ el.removeAttribute('hidden'); el.style.display = s ? 'none' : ''; });
+      stage.querySelectorAll('[data-demo-solo]').forEach(el=>{ el.removeAttribute('hidden'); el.style.display = s ? '' : 'none'; });
     }
     let i = 0, timer = null;
     function show(n){
@@ -6462,10 +6496,10 @@
     function start(){ stop(); timer = setInterval(()=>show(i+1), 3000); }
     function stop(){ if(timer){ clearInterval(timer); timer = null; } }
     dots.forEach(d=> d.addEventListener('click', ()=>{ show(parseInt(d.dataset.go,10)); start(); }));
-    // Re-render the caption and swap the last frame when the audience or
-    // language changes.
-    window.__btwDemoRefresh = ()=>{ applyDemoAudience(); if(caption) caption.textContent = caps[i](); };
-    applyDemoAudience();
+    // Re-render the caption, the field-specific content, and swap the last frame
+    // when the audience, tracking mode, or language changes.
+    window.__btwDemoRefresh = ()=>{ applyDemoAudience(); renderDemoContent(); if(caption) caption.textContent = caps[i](); };
+    applyDemoAudience(); renderDemoContent();
     show(0); start();
   })();
 
