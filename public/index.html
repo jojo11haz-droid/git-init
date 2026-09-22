@@ -1855,8 +1855,14 @@
         </div>
       </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
-        <button type="button" class="btw-submode-btn active" data-mode="guidance">Guidance</button>
+        <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
         <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
+      </div>
+      <div class="btw-submode" id="btwIndividualMode" role="group" aria-label="What you track">
+        <button type="button" class="btw-submode-btn" data-imode="mind">Mind</button>
+        <button type="button" class="btw-submode-btn" data-imode="body">Body</button>
+        <button type="button" class="btw-submode-btn" data-imode="sport">Sport</button>
+        <button type="button" class="btw-submode-btn" data-imode="eating">Eating</button>
       </div>
       <div class="btw-lang" role="group" aria-label="Language / Langue">
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
@@ -2840,6 +2846,7 @@
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
     "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Mind":"Esprit","Body":"Corps","Sport":"Sport","Eating":"Alimentation",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :",
     "Who's it for?":"Pour qui ?",
@@ -3292,6 +3299,12 @@
   let curLang = 'en';
   let curAudience = 'therapy';        // 'therapy' | 'sports' | 'recovery' | 'schools' — marketing copy only
   let curSchoolMode = 'guidance';     // within Schools: 'guidance' (counsellor) | 'classroom' (teacher)
+  // Within the individual field: what a solo user tracks. Each maps to the
+  // check-in style of an existing discipline, so "Body" gets a pain body map,
+  // "Sport" gets the sports blend, and "Mind"/"Eating" stay mood-style.
+  let curIndividualMode = 'mind';     // 'mind' | 'body' | 'sport' | 'eating'
+  const INDIVIDUAL_MODE_DISCIPLINE = { mind:'therapy', body:'physio', sport:'sports', eating:'nutrition' };
+  function individualDiscipline(){ return INDIVIDUAL_MODE_DISCIPLINE[curIndividualMode] || 'therapy'; }
   const _orig = new WeakMap();
   const heroH1 = document.getElementById('btwHeroH1');
   const heroEn = heroH1 ? heroH1.innerHTML : '';
@@ -5044,9 +5057,12 @@
     // The "use it on your own" hero link is redundant on the individual page,
     // where the whole page already speaks to self-use.
     document.querySelectorAll('.btw-hero-solo-link').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
-    // "See both sides" is a two-view, clinician-and-client section that has no
-    // meaning for someone using Between only for themselves.
-    document.querySelectorAll('.btw-shots').forEach(function(s){ s.style.display = (curAudience === 'individual') ? 'none' : ''; });
+    // Sections written for a practitioner (a two-view "See both sides", the
+    // "less admin" pitch about client emails and calls, and the "built for real
+    // practice" caseload features) have no meaning for someone using Between
+    // only for themselves, so hide them on the individual page.
+    var _soloHide = (curAudience === 'individual');
+    document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
     renderHeroThread();
     applyCurrency();
   }
@@ -5107,7 +5123,12 @@
   function updateSchoolModeUI(){
     const slider = document.getElementById('btwSchoolMode');
     if(slider) slider.classList.toggle('on', curAudience === 'schools');
-    document.querySelectorAll('.btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === curSchoolMode));
+    document.querySelectorAll('#btwSchoolMode .btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === curSchoolMode));
+  }
+  function updateIndividualModeUI(){
+    const picker = document.getElementById('btwIndividualMode');
+    if(picker) picker.classList.toggle('on', curAudience === 'individual');
+    document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.imode === curIndividualMode));
   }
 
   // The header switcher is a compact dropdown; keep its label on the current
@@ -5169,6 +5190,7 @@
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     updateSchoolModeUI();
+    updateIndividualModeUI();
     translateStatic();
     syncAudSelLabel();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
@@ -5223,8 +5245,21 @@
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
   }
-  document.querySelectorAll('.btw-submode-btn').forEach(b=>{
+  document.querySelectorAll('#btwSchoolMode .btw-submode-btn').forEach(b=>{
     b.addEventListener('click', ()=> setSchoolMode(b.dataset.mode));
+  });
+  function setIndividualMode(m){
+    curIndividualMode = INDIVIDUAL_MODE_DISCIPLINE[m] ? m : 'mind';
+    try { localStorage.setItem('btw_individual_mode', curIndividualMode); } catch(e){}
+    updateIndividualModeUI();
+    // The mode changes the check-in style (body map vs mood) and the pain/mood
+    // wording, so refresh the composer and the dashboard.
+    if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
+    if(window.__btwScoreMode) window.__btwScoreMode();
+    try { renderAll(); } catch(e){}
+  }
+  document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setIndividualMode(b.dataset.imode));
   });
   // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
   // A "coach" account carries a discipline (sports, physio or kinesiology), so route
@@ -8126,9 +8161,11 @@
       // patient (no clinician): follow the audience they picked, so choosing
       // Physio/Kinesiology/Osteopathy gives a pain-based check-in, not mood.
       if(state.patient && state.patient.clinician_account_type) return state.patient.clinician_discipline || null;
+      if(curAudience === 'individual') return individualDiscipline();
       return (typeof curAudience !== 'undefined') ? curAudience : null;
     }
     if(state.me) return state.me.discipline || null;
+    if(curAudience === 'individual') return individualDiscipline();
     return (typeof curAudience !== 'undefined') ? curAudience : null;
   }
   function syncComposerTags(){
@@ -8963,7 +9000,9 @@
       // Invited patient: follow their clinician's account type and discipline.
       // Solo patient (no clinician): follow the audience they picked.
       if(at) return coachTypeHasBody(at, state.patient && state.patient.clinician_discipline);
-      return !!BODY_AUDIENCES[(typeof curAudience !== 'undefined') ? curAudience : 'therapy'];
+      // A solo individual follows the discipline behind their chosen tracking mode.
+      const solo = (curAudience === 'individual') ? individualDiscipline() : ((typeof curAudience !== 'undefined') ? curAudience : 'therapy');
+      return !!BODY_AUDIENCES[solo];
     }
     return coachTypeHasBody(state.me && state.me.account_type, state.me && state.me.discipline);
   }
@@ -9064,7 +9103,13 @@
     else if(['guidance','counsellor','counselor','wellbeing'].includes(modeParam)) curSchoolMode = 'guidance';
     else { const sm = localStorage.getItem('btw_school_mode'); if(sm === 'classroom' || sm === 'guidance') curSchoolMode = sm; }
   } catch(e){}
+  try {
+    const trackParam = (new URLSearchParams(location.search).get('track') || '').toLowerCase();
+    if(INDIVIDUAL_MODE_DISCIPLINE[trackParam]) curIndividualMode = trackParam;
+    else { const im = localStorage.getItem('btw_individual_mode'); if(INDIVIDUAL_MODE_DISCIPLINE[im]) curIndividualMode = im; }
+  } catch(e){}
   updateSchoolModeUI();
+  updateIndividualModeUI();
   setLang(_startLang, {initial:true});
 
   renderAuthState();
