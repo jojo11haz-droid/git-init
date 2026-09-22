@@ -4889,6 +4889,42 @@
         {cls:"good",when:"Sam · 15:20",text:"Vu un vieil ami. Je me sens plus légère."},
         {cls:"mid",when:"Lun · 8:05",text:"Anxieux à l'idée de la semaine."}]}
     },
+    individual_body:{
+      en:{last:"A week ago",next:"Today",day:"Tue",day2:"Tue",ai:"Your summary",since:"Your week",waiting:"This week",flag:"1 flagged",summary:"Sore knee early in the week, then easing. Missed a couple of exercises, but walked pain-free on the weekend.",aria:"A week of your own pain check-ins gathering into a short summary.",checkins:[
+        {cls:"rough",when:"Wed · 7:12a",text:"Knee's still sore this morning."},
+        {cls:"mid",voice:true,when:"Thu · 8:40p",text:"Missed my exercises again, too busy."},
+        {cls:"good",when:"Sat · 3:20p",text:"Walked the whole trail with no pain."},
+        {cls:"good",when:"Mon · 8:05a",text:"Feels looser than last week."}]},
+      fr:{last:"Il y a une semaine",next:"Aujourd'hui",day:"Mar",day2:"Mar",ai:"Votre résumé",since:"Votre semaine",waiting:"Cette semaine",flag:"1 signalé",summary:"Genou endolori en début de semaine, puis ça s'apaise. Quelques exercices manqués, mais marche sans douleur la fin de semaine.",aria:"Une semaine de vos propres suivis de douleur qui forment un court résumé.",checkins:[
+        {cls:"rough",when:"Mer · 7:12",text:"Le genou est encore douloureux ce matin."},
+        {cls:"mid",voice:true,when:"Jeu · 20:40",text:"Encore manqué mes exercices, trop occupé."},
+        {cls:"good",when:"Sam · 15:20",text:"Marché tout le sentier sans douleur."},
+        {cls:"good",when:"Lun · 8:05",text:"Ça semble plus souple que la semaine dernière."}]}
+    },
+    individual_sport:{
+      en:{last:"A week ago",next:"Today",day:"Tue",day2:"Tue",ai:"Your summary",since:"Your week",waiting:"This week",flag:"1 flagged",summary:"Fit but tense. Legs heavy midweek, then a sharp session on Friday. Nerves building before the game.",aria:"A week of your own training check-ins gathering into a short summary.",checkins:[
+        {cls:"good",when:"Wed · 6:40a",text:"Legs feel fresh again after the rest day."},
+        {cls:"rough",voice:true,when:"Thu · 9:15p",text:"Head not in it. The pressure is getting to me."},
+        {cls:"good",when:"Fri · 4:10p",text:"Best session in weeks. Really clicked."},
+        {cls:"mid",when:"Sat · 8:00a",text:"Nervous about the game today."}]},
+      fr:{last:"Il y a une semaine",next:"Aujourd'hui",day:"Mar",day2:"Mar",ai:"Votre résumé",since:"Votre semaine",waiting:"Cette semaine",flag:"1 signalé",summary:"En forme mais tendu. Jambes lourdes en milieu de semaine, puis une séance vive vendredi. La nervosité monte avant le match.",aria:"Une semaine de vos propres suivis d'entraînement qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mer · 6:40",text:"Les jambes sont fraîches après la journée de repos."},
+        {cls:"rough",voice:true,when:"Jeu · 21:15",text:"La tête n'y est pas. La pression me pèse."},
+        {cls:"good",when:"Ven · 16:10",text:"Meilleure séance depuis des semaines."},
+        {cls:"mid",when:"Sam · 8:00",text:"Nerveux à l'idée du match aujourd'hui."}]}
+    },
+    individual_eating:{
+      en:{last:"A week ago",next:"Today",day:"Tue",day2:"Tue",ai:"Your summary",since:"Your week",waiting:"This week",flag:"1 flagged",summary:"Good start, then a couple of off days. Skipped lunch midweek and energy dipped, but hit your protein goal and meal prepped on the weekend.",aria:"A week of your own eating check-ins gathering into a short summary.",checkins:[
+        {cls:"good",when:"Wed · 7:12a",text:"Hit my protein at every meal today."},
+        {cls:"rough",voice:true,when:"Thu · 1:40p",text:"Skipped lunch, energy crashed by 3."},
+        {cls:"good",when:"Sat · 3:20p",text:"Meal prepped for the week. On track."},
+        {cls:"mid",when:"Mon · 8:05a",text:"Cravings hit hard last night."}]},
+      fr:{last:"Il y a une semaine",next:"Aujourd'hui",day:"Mar",day2:"Mar",ai:"Votre résumé",since:"Votre semaine",waiting:"Cette semaine",flag:"1 signalé",summary:"Bon début, puis quelques jours difficiles. Dîner sauté en milieu de semaine et énergie en baisse, mais objectif de protéines atteint et repas préparés la fin de semaine.",aria:"Une semaine de vos propres suivis d'alimentation qui forment un court résumé.",checkins:[
+        {cls:"good",when:"Mer · 7:12",text:"Protéines à chaque repas aujourd'hui."},
+        {cls:"rough",voice:true,when:"Jeu · 13:40",text:"Dîner sauté, panne d'énergie vers 15 h."},
+        {cls:"good",when:"Sam · 15:20",text:"Repas préparés pour la semaine. Sur la bonne voie."},
+        {cls:"mid",when:"Lun · 8:05",text:"Fortes envies hier soir."}]}
+    },
     nutrition:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Good start, then a couple of off days. Skipped lunch midweek and energy dipped, but hit her protein goal and meal prepped on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
         {cls:"good",when:"Wed · 7:12a",text:"Hit my protein at every meal today."},
@@ -4978,6 +5014,7 @@
     const host = document.getElementById('btwHeroThread'); if(!host) return;
     const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
       : (curAudience === 'kinesiology' || curAudience === 'osteo') ? 'physio'
+      : (curAudience === 'individual') ? ((typeof curIndividualMode !== 'undefined' && curIndividualMode !== 'mind') ? ('individual_' + curIndividualMode) : 'individual')
       : curAudience;
     const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
     const d = A[curLang] || A.en;
@@ -5257,6 +5294,7 @@
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     if(window.__btwScoreMode) window.__btwScoreMode();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
+    try { renderHeroThread(); } catch(e){}
     try { renderAll(); } catch(e){}
   }
   document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>{
@@ -6458,10 +6496,10 @@
       nutrition: { en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } },
       recovery:  { en:{ bubble:"Craving hit hard tonight. Sitting with it.", tags:["Craving","Support"] },   fr:{ bubble:"Forte envie ce soir. Je reste avec, sans agir.", tags:["Envie","Soutien"] } },
       schools:   { en:{ bubble:"Rough day. Couldn't focus in class.", tags:["Focus","Stress"] },             fr:{ bubble:"Journée difficile. Impossible de me concentrer en classe.", tags:["Concentration","Stress"] } },
-      ind_mind:  { en:{ bubble:"Couldn't switch off after work.", tags:["Work","Sleep"] },                    fr:{ bubble:"Impossible de décrocher après le travail.", tags:["Travail","Sommeil"] } },
-      ind_body:  { en:{ bubble:"Knee's still sore this morning.", tags:["Knee","Pain"] },                     fr:{ bubble:"Le genou est encore douloureux ce matin.", tags:["Genou","Douleur"] } },
-      ind_sport: { en:{ bubble:"Legs still heavy after training.", tags:["Fatigue","Sleep"] },               fr:{ bubble:"Les jambes encore lourdes après l'entraînement.", tags:["Fatigue","Sommeil"] } },
-      ind_eating:{ en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } }
+      ind_mind:  { en:{ bubble:"Couldn't switch off after work.", tags:["Work","Sleep"], note:"Mood mostly okay, and climbing. Sleep came up most." },   fr:{ bubble:"Impossible de décrocher après le travail.", tags:["Travail","Sommeil"], note:"Humeur surtout correcte, et en hausse. Le sommeil est revenu le plus souvent." } },
+      ind_body:  { en:{ bubble:"Knee's still sore this morning.", tags:["Knee","Pain"], note:"Pain easing since Monday. Knee came up most." },            fr:{ bubble:"Le genou est encore douloureux ce matin.", tags:["Genou","Douleur"], note:"Douleur en baisse depuis lundi. Le genou est revenu le plus souvent." } },
+      ind_sport: { en:{ bubble:"Legs still heavy after training.", tags:["Fatigue","Sleep"], note:"Training landing well, energy climbing. Legs came up most." },  fr:{ bubble:"Les jambes encore lourdes après l'entraînement.", tags:["Fatigue","Sommeil"], note:"L'entraînement va bien, l'énergie monte. Les jambes sont revenues le plus souvent." } },
+      ind_eating:{ en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"], note:"Energy steadier this week. Meals came up most." },      fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"], note:"Énergie plus stable cette semaine. Les repas sont revenus le plus souvent." } }
     };
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
@@ -6475,6 +6513,8 @@
       const d = demoData();
       const bubble = stage.querySelector('.btw-demo-bubble'); if(bubble) bubble.textContent = d.bubble;
       const tagsEl = stage.querySelector('.btw-demo-tags'); if(tagsEl) tagsEl.innerHTML = d.tags.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
+      // The individual field's this-week summary follows the tracking mode.
+      if(d.note){ const note = stage.querySelector('.btw-demo-selfnote'); if(note) note.textContent = d.note; }
     }
     // The last frame shows a caseload for a clinician and a personal week for
     // someone using Between for themselves. Toggle display (not the hidden
