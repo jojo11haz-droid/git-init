@@ -86,6 +86,21 @@ CREATE TABLE IF NOT EXISTS audio_upload_tokens (
   used_at TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS photo_uploads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  mime TEXT NOT NULL,
+  data BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS photo_upload_tokens (
+  token_hash TEXT PRIMARY KEY,
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS check_ins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -98,6 +113,7 @@ CREATE TABLE IF NOT EXISTS check_ins (
   model_version TEXT,
   patient_flagged_inaccurate BOOLEAN NOT NULL DEFAULT false,
   audio_upload_id UUID REFERENCES audio_uploads(id),
+  photo_upload_id UUID REFERENCES photo_uploads(id),
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ
 );
@@ -143,6 +159,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_secret TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS patient_flagged_inaccurate BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS audio_upload_id UUID REFERENCES audio_uploads(id);
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS photo_upload_id UUID REFERENCES photo_uploads(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS subscription_status TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
@@ -770,6 +787,53 @@ export async function getAudioForClinician(uploadId, clinicianId) {
   return rows[0] || null;
 }
 
+// Photos of a hurting body part, attached to a pain check-in. Same signed-URL
+// upload flow as voice memos, stored as bytea for the MVP.
+
+export async function createPhotoUploadToken(tokenHash, patientId, ttlMinutes) {
+  await pool.query(
+    `INSERT INTO photo_upload_tokens (token_hash, patient_id, expires_at)
+     VALUES ($1, $2, now() + ($3 || ' minutes')::interval)`,
+    [tokenHash, patientId, String(ttlMinutes)]
+  );
+}
+
+export async function consumePhotoUploadToken(tokenHash) {
+  const { rows } = await pool.query(
+    `UPDATE photo_upload_tokens SET used_at = now()
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+     RETURNING patient_id`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function storePhotoUpload(patientId, mime, data) {
+  const { rows } = await pool.query(
+    `INSERT INTO photo_uploads (patient_id, mime, data) VALUES ($1, $2, $3) RETURNING id`,
+    [patientId, mime, data]
+  );
+  return rows[0].id;
+}
+
+export async function getPhotoUploadOwned(uploadId, patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, mime, data FROM photo_uploads WHERE id = $1 AND patient_id = $2`,
+    [uploadId, patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function getPhotoForClinician(uploadId, clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT a.id, a.mime, a.data
+     FROM photo_uploads a JOIN patients p ON p.id = a.patient_id
+     WHERE a.id = $1 AND p.clinician_id = $2`,
+    [uploadId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
 // --- Alerts (risk-flag notifications for clinicians) ---
 
 export async function createAlert({ checkInId, clinicianId, deliveryChannel, deliveredAt }) {
@@ -827,11 +891,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, painMap }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, pain_map)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, painMap ? JSON.stringify(painMap) : null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null]
   );
   return rows[0];
 }

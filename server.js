@@ -17,6 +17,8 @@ import {
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
+  createPhotoUploadToken, consumePhotoUploadToken, storePhotoUpload,
+  getPhotoUploadOwned, getPhotoForClinician,
   createAlert, listAlerts, markAlertViewed
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
@@ -1162,6 +1164,7 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         raw_text: c.raw_text || null,
         risk_flag: c.risk_flag || false,
         has_voice_memo: !!c.audio_upload_id,
+        has_photo: !!c.photo_upload_id,
         pain_map: c.pain_map || null
       }))
     };
@@ -1270,7 +1273,7 @@ function sanitizePainMap(pm) {
   return Object.keys(out).length ? out : null;
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, painMap }) {
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -1304,7 +1307,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
   const checkIn = await createCheckIn({
     patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
-    summaryText, autoTags, riskFlag, modelVersion, audioUploadId, painMap: sanitizePainMap(painMap)
+    summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap: sanitizePainMap(painMap)
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
   return checkIn;
@@ -1354,6 +1357,23 @@ app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, 
   } catch (err) {
     console.error('Error streaming audio:', err);
     res.status(500).json({ error: 'Could not load the audio.' });
+  }
+});
+
+app.get('/api/patients/:id/check-ins/:checkInId/photo', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIn = await getCheckIn(req.params.checkInId, patient.id);
+    if (!checkIn || !checkIn.photo_upload_id) return res.status(404).json({ error: 'No photo for this check-in.' });
+    const photo = await getPhotoForClinician(checkIn.photo_upload_id, req.clinician.id);
+    if (!photo) return res.status(404).json({ error: 'No photo for this check-in.' });
+    res.setHeader('Content-Type', photo.mime);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(photo.data);
+  } catch (err) {
+    console.error('Error streaming photo:', err);
+    res.status(500).json({ error: 'Could not load the photo.' });
   }
 });
 
@@ -1852,14 +1872,68 @@ app.put('/api/patient/audio-upload/:token',
     }
   });
 
+// Photo of a sore area, same two-step signed-URL flow as voice memos. Only the
+// physical fields (physio, kinesiology, osteopathy, and the individual body and
+// sport modes) surface the control, but any patient token may upload.
+const PHOTO_TOKEN_TTL_MINUTES = 10;
+const PHOTO_MAX_BYTES = 12 * 1024 * 1024;
+const PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
+app.post('/api/patient/check-ins/photo-upload-url', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const token = generateSessionToken();
+    await createPhotoUploadToken(hashSessionToken(token), req.patient.id, PHOTO_TOKEN_TTL_MINUTES);
+    res.json({
+      uploadUrl: `/api/patient/photo-upload/${token}`,
+      method: 'PUT',
+      maxBytes: PHOTO_MAX_BYTES,
+      expiresInMinutes: PHOTO_TOKEN_TTL_MINUTES
+    });
+  } catch (err) {
+    console.error('Error creating photo upload URL:', err);
+    res.status(500).json({ error: 'Could not prepare the upload.' });
+  }
+});
+
+app.put('/api/patient/photo-upload/:token',
+  express.raw({ type: () => true, limit: PHOTO_MAX_BYTES }),
+  requireDb,
+  async (req, res) => {
+    try {
+      const grant = await consumePhotoUploadToken(hashSessionToken(req.params.token));
+      if (!grant) return res.status(403).json({ error: 'Upload link expired — try adding the photo again.' });
+      const mime = (req.headers['content-type'] || '').split(';')[0].trim();
+      if (!PHOTO_MIMES.includes(mime)) {
+        return res.status(415).json({ error: 'Unsupported image format.' });
+      }
+      if (!req.body || !req.body.length) {
+        return res.status(400).json({ error: 'No image received.' });
+      }
+      const photoUploadId = await storePhotoUpload(grant.patient_id, mime, req.body);
+      res.status(201).json({ photoUploadId });
+    } catch (err) {
+      console.error('Error storing photo upload:', err);
+      res.status(500).json({ error: 'Could not save the photo.' });
+    }
+  });
+
 app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatientSubscription, patientCheckInLimiter, async (req, res) => {
   try {
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, painMap } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
+    }
+
+    // A photo of the sore area is optional. Confirm it belongs to this patient
+    // before attaching it, so nobody can staple someone else's upload to a check-in.
+    if (photoUploadId) {
+      const photo = await getPhotoUploadOwned(photoUploadId, req.patient.id);
+      if (!photo) {
+        return res.status(400).json({ error: 'That photo could not be found — try again.' });
+      }
     }
 
     let effectiveText = text;
@@ -1879,7 +1953,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, painMap });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
@@ -1985,6 +2059,21 @@ app.get('/api/patient/check-ins/:id/audio', requireDb, requirePatientAuth, async
   } catch (err) {
     console.error('Error streaming patient audio:', err);
     res.status(500).json({ error: 'Could not load the audio.' });
+  }
+});
+
+app.get('/api/patient/check-ins/:id/photo', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const checkIn = await getCheckIn(req.params.id, req.patient.id);
+    if (!checkIn || !checkIn.photo_upload_id) return res.status(404).json({ error: 'No photo for this check-in.' });
+    const photo = await getPhotoUploadOwned(checkIn.photo_upload_id, req.patient.id);
+    if (!photo) return res.status(404).json({ error: 'No photo for this check-in.' });
+    res.setHeader('Content-Type', photo.mime);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(photo.data);
+  } catch (err) {
+    console.error('Error streaming patient photo:', err);
+    res.status(500).json({ error: 'Could not load the photo.' });
   }
 });
 
