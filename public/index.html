@@ -937,6 +937,10 @@
   .btw-mk-airnote{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-bottom:15px;line-height:1.4;}
   /* Body pain map (sports / fitness / physio) */
   .btw-mk-body{margin:14px 0 4px;}
+  .btw-mk-photo{margin:14px 0 4px;}
+  .btw-mk-photorow{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .btw-mk-photothumb{width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,#E8EEF6,#DCE6F3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;color:var(--moss);}
+  .btw-mk-photolabel{font-size:12px;color:var(--ink-soft);}
   .btw-mk-bodyrow{display:flex;gap:16px;align-items:center;}
   .btw-mk-bodyfig{flex:0 0 auto;}
   .btw-bodysvg{width:98px;height:auto;display:block;}
@@ -2043,6 +2047,13 @@
                     </div>
                   </div>
                   <div class="btw-mk-bodyhint">Tap where it hurts, then slide to set how strong.</div>
+                </div>
+                <div class="btw-mk-photo" id="btwMkPhoto" hidden>
+                  <div class="btw-mk-sub" style="margin-top:2px;">Add a photo of the sore area</div>
+                  <div class="btw-mk-photorow">
+                    <span class="btw-mk-photothumb" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="9" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>
+                    <span class="btw-mk-photolabel">Photo of the sore area</span>
+                  </div>
                 </div>
                 <div class="btw-mk-voice">
                   <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
@@ -3285,6 +3296,7 @@
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
     "Add a photo of the sore area (optional)":"Ajoutez une photo de la zone douloureuse (facultatif)",
+    "Add a photo of the sore area":"Ajoutez une photo de la zone douloureuse",
     "Take or add a photo":"Prendre ou ajouter une photo","Remove":"Retirer",
     "Photo of the sore area":"Photo de la zone douloureuse",
     "Please choose an image file.":"Veuillez choisir un fichier image.",
@@ -6070,10 +6082,15 @@
     }); });
     if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
     const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
+    const photoEl = document.getElementById('btwMkPhoto');
     function refresh(){
-      const on = !!PHYS[(typeof curAudience !== 'undefined' ? curAudience : 'therapy')];
+      const aud = (typeof curAudience !== 'undefined' ? curAudience : 'therapy');
+      const on = !!PHYS[aud];
       if(wrap) wrap.hidden = !on;
       if(wrapT) wrapT.hidden = !on;
+      // The photo attaches only to a pain check-in, so show it for physio,
+      // kinesiology and osteopathy but not the load-focused sports and fitness.
+      if(photoEl) photoEl.hidden = !(aud === 'physio' || aud === 'kinesiology' || aud === 'osteo');
       render(); updateSummary();
     }
     // Highlight body regions from a typed check-in ("sore knee", "lower back",
