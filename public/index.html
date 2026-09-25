@@ -860,6 +860,9 @@
   .btw-demo-frame.active{opacity:1;transform:none;pointer-events:auto;}
   .btw-demo-phone{width:300px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(30,76,134,0.10);text-align:left;}
   .btw-demo-bubble{background:var(--moss);color:#fff;border-radius:14px 14px 14px 4px;padding:11px 14px;font-size:14px;line-height:1.45;display:inline-block;max-width:92%;}
+  .btw-demo-attachphoto{display:flex;align-items:center;gap:9px;margin-top:11px;}
+  .btw-demo-thumb{width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,#E8EEF6,#DCE6F3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;color:var(--moss);}
+  .btw-demo-attachlabel{font-size:12px;color:var(--ink-soft);}
   .btw-demo-inputrow{display:flex;align-items:center;gap:8px;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;}
   .btw-demo-mic{width:9px;height:9px;border-radius:50%;background:var(--clay);flex:none;}
   .btw-demo-inputhint{color:var(--ink-soft);font-size:13px;}
@@ -1962,6 +1965,10 @@
           <div class="btw-demo-frame active" data-frame="0">
             <div class="btw-demo-phone">
               <div class="btw-demo-bubble">Rough week. Work stress kept me up again.</div>
+              <div class="btw-demo-attachphoto" id="btwDemoPhoto" style="display:none;">
+                <span class="btw-demo-thumb" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="9" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>
+                <span class="btw-demo-attachlabel">Photo of the sore area</span>
+              </div>
               <div class="btw-demo-inputrow"><span class="btw-demo-mic"></span><span class="btw-demo-inputhint">Type, or tap to record…</span></div>
             </div>
           </div>
@@ -6542,6 +6549,10 @@
       const tagsEl = stage.querySelector('.btw-demo-tags'); if(tagsEl) tagsEl.innerHTML = d.tags.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
       // The individual field's this-week summary follows the tracking mode.
       if(d.note){ const note = stage.querySelector('.btw-demo-selfnote'); if(note) note.textContent = d.note; }
+      // The photo attachment shows only where check-ins are pain based: physio,
+      // kinesiology, osteopathy and the individual Body mode (not sports).
+      const k = demoKey();
+      const photo = stage.querySelector('#btwDemoPhoto'); if(photo) photo.style.display = (k === 'physio' || k === 'ind_body') ? '' : 'none';
     }
     // The last frame shows a caseload for a clinician and a personal week for
     // someone using Between for themselves. Toggle display (not the hidden
