@@ -4940,6 +4940,42 @@
   OST_FR["For therapists, counsellors & anyone on their own"] = "Pour les ostéopathes et tous ceux qui veulent l'utiliser seuls";
   OCC_EN["For therapists, counsellors & anyone on their own"] = "For occupational therapists & anyone on their own";
   OCC_FR["For therapists, counsellors & anyone on their own"] = "Pour les ergothérapeutes et tous ceux qui veulent l'utiliser seuls";
+  // Occupational therapy is about daily activities and function, not exercises
+  // and mobility, so reframe the physio-derived pain copy in OT terms.
+  Object.assign(OCC_EN, {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "A simple way to see how daily activities are going between visits. Your patient sends a quick note when a task is hard or something isn't working, and you get a short summary before the next visit.",
+    "The important part happens between sessions.":"The real progress happens between visits.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":
+      "This is where you pick it up, on your own time. Between keeps what matters for each patient, so you walk into the next appointment already knowing how their week and their daily activities went. Log in to your caseload, or start a 14-day free trial. A patient's data is only ever visible to you.",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Your patients check in the moment something happens, a task that was hard, a day with more energy, or pain during an activity. Between turns each one into a clear summary and a function and pain trend, ready in your dashboard before the next appointment. You walk in already knowing how their week and their home program went and spend less of the visit catching up.",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "A task that was hard, a flare during an activity, or a day with more energy. Your patient captures it in a quick voice note or text the moment it happens, not a week later from memory.",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Function and pain trends, how their daily activities and home program are going, and a since-last-visit recap are waiting in your dashboard before every appointment, so you begin already knowing where their recovery stands.",
+    "Where does it hurt or feel sore?":"Where does it hurt or feel limited?",
+    "Work":"Fatigue","Family":"Daily tasks","Win":"Independence",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "Anyone can use it as a private diary. Check in whenever a task is hard or a good day comes and watch your own function and recurring patterns over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have an occupational therapist."
+  });
+  Object.assign(OCC_FR, {
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
+      "Une façon simple de voir comment se passent les activités quotidiennes entre les visites. Votre patient envoie une note quand une tâche est difficile ou que quelque chose ne fonctionne pas, et vous recevez un court résumé avant la prochaine visite.",
+    "The important part happens between sessions.":"Les vrais progrès se font entre les visites.",
+    "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":
+      "C'est ici que vous reprenez, à votre rythme. Between garde l'essentiel pour chaque patient, alors vous arrivez au prochain rendez-vous en sachant déjà comment se sont passées sa semaine et ses activités quotidiennes. Connectez-vous à votre clientèle, ou commencez un essai gratuit de 14 jours. Les données d'un patient ne sont visibles que par vous.",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Vos patients font un suivi dès que quelque chose survient, une tâche difficile, une journée avec plus d'énergie, ou une douleur pendant une activité. Between en fait un court résumé et une tendance de fonction et de douleur, prête dans votre tableau de bord avant le prochain rendez-vous. Vous arrivez en sachant déjà comment s'est passé leur programme à la maison.",
+    "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
+      "Une tâche difficile, une poussée pendant une activité, ou une journée avec plus d'énergie. Votre patient le capte avec une courte note vocale ou un texte au moment où ça arrive, pas une semaine plus tard de mémoire.",
+    "Mood trends, recurring themes, and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
+      "Les tendances de fonction et de douleur, l'état de leurs activités quotidiennes et de leur programme, et un récapitulatif depuis la dernière visite vous attendent avant chaque rendez-vous, alors vous savez déjà où en est leur récupération.",
+    "Where does it hurt or feel sore?":"Où avez-vous mal ou vous sentez-vous limité?",
+    "Work":"Fatigue","Family":"Tâches quotidiennes","Win":"Autonomie",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a therapist.":
+      "N'importe qui peut l'utiliser comme journal privé. Faites un suivi quand une tâche est difficile ou qu'une bonne journée arrive, et observez votre fonction et vos habitudes au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un ergothérapeute ou non."
+  });
 
   // Therapy is the default audience with no override dict, but its base strings
   // say "therapist". Build an override that reads "psychotherapist" instead,
@@ -5051,6 +5087,18 @@
         {cls:"good",when:"Sam · 15:20",text:"Marché tout le sentier sans douleur."},
         {cls:"good",when:"Lun · 8:05",text:"Ça semble plus souple que la semaine dernière."}]}
     },
+    occupational:{
+      en:{last:"Last appointment",next:"Next appointment",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last appointment",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Tiring start with dressing and cooking hard, then steadier. Managed the stairs on the weekend and the grip aid helped at breakfast.",aria:"A week from last appointment to next appointment, with four check-ins that gather into a short summary.",checkins:[
+        {cls:"rough",when:"Wed · 7:12a",text:"Dressing was slow and tiring this morning."},
+        {cls:"mid",voice:true,when:"Thu · 8:40p",text:"Cooking wore me out, had to sit down."},
+        {cls:"good",when:"Sat · 3:20p",text:"Managed the stairs without help today."},
+        {cls:"good",when:"Mon · 8:05a",text:"The grip aid made breakfast easier."}]},
+      fr:{last:"Dernier rendez-vous",next:"Prochain rendez-vous",day:"Mar",day2:"Mar",ai:"Résumé IA",since:"Depuis le dernier rendez-vous",waiting:"En attente avant mar.",flag:"1 signalé",summary:"Début fatigant, m'habiller et cuisiner étaient difficiles, puis plus stable. Réussi les escaliers la fin de semaine et l'aide de préhension a aidé au déjeuner.",aria:"Une semaine d'un rendez-vous à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
+        {cls:"rough",when:"Mer · 7:12",text:"M'habiller était lent et fatigant ce matin."},
+        {cls:"mid",voice:true,when:"Jeu · 20:40",text:"Cuisiner m'a épuisé, j'ai dû m'asseoir."},
+        {cls:"good",when:"Sam · 15:20",text:"Réussi les escaliers sans aide aujourd'hui."},
+        {cls:"good",when:"Lun · 8:05",text:"L'aide de préhension a facilité le déjeuner."}]}
+    },
     sports:{
       en:{last:"Last practice",next:"Next game",day:"Wed",day2:"Sat",ai:"AI summary",since:"Since last practice",waiting:"Waiting before Sat",flag:"1 to check on",summary:"Fit but tense. Nerves building before the game. One high: a sharp session on Friday.",aria:"A week from last practice to next game, with four check-ins that gather into a short read.",checkins:[
         {cls:"good",when:"Wed · 6:40a",text:"Legs feel fresh again after the rest day."},
@@ -5115,7 +5163,7 @@
   function renderHeroThread(){
     const host = document.getElementById('btwHeroThread'); if(!host) return;
     const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
-      : (curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational') ? 'physio'
+      : (curAudience === 'kinesiology' || curAudience === 'osteo') ? 'physio'
       : (curAudience === 'individual') ? ((typeof curIndividualMode !== 'undefined' && curIndividualMode !== 'mind') ? ('individual_' + curIndividualMode) : 'individual')
       : curAudience;
     const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
@@ -6635,6 +6683,7 @@
       fitness:   { en:{ bubble:"Skipped my workout, felt sluggish.", tags:["Energy","Motivation"] },         fr:{ bubble:"Entraînement sauté, je me sens amorphe.", tags:["Énergie","Motivation"] } },
       nutrition: { en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } },
       recovery:  { en:{ bubble:"Craving hit hard tonight. Sitting with it.", tags:["Craving","Support"] },   fr:{ bubble:"Forte envie ce soir. Je reste avec, sans agir.", tags:["Envie","Soutien"] } },
+      occupational: { en:{ bubble:"Dressing was slow and tiring this morning.", tags:["Daily tasks","Fatigue"] }, fr:{ bubble:"M'habiller était lent et fatigant ce matin.", tags:["Tâches quotidiennes","Fatigue"] } },
       schools:   { en:{ bubble:"Rough day. Couldn't focus in class.", tags:["Focus","Stress"] },             fr:{ bubble:"Journée difficile. Impossible de me concentrer en classe.", tags:["Concentration","Stress"] } },
       ind_mind:  { en:{ bubble:"Couldn't switch off after work.", tags:["Work","Sleep"], note:"Mood mostly okay, and climbing. Sleep came up most." },   fr:{ bubble:"Impossible de décrocher après le travail.", tags:["Travail","Sommeil"], note:"Humeur surtout correcte, et en hausse. Le sommeil est revenu le plus souvent." } },
       ind_body:  { en:{ bubble:"Knee's still sore this morning.", tags:["Knee","Pain"], note:"Pain easing since Monday. Knee came up most." },            fr:{ bubble:"Le genou est encore douloureux ce matin.", tags:["Genou","Douleur"], note:"Douleur en baisse depuis lundi. Le genou est revenu le plus souvent." } },
@@ -6643,7 +6692,7 @@
     };
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
-      if(curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational') return 'physio';
+      if(curAudience === 'kinesiology' || curAudience === 'osteo') return 'physio';
       return DEMO_COPY[curAudience] ? curAudience : 'therapy';
     }
     function demoData(){ const d = DEMO_COPY[demoKey()] || DEMO_COPY.therapy; return d[curLang] || d.en; }
@@ -6658,7 +6707,7 @@
       // The photo attachment shows only where check-ins are pain based: physio,
       // kinesiology, osteopathy and the individual Body mode (not sports).
       const k = demoKey();
-      const photo = stage.querySelector('#btwDemoPhoto'); if(photo) photo.style.display = (k === 'physio' || k === 'ind_body') ? '' : 'none';
+      const photo = stage.querySelector('#btwDemoPhoto'); if(photo) photo.style.display = (k === 'physio' || k === 'occupational' || k === 'ind_body') ? '' : 'none';
     }
     // The last frame shows a caseload for a clinician and a personal week for
     // someone using Between for themselves. Toggle display (not the hidden
