@@ -900,6 +900,18 @@ export async function createCheckIn({ patientId, moodScore, moodInferred, manual
   return rows[0];
 }
 
+// A backdated check-in the clinician typed in from a patient's earlier history,
+// so trends have something to draw from day one. Stored directly, no AI and no
+// risk alert — these are past facts the clinician is entering, not live events.
+export async function createHistoricalCheckIn({ patientId, submittedAt, moodScore, manualTags, summaryText, painMap }) {
+  const { rows } = await pool.query(
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, submitted_at, pain_map)
+     VALUES ($1,$2,false,$3,$4,$5,$6,false,$7,$8,$9) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, manualTags || [], summaryText || null, summaryText || null, [], null, submittedAt, painMap ? JSON.stringify(painMap) : null]
+  );
+  return rows[0];
+}
+
 export async function listCheckIns(patientId) {
   const { rows } = await pool.query(
     `SELECT * FROM check_ins WHERE patient_id = $1 AND deleted_at IS NULL ORDER BY submitted_at DESC`,
