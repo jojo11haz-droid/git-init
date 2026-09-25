@@ -9139,8 +9139,9 @@
   function updateComposePain(){
     const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none';
     // The photo control is for the person photographing their own sore area, so
-    // it shows on the patient side of a physical field only.
-    const showPhoto = painMapContext() && isPatient();
+    // it shows on the patient side of the pain fields only (physio, kinesiology,
+    // osteopathy, and the individual Body mode). Sports and fitness are excluded.
+    const showPhoto = painMode() && isPatient();
     const photoHost = document.getElementById('btwComposePhoto'); if(photoHost) photoHost.style.display = showPhoto ? '' : 'none';
     if(!showPhoto && typeof clearComposePhoto === 'function') clearComposePhoto();
     syncComposerTags(); applyScoreMode();
