@@ -1831,6 +1831,17 @@
 
       <div id="btwDataList" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px;"></div>
 
+      <div id="btwBackfillBox" style="display:none;border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:14px;">
+        <strong style="display:block;font-size:13px;margin-bottom:3px;">Add past records</strong>
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;">Enter earlier check-ins to seed their trends. Add a date and a score, plus an optional note.</div>
+        <div id="btwBackfillRows"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button type="button" id="btwBackfillAdd" style="flex:1;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:8px;padding:8px 12px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">+ Add another</button>
+          <button type="button" id="btwBackfillSave" style="flex:1;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:8px 12px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Save records</button>
+        </div>
+        <div id="btwBackfillStatus" style="display:none;font-size:12px;margin-top:8px;color:var(--moss);"></div>
+      </div>
+
       <button id="btwResetAccess" style="width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:#fff;color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
       <div id="btwLeftNote" style="display:none;background:#FBF3E7;border:1px solid #E6D8A8;border-radius:9px;padding:10px 12px;font-size:12px;color:#6b5a1f;line-height:1.55;margin-bottom:10px;"></div>
@@ -3297,6 +3308,12 @@
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
     "Add a photo of the sore area (optional)":"Ajoutez une photo de la zone douloureuse (facultatif)",
     "Add a photo of the sore area":"Ajoutez une photo de la zone douloureuse",
+    "Add past records":"Ajouter des données antérieures",
+    "Enter earlier check-ins to seed their trends. Add a date and a score, plus an optional note.":"Saisissez des suivis antérieurs pour amorcer leurs tendances. Ajoutez une date et un score, avec une note facultative.",
+    "+ Add another":"+ Ajouter une ligne","Save records":"Enregistrer",
+    "Mood 1-10":"Humeur 1-10","Pain 1-10":"Douleur 1-10","Note (optional)":"Note (facultatif)",
+    "Add at least one row with a date and a score.":"Ajoutez au moins une ligne avec une date et un score.",
+    "records added. Trends updated.":"données ajoutées. Tendances mises à jour.",
     "Take or add a photo":"Prendre ou ajouter une photo","Remove":"Retirer",
     "Photo of the sore area":"Photo de la zone douloureuse",
     "Please choose an image file.":"Veuillez choisir un fichier image.",
@@ -7988,6 +8005,7 @@
       if(delBtn) delBtn.style.display = 'none'; // patients delete their history, not a "patient" record
       const dlRowP = document.getElementById('btwDownloadRow'); if(dlRowP) dlRowP.style.display = 'none';
       const leftNoteP = document.getElementById('btwLeftNote'); if(leftNoteP) leftNoteP.style.display = 'none';
+      const bfP = document.getElementById('btwBackfillBox'); if(bfP) bfP.style.display = 'none';
       syncConsentUi();
       renderDataList();
       dataOverlay.style.display = 'flex';
@@ -8023,12 +8041,74 @@
       if(leftNote) leftNote.style.display = 'none';
       const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = '';
     }
+    // Let the clinician backfill earlier records so trends aren't empty. Hidden
+    // once a patient has left (their record is winding down, not growing).
+    const bfBox = document.getElementById('btwBackfillBox');
+    if(bfBox){ bfBox.style.display = left ? 'none' : ''; if(!left) resetBackfillRows(); }
     syncConsentUi();
     renderDataList();
     dataOverlay.style.display = 'flex';
   });
   document.getElementById('btwCloseData').addEventListener('click', ()=>{
     dataOverlay.style.display = 'none';
+  });
+
+  // --- Backfill past records (clinician) ---
+  // A small repeatable form. Each row is a date, a score and an optional note.
+  const bfRowsEl = document.getElementById('btwBackfillRows');
+  function addBackfillRow(){
+    if(!bfRowsEl) return;
+    const scoreLabel = painMode() ? t('Pain 1-10') : t('Mood 1-10');
+    const row = document.createElement('div');
+    row.className = 'btw-bf-row';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+    row.innerHTML =
+      '<input type="date" class="bf-date" style="flex:0 0 auto;font-family:var(--font-body);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;">' +
+      '<input type="number" min="1" max="10" class="bf-score" placeholder="' + esc(scoreLabel) + '" style="width:82px;font-family:var(--font-body);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;">' +
+      '<input type="text" class="bf-note" placeholder="' + esc(t('Note (optional)')) + '" style="flex:1;min-width:0;font-family:var(--font-body);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;">' +
+      '<button type="button" class="bf-del" aria-label="' + esc(t('Remove')) + '" style="flex:0 0 auto;background:none;border:none;color:var(--ink-soft);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;">×</button>';
+    row.querySelector('.bf-del').addEventListener('click', ()=>{ row.remove(); if(!bfRowsEl.children.length) addBackfillRow(); });
+    bfRowsEl.appendChild(row);
+  }
+  function resetBackfillRows(){
+    if(!bfRowsEl) return;
+    bfRowsEl.innerHTML = '';
+    addBackfillRow();
+    const st = document.getElementById('btwBackfillStatus'); if(st){ st.style.display = 'none'; st.textContent = ''; }
+  }
+  const bfAddBtn = document.getElementById('btwBackfillAdd');
+  if(bfAddBtn) bfAddBtn.addEventListener('click', addBackfillRow);
+  const bfSaveBtn = document.getElementById('btwBackfillSave');
+  if(bfSaveBtn) bfSaveBtn.addEventListener('click', async ()=>{
+    const p = selectedPatient();
+    if(!p) return;
+    const st = document.getElementById('btwBackfillStatus');
+    const records = [];
+    bfRowsEl.querySelectorAll('.btw-bf-row').forEach(function(row){
+      const date = row.querySelector('.bf-date').value;
+      const scoreRaw = row.querySelector('.bf-score').value;
+      const note = row.querySelector('.bf-note').value.trim();
+      if(!date) return;
+      const score = scoreRaw === '' ? null : parseInt(scoreRaw, 10);
+      if(score == null && !note) return;
+      // Store at local noon so the day lands right whatever the timezone.
+      records.push({ submittedAt: new Date(date + 'T12:00:00').toISOString(), moodScore: score, text: note || null });
+    });
+    if(!records.length){
+      if(st){ st.style.display = ''; st.style.color = 'var(--clay)'; st.textContent = t('Add at least one row with a date and a score.'); }
+      return;
+    }
+    bfSaveBtn.disabled = true;
+    try{
+      const resp = await api('POST', '/api/patients/' + p.id + '/check-ins/import', { records });
+      await loadPatients();
+      resetBackfillRows();
+      if(st){ st.style.display = ''; st.style.color = 'var(--moss)'; st.textContent = (resp.saved || 0) + ' ' + t('records added. Trends updated.'); }
+    }catch(err){
+      if(st){ st.style.display = ''; st.style.color = 'var(--clay)'; st.textContent = err.message; }
+    }finally{
+      bfSaveBtn.disabled = false;
+    }
   });
   dataAiToggle.addEventListener('change', ()=>{
     if(isPatient()){

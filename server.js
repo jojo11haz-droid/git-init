@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
-  createCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -1325,6 +1325,36 @@ app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedC
   } catch (err) {
     console.error('Error creating check-in:', err);
     res.status(500).json({ error: 'Could not create check-in.' });
+  }
+});
+
+// Backfill a patient's earlier history so their trends aren't empty on day one.
+// The clinician sends a list of past records (a date, a score, an optional note);
+// each is stored directly with that date, no AI and no alerting.
+app.post('/api/patients/:id/check-ins/import', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const records = (req.body && Array.isArray(req.body.records)) ? req.body.records : null;
+    if (!records || !records.length) return res.status(400).json({ error: 'No records to import.' });
+    if (records.length > 500) return res.status(400).json({ error: 'Too many records at once (max 500).' });
+
+    let saved = 0;
+    for (const r of records) {
+      const when = new Date(r && r.submittedAt);
+      if (isNaN(when.getTime()) || when.getTime() > Date.now() + 86400000) continue; // need a valid, non-future date
+      let mood = (r.moodScore == null || r.moodScore === '') ? null : Math.round(Number(r.moodScore));
+      if (mood != null && (isNaN(mood) || mood < 1 || mood > 10)) mood = null;
+      const note = (typeof r.text === 'string' && r.text.trim()) ? r.text.trim().slice(0, 1000) : null;
+      const tags = Array.isArray(r.tags) ? r.tags.filter(t => typeof t === 'string').slice(0, 12) : [];
+      if (mood == null && !note && !tags.length) continue; // nothing worth storing
+      await createHistoricalCheckIn({ patientId: patient.id, submittedAt: when.toISOString(), moodScore: mood, manualTags: tags, summaryText: note, painMap: sanitizePainMap(r.painMap) });
+      saved++;
+    }
+    res.status(201).json({ saved });
+  } catch (err) {
+    console.error('Error importing check-ins:', err);
+    res.status(500).json({ error: 'Could not import the records.' });
   }
 });
 
