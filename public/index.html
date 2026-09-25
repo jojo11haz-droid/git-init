@@ -1301,17 +1301,19 @@
   .btw-chooser-head{text-align:center;margin-bottom:14px;}
   .btw-chooser-title{font-family:var(--font-display);font-style:italic;font-size:27px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);margin:0;}
   .btw-chooser-sub{font-size:13px;color:var(--ink-soft);margin:7px 0 0;line-height:1.5;font-family:var(--font-mono);letter-spacing:0.02em;}
-  .btw-chooser-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  @media (max-width:820px){.btw-chooser-grid{grid-template-columns:repeat(2,1fr);}}
-  @media (max-width:460px){.btw-chooser-grid{grid-template-columns:1fr;}}
-  .btw-chooser-card{display:flex;flex-direction:column;gap:4px;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper);cursor:pointer;font-family:var(--font-body);transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;}
+  /* Flex-wrap (not a rigid grid) so an incomplete last row centres instead of
+     leaving a card stranded on the left. Three per row, fixed width, no grow. */
+  .btw-chooser-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+  .btw-chooser-card{flex:0 0 calc(33.333% - 8px);min-width:0;display:flex;flex-direction:column;gap:4px;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:var(--paper);cursor:pointer;font-family:var(--font-body);transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;}
+  @media (max-width:820px){.btw-chooser-card{flex-basis:calc(50% - 6px);}}
+  @media (max-width:460px){.btw-chooser-card{flex-basis:100%;}}
   .btw-chooser-card:hover{border-color:var(--moss);box-shadow:0 6px 16px rgba(30,76,134,.10);}
   .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
-  /* The "for yourself" option spans the full row under the nine fields, so it
+  /* The "for yourself" option spans the full width under the fields, so it
      reads as a deliberate second path rather than a single orphaned card. */
-  .btw-chooser-card-solo{grid-column:1 / -1;flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--moss-light);border-color:transparent;}
+  .btw-chooser-card-solo{flex:0 0 100%;flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--moss-light);border-color:transparent;}
   .btw-chooser-card-solo .h{color:var(--moss);}
   @media (max-width:460px){.btw-chooser-card-solo{flex-direction:column;gap:4px;}}
   .btw-hero{
@@ -1878,6 +1880,7 @@
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
+          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="occupational" role="menuitem">Occupational therapy</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="sports" role="menuitem">Sports</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="fitness" role="menuitem">Fitness</button>
           <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="nutrition" role="menuitem">Nutrition</button>
@@ -1928,6 +1931,7 @@
           <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="occupational"><span class="t">Occupational therapy</span><span class="h">Daily function and recovery between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
           <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
           <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
@@ -2904,7 +2908,7 @@
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Guidance":"Orientation","Classroom":"Classe",
+    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Occupational therapy":"Ergothérapie","Daily function and recovery between visits":"Fonction au quotidien et récupération entre les visites","Guidance":"Orientation","Classroom":"Classe",
     "Mind":"Esprit","Body":"Corps","Sport":"Sport","Eating":"Alimentation",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :",
@@ -3481,6 +3485,7 @@
     if(curAudience === 'physio') return [PHYSIO_EN, PHYSIO_FR];
     if(curAudience === 'kinesiology') return [KIN_EN, KIN_FR];
     if(curAudience === 'osteo') return [OST_EN, OST_FR];
+    if(curAudience === 'occupational') return [OCC_EN, OCC_FR];
     if(curAudience === 'therapy') return [THERAPY_EN, THERAPY_FR];
     return null;
   }
@@ -4905,11 +4910,36 @@
   }
   const OST_EN = btwOsteoDict(PHYSIO_EN, false);
   const OST_FR = btwOsteoDict(PHYSIO_FR, true);
+
+  // Occupational therapy (ergothérapie) reuses the physio treatment too (same
+  // clinic pricing, pain map, coach-type account); swap the profession word.
+  function btwOccDict(dict, fr){
+    const map = fr ? [
+      [/Physiothérapeutes/g,'Ergothérapeutes'],[/physiothérapeutes/g,'ergothérapeutes'],
+      [/Physiothérapeute/g,'Ergothérapeute'],[/physiothérapeute/g,'ergothérapeute'],
+      [/Physiothérapie/g,'Ergothérapie'],[/physiothérapie/g,'ergothérapie'],
+      [/Physios/g,'Ergothérapeutes'],[/physios/g,'ergothérapeutes'],
+      [/Physio/g,'Ergothérapeute'],[/physio/g,'ergothérapeute']
+    ] : [
+      [/Physiotherapists/g,'Occupational therapists'],[/physiotherapists/g,'occupational therapists'],
+      [/Physiotherapist/g,'Occupational therapist'],[/physiotherapist/g,'occupational therapist'],
+      [/Physiotherapy/g,'Occupational therapy'],[/physiotherapy/g,'occupational therapy'],
+      [/Physios/g,'Occupational therapists'],[/physios/g,'occupational therapists'],
+      [/Physio/g,'Occupational therapist'],[/physio/g,'occupational therapist']
+    ];
+    const out = {};
+    for(const k in dict){ let v = dict[k]; for(const pair of map) v = v.replace(pair[0], pair[1]); out[k] = v; }
+    return out;
+  }
+  const OCC_EN = btwOccDict(PHYSIO_EN, false);
+  const OCC_FR = btwOccDict(PHYSIO_FR, true);
   // "sports physiotherapists" is a physio-only line; kine/osteo keep the plain form.
   KIN_EN["For therapists, counsellors & anyone on their own"] = "For kinesiologists & anyone on their own";
   KIN_FR["For therapists, counsellors & anyone on their own"] = "Pour les kinésiologues et tous ceux qui veulent l'utiliser seuls";
   OST_EN["For therapists, counsellors & anyone on their own"] = "For osteopaths & anyone on their own";
   OST_FR["For therapists, counsellors & anyone on their own"] = "Pour les ostéopathes et tous ceux qui veulent l'utiliser seuls";
+  OCC_EN["For therapists, counsellors & anyone on their own"] = "For occupational therapists & anyone on their own";
+  OCC_FR["For therapists, counsellors & anyone on their own"] = "Pour les ergothérapeutes et tous ceux qui veulent l'utiliser seuls";
 
   // Therapy is the default audience with no override dict, but its base strings
   // say "therapist". Build an override that reads "psychotherapist" instead,
@@ -5085,7 +5115,7 @@
   function renderHeroThread(){
     const host = document.getElementById('btwHeroThread'); if(!host) return;
     const _htKey = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
-      : (curAudience === 'kinesiology' || curAudience === 'osteo') ? 'physio'
+      : (curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational') ? 'physio'
       : (curAudience === 'individual') ? ((typeof curIndividualMode !== 'undefined' && curIndividualMode !== 'mind') ? ('individual_' + curIndividualMode) : 'individual')
       : curAudience;
     const A = HERO_THREAD[_htKey] || HERO_THREAD.therapy;
@@ -5141,7 +5171,7 @@
             : (curLang === 'fr' ? heroSchoolsFr : heroSchoolsEn))
         : curAudience === 'fitness'
         ? (curLang === 'fr' ? heroFitnessFr : heroFitnessEn)
-        : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo')
+        : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational')
         ? (curLang === 'fr' ? heroPhysioFr : heroPhysioEn)
         : (curLang === 'fr' ? heroFr : heroEn);
     }
@@ -5242,14 +5272,14 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', nutrition:'Nutrition' };
+  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
-  const AUD_TO_PATH = { therapy:'/', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
-  const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
+  const AUD_TO_PATH = { therapy:'/', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
+  const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/occupational-therapy':'occupational', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
   function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
   // Keep the address bar on the current field. push=true adds a history entry
   // (a real navigation the visitor did); otherwise it just corrects the URL.
@@ -5270,6 +5300,7 @@
     physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
     kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
     osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
+    occupational: { title: 'Between — Between-visit check-ins for occupational therapy', desc: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
     sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
     fitness: { title: 'Between — Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
     recovery: { title: 'Between — Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
@@ -5294,7 +5325,7 @@
     // switch away (dropdown, chooser card, or a field URL) and keep it pinned.
     const _locked = accountAudience();
     if(_locked) a = _locked;
-    curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'nutrition') ? a : 'therapy';
+    curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'occupational' || a === 'nutrition') ? a : 'therapy';
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
@@ -5378,7 +5409,7 @@
   function maybeCoachAudience(){
     if(!state.me) return;
     if(state.me.account_type === 'coach'){
-      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo' || state.me.discipline === 'nutrition') ? state.me.discipline : 'sports';
+      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo' || state.me.discipline === 'occupational' || state.me.discipline === 'nutrition') ? state.me.discipline : 'sports';
       if(curAudience !== want) setAudience(want);
     }
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
@@ -5394,7 +5425,7 @@
     if(ownerFreeAccess) return null;
     if(state.me){
       const at = state.me.account_type;
-      if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'nutrition') ? d : 'sports'; }
       if(at === 'mentor') return 'recovery';
       if(at === 'school') return 'schools';
       if(at === 'trainer') return 'fitness';
@@ -5405,7 +5436,7 @@
       // with no clinician is using Between for themselves, so they're locked to
       // the individual field.
       const at = state.patient.clinician_account_type;
-      if(at === 'coach'){ const d = state.patient.clinician_discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'coach'){ const d = state.patient.clinician_discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'nutrition') ? d : 'sports'; }
       if(at === 'mentor') return 'recovery';
       if(at === 'school') return 'schools';
       if(at === 'trainer') return 'fitness';
@@ -5535,7 +5566,7 @@
     const mlabel = document.querySelector('#btwMkComposer .btw-mk-mlabel') || document.querySelector('.btw-mk-mlabel');
     // Marketing demo: follow the audience toggle, not a signed-in account's
     // real discipline, so previewing physio/kinesiology always reads as pain.
-    function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo'); }
+    function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational'); }
     function pick(table, v){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
       const rows = table[l];
@@ -5781,12 +5812,12 @@
       // Marketing demo: pain-mode follows the audience toggle (curAudience), not
       // a signed-in account's real discipline, so the physio/kine preview reads
       // as pain even when a therapist account is viewing the page.
-      const pm = (typeof curAudience !== 'undefined') && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo');
+      const pm = (typeof curAudience !== 'undefined') && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational');
       rows.forEach(r => r.classList.toggle('active', r.getAttribute('data-pt') === cur));
       if(sumLabel) sumLabel.textContent = L(p.label);
-      // Ben and Cara carry a summary per category (kine/osteo share physio);
+      // Ben and Cara carry a summary per category (kine/osteo/occupational share physio);
       // Amy still resolves through the audience dictionary.
-      const _ak = (function(){ const a = (typeof curAudience !== 'undefined') ? curAudience : 'therapy'; return (a === 'kinesiology' || a === 'osteo') ? 'physio' : a; })();
+      const _ak = (function(){ const a = (typeof curAudience !== 'undefined') ? curAudience : 'therapy'; return (a === 'kinesiology' || a === 'osteo' || a === 'occupational') ? 'physio' : a; })();
       if(sumText) sumText.textContent = p.byAud ? L(p.byAud[_ak] || p.byAud.therapy) : localize(p.summary);
       // In pain mode the trend/topic tiles read as pain, not mood.
       const dirLabel = document.getElementById('btwMkMoodDirLabel');
@@ -6108,7 +6139,7 @@
       render();
     }); });
     if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
-    const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
+    const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1, occupational:1 };
     const photoEl = document.getElementById('btwMkPhoto');
     function refresh(){
       const aud = (typeof curAudience !== 'undefined' ? curAudience : 'therapy');
@@ -6117,7 +6148,7 @@
       if(wrapT) wrapT.hidden = !on;
       // The photo attaches only to a pain check-in, so show it for physio,
       // kinesiology and osteopathy but not the load-focused sports and fitness.
-      if(photoEl) photoEl.hidden = !(aud === 'physio' || aud === 'kinesiology' || aud === 'osteo');
+      if(photoEl) photoEl.hidden = !(aud === 'physio' || aud === 'kinesiology' || aud === 'osteo' || aud === 'occupational');
       render(); updateSummary();
     }
     // Highlight body regions from a typed check-in ("sore knee", "lower back",
@@ -6508,6 +6539,7 @@
     physio:  { plan: 'team_premium',    acct: 'coach' },
     kinesiology: { plan: 'team_premium', acct: 'coach' },
     osteo:   { plan: 'team_premium',    acct: 'coach' },
+    occupational: { plan: 'team_premium', acct: 'coach' },
     nutrition: { plan: 'team_premium',  acct: 'coach' },
     schools: { plan: 'school_premium',  acct: 'school' },
     fitness: { plan: 'trainer_premium', acct: 'trainer' }
@@ -6611,7 +6643,7 @@
     };
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
-      if(curAudience === 'kinesiology' || curAudience === 'osteo') return 'physio';
+      if(curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational') return 'physio';
       return DEMO_COPY[curAudience] ? curAudience : 'therapy';
     }
     function demoData(){ const d = DEMO_COPY[demoKey()] || DEMO_COPY.therapy; return d[curLang] || d.en; }
@@ -7037,7 +7069,7 @@
   function setLoginRole(role){
     loginRole = role === 'patient' ? 'patient' : 'therapist';
     document.querySelectorAll('#btwLoginRole .btw-role-btn').forEach(b=>b.classList.toggle('active', b.dataset.role === loginRole));
-    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'nutrition') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
+    document.getElementById('btwLoginEmail').placeholder = loginRole === 'patient' ? t('you@email.com') : (curAudience === 'sports' ? 'jamie@yourteam.ca' : curAudience === 'schools' ? 'jamie@yourschool.ca' : curAudience === 'recovery' ? 'jamie@yourprogram.ca' : curAudience === 'fitness' ? 'jamie@yourgym.ca' : (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'nutrition') ? 'jamie@yourclinic.ca' : 'jamie@yourpractice.ca');
     const invRow = document.getElementById('btwLoginInviteRow');
     if(invRow) invRow.style.display = loginRole === 'patient' ? '' : 'none';
     // Two-factor only applies to clinician accounts.
@@ -7457,6 +7489,7 @@
     if(curAudience === 'physio')   return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'kinesiology') return COACH_PLAN_FROM[p] || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'osteo')    return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'occupational') return COACH_PLAN_FROM[p] || (p.indexOf('team_')  === 0 ? p : 'team_monthly');
     if(curAudience === 'nutrition') return COACH_PLAN_FROM[p]  || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
     if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
@@ -7479,7 +7512,7 @@
       openBilling(); return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     // Physio is regulated: it's a coach account but goes through the licence
     // step and manual review, like a therapist. Other coaches stay one-step.
     proNeedsLicence = (curAudience === 'physio' || curAudience === 'nutrition');
@@ -7499,7 +7532,7 @@
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
         nextBtn.textContent = 'Create account';
-        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account';
+        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'occupational') ? 'Your occupational therapy account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account';
       }
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
@@ -7574,7 +7607,7 @@
           body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
           // Tell the server which coach-type discipline this is (sports / physio
           // / kinesiology) so it tailors the welcome email and the app copy.
-          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'sports' || curAudience === 'nutrition') body.discipline = curAudience;
+          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'sports' || curAudience === 'nutrition') body.discipline = curAudience;
         }
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
@@ -8542,7 +8575,7 @@
   }
   // Physio and kinesiology track pain instead of mood: the 0-10 scalar means
   // pain (higher = worse) and the trend reads the other way (less pain = better).
-  function painMode(){ const d = painDiscipline(); return d === 'physio' || d === 'kinesiology' || d === 'osteo'; }
+  function painMode(){ const d = painDiscipline(); return d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational'; }
   function painWord(n){
     if(n == null) return '';
     if(n <= 2) return t('Minimal');
@@ -9264,7 +9297,7 @@
   (function(){ const host = document.getElementById('btwComposePain'); if(host){ composeBodyMap = btwCreateBodyMap({}); host.appendChild(composeBodyMap.el); } })();
   // Body/pain audiences: physio, kinesiology, osteopathy and sports are coach
   // accounts; fitness is a trainer. All get the body map in the composer.
-  const BODY_AUDIENCES = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1 };
+  const BODY_AUDIENCES = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1, occupational:1 };
   // Coach disciplines that do NOT use the body map (nutrition is mood-style).
   const NON_BODY_DISCIPLINES = { nutrition:1 };
   function coachTypeHasBody(at, disc){
@@ -9413,12 +9446,13 @@
     else if (['physio','physio therapy','physiotherapy','physiotherapist','physical-therapy','physicaltherapy'].includes(forParam)) _startAud = 'physio';
     else if (['kinesiology','kinesiologist','kin','kinesiologie','kinésiologie','kinésiologue'].includes(forParam)) _startAud = 'kinesiology';
     else if (['osteo','osteopath','osteopathy','osteopaths','osteopathic','osteopathe','ostéopathe','ostéopathie','ostéo'].includes(forParam)) _startAud = 'osteo';
+    else if (['occupational','occupational-therapy','occupational therapy','ot','occupational-therapist','occupationaltherapy','ergo','ergotherapy','ergothérapie','ergotherapie','ergothérapeute','ergotherapeute'].includes(forParam)) _startAud = 'occupational';
     else if (['nutrition','nutritionist','nutritionists','dietitian','dietician','dietitians','nutritionniste','diététiste','dieteticienne','nutritionnistes'].includes(forParam)) _startAud = 'nutrition';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
     else if (['individual','myself','me','self','personal','solo','yourself'].includes(forParam)) _startAud = 'individual';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'individual' || _startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'nutrition') ? _startAud : 'therapy';
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'occupational' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
+  curAudience = (_startAud === 'individual' || _startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'occupational' || _startAud === 'nutrition') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
   // without adding a history entry, and set the tab title/meta to match.
