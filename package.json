@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node scripts/ci-check.mjs",
+    "check": "node scripts/ci-check.mjs"
   },
   "engines": {
     "node": ">=18"
