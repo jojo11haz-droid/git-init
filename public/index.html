@@ -939,8 +939,13 @@
   .btw-mk-body{margin:14px 0 4px;}
   .btw-mk-photo{margin:14px 0 4px;}
   .btw-mk-photorow{display:flex;align-items:center;gap:10px;margin-top:8px;}
-  .btw-mk-photothumb{width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,#E8EEF6,#DCE6F3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;color:var(--moss);}
+  .btw-mk-photobtn{display:flex;align-items:center;gap:10px;background:none;border:none;padding:0;margin:0;cursor:pointer;font-family:var(--font-body);text-align:left;}
+  .btw-mk-photothumb{width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,#E8EEF6,#DCE6F3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;color:var(--moss);overflow:hidden;}
+  .btw-mk-photothumb img{width:100%;height:100%;object-fit:cover;display:block;}
   .btw-mk-photolabel{font-size:12px;color:var(--ink-soft);}
+  .btw-mk-photobtn:hover .btw-mk-photolabel{color:var(--moss);}
+  .btw-mk-photoremove{background:none;border:none;padding:0;font-family:var(--font-body);font-size:11.5px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
+  .btw-mk-photoremove:hover{color:var(--ink);}
   .btw-mk-bodyrow{display:flex;gap:16px;align-items:center;}
   .btw-mk-bodyfig{flex:0 0 auto;}
   .btw-bodysvg{width:98px;height:auto;display:block;}
@@ -2061,9 +2066,13 @@
                 </div>
                 <div class="btw-mk-photo" id="btwMkPhoto" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Add a photo of the sore area</div>
+                  <input type="file" id="btwMkPhotoInput" accept="image/*" style="display:none;">
                   <div class="btw-mk-photorow">
-                    <span class="btw-mk-photothumb" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="9" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>
-                    <span class="btw-mk-photolabel">Photo of the sore area</span>
+                    <button type="button" class="btw-mk-photobtn" id="btwMkPhotoBtn">
+                      <span class="btw-mk-photothumb" id="btwMkPhotoThumb" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="9" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg></span>
+                      <span class="btw-mk-photolabel" id="btwMkPhotoLabel">Tap to add a photo</span>
+                    </button>
+                    <button type="button" class="btw-mk-photoremove" id="btwMkPhotoRemove" hidden>Remove</button>
                   </div>
                 </div>
                 <div class="btw-mk-voice">
@@ -3308,6 +3317,7 @@
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
     "Add a photo of the sore area (optional)":"Ajoutez une photo de la zone douloureuse (facultatif)",
     "Add a photo of the sore area":"Ajoutez une photo de la zone douloureuse",
+    "Tap to add a photo":"Touchez pour ajouter une photo","Photo added":"Photo ajoutée",
     "Add past records":"Ajouter des données antérieures",
     "Enter earlier check-ins to seed their trends. Add a date and a score, plus an optional note.":"Saisissez des suivis antérieurs pour amorcer leurs tendances. Ajoutez une date et un score, avec une note facultative.",
     "+ Add another":"+ Ajouter une ligne","Save records":"Enregistrer",
@@ -6166,6 +6176,36 @@
     };
     window.__btwBodyRefresh = refresh;
     render(); refresh();
+  })();
+  // The live demo's photo picker actually works: pick an image and it shows as
+  // a thumbnail. It never leaves the browser, this is only a try-it preview.
+  (function(){
+    const btn = document.getElementById('btwMkPhotoBtn');
+    const input = document.getElementById('btwMkPhotoInput');
+    const thumb = document.getElementById('btwMkPhotoThumb');
+    const label = document.getElementById('btwMkPhotoLabel');
+    const removeBtn = document.getElementById('btwMkPhotoRemove');
+    if(!btn || !input || !thumb) return;
+    const iconHtml = thumb.innerHTML; // keep the default icon to restore on remove
+    let objUrl = null;
+    function reset(){
+      if(objUrl){ try { URL.revokeObjectURL(objUrl); } catch(e){} objUrl = null; }
+      thumb.innerHTML = iconHtml;
+      if(label) label.textContent = t('Tap to add a photo');
+      if(removeBtn) removeBtn.hidden = true;
+      input.value = '';
+    }
+    btn.addEventListener('click', ()=> input.click());
+    input.addEventListener('change', ()=>{
+      const f = input.files && input.files[0];
+      if(!f || !/^image\//.test(f.type)) return;
+      if(objUrl){ try { URL.revokeObjectURL(objUrl); } catch(e){} }
+      objUrl = URL.createObjectURL(f);
+      thumb.innerHTML = '<img alt="' + esc(t('Photo of the sore area')) + '" src="' + objUrl + '">';
+      if(label) label.textContent = t('Photo added');
+      if(removeBtn) removeBtn.hidden = false;
+    });
+    if(removeBtn) removeBtn.addEventListener('click', reset);
   })();
   // Reusable body pain map for the real app: interactive picker (check-in
   // composer) or read-only display (dashboard). Self-contained; front/back
