@@ -963,6 +963,15 @@
   .btw-pain-range{width:132px;max-width:100%;accent-color:var(--pc,#EA6F3B);}
   .btw-pain-ends{display:flex;justify-content:space-between;width:132px;max-width:100%;font-size:9.5px;color:var(--ink-soft);letter-spacing:.02em;}
   .btw-compose-pain{margin:16px 0;}
+  .btw-compose-photo{margin:16px 0;}
+  .btw-photo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .btw-photo-btn{display:inline-flex;align-items:center;gap:7px;background:var(--moss-light);color:var(--moss);border:1px solid transparent;border-radius:10px;padding:9px 14px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:background .2s ease;}
+  .btw-photo-btn:hover{background:#CBDDEF;}
+  .btw-photo-preview{display:inline-flex;align-items:center;gap:10px;}
+  .btw-photo-preview img{width:52px;height:52px;object-fit:cover;border-radius:9px;border:1px solid var(--line);}
+  .btw-photo-remove{background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
+  .btw-photo-remove:hover{color:var(--ink);}
+  .btw-ci-photo img{max-width:150px;max-height:150px;object-fit:cover;border-radius:9px;border:1px solid var(--line);margin:6px 0 2px;display:block;}
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
@@ -2232,6 +2241,18 @@
         <div class="btw-field-label">Where does it hurt or feel sore?</div>
       </div>
 
+      <div id="btwComposePhoto" class="btw-compose-photo" style="display:none;">
+        <div class="btw-field-label">Add a photo of the sore area (optional)</div>
+        <input type="file" id="btwPhotoInput" accept="image/*" capture="environment" style="display:none;">
+        <div class="btw-photo-row">
+          <button type="button" class="btw-photo-btn" id="btwPhotoBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Take or add a photo</button>
+          <div class="btw-photo-preview" id="btwPhotoPreview" style="display:none;">
+            <img id="btwPhotoThumb" alt="Selected photo">
+            <button type="button" class="btw-photo-remove" id="btwPhotoRemove">Remove</button>
+          </div>
+        </div>
+      </div>
+
       <div class="btw-field-label">Tell it like it happened</div>
       <textarea class="btw-textarea" id="btwText" placeholder="Type, or tap the mic to record and transcribe..."></textarea>
       <div class="btw-input-row">
@@ -3256,6 +3277,11 @@
     "Tap what fits, or let Between pick up what's bothering you from your check-in.":"Touchez ce qui correspond, ou laissez Between repérer ce qui vous préoccupe d'après votre suivi.",
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
+    "Add a photo of the sore area (optional)":"Ajoutez une photo de la zone douloureuse (facultatif)",
+    "Take or add a photo":"Prendre ou ajouter une photo","Remove":"Retirer",
+    "Photo of the sore area":"Photo de la zone douloureuse",
+    "Please choose an image file.":"Veuillez choisir un fichier image.",
+    "That image is too large. Please choose one under 12 MB.":"Cette image est trop grande. Veuillez en choisir une de moins de 12 Mo.",
     "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur","Where it hurts":"Où ça fait mal",
     "A bit":"Un peu","Moderate":"Modéré","A lot":"Beaucoup","Clear":"Effacer",
     "Tap a body part. Tap again to change how much it hurts.":"Touchez une partie du corps. Touchez encore pour changer l'intensité.",
@@ -5379,6 +5405,7 @@
       summary: row.summary_text || row.raw_text || (row.audio_upload_id ? 'Voice memo (no transcript yet).' : 'Check-in received (no notes).'),
       risk: !!row.risk_flag,
       hasAudio: !!row.audio_upload_id,
+      hasPhoto: !!row.photo_upload_id,
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null
     };
   }
@@ -8602,12 +8629,24 @@
         : (c.hasAudio ? `<div style="font-size:11.5px;color:var(--moss);margin:4px 0;">${esc(t('Voice memo'))}</div>` : '');
       // Pain map is a physio/fitness/sports feature only (coach/trainer contexts).
       const painHtml = (c.painMap && painMapContext()) ? `<div class="btw-ci-pain" data-pain="${esc(c.id)}"><div class="l">${esc(t('Pain map'))}</div></div>` : '';
+      // Photo of the sore area. A clinician loads it by cookie-authed src; the
+      // patient's own view fetches it with their token afterwards (see below).
+      let photoHtml = '';
+      if(c.hasPhoto){
+        if(!isPatient() && state.selectedPatientId){
+          const u = `/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/photo`;
+          photoHtml = `<div class="btw-ci-photo"><a href="${u}" target="_blank" rel="noopener"><img loading="lazy" src="${u}" alt="${esc(t('Photo of the sore area'))}"></a></div>`;
+        } else if(isPatient()){
+          photoHtml = `<div class="btw-ci-photo"><img data-photo-ci="${esc(c.id)}" alt="${esc(t('Photo of the sore area'))}"></div>`;
+        }
+      }
       return `<div class="btw-entry">
         <div class="btw-entry-time">${datePart}<br>${timePart}</div>
         <div>
           <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(painMode()?t('pain'):t('mood'))} ${c.mood!=null?esc(scoreWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
           ${audioHtml}
+          ${photoHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
           ${painHtml}
         </div>
@@ -8618,6 +8657,23 @@
       const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
       if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true }); bm.setMap(ci.painMap); host.appendChild(bm.el); }
     });
+    hydratePatientPhotos();
+  }
+  // A patient's own photo endpoint is token-authed, so an <img src> can't reach
+  // it. Fetch each one with the bearer token and swap in an object URL.
+  async function hydratePatientPhotos(){
+    if(!isPatient()) return;
+    const imgs = document.querySelectorAll('img[data-photo-ci]:not([data-loaded])');
+    for(const img of imgs){
+      const id = img.getAttribute('data-photo-ci');
+      img.setAttribute('data-loaded','1');
+      try{
+        const tk = pToken();
+        const resp = await fetch('/api/patient/check-ins/' + id + '/photo', { headers: tk ? { 'Authorization':'Bearer ' + tk } : {} });
+        if(!resp.ok) continue;
+        img.src = URL.createObjectURL(await resp.blob());
+      }catch(e){}
+    }
   }
 
   function renderMoodChart(){
@@ -9080,8 +9136,58 @@
     }
     return coachTypeHasBody(state.me && state.me.account_type, state.me && state.me.discipline);
   }
-  function updateComposePain(){ const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none'; syncComposerTags(); applyScoreMode(); }
+  function updateComposePain(){
+    const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none';
+    // The photo control is for the person photographing their own sore area, so
+    // it shows on the patient side of the pain fields only (physio, kinesiology,
+    // osteopathy, and the individual Body mode). Sports and fitness are excluded.
+    const showPhoto = painMode() && isPatient();
+    const photoHost = document.getElementById('btwComposePhoto'); if(photoHost) photoHost.style.display = showPhoto ? '' : 'none';
+    if(!showPhoto && typeof clearComposePhoto === 'function') clearComposePhoto();
+    syncComposerTags(); applyScoreMode();
+  }
   window.__btwUpdateComposePain = updateComposePain;
+
+  // Optional photo of the sore area. A file is chosen here and only uploaded on
+  // send, through the same two-step signed-URL flow as voice memos.
+  let composePhoto = null;
+  const PHOTO_MAX_BYTES_CLIENT = 12 * 1024 * 1024;
+  (function(){
+    const input = document.getElementById('btwPhotoInput');
+    const btn = document.getElementById('btwPhotoBtn');
+    const preview = document.getElementById('btwPhotoPreview');
+    const thumb = document.getElementById('btwPhotoThumb');
+    const removeBtn = document.getElementById('btwPhotoRemove');
+    if(!input || !btn) return;
+    btn.addEventListener('click', ()=> input.click());
+    input.addEventListener('change', ()=>{
+      const f = input.files && input.files[0];
+      if(!f) return;
+      if(!/^image\//.test(f.type)){ alert(t('Please choose an image file.')); input.value=''; return; }
+      if(f.size > PHOTO_MAX_BYTES_CLIENT){ alert(t('That image is too large. Please choose one under 12 MB.')); input.value=''; return; }
+      composePhoto = f;
+      if(thumb){ try { thumb.src = URL.createObjectURL(f); } catch(e){} }
+      if(preview) preview.style.display = 'inline-flex';
+      btn.style.display = 'none';
+    });
+    if(removeBtn) removeBtn.addEventListener('click', clearComposePhoto);
+  })();
+  function clearComposePhoto(){
+    composePhoto = null;
+    const input = document.getElementById('btwPhotoInput'); if(input) input.value = '';
+    const preview = document.getElementById('btwPhotoPreview'); if(preview) preview.style.display = 'none';
+    const btn = document.getElementById('btwPhotoBtn'); if(btn) btn.style.display = '';
+    const thumb = document.getElementById('btwPhotoThumb'); if(thumb) thumb.removeAttribute('src');
+  }
+  // Upload the chosen photo and return its id, or null when there is none.
+  async function uploadComposePhoto(){
+    if(!composePhoto || !isPatient()) return null;
+    const grant = await pApi('POST', '/api/patient/check-ins/photo-upload-url');
+    const put = await fetch(grant.uploadUrl, { method: 'PUT', headers: { 'Content-Type': composePhoto.type }, body: composePhoto });
+    if(!put.ok){ let e = null; try { e = await put.json(); } catch(_){ } throw new Error((e && e.error) || 'Photo upload failed'); }
+    const data = await put.json();
+    return data.photoUploadId || null;
+  }
 
   sendBtn.addEventListener('click', async ()=>{
     const p = selectedPatient();
@@ -9090,7 +9196,7 @@
     const mood = moodSkipped ? null : Math.round(parseFloat(moodEl.value));
     const manualTags = [...state.selectedTags];
     const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
-    if(!text && manualTags.length===0 && !painMap){
+    if(!text && manualTags.length===0 && !painMap && !composePhoto){
       textEl.placeholder = t('Say a bit about what happened before sending…');
       textEl.focus();
       return;
@@ -9102,8 +9208,9 @@
     try{
       let risk = false;
       if(isPatient()){
+        const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap
+          text: text || null, moodScore: mood, manualTags, painMap, photoUploadId
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
@@ -9124,6 +9231,7 @@
       moodEl.value = 5; setMoodSkipped(false);
       if(typeof setComposeTopicAi === 'function') setComposeTopicAi(false);
       if(composeBodyMap) composeBodyMap.clear();
+      clearComposePhoto();
 
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();
