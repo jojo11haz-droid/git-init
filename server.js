@@ -1519,7 +1519,8 @@ function publicPatient(p) {
     subscription_status: p.subscription_status,
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
-    check_in_mode_lock: p.check_in_mode_lock || 'any'
+    check_in_mode_lock: p.check_in_mode_lock || 'any',
+    is_premium: patientIsPremium(p)
   };
 }
 
@@ -1718,7 +1719,13 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
 // therapist. Creates a standalone account (clinician_id NULL) and signs them
 // in. AI profiling stays off until they explicitly opt in, exactly as with an
 // invited patient — but they still record a consent decision at onboarding.
-const PATIENT_PLANS = ['patient_monthly', 'patient_annual'];
+const PATIENT_PLANS = ['patient_monthly', 'patient_annual', 'patient_premium', 'patient_premium_annual'];
+// A self-serve individual on either Premium plan. Premium unlocks the guided
+// journaling packs, deeper weekly reflections and self-export. Checked
+// server-side so the gate holds even if the client is bypassed.
+function patientIsPremium(p) {
+  return !!p && typeof p.plan === 'string' && p.plan.indexOf('patient_premium') === 0;
+}
 
 app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
   try {

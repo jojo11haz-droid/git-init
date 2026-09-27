@@ -16,6 +16,8 @@ export function priceForPlan(plan) {
   const map = {
     patient_monthly: process.env.STRIPE_PRICE_PATIENT_MONTHLY,
     patient_annual: process.env.STRIPE_PRICE_PATIENT_ANNUAL,
+    patient_premium: process.env.STRIPE_PRICE_PATIENT_PREMIUM,
+    patient_premium_annual: process.env.STRIPE_PRICE_PATIENT_PREMIUM_ANNUAL,
     solo_monthly: process.env.STRIPE_PRICE_THERAPIST_MONTHLY,
     solo_annual: process.env.STRIPE_PRICE_THERAPIST_ANNUAL,
     solo_premium: process.env.STRIPE_PRICE_THERAPIST_PREMIUM,
