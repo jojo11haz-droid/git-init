@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>Subprocessors & data location — Between</title>
+<meta name="description" content="The third-party processors Between uses, what each does, the data it can access, and where it is processed.">
+<style>
+  :root{ --moss:#1E4C86; --clay:#C0392B; --ink:#1A1E1C; --ink-soft:#5A6169; --paper:#F5F4F1; --line:#E4E3DD; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.65;}
+  .wrap{max-width:820px;margin:0 auto;padding:40px 22px 80px;}
+  a{color:var(--moss);}
+  .back{font-size:13px;text-decoration:none;}
+  h1{font-size:30px;margin:18px 0 4px;}
+  h2{font-size:19px;margin:32px 0 8px;}
+  .eyebrow{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--moss);}
+  .meta{font-size:13px;color:var(--ink-soft);margin-bottom:10px;}
+  .note{background:#FBF7E9;border:1px solid #E6D8A8;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#6b5a1f;margin:18px 0 8px;}
+  p,li{font-size:15px;}
+  table{width:100%;border-collapse:collapse;margin:14px 0 8px;font-size:14px;}
+  th,td{text-align:left;vertical-align:top;padding:10px 12px;border:1px solid var(--line);}
+  th{background:#EDEFEA;font-size:12.5px;letter-spacing:0.02em;}
+  td strong{color:var(--ink);}
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:6px 0 18px;}
+  .lang button{background:#fff;border:none;padding:6px 14px;font-family:inherit;font-size:13px;font-weight:600;color:var(--moss);cursor:pointer;}
+  .lang button.active{background:var(--moss);color:#fff;}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);}
+  [hidden]{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/"><svg width="18" height="18" viewBox="0 0 64 64" style="vertical-align:-4px;margin-right:6px;border-radius:5px;" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>← Back to Between</a>
+
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" id="langEn" class="active">EN</button>
+    <button type="button" id="langFr">FR</button>
+  </div>
+
+  <!-- ==================== ENGLISH ==================== -->
+  <section id="secEn">
+    <div class="eyebrow" style="margin-top:6px;">Between</div>
+    <h1>Subprocessors & data location</h1>
+    <div class="meta">Last updated: September 26, 2026</div>
+
+    <div class="note"><strong>Template — not legal advice.</strong> Between handles health-related information, so this page should be reviewed alongside a lawyer and kept current as providers change. It is meant to help clinicians complete their own privacy assessment, including a Quebec Law 25 privacy impact assessment (EFVP).</div>
+
+    <p>Between relies on a small number of third-party processors to run the service. Each one processes data only to provide its service to us, under its own agreement. The table below lists who they are, what they do, the data they can access, and where they process it.</p>
+
+    <table>
+      <thead><tr><th>Provider</th><th>Purpose</th><th>Data it can access</th><th>Location</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">privacy</a></td>
+          <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in. Runs only when the client has opted in to AI summaries.</td>
+          <td>Check-in text, only when AI summaries are on for that client.</td>
+          <td>United States</td>
+        </tr>
+        <tr>
+          <td><strong>Deepgram</strong><br><a href="https://deepgram.com/privacy">privacy</a></td>
+          <td>Transcribes a voice memo to text so it can be summarized. Runs only when a client records a voice check-in, and only where configured.</td>
+          <td>The voice memo audio.</td>
+          <td>United States</td>
+        </tr>
+        <tr>
+          <td><strong>Resend</strong><br><a href="https://resend.com/legal/privacy-policy">privacy</a></td>
+          <td>Sends account and notification emails such as invites, alerts and password resets. Used where configured.</td>
+          <td>Name and email address, and the content of the email.</td>
+          <td>United States</td>
+        </tr>
+        <tr>
+          <td><strong>Stripe</strong><br><a href="https://stripe.com/privacy">privacy</a></td>
+          <td>Handles subscriptions and payment. Card details are entered on Stripe's own page and never reach our server.</td>
+          <td>Billing details entered on Stripe's page, plus a subscription status and identifiers.</td>
+          <td>United States and internationally</td>
+        </tr>
+        <tr>
+          <td><strong>Render</strong><br><a href="https://render.com/privacy">privacy</a></td>
+          <td>Runs the application and the database that stores everything else.</td>
+          <td>All stored data: account details, check-in content, voice memos and photos.</td>
+          <td>United States (the region selected for the service)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>What this means for your data</h2>
+    <ul>
+      <li>AI analysis is <strong>off by default</strong> and runs only with the client's explicit consent. If a client leaves AI off, their check-ins are never sent to Anthropic.</li>
+      <li>Voice memos and photos are stored in the database on Render, and a voice memo reaches Deepgram only if the client records one.</li>
+      <li>We do not sell data, and we do not use it to train AI models.</li>
+      <li>A client can see, correct and delete their own data at any time.</li>
+      <li>Because this can involve storing and processing personal information in the United States, outside Quebec and outside Canada, we take applicable cross-border requirements into account under Canadian privacy law, including the federal PIPEDA and Quebec's Law 25.</li>
+    </ul>
+
+    <h2>Contact</h2>
+    <p>For a formal subprocessor list, a data processing agreement, or details about where your data is stored, contact <a href="mailto:jojo11haz@gmail.com">jojo11haz@gmail.com</a>. See also the <a href="/privacy.html">Privacy Policy</a>.</p>
+  </section>
+
+  <!-- ==================== FRANÇAIS ==================== -->
+  <section id="secFr" hidden>
+    <div class="eyebrow" style="margin-top:6px;">Between</div>
+    <h1>Sous-traitants et lieu de traitement</h1>
+    <div class="meta">Dernière mise à jour : 26 septembre 2026</div>
+
+    <div class="note"><strong>Modèle — ne constitue pas un avis juridique.</strong> Between traite des renseignements liés à la santé, alors cette page devrait être revue avec un avocat et tenue à jour à mesure que les fournisseurs changent. Elle vise à aider les cliniciens à réaliser leur propre évaluation, dont une évaluation des facteurs relatifs à la vie privée (EFVP) sous la loi 25 du Québec.</div>
+
+    <p>Between s'appuie sur un petit nombre de sous-traitants pour offrir le service. Chacun ne traite les données que pour nous fournir son service, selon sa propre entente. Le tableau ci-dessous indique qui ils sont, ce qu'ils font, les données auxquelles ils accèdent et où ils les traitent.</p>
+
+    <table>
+      <thead><tr><th>Fournisseur</th><th>Rôle</th><th>Données accessibles</th><th>Lieu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">confidentialité</a></td>
+          <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi. Ne s'exécute que si le client a activé les résumés IA.</td>
+          <td>Le texte du suivi, uniquement quand les résumés IA sont activés pour ce client.</td>
+          <td>États-Unis</td>
+        </tr>
+        <tr>
+          <td><strong>Deepgram</strong><br><a href="https://deepgram.com/privacy">confidentialité</a></td>
+          <td>Transcrit une note vocale en texte pour qu'elle puisse être résumée. Ne s'exécute que si un client enregistre une note vocale, et là où il est configuré.</td>
+          <td>L'audio de la note vocale.</td>
+          <td>États-Unis</td>
+        </tr>
+        <tr>
+          <td><strong>Resend</strong><br><a href="https://resend.com/legal/privacy-policy">confidentialité</a></td>
+          <td>Envoie les courriels de compte et de notification comme les invitations, les alertes et les réinitialisations de mot de passe. Utilisé là où il est configuré.</td>
+          <td>Le nom et l'adresse courriel, et le contenu du courriel.</td>
+          <td>États-Unis</td>
+        </tr>
+        <tr>
+          <td><strong>Stripe</strong><br><a href="https://stripe.com/privacy">confidentialité</a></td>
+          <td>Gère les abonnements et le paiement. Les détails de carte sont saisis sur la page de Stripe et n'atteignent jamais notre serveur.</td>
+          <td>Les détails de facturation saisis sur la page de Stripe, plus un statut d'abonnement et des identifiants.</td>
+          <td>États-Unis et à l'international</td>
+        </tr>
+        <tr>
+          <td><strong>Render</strong><br><a href="https://render.com/privacy">confidentialité</a></td>
+          <td>Héberge l'application et la base de données qui stocke tout le reste.</td>
+          <td>Toutes les données stockées : renseignements de compte, contenu des suivis, notes vocales et photos.</td>
+          <td>États-Unis (la région choisie pour le service)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Ce que cela signifie pour vos données</h2>
+    <ul>
+      <li>L'analyse par IA est <strong>désactivée par défaut</strong> et ne s'exécute qu'avec le consentement explicite du client. Si un client laisse l'IA désactivée, ses suivis ne sont jamais envoyés à Anthropic.</li>
+      <li>Les notes vocales et les photos sont stockées dans la base de données sur Render, et une note vocale n'atteint Deepgram que si le client en enregistre une.</li>
+      <li>Nous ne vendons pas les données et nous ne les utilisons pas pour entraîner des modèles d'IA.</li>
+      <li>Un client peut consulter, corriger et supprimer ses propres données en tout temps.</li>
+      <li>Comme cela peut impliquer le stockage et le traitement de renseignements personnels aux États-Unis, hors du Québec et hors du Canada, nous tenons compte des exigences applicables en matière de transferts sous les lois canadiennes sur la vie privée, dont la LPRPDE fédérale et la loi 25 du Québec.</li>
+    </ul>
+
+    <h2>Contact</h2>
+    <p>Pour une liste formelle des sous-traitants, une entente de traitement des données, ou des détails sur le lieu de stockage de vos données, écrivez à <a href="mailto:jojo11haz@gmail.com">jojo11haz@gmail.com</a>. Consultez aussi la <a href="/privacy.html">politique de confidentialité</a>.</p>
+  </section>
+
+  <footer>© 2026 Between. <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></footer>
+</div>
+<script>
+  (function(){
+    var en = document.getElementById('secEn'), fr = document.getElementById('secFr');
+    var bEn = document.getElementById('langEn'), bFr = document.getElementById('langFr');
+    function set(lang){
+      var isFr = lang === 'fr';
+      fr.hidden = !isFr; en.hidden = isFr;
+      bFr.classList.toggle('active', isFr); bEn.classList.toggle('active', !isFr);
+      document.documentElement.lang = isFr ? 'fr' : 'en';
+      try { localStorage.setItem('btw_lang', lang); } catch(e){}
+    }
+    bEn.addEventListener('click', function(){ set('en'); });
+    bFr.addEventListener('click', function(){ set('fr'); });
+    var start = 'en';
+    try { if(localStorage.getItem('btw_lang') === 'fr') start = 'fr'; } catch(e){}
+    if(start === 'en' && (navigator.language || '').toLowerCase().indexOf('fr') === 0) start = 'fr';
+    set(start);
+  })();
+</script>
+</body>
+</html>
