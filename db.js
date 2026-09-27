@@ -933,6 +933,19 @@ export async function listCheckIns(patientId) {
   return rows;
 }
 
+// How many check-ins a patient has sent in the last `days` days. Used to
+// enforce the free-tier weekly cap for self-serve individuals. Counts only
+// live (not soft-deleted) rows, so deleting an entry frees a slot.
+export async function countRecentCheckIns(patientId, days) {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM check_ins
+       WHERE patient_id = $1 AND deleted_at IS NULL
+         AND submitted_at >= now() - ($2 || ' days')::interval`,
+    [patientId, String(days)]
+  );
+  return rows[0] ? rows[0].n : 0;
+}
+
 export async function softDeleteCheckIn(checkInId, patientId) {
   const { rows } = await pool.query(
     `UPDATE check_ins SET deleted_at = now() WHERE id = $1 AND patient_id = $2 RETURNING *`,

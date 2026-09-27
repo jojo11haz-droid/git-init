@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
-  createCheckIn, createHistoricalCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -1507,6 +1507,17 @@ async function startPatientSession(patientId) {
   return token;
 }
 
+// Free-tier weekly check-in cap for self-serve individuals. Premium is
+// unlimited; invited patients (they have a clinician) are never capped.
+const WEEKLY_CHECKIN_CAP = 5;
+const WEEKLY_CHECKIN_WINDOW_DAYS = 7;
+// A patient is capped when they signed up on their own (no clinician) and are
+// not on a Premium plan. Returns the cap number, or null for unlimited.
+function patientWeeklyCap(p) {
+  if (!p || p.clinician_id || patientIsPremium(p)) return null;
+  return WEEKLY_CHECKIN_CAP;
+}
+
 function publicPatient(p) {
   return {
     id: p.id,
@@ -1520,7 +1531,8 @@ function publicPatient(p) {
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
-    is_premium: patientIsPremium(p)
+    is_premium: patientIsPremium(p),
+    weekly_checkin_cap: patientWeeklyCap(p)
   };
 }
 
@@ -1999,6 +2011,24 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     }
     if (lock === 'free' && viaQuestions) {
       return res.status(400).json({ error: 'Your clinician has set your check-ins to writing or a voice memo.' });
+    }
+
+    // Free-tier weekly cap. A self-serve individual on a non-Premium plan can
+    // send up to WEEKLY_CHECKIN_CAP check-ins in a rolling week; Premium is
+    // unlimited and invited patients are never capped. Enforced server-side so
+    // the limit holds even if the client is bypassed. Crisis resources and the
+    // safety net are never gated — but that path lives in the AI/risk step,
+    // which still runs on any check-in that does get through.
+    const cap = patientWeeklyCap(req.patient);
+    if (cap != null) {
+      const used = await countRecentCheckIns(req.patient.id, WEEKLY_CHECKIN_WINDOW_DAYS);
+      if (used >= cap) {
+        return res.status(403).json({
+          error: `You have used all ${cap} of your check-ins this week. Upgrade to Premium for unlimited check-ins, or your next one opens up in a few days.`,
+          cap_reached: true,
+          cap
+        });
+      }
     }
 
     // A photo of the sore area is optional. Confirm it belongs to this patient
