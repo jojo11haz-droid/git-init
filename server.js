@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
-  dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote,
+  dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
   createCheckIn, createHistoricalCheckIn, listCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
@@ -1087,6 +1087,26 @@ app.put('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinici
   }
 });
 
+// Lock (or unlock) how a patient may check in. 'any' allows both guided
+// questions and write-or-speak; 'questions' allows only the guided questions;
+// 'free' allows only writing or a voice memo. Clinician-owned; the patient's
+// composer follows it and the check-in endpoint enforces it server-side.
+const CHECK_IN_MODES = ['any', 'questions', 'free'];
+app.put('/api/patients/:id/check-in-mode', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const { mode } = req.body || {};
+    if (!CHECK_IN_MODES.includes(mode)) {
+      return res.status(400).json({ error: 'Choose a valid check-in mode.' });
+    }
+    const patient = await setPatientCheckInMode(req.clinician.id, req.params.id, mode);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ ok: true, check_in_mode_lock: patient.check_in_mode_lock });
+  } catch (err) {
+    console.error('Error setting check-in mode:', err);
+    res.status(500).json({ error: 'Could not update the check-in mode.' });
+  }
+});
+
 app.post('/api/patients/:id/consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const { enabled } = req.body || {};
@@ -1167,6 +1187,7 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         risk_flag: c.risk_flag || false,
         has_voice_memo: !!c.audio_upload_id,
         has_photo: !!c.photo_upload_id,
+        via_questions: c.input_mode === 'questions',
         pain_map: c.pain_map || null
       }))
     };
@@ -1183,10 +1204,10 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         const s = Array.isArray(v) ? v.join('; ') : String(v);
         return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
       };
-      const header = ['submitted_at', 'mood_score', 'mood_inferred', 'manual_tags', 'auto_tags', 'summary_text', 'raw_text', 'risk_flag', 'has_voice_memo'];
+      const header = ['submitted_at', 'mood_score', 'mood_inferred', 'manual_tags', 'auto_tags', 'summary_text', 'raw_text', 'risk_flag', 'has_voice_memo', 'via_questions'];
       const lines = [header.join(',')];
       for (const c of record.check_ins) {
-        lines.push([c.submitted_at, c.mood_score, c.mood_inferred, c.manual_tags, c.auto_tags, c.summary_text, c.raw_text, c.risk_flag, c.has_voice_memo].map(cell).join(','));
+        lines.push([c.submitted_at, c.mood_score, c.mood_inferred, c.manual_tags, c.auto_tags, c.summary_text, c.raw_text, c.risk_flag, c.has_voice_memo, c.via_questions].map(cell).join(','));
       }
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="between-${safeName}-${stamp}.csv"`);
@@ -1275,7 +1296,7 @@ function sanitizePainMap(pm) {
   return Object.keys(out).length ? out : null;
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap }) {
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, inputMode }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -1309,7 +1330,8 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
   const checkIn = await createCheckIn({
     patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
-    summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap: sanitizePainMap(painMap)
+    summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap: sanitizePainMap(painMap),
+    inputMode: inputMode === 'questions' ? 'questions' : null
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
   return checkIn;
@@ -1317,12 +1339,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap } = req.body || {};
+    const { moodScore, manualTags, text, painMap, inputMode } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, inputMode });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -1496,7 +1518,8 @@ function publicPatient(p) {
     plan: p.plan,
     subscription_status: p.subscription_status,
     clinician_account_type: p.clinician_account_type || null,
-    clinician_discipline: p.clinician_discipline || null
+    clinician_discipline: p.clinician_discipline || null,
+    check_in_mode_lock: p.check_in_mode_lock || 'any'
   };
 }
 
@@ -1954,9 +1977,21 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, inputMode } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
+    }
+
+    // Honour a clinician's check-in-mode lock. 'questions' means only guided
+    // question check-ins are accepted; 'free' means only write-or-speak ones.
+    // A voice memo counts as a write-or-speak check-in, never a questions one.
+    const lock = req.patient.check_in_mode_lock || 'any';
+    const viaQuestions = inputMode === 'questions';
+    if (lock === 'questions' && !viaQuestions) {
+      return res.status(400).json({ error: 'Your clinician has set your check-ins to the guided questions. Please answer the questions to send.' });
+    }
+    if (lock === 'free' && viaQuestions) {
+      return res.status(400).json({ error: 'Your clinician has set your check-ins to writing or a voice memo.' });
     }
 
     // A photo of the sore area is optional. Confirm it belongs to this patient
@@ -1985,7 +2020,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, inputMode });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
