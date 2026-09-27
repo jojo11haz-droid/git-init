@@ -175,6 +175,12 @@
   .btw-mood-val .btw-mv-w{font-weight:600;}
   .btw-mood-val .btw-mv-n{color:var(--ink-soft);}
   .btw-tags{display:flex;flex-wrap:wrap;gap:7px;}
+  .btw-compose-mode{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:2px 0 12px;background:#fff;}
+  .btw-cmode-btn{border:none;background:transparent;color:var(--moss);font-family:var(--font-body);font-weight:600;font-size:12px;padding:6px 13px;cursor:pointer;}
+  .btw-cmode-btn.active{background:var(--moss);color:#fff;}
+  .btw-cq{margin-bottom:11px;}
+  .btw-cq label{display:block;font-size:12.5px;color:var(--ink);margin-bottom:5px;}
+  .btw-cq textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;font-family:var(--font-body);font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;}
   .btw-tag{
     font-family:var(--font-body);
     font-size:12px;
@@ -2302,8 +2308,18 @@
         </div>
       </div>
 
-      <div class="btw-field-label">Tell it like it happened</div>
-      <textarea class="btw-textarea" id="btwText" placeholder="Type, or tap the mic to record and transcribe..."></textarea>
+      <div class="btw-compose-mode" id="btwComposeMode" role="group" aria-label="How to check in">
+        <button type="button" class="btw-cmode-btn active" data-cmode="free">Write or speak</button>
+        <button type="button" class="btw-cmode-btn" data-cmode="questions">Answer questions</button>
+      </div>
+
+      <div id="btwComposeFree">
+        <div class="btw-field-label">Tell it like it happened</div>
+        <textarea class="btw-textarea" id="btwText" placeholder="Type, or tap the mic to record and transcribe..."></textarea>
+      </div>
+
+      <div id="btwComposeQuestions" style="display:none;"></div>
+
       <div class="btw-input-row">
         <button class="btw-mic" id="btwMic" title="Record voice memo" aria-label="Record voice memo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
         <button class="btw-send" id="btwSend">Send check-in</button>
@@ -3034,6 +3050,14 @@
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
     "Pressure":"Pression","Confidence":"Confiance","Motivation":"Motivation",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
+    "Write or speak":"Écrire ou parler",
+    "Answer questions":"Répondre à des questions",
+    "What stood out since last time?":"Qu'est-ce qui vous a marqué depuis la dernière fois ?",
+    "What was hard?":"Qu'est-ce qui a été difficile ?",
+    "What helped or felt good?":"Qu'est-ce qui a aidé ou fait du bien ?",
+    "How has the pain been since last time?":"Comment va la douleur depuis la dernière fois ?",
+    "What made it better or worse?":"Qu'est-ce qui l'a améliorée ou aggravée ?",
+    "How did your exercises and daily activities go?":"Comment se sont passés vos exercices et activités quotidiennes ?",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
     "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.":
@@ -8593,6 +8617,53 @@
   }
   textEl.addEventListener('input', composeBodyFromText);
 
+  // --- guided check-in: answer a few short questions instead of free text ---
+  // The answers are stitched into the same check-in text, so they flow through
+  // the usual summary and storage. The questions match the field: a body-based
+  // set for the pain disciplines, a reflective set otherwise.
+  let composeMode = 'free'; // 'free' (write or speak) | 'questions'
+  const COMPOSE_Q = {
+    mind: ['What stood out since last time?', 'What was hard?', 'What helped or felt good?'],
+    pain: ['How has the pain been since last time?', 'What made it better or worse?', 'How did your exercises and daily activities go?']
+  };
+  function composeQuestions(){ return painMode() ? COMPOSE_Q.pain : COMPOSE_Q.mind; }
+  function renderComposeQuestions(){
+    const host = document.getElementById('btwComposeQuestions'); if(!host) return;
+    const qs = composeQuestions();
+    const prev = {};
+    host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ prev[ta.getAttribute('data-qi')] = ta.value; });
+    host.innerHTML = qs.map(function(q, i){
+      return '<div class="btw-cq"><label>' + esc(t(q)) + '</label><textarea data-qi="' + i + '" rows="2"></textarea></div>';
+    }).join('');
+    host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ const v = prev[ta.getAttribute('data-qi')]; if(v) ta.value = v; });
+  }
+  function setComposeMode(m){
+    composeMode = (m === 'questions') ? 'questions' : 'free';
+    document.querySelectorAll('#btwComposeMode .btw-cmode-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.cmode === composeMode); });
+    const free = document.getElementById('btwComposeFree'); if(free) free.style.display = (composeMode === 'free') ? '' : 'none';
+    const qh = document.getElementById('btwComposeQuestions'); if(qh) qh.style.display = (composeMode === 'questions') ? '' : 'none';
+    if(micBtn) micBtn.style.display = (composeMode === 'questions') ? 'none' : '';
+    if(composeMode === 'questions') renderComposeQuestions();
+  }
+  document.querySelectorAll('#btwComposeMode .btw-cmode-btn').forEach(function(b){ b.addEventListener('click', function(){ setComposeMode(b.dataset.cmode); }); });
+  // Build the check-in text from whichever input mode is active.
+  function composeText(){
+    if(composeMode !== 'questions') return textEl.value.trim();
+    const host = document.getElementById('btwComposeQuestions'); if(!host) return '';
+    const qs = composeQuestions();
+    const parts = [];
+    host.querySelectorAll('textarea[data-qi]').forEach(function(ta){
+      const a = ta.value.trim(); if(!a) return;
+      const i = parseInt(ta.getAttribute('data-qi'), 10);
+      parts.push(t(qs[i]) + ' ' + a);
+    });
+    return parts.join('\n');
+  }
+  function clearComposeQuestions(){
+    const host = document.getElementById('btwComposeQuestions'); if(host) host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ ta.value = ''; });
+  }
+  window.__btwComposeQuestions = renderComposeQuestions;
+
   function fmtTimeParts(ts){
     const d = new Date(ts);
     const loc = curLang === 'fr' ? 'fr-CA' : undefined;
@@ -9414,6 +9485,7 @@
     const showPhoto = painMode() && isPatient();
     const photoHost = document.getElementById('btwComposePhoto'); if(photoHost) photoHost.style.display = showPhoto ? '' : 'none';
     if(!showPhoto && typeof clearComposePhoto === 'function') clearComposePhoto();
+    if(composeMode === 'questions' && typeof renderComposeQuestions === 'function') renderComposeQuestions();
     syncComposerTags(); applyScoreMode();
   }
   window.__btwUpdateComposePain = updateComposePain;
@@ -9462,13 +9534,13 @@
   sendBtn.addEventListener('click', async ()=>{
     const p = selectedPatient();
     if(!isPatient() && !p) return;
-    const text = textEl.value.trim();
+    const text = composeText();
     const mood = moodSkipped ? null : Math.round(parseFloat(moodEl.value));
     const manualTags = [...state.selectedTags];
     const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
     if(!text && manualTags.length===0 && !painMap && !composePhoto){
-      textEl.placeholder = t('Say a bit about what happened before sending…');
-      textEl.focus();
+      if(composeMode === 'questions'){ const first = document.querySelector('#btwComposeQuestions textarea'); if(first) first.focus(); }
+      else { textEl.placeholder = t('Say a bit about what happened before sending…'); textEl.focus(); }
       return;
     }
     sendBtn.disabled = true;
@@ -9494,6 +9566,7 @@
 
       // reset compose form
       textEl.value = '';
+      clearComposeQuestions();
       state.selectedTags.clear();
       document.querySelectorAll('.btw-tag.active').forEach(el=>el.classList.remove('active'));
       document.querySelectorAll('.btw-tag-custom').forEach(el=>el.remove());
