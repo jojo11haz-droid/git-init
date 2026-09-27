@@ -1458,6 +1458,11 @@
   .btw-ping.mid{background:#E0902A;}
   .btw-ping.high{background:#D64545;}
   .btw-ping.none{background:var(--line);}
+  /* Caseload group marker: a small labelled tag before each colour cluster. */
+  .btw-caseload-group{flex:none;align-self:center;display:flex;align-items:center;gap:6px;white-space:nowrap;padding:4px 0 4px 13px;margin-left:5px;border-left:2px solid var(--line);font-family:var(--font-mono);font-size:10px;letter-spacing:0.03em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-caseload-group:first-child{border-left:none;padding-left:0;margin-left:0;}
+  .btw-caseload-group .btw-ping{margin-right:0;}
+  .btw-caseload-group .n{background:#EDEFEA;border-radius:8px;padding:1px 7px;color:var(--ink);font-weight:600;}
   .btw-hero-visual{
     background:transparent;
     border:none;
@@ -8665,6 +8670,16 @@
     }
     return '<span class="btw-ping ' + cls + '" title="' + esc(label) + '" aria-label="' + esc(label) + '"></span>';
   }
+  // The status colour of a patient, same rule as the dot: red (high) when
+  // flagged or a low score, yellow (mid) for a middling score, green (good) for
+  // a high one, grey (none) with no check-ins. Used to group the caseload.
+  function patientColor(p){
+    if(p.has_recent_risk) return 'high';
+    if(p.last_mood == null) return 'none';
+    if(p.last_mood <= 3) return 'high';
+    if(p.last_mood <= 6) return 'mid';
+    return 'good';
+  }
   function patientCardMeta(p){
     if(p.has_recent_risk) return '<span class="btw-patient-meta-risk" style="color:var(--clay);font-weight:700;">' + esc(t('Flagged for review')) + '</span>';
     if(!p.last_check_in_at) return esc(t('No check-ins yet'));
@@ -8719,7 +8734,7 @@
     } else if(caseloadFilter === 'quiet'){
       list = state.patients.filter(p=> isQuiet(p) || p.id === state.selectedPatientId);
     }
-    let cards = list.map(p=>{
+    function cardHtml(p){
       const active = p.id === state.selectedPatientId;
       const left = !!p.left_at;
       const leftMeta = left ? `<div class="btw-patient-meta" style="color:var(--clay);">${esc(t('Left'))} · ${daysUntilPurge(p.left_at)} ${esc(t('d left'))}</div>` : `<div class="btw-patient-meta">${patientCardMeta(p)}</div>`;
@@ -8730,13 +8745,29 @@
         <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
         ${leftMeta}
       </div>`;
-    }).join('');
+    }
+    let cards;
     if(list.length === 0){
-      if(caseloadFilter === 'attention'){
-        cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>';
-      } else if(caseloadFilter === 'quiet'){
-        cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Everyone has checked in recently.'))+'</div>';
-      }
+      cards = (caseloadFilter === 'attention')
+        ? '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>'
+        : (caseloadFilter === 'quiet')
+        ? '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Everyone has checked in recently.'))+'</div>'
+        : '';
+    } else {
+      // Group the caseload by status colour so each category is together and
+      // labelled: yellow, then green, then red, then those with no check-ins.
+      const GROUPS = [
+        { key:'mid',  label:t('Doing okay') },
+        { key:'good', label:t('Doing well') },
+        { key:'high', label:t('Needs attention now') },
+        { key:'none', label:t('No check-ins yet') }
+      ];
+      cards = GROUPS.map(function(g){
+        const grp = list.filter(function(p){ return patientColor(p) === g.key; });
+        if(!grp.length) return '';
+        const header = '<div class="btw-caseload-group"><span class="btw-ping ' + g.key + '"></span>' + esc(g.label) + ' <span class="n">' + grp.length + '</span></div>';
+        return header + grp.map(cardHtml).join('');
+      }).join('');
     }
     el.innerHTML = cards + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
