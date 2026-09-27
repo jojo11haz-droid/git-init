@@ -176,6 +176,8 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS input_mode TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
@@ -462,7 +464,7 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -507,6 +509,17 @@ export async function updatePatientNote(clinicianId, patientId, note) {
   const { rows } = await pool.query(
     `UPDATE patients SET clinician_note = $1 WHERE id = $2 AND clinician_id = $3 RETURNING id`,
     [note, patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// Set how a patient may check in: 'any' (questions or write/speak), 'questions'
+// (guided questions only) or 'free' (write or speak only). Clinician-owned and
+// enforced server-side when a check-in comes in. Ownership is in the WHERE.
+export async function setPatientCheckInMode(clinicianId, patientId, mode) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET check_in_mode_lock = $1 WHERE id = $2 AND clinician_id = $3 RETURNING ${PATIENT_ROW_COLS}`,
+    [mode, patientId, clinicianId]
   );
   return rows[0] || null;
 }
@@ -891,11 +904,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, inputMode }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, input_mode)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, inputMode || null]
   );
   return rows[0];
 }

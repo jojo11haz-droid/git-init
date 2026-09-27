@@ -181,6 +181,10 @@
   .btw-cq{margin-bottom:11px;}
   .btw-cq label{display:block;font-size:12.5px;color:var(--ink);margin-bottom:5px;}
   .btw-cq textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;font-family:var(--font-body);font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  .btw-cmode-locked{font-size:11.5px;color:var(--ink-soft);margin:2px 0 12px;line-height:1.4;}
+  .btw-mode-row{display:flex;align-items:center;gap:10px;margin:6px 0 8px;flex-wrap:wrap;}
+  .btw-mode-select{font-family:var(--font-body);font-size:13px;color:var(--ink);padding:8px 30px 8px 11px;border:1px solid var(--line);border-radius:10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6169' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer;}
+  .btw-mode-select:focus{outline:none;border-color:var(--moss);}
   .btw-tag{
     font-family:var(--font-body);
     font-size:12px;
@@ -538,6 +542,23 @@
     background:var(--amber);
     border-radius:12px;
     padding:2px 8px;
+  }
+  .btw-entry-method{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10.5px;
+    font-weight:600;
+    color:var(--moss);
+    background:var(--moss-light);
+    border-radius:12px;
+    padding:2px 9px;
+    margin:2px 0 4px;
+  }
+  .btw-entry-method::before{
+    content:"";
+    width:5px;height:5px;border-radius:50%;
+    background:var(--moss);
   }
   /* ---- consent modal ---- */
   .btw-modal-overlay{
@@ -2321,6 +2342,7 @@
         <button type="button" class="btw-cmode-btn active" data-cmode="free">Write or speak</button>
         <button type="button" class="btw-cmode-btn" data-cmode="questions">Answer questions</button>
       </div>
+      <div class="btw-cmode-locked" id="btwComposeModeLock" style="display:none;"></div>
 
       <div id="btwComposeFree">
         <div class="btw-field-label">Tell it like it happened</div>
@@ -2350,6 +2372,16 @@
       </div>
 
       <div id="btwClinNote" style="display:none;">
+        <div class="btw-field-label">How this person checks in</div>
+        <div class="btw-mode-row">
+          <select id="btwCheckInMode" class="btw-mode-select" aria-label="How this person checks in">
+            <option value="any">Questions, writing or voice</option>
+            <option value="questions">Guided questions only</option>
+            <option value="free">Writing or voice only</option>
+          </select>
+          <span id="btwCheckInModeStatus" style="font-size:11.5px;color:var(--ink-soft);"></span>
+        </div>
+        <div class="btw-disclaimer" style="margin-bottom:16px;">Locking to questions gives you a steady, comparable read each time. Leave it open and they can also write or send a voice memo.</div>
         <div class="btw-field-label">Notes and follow-ups <span style="font-weight:400;color:var(--ink-soft);">private to you</span></div>
         <textarea class="btw-textarea" id="btwClinNoteText" placeholder="What matters for this person and what to follow up on next time"></textarea>
         <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
@@ -3061,6 +3093,14 @@
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Write or speak":"Écrire ou parler",
     "Answer questions":"Répondre à des questions",
+    "Answered questions":"A répondu aux questions",
+    "How this person checks in":"Comment cette personne fait ses suivis",
+    "Questions, writing or voice":"Questions, écrit ou voix",
+    "Guided questions only":"Questions guidées seulement",
+    "Writing or voice only":"Écrit ou voix seulement",
+    "Locking to questions gives you a steady, comparable read each time. Leave it open and they can also write or send a voice memo.":"Verrouiller sur les questions vous donne une lecture régulière et comparable à chaque fois. Laissez ouvert et la personne peut aussi écrire ou envoyer un mémo vocal.",
+    "Your check-ins are set to the guided questions.":"Vos suivis sont réglés sur les questions guidées.",
+    "Your check-ins are set to writing or a voice memo.":"Vos suivis sont réglés sur l'écriture ou un mémo vocal.",
     "What stood out since last time?":"Qu'est-ce qui vous a marqué depuis la dernière fois ?",
     "What was hard?":"Qu'est-ce qui a été difficile ?",
     "What helped or felt good?":"Qu'est-ce qui a aidé ou fait du bien ?",
@@ -5600,6 +5640,7 @@
       risk: !!row.risk_flag,
       hasAudio: !!row.audio_upload_id,
       hasPhoto: !!row.photo_upload_id,
+      viaQuestions: row.input_mode === 'questions',
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null
     };
   }
@@ -8789,6 +8830,28 @@
     if(composeMode === 'questions') renderComposeQuestions();
   }
   document.querySelectorAll('#btwComposeMode .btw-cmode-btn').forEach(function(b){ b.addEventListener('click', function(){ setComposeMode(b.dataset.cmode); }); });
+  // A clinician can lock how a patient checks in. When locked, force that mode
+  // and hide the toggle so the patient only sees the one way in. 'any' (or the
+  // clinician's own composer) keeps both options.
+  function checkInLock(){ return (isPatient() && state.patient && state.patient.check_in_mode_lock) || 'any'; }
+  function applyComposerLock(){
+    const toggle = document.getElementById('btwComposeMode');
+    const note = document.getElementById('btwComposeModeLock');
+    const lock = checkInLock();
+    if(lock === 'questions'){
+      if(composeMode !== 'questions') setComposeMode('questions');
+      if(toggle) toggle.style.display = 'none';
+      if(note){ note.textContent = t('Your check-ins are set to the guided questions.'); note.style.display = ''; }
+    } else if(lock === 'free'){
+      if(composeMode !== 'free') setComposeMode('free');
+      if(toggle) toggle.style.display = 'none';
+      if(note){ note.textContent = t('Your check-ins are set to writing or a voice memo.'); note.style.display = ''; }
+    } else {
+      if(toggle) toggle.style.display = '';
+      if(note){ note.style.display = 'none'; note.textContent = ''; }
+    }
+  }
+  window.__btwApplyComposerLock = applyComposerLock;
   // Build the check-in text from whichever input mode is active.
   function composeText(){
     if(composeMode !== 'questions') return textEl.value.trim();
@@ -9052,6 +9115,9 @@
         const ta = document.getElementById('btwClinNoteText');
         if(document.activeElement !== ta) ta.value = p.clinician_note || '';
         document.getElementById('btwClinNoteStatus').textContent = '';
+        const modeSel = document.getElementById('btwCheckInMode');
+        if(modeSel && document.activeElement !== modeSel){ modeSel.value = p.check_in_mode_lock || 'any'; }
+        const modeStatus = document.getElementById('btwCheckInModeStatus'); if(modeStatus) modeStatus.textContent = '';
       } else {
         noteBox.style.display = 'none';
       }
@@ -9074,6 +9140,24 @@
         setTimeout(function(){ if(status.textContent === t('Saved')) status.textContent = ''; }, 2500);
       }catch(e){ status.textContent = e.message; }
       finally{ btn.disabled = false; }
+    });
+  })();
+  // Save the clinician's check-in-mode lock for the selected patient. Applies
+  // immediately: the patient's composer reads this on their next load.
+  (function bindCheckInMode(){
+    const sel = document.getElementById('btwCheckInMode');
+    if(!sel) return;
+    sel.addEventListener('change', async ()=>{
+      const p = selectedPatient(); if(!p) return;
+      const status = document.getElementById('btwCheckInModeStatus');
+      const mode = sel.value;
+      sel.disabled = true; if(status) status.textContent = t('Saving…');
+      try{
+        const r = await api('PUT', '/api/patients/' + encodeURIComponent(p.id) + '/check-in-mode', { mode });
+        p.check_in_mode_lock = (r && r.check_in_mode_lock) || mode;
+        if(status){ status.textContent = t('Saved'); setTimeout(function(){ if(status.textContent === t('Saved')) status.textContent = ''; }, 2500); }
+      }catch(e){ if(status) status.textContent = e.message; sel.value = p.check_in_mode_lock || 'any'; }
+      finally{ sel.disabled = false; }
     });
   })();
 
@@ -9108,6 +9192,9 @@
     el.innerHTML = sorted.length ? sorted.map(c=>{
       const [datePart,timePart] = fmtTimeParts(c.time);
       const tagsHtml = c.tags.map(tg=>`<span class="btw-entry-tag">${esc(curLang==='fr'?(FR[tg]||tg):tg)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">${esc(t('safety flag'))}</span>` : '');
+      // Show how the check-in was sent so the clinician can tell a guided
+      // question check-in apart from a free-written or voice one at a glance.
+      const methodHtml = c.viaQuestions ? `<span class="btw-entry-method">${esc(t('Answered questions'))}</span>` : '';
       const audioHtml = (c.hasAudio && !isPatient() && state.selectedPatientId)
         ? `<audio controls preload="none" style="width:100%;height:32px;margin:6px 0 2px;" src="/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/audio"></audio>`
         : (c.hasAudio ? `<div style="font-size:11.5px;color:var(--moss);margin:4px 0;">${esc(t('Voice memo'))}</div>` : '');
@@ -9129,6 +9216,7 @@
         <div>
           <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(painMode()?t('pain'):t('mood'))} ${c.mood!=null?esc(scoreWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
+          ${methodHtml}
           ${audioHtml}
           ${photoHtml}
           <div class="btw-entry-tags">${tagsHtml}</div>
@@ -9628,6 +9716,7 @@
     const showPhoto = painMode() && isPatient();
     const photoHost = document.getElementById('btwComposePhoto'); if(photoHost) photoHost.style.display = showPhoto ? '' : 'none';
     if(!showPhoto && typeof clearComposePhoto === 'function') clearComposePhoto();
+    if(typeof applyComposerLock === 'function') applyComposerLock();
     if(composeMode === 'questions' && typeof renderComposeQuestions === 'function') renderComposeQuestions();
     syncComposerTags(); applyScoreMode();
   }
@@ -9695,12 +9784,12 @@
       if(isPatient()){
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, photoUploadId
+          text: text || null, moodScore: mood, manualTags, painMap, photoUploadId, inputMode: composeMode
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap
+          text: text || null, moodScore: mood, manualTags, painMap, inputMode: composeMode
         });
         risk = !!checkIn.risk_flag;
       }
