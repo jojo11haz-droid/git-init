@@ -393,6 +393,14 @@
   .btw-week-summary{background:var(--moss-light);border:1px solid var(--moss-light);border-radius:12px;padding:12px 15px;margin-bottom:16px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
+  .btw-reflection{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#fff 0%,var(--moss-light) 140%);padding:15px 16px;margin-bottom:16px;}
+  .btw-reflection-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .btw-reflection-badge{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);background:#fff;border:1px solid var(--line);border-radius:20px;padding:2px 8px;}
+  .btw-reflection-title{font-family:var(--font-display);font-size:16px;color:var(--ink);}
+  .btw-reflection-body{font-size:13.5px;line-height:1.62;color:var(--ink);}
+  .btw-reflection-body p{margin:0 0 7px;}
+  .btw-reflection-body p:last-child{margin-bottom:0;}
+  .btw-reflection-prompt{color:var(--ink-soft);font-style:italic;}
   .btw-insights{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
@@ -2452,6 +2460,7 @@
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
       <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
+      <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
 
       <div class="btw-digest" id="btwDigest"></div>
 
@@ -2607,6 +2616,7 @@
           <ul class="btw-price-features">
             <li>Everything in Personal</li>
             <li>Guided journaling packs for gratitude, stress, sleep and wins</li>
+            <li>A weekly reflection on your patterns</li>
             <li>Attach a photo to any entry</li>
             <li>The full advanced-stats view for deeper trends</li>
             <li>Priority email support</li>
@@ -3408,6 +3418,7 @@
     "Premium":"Premium","Premium Annual":"Premium annuel","Most complete":"Le plus complet",
     "Journaling with more depth":"Un journal plus approfondi","Everything, paid yearly":"Tout, payé à l'année",
     "Guided journaling packs for gratitude, stress, sleep and wins":"Trousses de journal guidé pour la gratitude, le stress, le sommeil et les réussites",
+    "A weekly reflection on your patterns":"Une réflexion hebdomadaire sur vos tendances",
     "Attach a photo to any entry":"Ajoutez une photo à n'importe quelle entrée",
     "The full advanced-stats view for deeper trends":"La vue complète des statistiques avancées pour des tendances plus poussées",
     "Priority email support":"Soutien courriel prioritaire",
@@ -3448,6 +3459,22 @@
     "mood mostly":"humeur surtout","pain mostly":"douleur surtout",
     "and improving":"et en amélioration","and slipping":"et en recul","and holding steady":"et stable",
     "came up most":"est revenu le plus souvent",
+    "Your week, reflected":"Votre semaine, en réflexion",
+    "You checked in":"Vous avez fait un suivi","time":"fois","times":"fois",
+    "more than the week before":"plus que la semaine précédente",
+    "fewer than the week before":"moins que la semaine précédente",
+    "about the same as the week before":"à peu près comme la semaine précédente",
+    "mostly in the mornings":"surtout le matin","mostly in the afternoons":"surtout l'après-midi","mostly in the evenings":"surtout le soir",
+    "Mood was mostly":"L'humeur était surtout","Pain was mostly":"La douleur était surtout",
+    "brighter than the week before":"plus lumineuse que la semaine précédente",
+    "a bit heavier than the week before":"un peu plus lourde que la semaine précédente",
+    "steady, much like the week before":"stable, comme la semaine précédente",
+    "What came up most:":"Ce qui est revenu le plus :",
+    "You marked a win this week — worth holding onto.":"Vous avez souligné une réussite cette semaine — à garder en tête.",
+    "Going into next week, what would you like a little more of?":"Pour la semaine à venir, qu'aimeriez-vous un peu plus ?",
+    "What is one small thing that helped this week, worth repeating?":"Quelle petite chose vous a aidé cette semaine, à répéter ?",
+    "If next week could feel one notch better, what would nudge it there?":"Si la semaine prochaine pouvait être un cran meilleure, qu'est-ce qui y aiderait ?",
+    "What is worth being gentle with yourself about right now?":"Envers quoi vaut-il la peine d'être doux avec vous-même en ce moment ?",
     "check-in flagged":"suivi signalé","check-ins flagged":"suivis signalés",
     "You check in within seconds":"Vous faites un suivi en quelques secondes",
     "You watch your own pattern build":"Vous voyez votre propre tendance se dessiner",
@@ -9756,6 +9783,7 @@
       document.getElementById('btwSend').disabled = false;
       syncConsentUi();
       renderWeekSummary();
+      renderWeeklyReflection();
       renderDigestSelf();
       renderInsights();
       renderBodyOverview();
@@ -9834,6 +9862,88 @@
     const flagged = week.filter(c=>c.risk).length;
     if(flagged) parts.push(`<strong>${flagged}</strong> ${esc(flagged===1?t('check-in flagged'):t('check-ins flagged'))}`);
     el.innerHTML = `<div class="btw-week-label">${esc(t('This week'))}</div><div class="btw-week-body">${parts.join(' · ')}</div>`;
+    el.style.display = '';
+  }
+
+  // A gentle, forward-looking closer for the reflection. Rotates by week so it
+  // feels fresh, but is stable within a given week.
+  const REFLECTION_PROMPTS = [
+    'Going into next week, what would you like a little more of?',
+    'What is one small thing that helped this week, worth repeating?',
+    'If next week could feel one notch better, what would nudge it there?',
+    'What is worth being gentle with yourself about right now?'
+  ];
+  function reflectionPartOfDay(ts){
+    const h = new Date(ts).getHours();
+    if(h >= 5 && h < 12) return 'mornings';
+    if(h >= 12 && h < 17) return 'afternoons';
+    return 'evenings';
+  }
+  // Premium weekly reflection: a short narrative read on the person's own week,
+  // synthesized from their entries — no AI and no server call, so it is instant
+  // and deterministic. Shown to self-serve individuals on Premium once there
+  // are at least two check-ins in the last seven days to reflect on.
+  function renderWeeklyReflection(){
+    const el = document.getElementById('btwWeeklyReflection'); if(!el) return;
+    const premium = soloIndividual() && !!(state.patient && state.patient.is_premium);
+    const now = Date.now();
+    const week = (state.checkIns||[]).filter(c=>c.time && c.time>=now-7*86400000);
+    if(!premium || week.length < 2){ el.style.display='none'; el.innerHTML=''; return; }
+    const prev = (state.checkIns||[]).filter(c=>c.time && c.time>=now-14*86400000 && c.time<now-7*86400000);
+    const paras = [];
+
+    // 1) How often, and when in the day, they checked in.
+    const n = week.length;
+    const buckets = { mornings:0, afternoons:0, evenings:0 };
+    week.forEach(function(c){ buckets[reflectionPartOfDay(c.time)]++; });
+    const topPart = Object.keys(buckets).sort(function(a,b){ return buckets[b]-buckets[a]; })[0];
+    const partKey = { mornings:'mostly in the mornings', afternoons:'mostly in the afternoons', evenings:'mostly in the evenings' }[topPart];
+    let cadenceClause = '';
+    if(prev.length){
+      if(n > prev.length) cadenceClause = ' ' + t('more than the week before');
+      else if(n < prev.length) cadenceClause = ' ' + t('fewer than the week before');
+      else cadenceClause = ' ' + t('about the same as the week before');
+    }
+    paras.push(t('You checked in') + ' <strong>' + n + '</strong> ' + t(n===1?'time':'times') + ' ' + t('this week') + cadenceClause + ', ' + t(partKey) + '.');
+
+    // 2) Where mood (or pain) sat, and which way it moved from the week before.
+    const rated = week.filter(function(c){ return c.mood!=null; });
+    const prevRated = prev.filter(function(c){ return c.mood!=null; });
+    if(rated.length){
+      const avg = rated.reduce(function(s,c){ return s+c.mood; },0)/rated.length;
+      let line = (painMode()?t('Pain was mostly'):t('Mood was mostly')) + ' <strong>' + esc(scoreWord(avg)) + '</strong>';
+      if(prevRated.length){
+        const pAvg = prevRated.reduce(function(s,c){ return s+c.mood; },0)/prevRated.length;
+        const delta = avg - pAvg;
+        const better = painMode() ? delta < -0.4 : delta > 0.4;
+        const worse  = painMode() ? delta > 0.4  : delta < -0.4;
+        if(better) line += ', ' + t('brighter than the week before');
+        else if(worse) line += ', ' + t('a bit heavier than the week before');
+        else line += ', ' + t('steady, much like the week before');
+      }
+      paras.push(line + '.');
+    }
+
+    // 3) The themes that came up most, and a win if they marked one.
+    const counts = {};
+    week.forEach(function(c){ c.tags.forEach(function(tg){ counts[tg]=(counts[tg]||0)+1; }); });
+    const tops = Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; }).slice(0,2).map(function(x){ return x[0]; });
+    if(tops.length){
+      const names = tops.map(themeName);
+      const joined = names.length>1 ? (esc(names[0]) + ' ' + t('and') + ' ' + esc(names[1])) : esc(names[0]);
+      paras.push(t('What came up most:') + ' <strong>' + joined + '</strong>.');
+    }
+    if(week.some(function(c){ return c.tags.some(function(tg){ return /^win$/i.test(tg); }); })){
+      paras.push(t('You marked a win this week — worth holding onto.'));
+    }
+
+    // 4) A gentle, forward-looking closer, stable within the week.
+    const weekIndex = Math.floor(now / (7*86400000));
+    const prompt = REFLECTION_PROMPTS[weekIndex % REFLECTION_PROMPTS.length];
+
+    el.innerHTML = '<div class="btw-reflection-head"><span class="btw-reflection-badge">' + esc(t('Premium')) + '</span><span class="btw-reflection-title">' + esc(t('Your week, reflected')) + '</span></div>'
+      + '<div class="btw-reflection-body">' + paras.map(function(p){ return '<p>' + p + '</p>'; }).join('')
+      + '<p class="btw-reflection-prompt">' + esc(t(prompt)) + '</p></div>';
     el.style.display = '';
   }
 
