@@ -3055,9 +3055,31 @@
     "What stood out since last time?":"Qu'est-ce qui vous a marqué depuis la dernière fois ?",
     "What was hard?":"Qu'est-ce qui a été difficile ?",
     "What helped or felt good?":"Qu'est-ce qui a aidé ou fait du bien ?",
+    "How did your head feel in training or competition?":"Comment vous sentiez-vous dans votre tête à l'entraînement ou en compétition ?",
+    "What added pressure or threw you off?":"Qu'est-ce qui a ajouté de la pression ou vous a déstabilisé ?",
+    "What felt strong or in your control?":"Qu'est-ce qui vous a semblé solide ou sous contrôle ?",
+    "How have the cravings or urges been since last time?":"Comment ont été les envies ou les pulsions depuis la dernière fois ?",
+    "What was a hard moment, and how did you get through it?":"Quel a été un moment difficile, et comment l'avez-vous traversé ?",
+    "What helped you stay on track?":"Qu'est-ce qui vous a aidé à rester sur la bonne voie ?",
+    "How have things been at school since last time?":"Comment ça s'est passé à l'école depuis la dernière fois ?",
+    "What felt stressful or hard?":"Qu'est-ce qui a été stressant ou difficile ?",
+    "What went well or helped?":"Qu'est-ce qui a bien été ou vous a aidé ?",
+    "How did your training go since last time?":"Comment se sont passés vos entraînements depuis la dernière fois ?",
+    "What felt tough or held you back?":"Qu'est-ce qui a été dur ou vous a freiné ?",
+    "What felt strong or went well?":"Qu'est-ce qui vous a semblé solide ou a bien été ?",
     "How has the pain been since last time?":"Comment va la douleur depuis la dernière fois ?",
     "What made it better or worse?":"Qu'est-ce qui l'a améliorée ou aggravée ?",
-    "How did your exercises and daily activities go?":"Comment se sont passés vos exercices et activités quotidiennes ?",
+    "How did your exercises go?":"Comment se sont passés vos exercices ?",
+    "How has movement felt since last time?":"Comment se sont senties vos mouvements depuis la dernière fois ?",
+    "What made moving easier or harder?":"Qu'est-ce qui a rendu le mouvement plus facile ou plus difficile ?",
+    "How has your body felt since last time?":"Comment s'est senti votre corps depuis la dernière fois ?",
+    "How did things feel day to day?":"Comment vous êtes-vous senti au quotidien ?",
+    "How did your daily activities go since last time?":"Comment se sont passées vos activités quotidiennes depuis la dernière fois ?",
+    "What was tiring or hard to manage?":"Qu'est-ce qui a été fatigant ou difficile à gérer ?",
+    "What helped you get things done?":"Qu'est-ce qui vous a aidé à accomplir vos tâches ?",
+    "How did eating go since last time?":"Comment s'est passée l'alimentation depuis la dernière fois ?",
+    "What was hard around food or energy?":"Qu'est-ce qui a été difficile côté nourriture ou énergie ?",
+    "What felt good or worked well?":"Qu'est-ce qui a fait du bien ou a bien fonctionné ?",
     "Send check-in":"Envoyer le suivi",
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
     "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.":
@@ -8622,11 +8644,23 @@
   // the usual summary and storage. The questions match the field: a body-based
   // set for the pain disciplines, a reflective set otherwise.
   let composeMode = 'free'; // 'free' (write or speak) | 'questions'
+  // Guided prompts, tailored to each profession so the questions fit the work
+  // the person and their clinician actually do together. Keyed by discipline
+  // (painDiscipline() already maps invited patients, solo patients and the
+  // individual tracking modes onto one of these). 'therapy' is the fallback.
   const COMPOSE_Q = {
-    mind: ['What stood out since last time?', 'What was hard?', 'What helped or felt good?'],
-    pain: ['How has the pain been since last time?', 'What made it better or worse?', 'How did your exercises and daily activities go?']
+    therapy:      ['What stood out since last time?', 'What was hard?', 'What helped or felt good?'],
+    sports:       ['How did your head feel in training or competition?', 'What added pressure or threw you off?', 'What felt strong or in your control?'],
+    recovery:     ['How have the cravings or urges been since last time?', 'What was a hard moment, and how did you get through it?', 'What helped you stay on track?'],
+    schools:      ['How have things been at school since last time?', 'What felt stressful or hard?', 'What went well or helped?'],
+    fitness:      ['How did your training go since last time?', 'What felt tough or held you back?', 'What felt strong or went well?'],
+    physio:       ['How has the pain been since last time?', 'What made it better or worse?', 'How did your exercises go?'],
+    kinesiology:  ['How has movement felt since last time?', 'What made moving easier or harder?', 'How did your exercises go?'],
+    osteo:        ['How has your body felt since last time?', 'What made it better or worse?', 'How did things feel day to day?'],
+    occupational: ['How did your daily activities go since last time?', 'What was tiring or hard to manage?', 'What helped you get things done?'],
+    nutrition:    ['How did eating go since last time?', 'What was hard around food or energy?', 'What felt good or worked well?']
   };
-  function composeQuestions(){ return painMode() ? COMPOSE_Q.pain : COMPOSE_Q.mind; }
+  function composeQuestions(){ const d = (typeof painDiscipline === 'function') ? painDiscipline() : null; return COMPOSE_Q[d] || COMPOSE_Q.therapy; }
   function renderComposeQuestions(){
     const host = document.getElementById('btwComposeQuestions'); if(!host) return;
     const qs = composeQuestions();
