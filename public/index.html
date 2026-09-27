@@ -1019,6 +1019,11 @@
   .btw-mk-input{display:block;width:100%;box-sizing:border-box;resize:none;border:none;border-left:2px solid var(--moss-light);background:transparent;outline:none;padding:0 0 0 13px;}
   .btw-mk-input:focus{border-left-color:var(--moss);}
   .btw-mk-tryhint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin-top:8px;}
+  .btw-mk-qhint{font-size:10.5px;color:var(--ink-soft);opacity:.85;margin:0 0 10px;line-height:1.4;}
+  .btw-mk-cq{margin-bottom:10px;}
+  .btw-mk-cq label{display:block;font-size:11.5px;color:var(--ink);margin-bottom:4px;line-height:1.35;}
+  .btw-mk-cq textarea{display:block;width:100%;box-sizing:border-box;resize:none;font-family:var(--font-body);font-size:13px;line-height:1.45;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none;}
+  .btw-mk-cq textarea:focus{border-color:var(--moss);}
   .btw-mk-status{font-size:11.5px;color:var(--clay,#C0392B);margin-top:8px;}
   .btw-mk-send{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--moss);color:#fff;border:none;border-radius:100px;padding:12px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;letter-spacing:.01em;width:100%;margin-top:16px;}
   .btw-mk-row{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:border-color .12s ease,box-shadow .12s ease;}
@@ -2092,13 +2097,17 @@
                     <button type="button" class="btw-mk-photoremove" id="btwMkPhotoRemove" hidden>Remove</button>
                   </div>
                 </div>
-                <div class="btw-mk-voice">
-                  <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
-                  <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
-                  <span class="btw-mk-dur" id="btwMkDur">Tap to record</span>
+                <div class="btw-mk-moodmode btw-mk-cmode" id="btwMkComposeMode" style="margin:2px 0 10px;"><button type="button" class="btw-mk-modebtn active" data-mkmode="free">Write or speak</button><button type="button" class="btw-mk-modebtn" data-mkmode="questions">Answer questions</button></div>
+                <div id="btwMkFreeBlock">
+                  <div class="btw-mk-voice">
+                    <span class="btw-mk-mic" id="btwMkMic" role="button" tabindex="0" title="Tap to record a voice memo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></span>
+                    <svg class="btw-mk-wave" id="btwMkWave" viewBox="0 0 132 22" preserveAspectRatio="none" aria-hidden="true"><g stroke="#1E4C86" stroke-width="3" stroke-linecap="round"><line x1="4" y1="11" x2="4" y2="11"/><line x1="14" y1="11" x2="14" y2="11"/><line x1="24" y1="11" x2="24" y2="11"/><line x1="34" y1="11" x2="34" y2="11"/><line x1="44" y1="11" x2="44" y2="11"/><line x1="54" y1="11" x2="54" y2="11"/><line x1="64" y1="11" x2="64" y2="11"/><line x1="74" y1="11" x2="74" y2="11"/><line x1="84" y1="11" x2="84" y2="11"/><line x1="94" y1="11" x2="94" y2="11"/><line x1="104" y1="11" x2="104" y2="11"/><line x1="114" y1="11" x2="114" y2="11"/><line x1="124" y1="11" x2="124" y2="11"/></g></svg>
+                    <span class="btw-mk-dur" id="btwMkDur">Tap to record</span>
+                  </div>
+                  <textarea id="btwMkInput" class="btw-mk-transcript btw-mk-input" rows="2" maxlength="400" aria-label="Your check-in">Rough week, work stress kept me up again.</textarea>
+                  <div class="btw-mk-tryhint">Edit this, then send to see Between read it.</div>
                 </div>
-                <textarea id="btwMkInput" class="btw-mk-transcript btw-mk-input" rows="2" maxlength="400" aria-label="Your check-in">Rough week, work stress kept me up again.</textarea>
-                <div class="btw-mk-tryhint">Edit this, then send to see Between read it.</div>
+                <div class="btw-mk-questions" id="btwMkQuestions" hidden></div>
                 <button class="btw-mk-send" type="button" id="btwMkSend">Send check-in</button>
                 <div class="btw-mk-status" id="btwMkStatus" hidden></div>
               </div>
@@ -5647,6 +5656,9 @@
     let moodMode = 'self';  // 'self' = you set the slider, 'ai' = Between estimates
     let aiRated = false;    // has AI supplied a mood yet, in 'ai' mode
     let topicMode = 'self'; // 'self' = you tap chips, 'ai' = Between picks the topic
+    let mkComposeMode = 'free'; // 'free' (write or speak) | 'questions'
+    let mkFreeCache = null;     // remembers the typed check-in when in questions mode
+    let mkRenderedSig = null;   // discipline+language the question list was last built for
     const LEAD = { en: ', mostly ', fr: ', surtout ' };
     const CONJ = { en: 'and', fr: 'et' };
     function humanJoin(arr, conj){
@@ -5675,6 +5687,46 @@
     // Marketing demo: follow the audience toggle, not a signed-in account's
     // real discipline, so previewing physio/kinesiology always reads as pain.
     function painDemo(){ return typeof curAudience !== 'undefined' && (curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational'); }
+    // Guided check-in for the demo: a couple of profession-specific questions,
+    // each seeded with a sample answer, so a visitor can see Between read how
+    // someone is feeling from their answers alone. Answers are stitched back
+    // into the same check-in field the "Send" flow interprets. Bilingual.
+    const DEMO_Q = {
+      therapy: {
+        en:[{q:'What stood out this week?',a:'Work was heavy and I barely slept.'},{q:'What helped, even a little?',a:'A walk on the weekend cleared my head.'}],
+        fr:[{q:'Qu’est-ce qui vous a marqué cette semaine ?',a:'Le travail était lourd et j’ai à peine dormi.'},{q:'Qu’est-ce qui a aidé, même un peu ?',a:'Une marche la fin de semaine m’a fait du bien.'}]
+      },
+      physio: {
+        en:[{q:'How has the pain been since last time?',a:'Sore after sitting all day, better once I move.'},{q:'How did your exercises go?',a:'Did them most days but skipped the weekend.'}],
+        fr:[{q:'Comment va la douleur depuis la dernière fois ?',a:'Endolori après être resté assis, mieux en bougeant.'},{q:'Comment se sont passés vos exercices ?',a:'Faits la plupart des jours, sauté la fin de semaine.'}]
+      },
+      sports: {
+        en:[{q:'How did your head feel in training or competition?',a:'Tense before the game, better once I started.'},{q:'What added pressure or threw you off?',a:'Selection was on my mind all week.'}],
+        fr:[{q:'Comment vous sentiez-vous dans votre tête à l’entraînement ou en compétition ?',a:'Tendu avant le match, mieux une fois lancé.'},{q:'Qu’est-ce qui a ajouté de la pression ou vous a déstabilisé ?',a:'La sélection m’occupait l’esprit toute la semaine.'}]
+      },
+      fitness: {
+        en:[{q:'How did your training go since last time?',a:'Two good sessions, skipped one when I was wiped.'},{q:'What felt tough or held you back?',a:'Low energy midweek.'}],
+        fr:[{q:'Comment se sont passés vos entraînements depuis la dernière fois ?',a:'Deux bonnes séances, une sautée quand j’étais à plat.'},{q:'Qu’est-ce qui a été dur ou vous a freiné ?',a:'Peu d’énergie en milieu de semaine.'}]
+      },
+      recovery: {
+        en:[{q:'How have the cravings or urges been?',a:'Strong on Tuesday, but I called a friend and it passed.'},{q:'What helped you stay on track?',a:'Sticking to my routine.'}],
+        fr:[{q:'Comment ont été les envies ou les pulsions ?',a:'Fortes mardi, mais j’ai appelé un ami et c’est passé.'},{q:'Qu’est-ce qui vous a aidé à rester sur la bonne voie ?',a:'Garder ma routine.'}]
+      },
+      schools: {
+        en:[{q:'How have things been at school?',a:'Stressed about exams and pretty tired.'},{q:'What went well or helped?',a:'Talking to a friend at lunch.'}],
+        fr:[{q:'Comment ça s’est passé à l’école ?',a:'Stressé par les examens et assez fatigué.'},{q:'Qu’est-ce qui a bien été ou vous a aidé ?',a:'Parler à un ami au dîner.'}]
+      },
+      nutrition: {
+        en:[{q:'How did eating go since last time?',a:'Skipped lunch a few times, energy dipped.'},{q:'What felt good or worked well?',a:'Cooked at home more this week.'}],
+        fr:[{q:'Comment s’est passée l’alimentation depuis la dernière fois ?',a:'Sauté le dîner quelques fois, l’énergie a baissé.'},{q:'Qu’est-ce qui a fait du bien ou a bien fonctionné ?',a:'Cuisiné plus à la maison cette semaine.'}]
+      }
+    };
+    function demoQKey(){
+      if(painDemo()) return 'physio';
+      const a = (typeof curAudience !== 'undefined') ? curAudience : 'therapy';
+      return DEMO_Q[a] ? a : 'therapy';
+    }
+    function mkSig(){ return demoQKey() + '|' + ((typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en'); }
     function pick(table, v){
       const l = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en';
       const rows = table[l];
@@ -5709,6 +5761,10 @@
           ? (fr ? "Pas de souci — Between choisira le sujet d'après votre suivi." : 'No problem — Between will choose the topic from your check-in.')
           : (fr ? 'Touchez ce qui correspond, ou laissez Between le repérer.' : "Tap what fits, or let Between pick up what's bothering you.");
       }
+      // Keep the guided questions in step with the audience and language, but
+      // only rebuild when the discipline or language actually changed, so a
+      // slider move never clears an answer the visitor is typing.
+      refreshMkQuestions();
     }
     chips.forEach(c => c.addEventListener('click', ()=>{ c.classList.toggle('on'); update(); }));
 
@@ -5831,6 +5887,59 @@
       mic.addEventListener('click', toggleVoice);
       mic.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleVoice(); } });
     }
+    // --- Guided "answer questions" mode for the demo composer ---------------
+    function syncMkAnswers(){
+      const host = document.getElementById('btwMkQuestions'); if(!host || !dInput) return;
+      const parts = [];
+      host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ const a = (ta.value || '').trim(); if(a) parts.push(a); });
+      dInput.value = parts.join(' ');
+    }
+    function renderMkQuestions(){
+      const host = document.getElementById('btwMkQuestions'); if(!host) return;
+      const key = demoQKey();
+      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+      const set = DEMO_Q[key] || DEMO_Q.therapy;
+      const qs = fr ? set.fr : set.en;
+      const changedDiscipline = (mkRenderedSig !== null && mkRenderedSig.split('|')[0] !== key);
+      const prev = {};
+      host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ prev[ta.getAttribute('data-qi')] = ta.value; });
+      const hint = fr
+        ? 'Répondez à deux questions — Between lit comment vous vous sentez à partir de vos réponses.'
+        : 'Answer a couple of questions — Between reads how you’re feeling from them.';
+      host.innerHTML = '<div class="btw-mk-qhint">' + esc(hint) + '</div>' + qs.map(function(q, i){
+        return '<div class="btw-mk-cq"><label>' + esc(q.q) + '</label><textarea data-qi="' + i + '" rows="2"></textarea></div>';
+      }).join('');
+      host.querySelectorAll('textarea[data-qi]').forEach(function(ta){
+        const i = ta.getAttribute('data-qi');
+        ta.value = (!changedDiscipline && prev[i] !== undefined) ? prev[i] : qs[parseInt(i, 10)].a;
+        ta.addEventListener('input', syncMkAnswers);
+      });
+      mkRenderedSig = mkSig();
+      syncMkAnswers();
+    }
+    function refreshMkQuestions(){ if(mkComposeMode === 'questions' && mkRenderedSig !== mkSig()) renderMkQuestions(); }
+    function setMkMode(m){
+      const mode = (m === 'questions') ? 'questions' : 'free';
+      if(mode === mkComposeMode) return;
+      const free = document.getElementById('btwMkFreeBlock');
+      const qh = document.getElementById('btwMkQuestions');
+      if(mode === 'questions'){
+        mkFreeCache = dInput ? dInput.value : '';
+        mkComposeMode = 'questions';
+        if(free) free.hidden = true;
+        if(qh) qh.hidden = false;
+        mkRenderedSig = null; // force a fresh build with sample answers
+        renderMkQuestions();
+      } else {
+        mkComposeMode = 'free';
+        if(qh) qh.hidden = true;
+        if(free) free.hidden = false;
+        if(dInput && mkFreeCache !== null) dInput.value = mkFreeCache;
+      }
+      document.querySelectorAll('#btwMkComposeMode .btw-mk-modebtn').forEach(function(b){ b.classList.toggle('active', b.dataset.mkmode === mkComposeMode); });
+    }
+    document.querySelectorAll('#btwMkComposeMode .btw-mk-modebtn').forEach(function(b){ b.addEventListener('click', function(){ setMkMode(b.dataset.mkmode); }); });
+
     range.addEventListener('input', update);
     window.__btwMoodRefresh = update; // re-localize on language switch
     update();
