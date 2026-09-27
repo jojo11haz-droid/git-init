@@ -1429,6 +1429,7 @@
   .btw-hero-btn.tertiary:hover{background:#CBDDEF;}
   .btw-hero-btn.tertiary span{margin-left:2px;transition:transform .2s ease;}
   .btw-hero-btn.tertiary:hover span{transform:translateX(3px);}
+  .btw-hero-reassure{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-top:10px;max-width:470px;border-left:2px solid var(--moss-light);padding-left:11px;}
   .btw-hero-meta{
     font-family:var(--font-mono);
     font-size:10.5px;
@@ -1957,6 +1958,7 @@
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
           <div class="btw-hero-meta">Free for 14 days. Private, secure, and consent-first. Not a crisis service.</div>
+          <div class="btw-hero-reassure" id="btwHeroReassure">You are never on call. Nothing pings you and you are never expected to reply. The summary is just waiting when you next sit down together.</div>
           <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-aud-btn[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
@@ -2418,7 +2420,7 @@
         <div class="btw-price-card">
           <div class="btw-price-tier">Solo</div>
           <div class="btw-price-name">For individual practitioners</div>
-          <div class="btw-price-amount"><span class="num" data-cad="99.99">$99.99</span><span class="unit">CAD / clinician / month</span></div>
+          <div class="btw-price-amount"><span class="num" data-cad="99.99">$99.99</span><span class="unit">CAD per clinician, per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
             <li>Up to 30 patients &amp; unlimited check-ins</li>
@@ -2435,7 +2437,7 @@
           <div class="btw-price-badge">Most practices</div>
           <div class="btw-price-tier">Solo Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
-          <div class="btw-price-amount"><span class="num" data-cad="79.99">$79.99</span><span class="unit">CAD / clinician / month</span></div>
+          <div class="btw-price-amount"><span class="num" data-cad="79.99">$79.99</span><span class="unit">CAD per clinician, per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="959.88">$959.88</span>/year), save ~20%</div>
           <ul class="btw-price-features">
             <li>Everything in Solo</li>
@@ -2449,7 +2451,7 @@
         <div class="btw-price-card" id="btwSoloPremiumCard">
           <div class="btw-price-tier">Premium</div>
           <div class="btw-price-name">For larger caseloads</div>
-          <div class="btw-price-amount"><span class="num" data-cad="149.99">$149.99</span><span class="unit">CAD / clinician / month</span></div>
+          <div class="btw-price-amount"><span class="num" data-cad="149.99">$149.99</span><span class="unit">CAD per clinician, per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
             <li>Everything in Solo</li>
@@ -2467,7 +2469,7 @@
           <ul class="btw-price-features">
             <li>Everything in Solo, per seat</li>
             <li>Shared practice billing</li>
-            <li>Admin/practice-manager role</li>
+            <li>Admin and practice-manager role</li>
             <li>Practice-level data agreement</li>
           </ul>
           <button class="btw-price-cta secondary" id="btwTalkToUs">Talk to us</button>
@@ -2479,7 +2481,7 @@
         <div class="btw-price-card">
           <div class="btw-price-tier">Personal</div>
           <div class="btw-price-name">Check in for yourself</div>
-          <div class="btw-price-amount"><span class="num" data-cad="14.99">$14.99</span><span class="unit">CAD / month</span></div>
+          <div class="btw-price-amount"><span class="num" data-cad="14.99">$14.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
             <li>Unlimited voice &amp; text check-ins</li>
@@ -2495,7 +2497,7 @@
           <div class="btw-price-badge">Best value</div>
           <div class="btw-price-tier">Personal Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
-          <div class="btw-price-amount"><span class="num" data-cad="9.99">$9.99</span><span class="unit">CAD / month</span></div>
+          <div class="btw-price-amount"><span class="num" data-cad="9.99">$9.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="119.88">$119.88</span>/year), save ~33%</div>
           <ul class="btw-price-features">
             <li>Everything in Personal</li>
@@ -2565,7 +2567,7 @@
             <input type="text" id="btwSuPractice" placeholder="Solo practice is fine">
           </div>
           <div class="btw-form-field">
-            <label>Province / State</label>
+            <label>Province or State</label>
             <select id="btwSuProvince">
               <optgroup label="Canada">
                 <option value="Alberta">Alberta</option>
@@ -2602,7 +2604,7 @@
                 <option value="NSBEP">Nova Scotia Board of Examiners in Psychology</option>
                 <option value="PEIPRB">PEI Psychologists Registration Board</option>
                 <option value="NLPB">Newfoundland &amp; Labrador Psychology Board</option>
-                <option value="CA-Psychology">Psychologist / therapist — other provincial college</option>
+                <option value="CA-Psychology">Psychologist or therapist — other provincial college</option>
               </optgroup>
               <optgroup label="Canada · Social work &amp; counselling">
                 <option value="OTSTCFQ">OTSTCFQ — social work, couple &amp; family therapy (QC)</option>
@@ -2629,7 +2631,7 @@
                 <option value="CDO-Diet">College of Dietitians of Ontario</option>
                 <option value="CDA-Diet">College of Dietitians of Alberta</option>
                 <option value="CDBC-Diet">College of Dietitians of British Columbia</option>
-                <option value="CA-Dietitian">Dietitian / nutritionist — other provincial college</option>
+                <option value="CA-Dietitian">Dietitian or nutritionist — other provincial college</option>
               </optgroup>
               <optgroup label="Canada · Nursing">
                 <option value="OIIQ">Infirmières et infirmiers du Québec (OIIQ)</option>
@@ -2643,18 +2645,18 @@
                 <option value="US-LPCC">Licensed Professional Clinical Counselor (LPCC)</option>
                 <option value="US-LMFT">Licensed Marriage &amp; Family Therapist (LMFT)</option>
                 <option value="US-LMHC">Licensed Mental Health Counselor (LMHC)</option>
-                <option value="US-Therapy-Other">Therapist / counselor — other state board</option>
+                <option value="US-Therapy-Other">Therapist or counselor — other state board</option>
               </optgroup>
               <optgroup label="United States · Physiotherapy">
                 <option value="US-PT">Licensed Physical Therapist, PT (state board)</option>
                 <option value="US-DPT">Doctor of Physical Therapy, DPT (state board)</option>
                 <option value="US-Physio-Other">Physical therapist — other state board</option>
               </optgroup>
-              <option value="other">Other regulated licence / board</option>
+              <option value="other">Other regulated licence or board</option>
             </select>
           </div>
           <div class="btw-form-field">
-            <label>Professional licence / order number</label>
+            <label>Professional licence or order number</label>
             <input type="text" id="btwSuLicence" placeholder="e.g. licence or order number">
           </div>
           <div class="btw-form-note">We verify this against your licensing board's public registry before your account is activated. Between is for licensed clinicians using it with their own clients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
@@ -3053,7 +3055,7 @@
     "Every plan includes AI-powered summaries and trend charts, the AI processing cost per check-in is small enough that we don't meter it. Use it as much as your patients need.":
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances, le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
-    "CAD / clinician / month":"CAD / clinicien / mois","Billed monthly.":"Facturé mensuellement.",
+    "CAD per clinician, per month":"CAD par clinicien, par mois","Billed monthly.":"Facturé mensuellement.",
     "Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.":"Les prix sont en dollars canadiens. Les taxes, le cas échéant, sont calculées au moment du paiement.",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
     "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
@@ -3067,7 +3069,7 @@
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
     "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
     "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
-    "Admin/practice-manager role":"Rôle d'administrateur / gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
+    "Admin and practice-manager role":"Rôle d'administrateur et gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
     "Talk to us":"Contactez-nous",
     "Needs attention now":"À contacter dès que possible","Doing okay":"Ça va","Doing well":"Va bien",
     "Team billing is not enabled yet.":"La facturation d'équipe n'est pas encore activée.",
@@ -3114,10 +3116,10 @@
     "Delete this patient permanently":"Supprimer ce patient définitivement",
     // signup modal
     "Step 1 of 3 · Account":"Étape 1 de 3 · Compte","Create your account":"Créez votre compte","Full name":"Nom complet","Work email":"Courriel professionnel",
-    "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province","Province / State":"Province / État",
+    "Step 2 of 3 · Your practice":"Étape 2 de 3 · Votre pratique","Tell us about your practice":"Parlez-nous de votre pratique","Practice or clinic name":"Nom de la pratique ou de la clinique","Province":"Province","Province or State":"Province ou État",
     "Quebec":"Québec","Ontario":"Ontario","British Columbia":"Colombie-Britannique","Alberta":"Alberta","Other":"Autre",
     "Professional order, college, or state board":"Ordre, collège ou conseil professionnel",
-    "Professional licence / order number":"Numéro de permis / d'ordre professionnel",
+    "Professional licence or order number":"Numéro de permis ou d'ordre professionnel",
     "We verify this against your licensing board's public registry before your account is activated. Between is for licensed clinicians using it with their own clients, not general wellness tracking. You won't be charged until your licence is confirmed.":"Nous le vérifions dans le registre public de votre ordre professionnel avant d'activer votre compte. Between s'adresse aux cliniciens autorisés qui l'utilisent avec leurs propres clients, pas au suivi de bien-être général. Vous ne serez pas facturé tant que votre permis n'est pas confirmé.",
     "Step 3 of 3 · Confirm":"Étape 3 de 3 · Confirmation","Review & submit for verification":"Vérifiez et soumettez pour validation",
     "I agree to the Between practice agreement and confirm I'll obtain patient consent as described there before enabling check-ins for any patient.":"J'accepte l'entente de pratique Between et je confirme que j'obtiendrai le consentement du patient tel qu'il y est décrit avant d'activer les suivis pour tout patient.",
@@ -3222,7 +3224,7 @@
     "For patients, use Between on your own":"Pour les patients, utilisez Between par vous-même",
     "Billed annually ($959.88/year), save ~20%":"Facturé annuellement (959,88 $/an), économisez ~20 %",
     "Billed annually ($119.88/year), save ~33%":"Facturé annuellement (119,88 $/an), économisez ~33 %",
-    "Personal":"Personnel","Check in for yourself":"Faites vos propres suivis","CAD / month":"CAD / mois",
+    "Personal":"Personnel","Check in for yourself":"Faites vos propres suivis","CAD per month":"CAD par mois",
     "Unlimited voice & text check-ins":"Suivis voix et texte illimités",
     "Your own mood & theme trends":"Vos propres tendances d'humeur et de thèmes",
     "Private by default, AI is opt-in":"Privé par défaut, l'IA est optionnelle",
@@ -3310,7 +3312,7 @@
     "Trainer":"Entraîneur","Trainer Annual":"Entraîneur annuel","Mentor Annual":"Mentor annuel",
     "Selected patient":"Patient sélectionné","No patient selected, pick one from your caseload":"Aucun patient sélectionné, choisissez-en un dans votre clientèle",
     "Manage this patient's AI consent, invite code, and stored data.":"Gérez le consentement IA, le code d'invitation et les données enregistrées de ce patient.",
-    "Needs attention":"À examiner","All":"Tous","this week":"cette semaine","flagged":"signalé(s)",
+    "Needs attention":"À examiner","All":"Tous","this week":"cette semaine","flagged":"signalé(s)","of":"sur",
     "new":"nouveaux","All caught up, nothing new.":"Tout est à jour, rien de nouveau.",
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
@@ -3377,7 +3379,9 @@
     "Thanks! Your subscription is still processing, check back shortly.":
       "Merci! Votre abonnement est en cours de traitement, revenez sous peu.",
     "Free for 14 days. Private, secure, and consent-first. Not a crisis service.":
-      "Gratuit pendant 14 jours. Privé, sécurisé et fondé sur le consentement. Pas un service de crise."
+      "Gratuit pendant 14 jours. Privé, sécurisé et fondé sur le consentement. Pas un service de crise.",
+    "You are never on call. Nothing pings you and you are never expected to reply. The summary is just waiting when you next sit down together.":
+      "Vous n'êtes jamais de garde. Rien ne vous notifie et vous n'êtes jamais tenu de répondre. Le résumé attend simplement lorsque vous vous rasseyez ensemble."
   };
 
   let curLang = 'en';
@@ -3591,7 +3595,7 @@
     "Solo":"Team",
     "For individual practitioners":"Up to 30 players",
     "$99.99":"$99",
-    "CAD / clinician / month":"CAD / team / month",
+    "CAD per clinician, per month":"CAD per team, per month",
     "Up to 30 patients & unlimited check-ins":"Up to 30 players and unlimited check-ins",
     "In-app crisis resources for patients":"In-app support resources for players",
     "Most practices":"Most teams",
@@ -3606,7 +3610,7 @@
     "Volume pricing per seat":"For squads over 30 players. Billed monthly.",
     "Everything in Solo, per seat":"Everything in Team, for 30+ players",
     "Shared practice billing":"Club-level billing",
-    "Admin/practice-manager role":"Multiple coach roles",
+    "Admin and practice-manager role":"Multiple coach roles",
     "Practice-level data agreement":"Club-level data agreement",
     "For patients, use Between on your own":"For players, use Between on your own",
     // pricing FAQ
@@ -3725,7 +3729,7 @@
     "Solo":"Équipe",
     "For individual practitioners":"Jusqu'à 30 joueurs",
     "$99.99":"99 $",
-    "CAD / clinician / month":"CAD / équipe / mois",
+    "CAD per clinician, per month":"CAD par équipe, par mois",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 joueurs et des suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les joueurs",
     "Most practices":"La plupart des équipes",
@@ -3740,7 +3744,7 @@
     "Volume pricing per seat":"Pour les équipes de plus de 30 joueurs. Facturé chaque mois.",
     "Everything in Solo, per seat":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
     "Shared practice billing":"Facturation au niveau du club",
-    "Admin/practice-manager role":"Plusieurs rôles d'entraîneur",
+    "Admin and practice-manager role":"Plusieurs rôles d'entraîneur",
     "Practice-level data agreement":"Entente de données au niveau du club",
     "For patients, use Between on your own":"Pour les joueurs, utilisez Between par vous-même",
     // pricing FAQ
@@ -3847,7 +3851,7 @@
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Mentors pay per seat and invite the people they support in for free. Anyone can also get Between on their own, to check in and track their own patterns, with or without a mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"For individual mentors",
-    "CAD / clinician / month":"CAD / mentor / month",
+    "CAD per clinician, per month":"CAD per mentor, per month",
     "Up to 30 patients & unlimited check-ins":"Unlimited members & check-ins",
     "In-app crisis resources for patients":"In-app crisis resources for members",
     "Most practices":"Most mentors",
@@ -3858,7 +3862,7 @@
     "Volume pricing per seat":"Volume pricing per mentor",
     "Everything in Solo, per seat":"Everything in Mentor, per seat",
     "Shared practice billing":"Shared program billing",
-    "Admin/practice-manager role":"Program-manager role",
+    "Admin and practice-manager role":"Program-manager role",
     "Practice-level data agreement":"Program-level data agreement",
     "Do my patients pay anything?":"Do the people I mentor pay anything?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not on your list. When you invite someone in as their mentor, Between is covered by your seat and they're never billed. A person only pays if they choose a Personal plan and use Between on their own, independent of any mentor.",
@@ -3951,7 +3955,7 @@
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les mentors paient par place et invitent gratuitement les personnes qu'ils accompagnent. N'importe qui peut aussi prendre Between par soi-même, pour faire des suivis et suivre ses tendances, avec ou sans mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"Pour les mentors individuels",
-    "CAD / clinician / month":"CAD / mentor / mois",
+    "CAD per clinician, per month":"CAD par mentor, par mois",
     "Up to 30 patients & unlimited check-ins":"Membres et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les membres",
     "Most practices":"La plupart des mentors",
@@ -3962,7 +3966,7 @@
     "Volume pricing per seat":"Tarif de volume par mentor",
     "Everything in Solo, per seat":"Tout ce qu'inclut Mentor, par place",
     "Shared practice billing":"Facturation partagée du programme",
-    "Admin/practice-manager role":"Rôle de gestionnaire de programme",
+    "Admin and practice-manager role":"Rôle de gestionnaire de programme",
     "Practice-level data agreement":"Entente de données au niveau du programme",
     "Do my patients pay anything?":"Est-ce que les personnes que j'accompagne paient quelque chose?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas sur votre liste. Quand vous invitez quelqu'un en tant que mentor, Between est couvert par votre place et la personne n'est jamais facturée. Une personne ne paie que si elle choisit un forfait Personnel et utilise Between par elle-même, indépendamment de tout mentor.",
@@ -4196,7 +4200,7 @@
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
     "Solo":"Staff",
     "For individual practitioners":"Up to 30 students",
-    "CAD / clinician / month":"CAD / staff / month",
+    "CAD per clinician, per month":"CAD per staff, per month",
     "Up to 30 patients & unlimited check-ins":"Up to 30 students and unlimited check-ins",
     "In-app crisis resources for patients":"In-app crisis resources for students",
     "Most practices":"Most schools",
@@ -4209,7 +4213,7 @@
     "Talk to us":"Get Premium",
     "Everything in Solo, per seat":"Everything in Staff, for 30+ students",
     "Shared practice billing":"School-level billing",
-    "Admin/practice-manager role":"Multiple staff roles",
+    "Admin and practice-manager role":"Multiple staff roles",
     "Practice-level data agreement":"School-level data agreement",
     "Do my patients pay anything?":"Do my students pay anything?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not for your students. When you invite a student in through your school, Between is covered by your seat and they're never billed. A student only pays if they choose a Personal plan and use Between on their own, independent of any school.",
@@ -4307,7 +4311,7 @@
     "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients, and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
     "Solo":"Personnel",
     "For individual practitioners":"Jusqu'à 30 élèves",
-    "CAD / clinician / month":"CAD / membre / mois",
+    "CAD per clinician, per month":"CAD par membre, par mois",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 élèves et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les élèves",
     "Most practices":"La plupart des écoles",
@@ -4320,7 +4324,7 @@
     "Talk to us":"Obtenir Premium",
     "Everything in Solo, per seat":"Tout ce qu'inclut Personnel, pour plus de 30 élèves",
     "Shared practice billing":"Facturation au niveau de l'école",
-    "Admin/practice-manager role":"Plusieurs rôles du personnel",
+    "Admin and practice-manager role":"Plusieurs rôles du personnel",
     "Practice-level data agreement":"Entente de données au niveau de l'école",
     "Do my patients pay anything?":"Est-ce que mes élèves paient quelque chose?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas vos élèves. Quand vous invitez un élève par l'entremise de votre école, Between est couvert par votre place et il n'est jamais facturé. Un élève ne paie que s'il choisit un forfait Personnel et utilise Between par lui-même, indépendamment de toute école.",
@@ -4398,7 +4402,7 @@
     "For therapists & practices":"For schools & teachers",
     "Solo":"Teacher",
     "For individual practitioners":"Up to 30 students",
-    "CAD / clinician / month":"CAD / teacher / month",
+    "CAD per clinician, per month":"CAD per teacher, per month",
     "Solo Annual":"Teacher Annual",
     "Everything in Solo":"Everything in Teacher",
     "For 2+ clinicians":"For 30+ students",
@@ -4453,7 +4457,7 @@
     "For therapists & practices":"Pour écoles et enseignants",
     "Solo":"Enseignant",
     "For individual practitioners":"Jusqu'à 30 élèves",
-    "CAD / clinician / month":"CAD / enseignant / mois",
+    "CAD per clinician, per month":"CAD par enseignant, par mois",
     "Solo Annual":"Enseignant annuel",
     "Everything in Solo":"Tout ce qu'inclut Enseignant",
     "For 2+ clinicians":"Pour plus de 30 élèves",
@@ -4536,7 +4540,7 @@
     "Solo":"Trainer",
     "For individual practitioners":"Up to 20 clients",
     "$99.99":"$49",
-    "CAD / clinician / month":"CAD / trainer / month",
+    "CAD per clinician, per month":"CAD per trainer, per month",
     "Up to 30 patients & unlimited check-ins":"Up to 20 clients and unlimited check-ins",
     "In-app crisis resources for patients":"In-app support resources for clients",
     "Most practices":"Most trainers",
@@ -4551,7 +4555,7 @@
     "Volume pricing per seat":"For 20+ clients. Billed monthly.",
     "Everything in Solo, per seat":"Everything in Trainer, for 20+ clients",
     "Shared practice billing":"Studio-level billing",
-    "Admin/practice-manager role":"Multiple trainer roles",
+    "Admin and practice-manager role":"Multiple trainer roles",
     "Practice-level data agreement":"Studio-level data agreement",
     "For patients, use Between on your own":"For clients, use Between on your own",
     // pricing FAQ
@@ -4652,7 +4656,7 @@
     "Solo":"Entraîneur",
     "For individual practitioners":"Jusqu'à 20 clients",
     "$99.99":"49 $",
-    "CAD / clinician / month":"CAD / entraîneur / mois",
+    "CAD per clinician, per month":"CAD par entraîneur, par mois",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 20 clients et suivis illimités",
     "In-app crisis resources for patients":"Ressources d'aide intégrées pour les clients",
     "Most practices":"La plupart des entraîneurs",
@@ -4667,7 +4671,7 @@
     "Volume pricing per seat":"Pour plus de 20 clients. Facturé au mois.",
     "Everything in Solo, per seat":"Tout ce qu'inclut Entraîneur, pour plus de 20 clients",
     "Shared practice billing":"Facturation au niveau du studio",
-    "Admin/practice-manager role":"Plusieurs rôles d'entraîneur",
+    "Admin and practice-manager role":"Plusieurs rôles d'entraîneur",
     "Practice-level data agreement":"Entente de données au niveau du studio",
     "For patients, use Between on your own":"Pour les clients, utilisez Between par vous-même",
     "Do my patients pay anything?":"Mes clients paient-ils quelque chose?",
@@ -4767,7 +4771,7 @@
     "Solo":"Practice",
     "For individual practitioners":"Up to 30 patients",
     "$99.99":"$99",
-    "CAD / clinician / month":"CAD / physio / month",
+    "CAD per clinician, per month":"CAD per physio, per month",
     "Most practices":"Most physios",
     "Solo Annual":"Practice Annual",
     "$79.99":"$79",
@@ -4780,7 +4784,7 @@
     "Volume pricing per seat":"For 30+ patients. Billed monthly.",
     "Everything in Solo, per seat":"Everything in Practice",
     "Shared practice billing":"For 30+ patients",
-    "Admin/practice-manager role":"Priority email support",
+    "Admin and practice-manager role":"Priority email support",
     "Practice-level data agreement":"Consent-first data controls",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
       "Not for your caseload. When you invite a patient in as their physio, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any physio.",
@@ -4851,7 +4855,7 @@
     "Solo":"Cabinet",
     "For individual practitioners":"Jusqu'à 30 patients",
     "$99.99":"$99",
-    "CAD / clinician / month":"CAD / physio / mois",
+    "CAD per clinician, per month":"CAD par physio, par mois",
     "Most practices":"Le plus populaire",
     "Solo Annual":"Cabinet annuel",
     "$79.99":"$79",
@@ -4864,7 +4868,7 @@
     "Volume pricing per seat":"Pour 30+ patients. Facturé mensuellement.",
     "Everything in Solo, per seat":"Tout ce qui est dans Cabinet",
     "Shared practice billing":"Pour 30+ patients",
-    "Admin/practice-manager role":"Soutien prioritaire par courriel",
+    "Admin and practice-manager role":"Soutien prioritaire par courriel",
     "Practice-level data agreement":"Contrôles axés sur le consentement",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
       "Pas pour votre clientèle. Quand vous invitez un patient à titre de son physio, Between est couvert par votre place et il n'est jamais facturé. Les patients ne paient que s'ils choisissent un forfait Personnel pour utiliser Between par eux-mêmes, indépendamment de tout physio.",
@@ -5252,6 +5256,8 @@
     // The "use it on your own" hero link is redundant on the individual page,
     // where the whole page already speaks to self-use.
     document.querySelectorAll('.btw-hero-solo-link').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
+    // The "never on call" reassurance is for a clinician, not the solo user.
+    document.querySelectorAll('.btw-hero-reassure').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
     // Sections written for a practitioner (a two-view "See both sides", the
     // "less admin" pitch about client emails and calls, and the "built for real
     // practice" caseload features) have no meaning for someone using Between
@@ -7709,7 +7715,7 @@
       <div><span class="label">Name:</span> <strong>${esc(name)}</strong></div>
       <div><span class="label">Email:</span> <strong>${esc(email)}</strong></div>
       <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
-      <div><span class="label">Province / State:</span> <strong>${esc(province)}</strong></div>
+      <div><span class="label">Province or State:</span> <strong>${esc(province)}</strong></div>
       <div><span class="label">Licence:</span> <strong>${esc(orderText)}</strong> · <strong>${esc(licence)}</strong></div>
       <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong> · starts after verification</div>
     `;
@@ -8721,7 +8727,7 @@
     if(cap != null){
       const used = state.patients.filter(p=>!p.left_at).length;
       const col = used >= cap ? 'var(--clay)' : used >= Math.ceil(cap*0.8) ? 'var(--amber)' : 'var(--ink-soft)';
-      bits.push('<span style="color:'+col+';">'+used+' / '+cap+' '+esc(t('patients'))+'</span>');
+      bits.push('<span style="color:'+col+';">'+used+' '+esc(t('of'))+' '+cap+' '+esc(t('patients'))+'</span>');
     }
     el.innerHTML = bits.join(' · ');
   }
@@ -9224,7 +9230,7 @@
     out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Overview'))+'</div><div class="btw-stats-tiles">'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Total check-ins'))+'</div><div class="v">'+s.n+'</div>'+(s.ratedN<s.n?'<div class="s">'+s.ratedN+' '+esc(pm?t('with a pain rating'):t('with a mood'))+'</div>':'')+'</div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Tracking since'))+'</div><div class="v" style="font-size:15px">'+(s.first?esc(fmtDate(s.first)):'—')+'</div>'+(spanMonths?'<div class="s">'+esc((spanMonths+' '+(spanMonths===1?t('month'):t('months'))))+'</div>':'')+'</div>'
-      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Active weeks'))+'</div><div class="v">'+(s.activeWeeks||0)+(s.spanWeeks?'<span style="font-size:12px;color:var(--ink-soft);font-weight:400"> / '+s.spanWeeks+'</span>':'')+'</div></div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Active weeks'))+'</div><div class="v">'+(s.activeWeeks||0)+(s.spanWeeks?'<span style="font-size:12px;color:var(--ink-soft);font-weight:400"> '+esc(t('of'))+' '+s.spanWeeks+'</span>':'')+'</div></div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Longest streak'))+'</div><div class="v">'+(s.longestStreak||0)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(s.longestStreak===1?t('week'):t('weeks'))+'</span></div>'+(s.currentStreak?'<div class="s">'+esc(t('current'))+': '+s.currentStreak+' '+esc(s.currentStreak===1?t('week'):t('weeks'))+'</div>':'')+'</div>'
       + '</div></div>');
     // Mood by month.
