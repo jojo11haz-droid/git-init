@@ -2277,10 +2277,44 @@ app.get(FIELD_PATHS, (req, res) => {
 // Simple health check — useful for most hosting platforms' uptime checks
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+// Startup sanity check for the self-serve (individual) plans: make sure each
+// one resolves to its own Stripe price, so an individual is charged the amount
+// their chosen plan advertises. Only meaningful once Stripe is configured —
+// without it, individual signup just creates a free account.
+const PATIENT_PLAN_LABELS = {
+  patient_monthly: 'Personal ($14.99/mo)',
+  patient_annual: 'Personal Annual ($9.99/mo)',
+  patient_premium: 'Premium ($24.99/mo)',
+  patient_premium_annual: 'Premium Annual ($19.99/mo)'
+};
+function checkPatientPricing() {
+  if (!stripeConfigured()) {
+    console.log('ℹ️  Stripe not configured — individual signups create a free account (no charge).');
+    return;
+  }
+  const seen = {};
+  let problems = 0;
+  for (const plan of PATIENT_PLANS) {
+    const price = priceForPlan(plan);
+    const label = PATIENT_PLAN_LABELS[plan] || plan;
+    if (!price) {
+      console.warn(`⚠️  ${label} [${plan}] has no Stripe price set — its checkout will fail. Set the matching STRIPE_PRICE_… env var.`);
+      problems++;
+    } else if (seen[price]) {
+      console.warn(`⚠️  ${label} [${plan}] shares a Stripe price (${price}) with ${seen[price]} — an individual would be charged the wrong amount. Give each plan its own price id.`);
+      problems++;
+    } else {
+      seen[price] = label;
+      console.log(`✅ ${label} → ${price}`);
+    }
+  }
+  if (!problems) console.log('✅ Individual Stripe prices look consistent — each plan has its own price.');
+}
+
 const PORT = process.env.PORT || 3000;
 initDb().then(() => {
-  app.listen(PORT, () => console.log(`Between server running on port ${PORT}`));
+  app.listen(PORT, () => { console.log(`Between server running on port ${PORT}`); checkPatientPricing(); });
 }).catch(err => {
   console.error('Failed to initialize database:', err);
-  app.listen(PORT, () => console.log(`Between server running on port ${PORT} (without DB)`));
+  app.listen(PORT, () => { console.log(`Between server running on port ${PORT} (without DB)`); checkPatientPricing(); });
 });
