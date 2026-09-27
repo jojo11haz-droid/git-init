@@ -401,6 +401,9 @@
   .btw-reflection-body p{margin:0 0 7px;}
   .btw-reflection-body p:last-child{margin-bottom:0;}
   .btw-reflection-prompt{color:var(--ink-soft);font-style:italic;}
+  .btw-cap-note{font-size:12px;color:var(--ink-soft);margin-top:9px;line-height:1.5;}
+  .btw-cap-note.full{color:var(--clay,#C0392B);}
+  .btw-cap-note button{background:none;border:none;padding:0;font:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;}
   .btw-insights{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
@@ -2398,6 +2401,7 @@
         <button class="btw-mic" id="btwMic" title="Record voice memo" aria-label="Record voice memo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
         <button class="btw-send" id="btwSend">Send check-in</button>
       </div>
+      <div class="btw-cap-note" id="btwCapNote" style="display:none;"></div>
       <div id="btwProcessing" style="display:none;">
         <div class="btw-wave"><span></span><span></span><span></span><span></span><span></span></div>
         <div class="btw-processing-label">Summarizing for your therapist…</div>
@@ -2585,7 +2589,7 @@
           <div class="btw-price-amount"><span class="num" data-cad="14.99">$14.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
-            <li>Unlimited voice &amp; text check-ins</li>
+            <li>Up to 5 check-ins a week, by voice or text</li>
             <li>Your own mood &amp; theme trends</li>
             <li>Private by default, AI is opt-in</li>
             <li>Crisis resources always one tap away</li>
@@ -2614,7 +2618,7 @@
           <div class="btw-price-amount"><span class="num" data-cad="24.99">$24.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
-            <li>Everything in Personal</li>
+            <li>Unlimited check-ins, no weekly limit</li>
             <li>Guided journaling packs for gratitude, stress, sleep and wins</li>
             <li>A weekly reflection on your patterns</li>
             <li>Attach a photo to any entry</li>
@@ -3413,6 +3417,12 @@
     "Private by default, AI is opt-in":"Privé par défaut, l'IA est optionnelle",
     "Crisis resources always one tap away":"Ressources de crise toujours à portée de main",
     "Delete your data anytime":"Supprimez vos données en tout temps",
+    "Up to 5 check-ins a week, by voice or text":"Jusqu'à 5 suivis par semaine, par voix ou texte",
+    "Unlimited check-ins, no weekly limit":"Suivis illimités, sans limite hebdomadaire",
+    "Upgrade for unlimited":"Passez à illimité",
+    "check-in left this week":"suivi restant cette semaine","check-ins left this week":"suivis restants cette semaine",
+    "You have used all your check-ins this week.":"Vous avez utilisé tous vos suivis cette semaine.",
+    "Premium checkout is not set up on this server yet.":"Le paiement Premium n'est pas encore configuré sur ce serveur.",
     "Create my account":"Créer mon compte","Best value":"Meilleure valeur","Personal Annual":"Personnel annuel",
     "Everything in Personal":"Tout ce qui est dans Personnel",
     "Premium":"Premium","Premium Annual":"Premium annuel","Most complete":"Le plus complet",
@@ -9342,6 +9352,46 @@
   // A self-serve individual with no clinician attached — their dashboard is a
   // private journal, so it gets warmer, journal-flavored framing.
   function soloIndividual(){ return isPatient() && !(state.patient && state.patient.clinician_account_type); }
+  // Free-tier weekly check-in cap. The server sets weekly_checkin_cap on the
+  // patient (a number for capped free individuals, null for Premium/invited).
+  // We count this rolling week's entries client-side to show what's left.
+  function capInfo(){
+    const cap = isPatient() && state.patient && state.patient.weekly_checkin_cap;
+    if(!cap) return null;
+    const now = Date.now();
+    const used = (state.checkIns || []).filter(function(c){ return c.time && c.time >= now - 7*86400000; }).length;
+    return { cap: cap, used: used, left: Math.max(0, cap - used) };
+  }
+  // Start a Premium upgrade for a signed-in individual (Stripe Checkout).
+  async function startPremiumUpgrade(){
+    try{
+      const r = await pApi('POST', '/api/patient/checkout/start', { plan: 'patient_premium' });
+      if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
+      alert(t('Premium checkout is not set up on this server yet.'));
+    }catch(e){ alert(e.message); }
+  }
+  window.__btwStartPremiumUpgrade = startPremiumUpgrade;
+  // Show how many check-ins are left this week for a capped free individual,
+  // with a nudge to Premium. Disables Send when the week's cap is used up.
+  function renderCapNote(){
+    const el = document.getElementById('btwCapNote'); if(!el) return;
+    const info = capInfo();
+    const sendBtn = document.getElementById('btwSend');
+    if(!info){ el.style.display = 'none'; el.innerHTML = ''; el.classList.remove('full'); return; }
+    const up = ' <button type="button" id="btwCapUpgrade">' + esc(t('Upgrade for unlimited')) + '</button>';
+    if(info.left <= 0){
+      el.classList.add('full');
+      el.innerHTML = esc(t('You have used all your check-ins this week.')) + up;
+      if(sendBtn && isPatient()) sendBtn.disabled = true;
+    } else {
+      el.classList.remove('full');
+      el.innerHTML = '<strong>' + info.left + '</strong> ' + esc(t('of')) + ' ' + info.cap + ' ' + esc(info.left === 1 ? t('check-in left this week') : t('check-ins left this week')) + up;
+    }
+    el.style.display = '';
+    const ub = document.getElementById('btwCapUpgrade');
+    if(ub) ub.addEventListener('click', startPremiumUpgrade);
+  }
+  window.__btwRenderCapNote = renderCapNote;
   // A gentle first-run welcome shown in place of an empty timeline, so a new
   // person lands on something warm instead of a bare "no check-ins yet".
   function journalWelcomeHtml(){
@@ -9782,6 +9832,7 @@
       document.getElementById('btwPatientPaneEyebrow').textContent = t('Your check-in');
       document.getElementById('btwSend').disabled = false;
       syncConsentUi();
+      renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();
       renderDigestSelf();
@@ -10053,6 +10104,12 @@
       else { textEl.placeholder = t('Say a bit about what happened before sending…'); textEl.focus(); }
       return;
     }
+    // Free-tier weekly cap: stop here with a friendly upgrade nudge rather than
+    // firing a request the server will reject. The server still enforces it.
+    if(isPatient()){
+      const ci = capInfo();
+      if(ci && ci.left <= 0){ renderCapNote(); const el = document.getElementById('btwCapNote'); if(el) el.scrollIntoView({ block:'nearest' }); return; }
+    }
     sendBtn.disabled = true;
     processingEl.style.display = 'block';
     crisisEl.style.display = 'none';
@@ -10092,7 +10149,11 @@
       alert('Could not send check-in: ' + err.message);
     }finally{
       processingEl.style.display = 'none';
-      sendBtn.disabled = isPatient() ? false : !selectedPatient();
+      // Keep Send disabled if a capped free week is now used up; the cap note
+      // shows the upgrade path.
+      const ci = isPatient() ? capInfo() : null;
+      sendBtn.disabled = isPatient() ? !!(ci && ci.left <= 0) : !selectedPatient();
+      renderCapNote();
     }
   });
 
