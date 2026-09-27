@@ -182,6 +182,10 @@
   .btw-cq label{display:block;font-size:12.5px;color:var(--ink);margin-bottom:5px;}
   .btw-cq textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;font-family:var(--font-body);font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;}
   .btw-cmode-locked{font-size:11.5px;color:var(--ink-soft);margin:2px 0 12px;line-height:1.4;}
+  .btw-packs{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px;align-items:center;}
+  .btw-packs-label{font-size:11px;color:var(--ink-soft);width:100%;margin-bottom:1px;}
+  .btw-pack{font-size:12px;color:var(--moss);background:#fff;border:1px solid var(--line);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:var(--font-body);line-height:1.3;}
+  .btw-pack.active{background:var(--moss);color:#fff;border-color:var(--moss);}
   .btw-mode-row{display:flex;align-items:center;gap:10px;margin:6px 0 8px;flex-wrap:wrap;}
   .btw-mode-select{font-family:var(--font-body);font-size:13px;color:var(--ink);padding:8px 30px 8px 11px;border:1px solid var(--line);border-radius:10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6169' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;-webkit-appearance:none;appearance:none;cursor:pointer;}
   .btw-mode-select:focus{outline:none;border-color:var(--moss);}
@@ -559,6 +563,36 @@
     content:"";
     width:5px;height:5px;border-radius:50%;
     background:var(--moss);
+  }
+  /* ---- warm first-run journal welcome ---- */
+  .btw-journal-welcome{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:linear-gradient(180deg, var(--moss-light) 0%, #fff 62%);
+    padding:22px 20px 20px;
+    margin:6px 0 4px;
+  }
+  .btw-journal-welcome-badge{
+    width:38px;height:38px;border-radius:11px;
+    background:#fff;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--moss);margin-bottom:12px;
+  }
+  .btw-journal-welcome-title{
+    font-family:var(--font-display);font-size:19px;color:var(--ink);margin-bottom:7px;
+  }
+  .btw-journal-welcome-body{
+    font-size:13.5px;line-height:1.6;color:var(--ink-soft);margin-bottom:12px;
+  }
+  .btw-journal-welcome-prompts{
+    display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;
+  }
+  .btw-journal-prompt{
+    font-size:12px;color:var(--moss);background:#fff;border:1px solid var(--line);
+    border-radius:20px;padding:5px 11px;line-height:1.3;
+  }
+  .btw-journal-welcome-hint{
+    font-size:12px;color:var(--ink-soft);opacity:.9;
   }
   /* ---- consent modal ---- */
   .btw-modal-overlay{
@@ -2327,7 +2361,7 @@
       </div>
 
       <div id="btwComposePhoto" class="btw-compose-photo" style="display:none;">
-        <div class="btw-field-label">Add a photo of the sore area (optional)</div>
+        <div class="btw-field-label" id="btwComposePhotoLabel">Add a photo of the sore area (optional)</div>
         <input type="file" id="btwPhotoInput" accept="image/*" capture="environment" style="display:none;">
         <div class="btw-photo-row">
           <button type="button" class="btw-photo-btn" id="btwPhotoBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Take or add a photo</button>
@@ -2349,6 +2383,7 @@
         <textarea class="btw-textarea" id="btwText" placeholder="Type, or tap the mic to record and transcribe..."></textarea>
       </div>
 
+      <div id="btwComposePacks" class="btw-packs" style="display:none;"></div>
       <div id="btwComposeQuestions" style="display:none;"></div>
 
       <div class="btw-input-row">
@@ -2562,6 +2597,35 @@
             <li>Priority email support</li>
           </ul>
           <button class="btw-price-cta" onclick="window.btwOpenPatientSignup && window.btwOpenPatientSignup('patient_annual')">Start 3-day free trial</button>
+        </div>
+
+        <div class="btw-price-card">
+          <div class="btw-price-tier">Premium</div>
+          <div class="btw-price-name">Journaling with more depth</div>
+          <div class="btw-price-amount"><span class="num" data-cad="24.99">$24.99</span><span class="unit">CAD per month</span></div>
+          <div class="btw-price-note">Billed monthly.</div>
+          <ul class="btw-price-features">
+            <li>Everything in Personal</li>
+            <li>Guided journaling packs for gratitude, stress, sleep and wins</li>
+            <li>Attach a photo to any entry</li>
+            <li>The full advanced-stats view for deeper trends</li>
+            <li>Priority email support</li>
+          </ul>
+          <button class="btw-price-cta" onclick="window.btwOpenPatientSignup && window.btwOpenPatientSignup('patient_premium')">Start 3-day free trial</button>
+        </div>
+
+        <div class="btw-price-card featured">
+          <div class="btw-price-badge">Most complete</div>
+          <div class="btw-price-tier">Premium Annual</div>
+          <div class="btw-price-name">Everything, paid yearly</div>
+          <div class="btw-price-amount"><span class="num" data-cad="19.99">$19.99</span><span class="unit">CAD per month</span></div>
+          <div class="btw-price-note">Billed annually (<span data-cad="239.88">$239.88</span> per year), save ~20%</div>
+          <ul class="btw-price-features">
+            <li>Everything in Premium</li>
+            <li>Locked-in rate for 12 months</li>
+            <li>Two months off compared with monthly</li>
+          </ul>
+          <button class="btw-price-cta" onclick="window.btwOpenPatientSignup && window.btwOpenPatientSignup('patient_premium_annual')">Start 3-day free trial</button>
         </div>
       </div>
 
@@ -3119,6 +3183,20 @@
     "How has the pain been since last time?":"Comment va la douleur depuis la dernière fois ?",
     "What made it better or worse?":"Qu'est-ce qui l'a améliorée ou aggravée ?",
     "How did your exercises go?":"Comment se sont passés vos exercices ?",
+    "Journaling packs":"Trousses de journal","My check-in":"Mon suivi",
+    "Gratitude":"Gratitude","Stress":"Stress","Sleep":"Sommeil","Wins":"Réussites",
+    "What are you grateful for today?":"De quoi êtes-vous reconnaissant aujourd'hui ?",
+    "Who or what made today a little better?":"Qui ou quoi a rendu la journée un peu meilleure ?",
+    "What is one thing you want to remember?":"Quelle est une chose dont vous voulez vous souvenir ?",
+    "What is weighing on you right now?":"Qu'est-ce qui vous pèse en ce moment ?",
+    "Where do you feel it in your body?":"Où le ressentez-vous dans votre corps ?",
+    "What is one small thing that could ease it?":"Quelle petite chose pourrait l'alléger ?",
+    "How did you sleep last night?":"Comment avez-vous dormi la nuit dernière ?",
+    "What was on your mind at bedtime?":"Qu'aviez-vous en tête au coucher ?",
+    "What could make tonight calmer?":"Qu'est-ce qui rendrait cette nuit plus calme ?",
+    "What went well today, big or small?":"Qu'est-ce qui a bien été aujourd'hui, petit ou grand ?",
+    "What did you do that you are proud of?":"Qu'avez-vous fait dont vous êtes fier ?",
+    "What helped you get there?":"Qu'est-ce qui vous a aidé à y arriver ?",
     "How has movement felt since last time?":"Comment se sont senties vos mouvements depuis la dernière fois ?",
     "What made moving easier or harder?":"Qu'est-ce qui a rendu le mouvement plus facile ou plus difficile ?",
     "How has your body felt since last time?":"Comment s'est senti votre corps depuis la dernière fois ?",
@@ -3327,6 +3405,15 @@
     "Delete your data anytime":"Supprimez vos données en tout temps",
     "Create my account":"Créer mon compte","Best value":"Meilleure valeur","Personal Annual":"Personnel annuel",
     "Everything in Personal":"Tout ce qui est dans Personnel",
+    "Premium":"Premium","Premium Annual":"Premium annuel","Most complete":"Le plus complet",
+    "Journaling with more depth":"Un journal plus approfondi","Everything, paid yearly":"Tout, payé à l'année",
+    "Guided journaling packs for gratitude, stress, sleep and wins":"Trousses de journal guidé pour la gratitude, le stress, le sommeil et les réussites",
+    "Attach a photo to any entry":"Ajoutez une photo à n'importe quelle entrée",
+    "The full advanced-stats view for deeper trends":"La vue complète des statistiques avancées pour des tendances plus poussées",
+    "Priority email support":"Soutien courriel prioritaire",
+    "Everything in Premium":"Tout ce qui est dans Premium",
+    "Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
+    "Two months off compared with monthly":"Deux mois gratuits par rapport au mensuel",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
       "Pas pour votre clientèle. Lorsque vous invitez un patient à titre de clinicien, Between est couvert par votre siège et il n'est jamais facturé. Les patients ne paient que s'ils choisissent un forfait Personnel et utilisent Between par eux-mêmes, indépendamment de tout thérapeute.",
     "I'm a therapist":"Je suis thérapeute","I'm a patient":"Je suis patient",
@@ -3346,6 +3433,16 @@
     "View my data & AI settings":"Voir mes données et réglages IA",
     "Saving your check-in…":"Enregistrement de votre suivi…",
     "No check-ins yet, send your first one on the left.":"Aucun suivi pour l'instant, envoyez votre premier à gauche.",
+    "Welcome to your journal":"Bienvenue dans votre journal",
+    "Your journal":"Votre journal",
+    "Your check-ins live here":"Vos suivis se trouvent ici",
+    "This is your private space. Check in whenever something is on your mind — write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.":"C'est votre espace privé. Faites un suivi dès que quelque chose vous trotte dans la tête — écrivez un mot, enregistrez un mémo vocal ou répondez à quelques questions douces. Between apprend discrètement vos tendances pour que vous puissiez les revoir.",
+    "Check in whenever something comes up — a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.":"Faites un suivi dès que quelque chose survient — un mot, un mémo vocal ou quelques questions. Vos entrées restent privées et ne sont partagées qu'avec la personne qui vous accompagne.",
+    "What is on your mind right now?":"Qu'avez-vous en tête en ce moment ?",
+    "One small win today":"Une petite réussite aujourd'hui",
+    "Something that felt heavy":"Quelque chose qui a pesé",
+    "What would help tomorrow?":"Qu'est-ce qui aiderait demain ?",
+    "There is no right way to do this. Your first entry is waiting whenever you are.":"Il n'y a pas de bonne façon de faire. Votre première entrée vous attend, à votre rythme.",
     "so far":"jusqu'à présent",
     "This week":"Cette semaine","this week":"cette semaine",
     "mood mostly":"humeur surtout","pain mostly":"douleur surtout",
@@ -3425,6 +3522,7 @@
     "I'll pick":"Je choisis","Not sure":"Pas sûr","Tap a client to see their read.":"Touchez un client pour voir son analyse.",
     "Where does it hurt or feel sore?":"Où avez-vous mal ou des courbatures?",
     "Add a photo of the sore area (optional)":"Ajoutez une photo de la zone douloureuse (facultatif)",
+    "Add a photo to this entry (optional)":"Ajoutez une photo à cette entrée (facultatif)",
     "Add a photo of the sore area":"Ajoutez une photo de la zone douloureuse",
     "Tap to add a photo":"Touchez pour ajouter une photo","Photo added":"Photo ajoutée",
     "Add past records":"Ajouter des données antérieures",
@@ -7987,7 +8085,7 @@
       return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    patientPlan = (plan === 'patient_annual') ? 'patient_annual' : 'patient_monthly';
+    patientPlan = ['patient_monthly','patient_annual','patient_premium','patient_premium_annual'].includes(plan) ? plan : 'patient_monthly';
     document.getElementById('btwPsError').textContent = '';
     psAgree.checked = false; psAge.checked = false; psSubmit.disabled = true;
     patientSignupOverlay.style.display = 'flex';
@@ -8174,7 +8272,8 @@
   const LINK_BTN_CLAY = 'background:none;border:none;padding:0;font-size:inherit;color:var(--clay,#C0392B);text-decoration:underline;cursor:pointer;';
   function renderSubscriptionInfo(el){
     const st = state.patient && state.patient.subscription_status;
-    const planName = (state.patient && state.patient.plan === 'patient_annual') ? t('Personal Annual') : t('Personal');
+    const PLAN_NAMES = { patient_monthly: 'Personal', patient_annual: 'Personal Annual', patient_premium: 'Premium', patient_premium_annual: 'Premium Annual' };
+    const planName = t(PLAN_NAMES[state.patient && state.patient.plan] || 'Personal');
     const active = (st === 'active' || st === 'trialing');
     if(active){
       el.innerHTML = '<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '. '
@@ -8811,9 +8910,35 @@
     nutrition:    ['How did eating go since last time?', 'What was hard around food or energy?', 'What felt good or worked well?']
   };
   function composeQuestions(){ const d = (typeof painDiscipline === 'function') ? painDiscipline() : null; return COMPOSE_Q[d] || COMPOSE_Q.therapy; }
+  // Premium journaling packs: curated question sets a self-serve individual can
+  // pick for a check-in, beyond the field's default set. Gated to Premium.
+  const COMPOSE_PACKS = {
+    gratitude: { label: 'Gratitude', q: ['What are you grateful for today?', 'Who or what made today a little better?', 'What is one thing you want to remember?'] },
+    stress:    { label: 'Stress',    q: ['What is weighing on you right now?', 'Where do you feel it in your body?', 'What is one small thing that could ease it?'] },
+    sleep:     { label: 'Sleep',     q: ['How did you sleep last night?', 'What was on your mind at bedtime?', 'What could make tonight calmer?'] },
+    wins:      { label: 'Wins',      q: ['What went well today, big or small?', 'What did you do that you are proud of?', 'What helped you get there?'] }
+  };
+  let composePack = null; // null = the field's default question set; else a pack key
+  // Packs are a Premium perk for self-serve individuals only.
+  function packsAvailable(){ return soloIndividual() && !!(state.patient && state.patient.is_premium); }
+  function activeComposeQuestions(){ return (composePack && COMPOSE_PACKS[composePack]) ? COMPOSE_PACKS[composePack].q : composeQuestions(); }
+  function renderComposePacks(){
+    const host = document.getElementById('btwComposePacks'); if(!host) return;
+    if(!(composeMode === 'questions' && packsAvailable())){ host.style.display = 'none'; host.innerHTML = ''; return; }
+    const chips = [{ key: null, label: t('My check-in') }].concat(Object.keys(COMPOSE_PACKS).map(function(k){ return { key: k, label: t(COMPOSE_PACKS[k].label) }; }));
+    host.innerHTML = '<div class="btw-packs-label">' + esc(t('Journaling packs')) + '</div>' + chips.map(function(c){
+      return '<button type="button" class="btw-pack' + ((composePack === c.key) ? ' active' : '') + '" data-pack="' + esc(c.key == null ? '' : c.key) + '">' + esc(c.label) + '</button>';
+    }).join('');
+    host.style.display = '';
+    host.querySelectorAll('.btw-pack').forEach(function(b){ b.addEventListener('click', function(){
+      composePack = b.dataset.pack || null;
+      renderComposePacks();
+      renderComposeQuestions();
+    }); });
+  }
   function renderComposeQuestions(){
     const host = document.getElementById('btwComposeQuestions'); if(!host) return;
-    const qs = composeQuestions();
+    const qs = activeComposeQuestions();
     const prev = {};
     host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ prev[ta.getAttribute('data-qi')] = ta.value; });
     host.innerHTML = qs.map(function(q, i){
@@ -8827,6 +8952,7 @@
     const free = document.getElementById('btwComposeFree'); if(free) free.style.display = (composeMode === 'free') ? '' : 'none';
     const qh = document.getElementById('btwComposeQuestions'); if(qh) qh.style.display = (composeMode === 'questions') ? '' : 'none';
     if(micBtn) micBtn.style.display = (composeMode === 'questions') ? 'none' : '';
+    renderComposePacks();
     if(composeMode === 'questions') renderComposeQuestions();
   }
   document.querySelectorAll('#btwComposeMode .btw-cmode-btn').forEach(function(b){ b.addEventListener('click', function(){ setComposeMode(b.dataset.cmode); }); });
@@ -8856,7 +8982,7 @@
   function composeText(){
     if(composeMode !== 'questions') return textEl.value.trim();
     const host = document.getElementById('btwComposeQuestions'); if(!host) return '';
-    const qs = composeQuestions();
+    const qs = activeComposeQuestions();
     const parts = [];
     host.querySelectorAll('textarea[data-qi]').forEach(function(ta){
       const a = ta.value.trim(); if(!a) return;
@@ -9186,6 +9312,34 @@
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
+  // A self-serve individual with no clinician attached — their dashboard is a
+  // private journal, so it gets warmer, journal-flavored framing.
+  function soloIndividual(){ return isPatient() && !(state.patient && state.patient.clinician_account_type); }
+  // A gentle first-run welcome shown in place of an empty timeline, so a new
+  // person lands on something warm instead of a bare "no check-ins yet".
+  function journalWelcomeHtml(){
+    const solo = soloIndividual();
+    const ico = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>';
+    const title = solo ? t('Welcome to your journal') : t('Your check-ins live here');
+    const body = solo
+      ? t('This is your private space. Check in whenever something is on your mind — write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.')
+      : t('Check in whenever something comes up — a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.');
+    const prompts = solo
+      ? [t('What is on your mind right now?'), t('One small win today'), t('Something that felt heavy'), t('What would help tomorrow?')]
+      : [];
+    const promptsHtml = prompts.length
+      ? '<div class="btw-journal-welcome-prompts">' + prompts.map(function(p){ return '<span class="btw-journal-prompt">' + esc(p) + '</span>'; }).join('') + '</div>'
+      : '';
+    const hint = t('There is no right way to do this. Your first entry is waiting whenever you are.');
+    return '<div class="btw-journal-welcome">'
+      + '<div class="btw-journal-welcome-badge">' + ico + '</div>'
+      + '<div class="btw-journal-welcome-title">' + esc(title) + '</div>'
+      + '<div class="btw-journal-welcome-body">' + esc(body) + '</div>'
+      + promptsHtml
+      + '<div class="btw-journal-welcome-hint">' + esc(hint) + '</div>'
+      + '</div>';
+  }
+
   function renderTimeline(){
     const el = document.getElementById('btwTimeline');
     const sorted = [...state.checkIns].sort((a,b)=>b.time-a.time);
@@ -9223,7 +9377,7 @@
           ${painHtml}
         </div>
       </div>`;
-    }).join('') : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>';
+    }).join('') : (isPatient() ? journalWelcomeHtml() : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>');
     // Attach a read-only body map to each entry that has one.
     el.querySelectorAll('.btw-ci-pain[data-pain]').forEach(function(host){
       const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
@@ -9421,8 +9575,13 @@
     el.innerHTML = cards.join('');
     el.style.display = cards.length ? 'grid' : 'none';
     // The advanced-stats button appears once there's a check-in to dig into.
+    // For a self-serve individual the deeper view is a Premium perk; invited
+    // patients (their clinician's seat covers it) and clinicians always see it.
     const sb = document.getElementById('btwStatsBtn');
-    if(sb) sb.style.display = list.length ? 'inline-flex' : 'none';
+    if(sb){
+      const statsGated = soloIndividual() && !(state.patient && state.patient.is_premium);
+      sb.style.display = (list.length && !statsGated) ? 'inline-flex' : 'none';
+    }
   }
 
   // A body overview on the dashboard for coach/trainer contexts (physio,
@@ -9623,8 +9782,10 @@
     const el = document.getElementById('btwDigest');
     const titleEl = document.getElementById('btwTimelineTitle');
     const list = state.checkIns;
-    if(titleEl) titleEl.textContent = t('Timeline');
-    if(list.length===0){ el.innerHTML = esc(t('No check-ins yet, send your first one on the left.')); return; }
+    if(titleEl) titleEl.textContent = soloIndividual() ? t('Your journal') : t('Timeline');
+    // For a new person the warm welcome card (in the timeline) carries the
+    // first-run message, so keep this digest line empty rather than doubling up.
+    if(list.length===0){ el.innerHTML = ''; return; }
     const rated = list.filter(c=>c.mood!=null);
     const avgMood = rated.length ? (rated.reduce((s,c)=>s+c.mood,0)/rated.length).toFixed(1) : null;
     const counts = {};
@@ -9710,13 +9871,20 @@
   }
   function updateComposePain(){
     const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none';
-    // The photo control is for the person photographing their own sore area, so
-    // it shows on the patient side of the pain fields only (physio, kinesiology,
-    // osteopathy and the individual Body mode). Sports and fitness are excluded.
-    const showPhoto = painMode() && isPatient();
+    // The photo control shows for the person photographing their own sore area
+    // on the pain fields (physio, kinesiology, osteopathy, Body mode) — sports
+    // and fitness excluded — and, as a Premium journaling perk, for a self-serve
+    // individual on any mode who wants to attach a photo to an entry.
+    const premiumPhoto = soloIndividual() && !!(state.patient && state.patient.is_premium);
+    const showPhoto = isPatient() && (painMode() || premiumPhoto);
     const photoHost = document.getElementById('btwComposePhoto'); if(photoHost) photoHost.style.display = showPhoto ? '' : 'none';
+    // The label matches the reason for the photo: a sore area on the pain
+    // fields, or just "a photo to this entry" for premium journaling.
+    const photoLabel = document.getElementById('btwComposePhotoLabel');
+    if(photoLabel) photoLabel.textContent = painMode() ? t('Add a photo of the sore area (optional)') : t('Add a photo to this entry (optional)');
     if(!showPhoto && typeof clearComposePhoto === 'function') clearComposePhoto();
     if(typeof applyComposerLock === 'function') applyComposerLock();
+    if(typeof renderComposePacks === 'function') renderComposePacks();
     if(composeMode === 'questions' && typeof renderComposeQuestions === 'function') renderComposeQuestions();
     syncComposerTags(); applyScoreMode();
   }
