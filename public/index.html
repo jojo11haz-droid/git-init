@@ -2344,9 +2344,10 @@
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
         <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
         <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
-          <button type="button" class="btw-role-btn active" data-filter="attention" style="font-size:11.5px;padding:5px 9px;">Needs attention</button>
-          <button type="button" class="btw-role-btn" data-filter="quiet" title="No check-in in the last few days" style="font-size:11.5px;padding:5px 9px;">Gone quiet</button>
-          <button type="button" class="btw-role-btn" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
+          <button type="button" class="btw-role-btn active" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
+          <button type="button" class="btw-role-btn" data-filter="mid" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping mid"></span>Doing okay</button>
+          <button type="button" class="btw-role-btn" data-filter="good" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping good"></span>Doing well</button>
+          <button type="button" class="btw-role-btn" data-filter="high" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping high"></span>Needs attention now</button>
         </div>
       </div>
 
@@ -3313,6 +3314,7 @@
     "new":"nouveaux","All caught up, nothing new.":"Tout est à jour, rien de nouveau.",
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
+    "No patients in this category right now.":"Aucun patient dans cette catégorie pour l'instant.",
     "Gone quiet":"Devenus silencieux","No check-in in the last few days":"Aucun suivi depuis quelques jours",
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
     "AI reads":"L'IA perçoit","Between estimates":"Between estime",
@@ -5569,7 +5571,7 @@
   // Caseload triage filter: needs-attention vs all.
   document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
-      caseloadFilter = b.dataset.filter || 'attention';
+      caseloadFilter = b.dataset.filter || 'all';
       document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(x=>x.classList.toggle('active', x===b));
       renderPatientList();
     });
@@ -8594,7 +8596,7 @@
     ];
   }
 
-  let caseloadFilter = 'attention'; // 'attention' | 'all' | 'quiet'
+  let caseloadFilter = 'all'; // 'all' | 'mid' (yellow) | 'good' (green) | 'high' (red)
   // Needs attention: a safety flag, unreviewed new check-ins, or a persistently
   // low last mood (matches the red status ping so the tab never hides a red dot).
   function needsAttention(p){ return p.has_recent_risk || (p.new_check_in_count||0) > 0 || (p.last_mood != null && p.last_mood <= 3); }
@@ -8726,13 +8728,13 @@
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     renderCaseloadSummary();
-    // "Needs attention" hides quiet patients (but keeps the selected one so the
-    // timeline pane still lines up); "All" shows everyone, flagged/recent first.
+    // The slider picks a status colour: "All" shows everyone grouped by colour,
+    // and a colour shows just that group. The timeline pane keeps the selected
+    // patient whether or not their card is in the current view.
+    const colorFilter = (caseloadFilter === 'mid' || caseloadFilter === 'good' || caseloadFilter === 'high') ? caseloadFilter : null;
     let list = state.patients;
-    if(caseloadFilter === 'attention'){
-      list = state.patients.filter(p=> needsAttention(p) || p.id === state.selectedPatientId);
-    } else if(caseloadFilter === 'quiet'){
-      list = state.patients.filter(p=> isQuiet(p) || p.id === state.selectedPatientId);
+    if(colorFilter){
+      list = state.patients.filter(p=> patientColor(p) === colorFilter);
     }
     function cardHtml(p){
       const active = p.id === state.selectedPatientId;
@@ -8748,14 +8750,14 @@
     }
     let cards;
     if(list.length === 0){
-      cards = (caseloadFilter === 'attention')
-        ? '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Nothing needs attention right now.'))+'</div>'
-        : (caseloadFilter === 'quiet')
-        ? '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('Everyone has checked in recently.'))+'</div>'
-        : '';
+      cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No patients in this category right now.'))+'</div>';
+    } else if(colorFilter){
+      // A single colour is picked, so the slider already names the category —
+      // show the cards without repeating a group header.
+      cards = list.map(cardHtml).join('');
     } else {
-      // Group the caseload by status colour so each category is together and
-      // labelled: yellow, then green, then red, then those with no check-ins.
+      // "All": group the caseload by status colour so each category is together
+      // and labelled: yellow, then green, then red, then those with no check-ins.
       const GROUPS = [
         { key:'mid',  label:t('Doing okay') },
         { key:'good', label:t('Doing well') },
