@@ -3170,6 +3170,7 @@
     "Sleep":"Sommeil","Work":"Travail","Conflict":"Conflit","Craving":"Envie","Panic":"Panique","Family":"Famille","Win":"Réussite","Social":"Social",
     "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
+    "Focus":"Concentration","Memory":"Mémoire","Mental fatigue":"Fatigue mentale","Word-finding":"Recherche de mots","Overwhelm":"Surcharge","Mood":"Humeur","Headache":"Maux de tête",
     "Pressure":"Pression","Confidence":"Confiance","Motivation":"Motivation",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Write or speak":"Écrire ou parler",
@@ -5274,6 +5275,12 @@
   // Cognition-flavored overrides on top of the word swap.
   Object.assign(NEURO_EN, {
     "For therapists, counsellors & anyone on their own":"For neuropsychologists & anyone on their own",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Your patients check in the moment something shifts — a lapse in focus, a word that wouldn't come, a foggy afternoon. Between turns each one into a clear summary and a trend across focus, memory, mental fatigue and mood, ready in your dashboard before the next session. You walk in already knowing their week.",
+    "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":
+      "The between-session notes on focus, memory, fatigue and mood now land in one calm place instead of your inbox.",
+    "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":
+      "A quick note or voice memo whenever focus slips, a word won't come or the fog rolls in. Ten seconds, no appointment, no one waiting on the other end.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "A simple way to see how your patients are doing between assessments and sessions. They note how their focus, memory, mental fatigue and mood are going the moment something comes up, and you get a short summary before the next appointment.",
     "You don't need a therapist to use Between.":"You don't need a neuropsychologist to use Between.",
@@ -5282,6 +5289,12 @@
   });
   Object.assign(NEURO_FR, {
     "For therapists, counsellors & anyone on their own":"Pour neuropsychologues et particuliers",
+    "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
+      "Vos patients font un suivi dès que quelque chose change — une baisse de concentration, un mot qui ne vient pas, un après-midi embrumé. Between transforme chacun en un résumé clair et une tendance de la concentration, de la mémoire, de la fatigue mentale et de l'humeur, prête dans votre tableau de bord avant la prochaine séance. Vous arrivez en sachant déjà leur semaine.",
+    "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":
+      "Les notes entre les séances sur la concentration, la mémoire, la fatigue et l'humeur arrivent dans un seul endroit calme plutôt que dans votre boîte de réception.",
+    "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":
+      "Un mot ou un mémo vocal dès que la concentration flanche, qu'un mot ne vient pas ou que le brouillard s'installe. Dix secondes, sans rendez-vous et sans personne à l'autre bout.",
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos patients entre les évaluations et les séances. Ils notent comment vont leur concentration, leur mémoire, leur fatigue mentale et leur humeur dès que quelque chose survient, et vous obtenez un court résumé avant le prochain rendez-vous.",
     "You don't need a therapist to use Between.":"Vous n'avez pas besoin d'un neuropsychologue pour utiliser Between.",
@@ -8879,7 +8892,9 @@
     therapy: ['Sleep','Work','Conflict','Craving','Panic','Family','Win','Social','Health','Money','Loneliness','Anger'],
     phys: ['Soreness','Stiffness','Fatigue','Injury','Sleep','Mobility','Training load','Stress'],
     // Sports blends the physio and therapist worlds: body and mind together.
-    mixed: ['Soreness','Fatigue','Injury','Sleep','Pressure','Confidence','Motivation','Stress']
+    mixed: ['Soreness','Fatigue','Injury','Sleep','Pressure','Confidence','Motivation','Stress'],
+    // Neuropsychology: cognition and mood, no body.
+    neuropsych: ['Focus','Memory','Mental fatigue','Word-finding','Overwhelm','Sleep','Mood','Headache']
   };
   let _composerTagSet = 'therapy'; // matches the static markup on load
   function renderComposerTags(which){
@@ -8915,6 +8930,7 @@
     // kinesiology, fitness) stay physical; therapy stays emotional.
     let want = 'therapy';
     if(painMapContext()) want = (painDiscipline() === 'sports') ? 'mixed' : 'phys';
+    else if(painDiscipline() === 'neuropsych') want = 'neuropsych';
     if(want !== _composerTagSet) renderComposerTags(want);
   }
 
