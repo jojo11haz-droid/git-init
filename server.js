@@ -430,6 +430,8 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
       ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions — soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
     : discipline === 'nutrition'
       ? `Your nutrition account is confirmed and ready. Add your clients and you'll see how they're doing between sessions — energy, cravings and how the plan is going, summarized before the next appointment.`
+    : discipline === 'neuropsych'
+      ? `Your neuropsychology account is confirmed and ready. Add your patients and you'll see how they're doing between assessments and sessions — how their focus, memory, mental fatigue and mood are going, summarized before the next appointment.`
     : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const body = kind === 'therapist'
     ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
@@ -511,7 +513,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, teamName, licenceNumber, licenceOrder, province } = req.body || {};
-    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo', 'occupational', 'nutrition'];
+    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition'];
     const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
@@ -519,7 +521,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
     // Physio and nutrition are regulated professions, so they need a licence and
     // manual review. The owner's free-access account skips it (to test each flow).
-    const needsLicence = (discipline === 'physio' || discipline === 'nutrition') && !isFreeAccess(email.trim());
+    const needsLicence = (discipline === 'physio' || discipline === 'nutrition' || discipline === 'neuropsych') && !isFreeAccess(email.trim());
     if (needsLicence && (!licenceNumber || !licenceNumber.trim())) {
       return res.status(400).json({ error: 'A professional licence/order number is required.' });
     }
@@ -1652,9 +1654,10 @@ function requireClinicianSubscription(req, res, next) {
 function clinicianVerified(c) {
   if (!c) return false;
   if (isFreeAccess(c.email) || !!c.licence_verified) return true;
-  // Coach/mentor/school/trainer accounts self-verify — except physio and
-  // nutrition, which are regulated and reviewed like a therapist.
-  if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition';
+  // Coach/mentor/school/trainer accounts self-verify — except physio,
+  // nutrition and neuropsychology, which are regulated and reviewed like a
+  // therapist.
+  if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition' && c.discipline !== 'neuropsych';
   return c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer';
 }
 function requireVerifiedClinician(req, res, next) {
@@ -2238,7 +2241,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 // single-page app; we serve index.html with the title, description and
 // canonical/social tags swapped for that field so each URL is its own search
 // result. /therapy is the default (canonical "/"), so it serves the base file.
-const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
+const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
 const DEFAULT_TITLE = 'Between — Between-session check-ins for therapy';
 const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
@@ -2249,6 +2252,7 @@ const FIELD_META = {
   '/kinesiology': { title: 'Between — Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
   '/osteopathy': { title: 'Between — Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
   '/occupational-therapy': { title: 'Between — Between-visit check-ins for occupational therapy', description: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
+  '/neuropsychology': { title: 'Between — Between-session check-ins for neuropsychology', description: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
   '/sports': { title: 'Between — Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
   '/fitness': { title: 'Between — Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
   '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
