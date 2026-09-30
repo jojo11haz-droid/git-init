@@ -1267,21 +1267,34 @@
     gap:20px 32px;
   }
   @media (max-width:700px){.btw-pricing-faq{grid-template-columns:1fr;}}
-  .btw-ask{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--moss-light) 0%,#fff 60%);padding:22px 20px;margin-top:26px;}
-  .btw-ask-head{font-family:var(--font-display);font-size:20px;color:var(--ink);margin-bottom:5px;}
-  .btw-ask-sub{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;}
-  .btw-ask-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
-  .btw-ask-chip{font-size:12.5px;color:var(--moss);background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 13px;cursor:pointer;font-family:var(--font-body);line-height:1.3;transition:background .15s ease,color .15s ease;}
-  .btw-ask-chip:hover{background:var(--moss);color:#fff;border-color:var(--moss);}
-  .btw-ask-row{display:flex;gap:9px;align-items:center;}
-  .btw-ask-input{flex:1;min-width:0;box-sizing:border-box;font-family:var(--font-body);font-size:14px;color:var(--ink);padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none;}
-  .btw-ask-input:focus{border-color:var(--moss);}
-  .btw-ask-send{flex:0 0 auto;background:var(--moss);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-family:var(--font-body);font-weight:600;font-size:13.5px;cursor:pointer;}
-  .btw-ask-send:disabled{opacity:.6;cursor:default;}
-  .btw-ask-answer{margin-top:13px;padding:13px 15px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap;}
-  .btw-ask-answer.loading{color:var(--ink-soft);font-style:italic;}
-  .btw-ask-note{font-size:11.5px;color:var(--ink-soft);margin-top:11px;line-height:1.5;}
-  .btw-ask-contact{background:none;border:none;padding:0;font:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;}
+  /* Floating AI chat widget */
+  #btwChat{position:fixed;right:20px;bottom:20px;z-index:45;}
+  .btw-chat-launch{position:relative;width:58px;height:58px;border-radius:50%;border:none;background:var(--moss);color:#fff;box-shadow:0 10px 28px rgba(30,76,134,0.34);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .18s ease,box-shadow .18s ease;}
+  .btw-chat-launch:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(30,76,134,0.4);}
+  .btw-chat-ico{position:absolute;transition:opacity .15s ease,transform .15s ease;}
+  .btw-chat-ico.close{opacity:0;transform:scale(.6) rotate(-30deg);}
+  #btwChat.open .btw-chat-ico.open{opacity:0;transform:scale(.6) rotate(30deg);}
+  #btwChat.open .btw-chat-ico.close{opacity:1;transform:scale(1) rotate(0);}
+  .btw-chat-panel{position:absolute;right:0;bottom:70px;width:370px;max-width:calc(100vw - 32px);height:min(70vh,540px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 60px rgba(22,28,38,0.28);overflow:hidden;}
+  .btw-chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--moss);color:#fff;}
+  .btw-chat-title{font-family:var(--font-display);font-size:16px;}
+  .btw-chat-x{background:none;border:none;color:#fff;font-size:15px;cursor:pointer;opacity:.85;line-height:1;padding:2px 4px;}
+  .btw-chat-x:hover{opacity:1;}
+  .btw-chat-body{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:9px;background:var(--paper);}
+  .btw-chat-msg{max-width:85%;font-size:13.5px;line-height:1.55;padding:9px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;}
+  .btw-chat-msg.bot{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:5px;}
+  .btw-chat-msg.user{align-self:flex-end;background:var(--moss);color:#fff;border-bottom-right-radius:5px;}
+  .btw-chat-msg.typing{color:var(--ink-soft);font-style:italic;}
+  .btw-chat-chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 15px 4px;background:var(--paper);}
+  .btw-chat-chip{font-size:12px;color:var(--moss);background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 11px;cursor:pointer;font-family:var(--font-body);line-height:1.3;}
+  .btw-chat-chip:hover{background:var(--moss);color:#fff;border-color:var(--moss);}
+  .btw-chat-row{display:flex;gap:8px;align-items:center;padding:11px 13px;border-top:1px solid var(--line);background:#fff;}
+  .btw-chat-input{flex:1;min-width:0;box-sizing:border-box;font-family:var(--font-body);font-size:14px;color:var(--ink);padding:10px 12px;border:1px solid var(--line);border-radius:22px;background:#fff;outline:none;}
+  .btw-chat-input:focus{border-color:var(--moss);}
+  .btw-chat-send{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--moss);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .btw-chat-send:disabled{opacity:.5;cursor:default;}
+  .btw-chat-note{font-size:10.5px;color:var(--ink-soft);text-align:center;padding:0 12px 9px;background:#fff;}
+  @media (max-width:560px){ #btwChat{right:14px;bottom:14px;} .btw-chat-panel{bottom:68px;} }
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
@@ -2681,22 +2694,6 @@
         </div>
       </div>
 
-      <div class="btw-ask" id="btwAsk">
-        <div class="btw-ask-head">Still have a question?</div>
-        <div class="btw-ask-sub">Ask and get an instant answer — about how it works, pricing, privacy, or anything else.</div>
-        <div class="btw-ask-chips" id="btwAskChips">
-          <button type="button" class="btw-ask-chip" data-q="How does it work?">How does it work?</button>
-          <button type="button" class="btw-ask-chip" data-q="How much does it cost?">How much does it cost?</button>
-          <button type="button" class="btw-ask-chip" data-q="Do my patients pay anything?">Do my patients pay?</button>
-          <button type="button" class="btw-ask-chip" data-q="Is my data private?">Is my data private?</button>
-        </div>
-        <div class="btw-ask-row">
-          <input type="text" id="btwAskInput" class="btw-ask-input" placeholder="Ask a question…" maxlength="500" aria-label="Ask a question">
-          <button type="button" class="btw-ask-send" id="btwAskSend">Ask</button>
-        </div>
-        <div class="btw-ask-answer" id="btwAskAnswer" style="display:none;"></div>
-        <div class="btw-ask-note">Answers come from an assistant and can be imperfect. <button type="button" class="btw-ask-contact" id="btwAskContact">Contact us for anything specific →</button></div>
-      </div>
     </div>
   </div>
 
@@ -3012,6 +3009,27 @@
   </footer>
 </div>
 
+<!-- Floating AI Q&A: a launcher bubble that opens a chat panel, site-wide. -->
+<div id="btwChat">
+  <div class="btw-chat-panel" id="btwChatPanel" role="dialog" aria-label="Ask Between" hidden>
+    <div class="btw-chat-head">
+      <div class="btw-chat-title">Ask Between</div>
+      <button type="button" class="btw-chat-x" id="btwChatX" aria-label="Close">✕</button>
+    </div>
+    <div class="btw-chat-body" id="btwChatBody"></div>
+    <div class="btw-chat-chips" id="btwChatChips"></div>
+    <div class="btw-chat-row">
+      <input type="text" id="btwChatInput" class="btw-chat-input" placeholder="Ask a question…" maxlength="500" autocomplete="off" aria-label="Ask a question">
+      <button type="button" class="btw-chat-send" id="btwChatSend" aria-label="Send"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+    </div>
+    <div class="btw-chat-note">Answers come from an assistant and can be imperfect.</div>
+  </div>
+  <button type="button" class="btw-chat-launch" id="btwChatLaunch" aria-label="Ask Between a question" aria-expanded="false">
+    <svg class="btw-chat-ico open" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    <svg class="btw-chat-ico close" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
+</div>
+
 <script>
 (function(){
   // --- tiny same-origin API helper (session cookie rides along automatically) ---
@@ -3203,15 +3221,13 @@
     "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
     "Focus":"Concentration","Memory":"Mémoire","Mental fatigue":"Fatigue mentale","Word-finding":"Recherche de mots","Overwhelm":"Surcharge","Mood":"Humeur","Headache":"Maux de tête",
-    "Still have a question?":"Une question ?",
-    "Ask and get an instant answer — about how it works, pricing, privacy, or anything else.":"Posez-la et obtenez une réponse instantanée — sur le fonctionnement, les tarifs, la confidentialité ou autre.",
+    "Ask Between":"Demander à Between",
+    "Hi — I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?":"Bonjour — je peux répondre à vos questions sur Between : fonctionnement, tarifs, confidentialité et plus. Que souhaitez-vous savoir ?",
     "How does it work?":"Comment ça fonctionne ?",
     "How much does it cost?":"Combien ça coûte ?",
     "Do my patients pay?":"Mes patients paient-ils ?",
     "Is my data private?":"Mes données sont-elles privées ?",
-    "Ask":"Demander",
     "Answers come from an assistant and can be imperfect.":"Les réponses proviennent d'un assistant et peuvent être imparfaites.",
-    "Contact us for anything specific →":"Contactez-nous pour toute question précise →",
     "Thinking…":"Réflexion…",
     "Could not answer that just now. Please try again.":"Impossible de répondre pour l'instant. Veuillez réessayer.",
     "Connection problem. Please try again.":"Problème de connexion. Veuillez réessayer.",
@@ -3696,7 +3712,7 @@
     btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
     btwTagInput:'Écrivez-le et appuyez sur entrée',
-    btwAskInput:'Posez une question…',
+    btwChatInput:'Posez une question…',
     btwResetNewPw:'Au moins 10 caractères', btwSuPassword:'Au moins 10 caractères',
     btwSuPractice:"Une pratique solo, c'est parfait", btwSuLicence:'ex. numéro OPQ',
     btwPsName:'Un prénom suffit', btwPsEmail:'vous@courriel.com', btwPsPassword:'Au moins 10 caractères',
@@ -5659,6 +5675,7 @@
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     if(window.__btwScoreMode) window.__btwScoreMode();
     if(typeof syncAudSelLabel === 'function') syncAudSelLabel();
+    if(window.__btwChatRelocalize) window.__btwChatRelocalize();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
@@ -7062,37 +7079,72 @@
     else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
   });
 
-  // Website Q&A assistant: a visitor asks a question and gets an instant,
-  // grounded answer, so they don't have to reach out for the basics. Public,
-  // no account, nothing stored. The chips send their (translated) label so a
-  // French visitor gets a French answer; typed questions answer in kind.
+  // Floating AI chat: a launcher bubble in the corner opens a Q&A panel that
+  // works site-wide, so a visitor can ask a question the moment it comes up
+  // instead of hunting for contact. Public, no account, nothing stored. Each
+  // question is answered on its own from grounded facts (see /api/ask).
   (function(){
-    const input = document.getElementById('btwAskInput');
-    const sendBtn = document.getElementById('btwAskSend');
-    const answerEl = document.getElementById('btwAskAnswer');
-    const chips = document.getElementById('btwAskChips');
-    const contact = document.getElementById('btwAskContact');
-    if(!input || !sendBtn || !answerEl) return;
-    let busy = false;
-    function show(text, loading){ answerEl.textContent = text; answerEl.classList.toggle('loading', !!loading); answerEl.style.display = ''; }
+    const root = document.getElementById('btwChat');
+    const launch = document.getElementById('btwChatLaunch');
+    const panel = document.getElementById('btwChatPanel');
+    const closeX = document.getElementById('btwChatX');
+    const bodyEl = document.getElementById('btwChatBody');
+    const chipsEl = document.getElementById('btwChatChips');
+    const input = document.getElementById('btwChatInput');
+    const sendBtn = document.getElementById('btwChatSend');
+    if(!root || !launch || !panel || !bodyEl) return;
+    let busy = false, greeted = false;
+    const CHAT_QS = ['How does it work?', 'How much does it cost?', 'Do my patients pay?', 'Is my data private?'];
+    function scrollDown(){ bodyEl.scrollTop = bodyEl.scrollHeight; }
+    function addMsg(who, text){
+      const el = document.createElement('div');
+      el.className = 'btw-chat-msg ' + (who === 'user' ? 'user' : 'bot');
+      el.textContent = text;
+      bodyEl.appendChild(el); scrollDown();
+      return el;
+    }
+    function renderChips(){
+      if(!chipsEl) return;
+      chipsEl.innerHTML = CHAT_QS.map(function(q){ return '<button type="button" class="btw-chat-chip">' + esc(t(q)) + '</button>'; }).join('');
+      chipsEl.querySelectorAll('.btw-chat-chip').forEach(function(b){ b.addEventListener('click', function(){ ask(b.textContent.trim()); }); });
+    }
+    function greet(){
+      if(greeted) return; greeted = true;
+      addMsg('bot', t('Hi — I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?'));
+      renderChips();
+    }
     async function ask(q){
-      const question = (q || input.value || '').trim();
+      const question = (q || (input && input.value) || '').trim();
       if(!question || busy) return;
-      input.value = question;
-      busy = true; sendBtn.disabled = true;
-      show(t('Thinking…'), true);
+      if(input) input.value = '';
+      if(chipsEl) chipsEl.innerHTML = ''; // chips are a starter; hide after first ask
+      addMsg('user', question);
+      busy = true; if(sendBtn) sendBtn.disabled = true;
+      const typing = addMsg('bot', t('Thinking…')); typing.classList.add('typing');
       try{
         const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: question }) });
         const data = await r.json().catch(function(){ return {}; });
-        if(!r.ok){ show(data.error || t('Could not answer that just now. Please try again.'), false); return; }
-        show(data.answer || t('Could not answer that just now. Please try again.'), false);
-      }catch(e){ show(t('Connection problem. Please try again.'), false); }
-      finally{ busy = false; sendBtn.disabled = false; }
+        typing.classList.remove('typing');
+        typing.textContent = (r.ok && data.answer) ? data.answer : (data.error || t('Could not answer that just now. Please try again.'));
+      }catch(e){ typing.classList.remove('typing'); typing.textContent = t('Connection problem. Please try again.'); }
+      finally{ busy = false; if(sendBtn) sendBtn.disabled = false; scrollDown(); }
     }
-    sendBtn.addEventListener('click', function(){ ask(); });
-    input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); ask(); } });
-    if(chips) chips.querySelectorAll('.btw-ask-chip').forEach(function(b){ b.addEventListener('click', function(){ ask(b.textContent.trim()); }); });
-    if(contact) contact.addEventListener('click', function(){ if(typeof openContact === 'function') openContact(); });
+    // The panel sits outside the translateStatic() scope, so localize its fixed
+    // labels here (title, note) from the same dictionary.
+    function localizeStatic(){
+      const title = panel.querySelector('.btw-chat-title'); if(title) title.textContent = t('Ask Between');
+      const note = panel.querySelector('.btw-chat-note'); if(note) note.textContent = t('Answers come from an assistant and can be imperfect.');
+      launch.setAttribute('aria-label', t('Ask Between'));
+    }
+    function open(){ root.classList.add('open'); panel.hidden = false; launch.setAttribute('aria-expanded', 'true'); localizeStatic(); greet(); setTimeout(function(){ if(input) input.focus(); }, 60); }
+    function close(){ root.classList.remove('open'); panel.hidden = true; launch.setAttribute('aria-expanded', 'false'); }
+    launch.addEventListener('click', function(){ root.classList.contains('open') ? close() : open(); });
+    if(closeX) closeX.addEventListener('click', close);
+    if(sendBtn) sendBtn.addEventListener('click', function(){ ask(); });
+    if(input) input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); ask(); } });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && root.classList.contains('open')) close(); });
+    // Re-localize the fixed labels (and starter chips) if the language flips.
+    window.__btwChatRelocalize = function(){ localizeStatic(); if(chipsEl && chipsEl.children.length){ renderChips(); } };
   })();
   // Therapist Premium card: upgrade a signed-in therapist in place, otherwise
   // open signup with the Premium plan pre-selected.
