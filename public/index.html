@@ -1268,15 +1268,16 @@
   }
   @media (max-width:700px){.btw-pricing-faq{grid-template-columns:1fr;}}
   /* Floating AI chat widget */
-  #btwChat{position:fixed;right:18px;bottom:18px;z-index:45;}
-  .btw-chat-launch{position:relative;width:46px;height:46px;border-radius:50%;background:#fff;color:var(--moss);border:1px solid var(--line);box-shadow:0 4px 14px rgba(22,28,38,0.10);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.9;transition:opacity .18s ease,box-shadow .18s ease,border-color .18s ease;}
-  .btw-chat-launch:hover{opacity:1;box-shadow:0 6px 18px rgba(22,28,38,0.16);border-color:var(--moss-light);}
-  #btwChat.open .btw-chat-launch{opacity:1;}
+  #btwChat{position:fixed;right:0;bottom:26px;z-index:45;}
+  /* Tucked against the right edge, peeking, until hovered, focused or opened. */
+  .btw-chat-launch{position:relative;width:46px;height:46px;border-radius:50%;background:#fff;color:var(--moss);border:1px solid var(--line);box-shadow:0 4px 14px rgba(22,28,38,0.10);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.72;transform:translateX(42%);transition:transform .22s ease,opacity .22s ease,box-shadow .18s ease,border-color .18s ease;}
+  .btw-chat-launch:hover,.btw-chat-launch:focus-visible{opacity:1;transform:translateX(-16px);box-shadow:0 6px 18px rgba(22,28,38,0.16);border-color:var(--moss-light);}
+  #btwChat.open .btw-chat-launch{opacity:1;transform:translateX(-16px);}
   .btw-chat-ico{position:absolute;width:20px;height:20px;transition:opacity .15s ease,transform .15s ease;}
   .btw-chat-ico.close{opacity:0;transform:scale(.6) rotate(-30deg);}
   #btwChat.open .btw-chat-ico.open{opacity:0;transform:scale(.6) rotate(30deg);}
   #btwChat.open .btw-chat-ico.close{opacity:1;transform:scale(1) rotate(0);}
-  .btw-chat-panel{position:absolute;right:0;bottom:70px;width:370px;max-width:calc(100vw - 32px);height:min(70vh,540px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 60px rgba(22,28,38,0.28);overflow:hidden;}
+  .btw-chat-panel{position:absolute;right:16px;bottom:80px;width:370px;max-width:calc(100vw - 32px);height:min(70vh,540px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 60px rgba(22,28,38,0.28);overflow:hidden;}
   .btw-chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--moss);color:#fff;}
   .btw-chat-title{font-family:var(--font-display);font-size:16px;}
   .btw-chat-x{background:none;border:none;color:#fff;font-size:15px;cursor:pointer;opacity:.85;line-height:1;padding:2px 4px;}
@@ -1295,7 +1296,7 @@
   .btw-chat-send{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--moss);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .btw-chat-send:disabled{opacity:.5;cursor:default;}
   .btw-chat-note{font-size:10.5px;color:var(--ink-soft);text-align:center;padding:0 12px 9px;background:#fff;}
-  @media (max-width:560px){ #btwChat{right:14px;bottom:14px;} .btw-chat-panel{bottom:68px;} }
+  @media (max-width:560px){ #btwChat{bottom:22px;} .btw-chat-panel{right:12px;bottom:74px;} }
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
