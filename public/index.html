@@ -1267,6 +1267,21 @@
     gap:20px 32px;
   }
   @media (max-width:700px){.btw-pricing-faq{grid-template-columns:1fr;}}
+  .btw-ask{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--moss-light) 0%,#fff 60%);padding:22px 20px;margin-top:26px;}
+  .btw-ask-head{font-family:var(--font-display);font-size:20px;color:var(--ink);margin-bottom:5px;}
+  .btw-ask-sub{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;}
+  .btw-ask-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .btw-ask-chip{font-size:12.5px;color:var(--moss);background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 13px;cursor:pointer;font-family:var(--font-body);line-height:1.3;transition:background .15s ease,color .15s ease;}
+  .btw-ask-chip:hover{background:var(--moss);color:#fff;border-color:var(--moss);}
+  .btw-ask-row{display:flex;gap:9px;align-items:center;}
+  .btw-ask-input{flex:1;min-width:0;box-sizing:border-box;font-family:var(--font-body);font-size:14px;color:var(--ink);padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none;}
+  .btw-ask-input:focus{border-color:var(--moss);}
+  .btw-ask-send{flex:0 0 auto;background:var(--moss);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-family:var(--font-body);font-weight:600;font-size:13.5px;cursor:pointer;}
+  .btw-ask-send:disabled{opacity:.6;cursor:default;}
+  .btw-ask-answer{margin-top:13px;padding:13px 15px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap;}
+  .btw-ask-answer.loading{color:var(--ink-soft);font-style:italic;}
+  .btw-ask-note{font-size:11.5px;color:var(--ink-soft);margin-top:11px;line-height:1.5;}
+  .btw-ask-contact{background:none;border:none;padding:0;font:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;}
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
@@ -2665,6 +2680,23 @@
           <p>Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. See the Privacy Policy for details.</p>
         </div>
       </div>
+
+      <div class="btw-ask" id="btwAsk">
+        <div class="btw-ask-head">Still have a question?</div>
+        <div class="btw-ask-sub">Ask and get an instant answer — about how it works, pricing, privacy, or anything else.</div>
+        <div class="btw-ask-chips" id="btwAskChips">
+          <button type="button" class="btw-ask-chip" data-q="How does it work?">How does it work?</button>
+          <button type="button" class="btw-ask-chip" data-q="How much does it cost?">How much does it cost?</button>
+          <button type="button" class="btw-ask-chip" data-q="Do my patients pay anything?">Do my patients pay?</button>
+          <button type="button" class="btw-ask-chip" data-q="Is my data private?">Is my data private?</button>
+        </div>
+        <div class="btw-ask-row">
+          <input type="text" id="btwAskInput" class="btw-ask-input" placeholder="Ask a question…" maxlength="500" aria-label="Ask a question">
+          <button type="button" class="btw-ask-send" id="btwAskSend">Ask</button>
+        </div>
+        <div class="btw-ask-answer" id="btwAskAnswer" style="display:none;"></div>
+        <div class="btw-ask-note">Answers come from an assistant and can be imperfect. <button type="button" class="btw-ask-contact" id="btwAskContact">Contact us for anything specific →</button></div>
+      </div>
     </div>
   </div>
 
@@ -3171,6 +3203,18 @@
     "Health":"Santé","Money":"Argent","Loneliness":"Solitude","Anger":"Colère","+ Something else":"+ Autre chose","Tap to remove":"Touchez pour retirer",
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
     "Focus":"Concentration","Memory":"Mémoire","Mental fatigue":"Fatigue mentale","Word-finding":"Recherche de mots","Overwhelm":"Surcharge","Mood":"Humeur","Headache":"Maux de tête",
+    "Still have a question?":"Une question ?",
+    "Ask and get an instant answer — about how it works, pricing, privacy, or anything else.":"Posez-la et obtenez une réponse instantanée — sur le fonctionnement, les tarifs, la confidentialité ou autre.",
+    "How does it work?":"Comment ça fonctionne ?",
+    "How much does it cost?":"Combien ça coûte ?",
+    "Do my patients pay?":"Mes patients paient-ils ?",
+    "Is my data private?":"Mes données sont-elles privées ?",
+    "Ask":"Demander",
+    "Answers come from an assistant and can be imperfect.":"Les réponses proviennent d'un assistant et peuvent être imparfaites.",
+    "Contact us for anything specific →":"Contactez-nous pour toute question précise →",
+    "Thinking…":"Réflexion…",
+    "Could not answer that just now. Please try again.":"Impossible de répondre pour l'instant. Veuillez réessayer.",
+    "Connection problem. Please try again.":"Problème de connexion. Veuillez réessayer.",
     "Pressure":"Pression","Confidence":"Confiance","Motivation":"Motivation",
     "Tell it like it happened":"Dites-le comme ça s'est passé",
     "Write or speak":"Écrire ou parler",
@@ -3652,6 +3696,7 @@
     btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
     btwTagInput:'Écrivez-le et appuyez sur entrée',
+    btwAskInput:'Posez une question…',
     btwResetNewPw:'Au moins 10 caractères', btwSuPassword:'Au moins 10 caractères',
     btwSuPractice:"Une pratique solo, c'est parfait", btwSuLicence:'ex. numéro OPQ',
     btwPsName:'Un prénom suffit', btwPsEmail:'vous@courriel.com', btwPsPassword:'Au moins 10 caractères',
@@ -7016,6 +7061,39 @@
     if(state.me && state.me.account_type === prem.acct) changePlan(prem.plan);
     else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
   });
+
+  // Website Q&A assistant: a visitor asks a question and gets an instant,
+  // grounded answer, so they don't have to reach out for the basics. Public,
+  // no account, nothing stored. The chips send their (translated) label so a
+  // French visitor gets a French answer; typed questions answer in kind.
+  (function(){
+    const input = document.getElementById('btwAskInput');
+    const sendBtn = document.getElementById('btwAskSend');
+    const answerEl = document.getElementById('btwAskAnswer');
+    const chips = document.getElementById('btwAskChips');
+    const contact = document.getElementById('btwAskContact');
+    if(!input || !sendBtn || !answerEl) return;
+    let busy = false;
+    function show(text, loading){ answerEl.textContent = text; answerEl.classList.toggle('loading', !!loading); answerEl.style.display = ''; }
+    async function ask(q){
+      const question = (q || input.value || '').trim();
+      if(!question || busy) return;
+      input.value = question;
+      busy = true; sendBtn.disabled = true;
+      show(t('Thinking…'), true);
+      try{
+        const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: question }) });
+        const data = await r.json().catch(function(){ return {}; });
+        if(!r.ok){ show(data.error || t('Could not answer that just now. Please try again.'), false); return; }
+        show(data.answer || t('Could not answer that just now. Please try again.'), false);
+      }catch(e){ show(t('Connection problem. Please try again.'), false); }
+      finally{ busy = false; sendBtn.disabled = false; }
+    }
+    sendBtn.addEventListener('click', function(){ ask(); });
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); ask(); } });
+    if(chips) chips.querySelectorAll('.btw-ask-chip').forEach(function(b){ b.addEventListener('click', function(){ ask(b.textContent.trim()); }); });
+    if(contact) contact.addEventListener('click', function(){ if(typeof openContact === 'function') openContact(); });
+  })();
   // Therapist Premium card: upgrade a signed-in therapist in place, otherwise
   // open signup with the Premium plan pre-selected.
   const soloPremCta = document.getElementById('btwSoloPremiumCta');
