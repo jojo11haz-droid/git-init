@@ -404,6 +404,15 @@
   .btw-cap-note{font-size:12px;color:var(--ink-soft);margin-top:9px;line-height:1.5;}
   .btw-cap-note.full{color:var(--clay,#C0392B);}
   .btw-cap-note button{background:none;border:none;padding:0;font:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;}
+  .btw-urgent-note{font-size:11.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;padding:8px 11px;background:var(--paper);border:1px solid var(--line);border-radius:9px;}
+  .btw-urgent-note strong{color:var(--clay,#C0392B);}
+  .btw-onboard{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--moss-light) 0%,#fff 60%);padding:20px 20px 18px;}
+  .btw-onboard-title{font-family:var(--font-display);font-size:19px;color:var(--ink);margin-bottom:12px;line-height:1.3;}
+  .btw-onboard-steps{margin:0 0 14px;padding:0;list-style:none;counter-reset:ob;}
+  .btw-onboard-steps li{position:relative;padding:0 0 11px 34px;font-size:13.5px;line-height:1.5;color:var(--ink);counter-increment:ob;}
+  .btw-onboard-steps li::before{content:counter(ob);position:absolute;left:0;top:-1px;width:23px;height:23px;border-radius:50%;background:var(--moss);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+  .btw-onboard-btn{background:var(--moss);color:#fff;border:none;border-radius:100px;padding:11px 20px;font-family:var(--font-body);font-weight:600;font-size:13.5px;cursor:pointer;}
+  .btw-onboard-foot{font-size:11.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;}
   .btw-insights{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
@@ -2435,6 +2444,7 @@
         <button class="btw-send" id="btwSend">Send check-in</button>
       </div>
       <div class="btw-cap-note" id="btwCapNote" style="display:none;"></div>
+      <div class="btw-urgent-note" id="btwUrgentNote" style="display:none;">Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.</div>
       <div id="btwProcessing" style="display:none;">
         <div class="btw-wave"><span></span><span></span><span></span><span></span><span></span></div>
         <div class="btw-processing-label">Summarizing for your therapist…</div>
@@ -3005,6 +3015,7 @@
     <a href="/terms.html" style="color:var(--moss);text-decoration:none;">Terms</a>
     <a href="/privacy.html" style="color:var(--moss);text-decoration:none;">Privacy</a>
     <a href="/subprocessors.html" style="color:var(--moss);text-decoration:none;">Subprocessors</a>
+    <a href="/clinic-data-agreement.html" style="color:var(--moss);text-decoration:none;">Clinic agreement</a>
     <a href="/guides/" style="color:var(--moss);text-decoration:none;">Guides</a>
     <span style="flex:1;"></span>
     <span id="btwFooterCrisis" style="color:var(--ink-soft);">Not a crisis service, in an emergency call 988 or 911.</span>
@@ -3424,6 +3435,11 @@
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet, add your first patient to start receiving check-ins.":"Aucun patient pour l'instant, ajoutez votre premier patient pour commencer à recevoir des suivis.",
+    "Welcome — let's get your first check-ins coming in":"Bienvenue — faisons arriver vos premiers suivis",
+    "Add someone to your caseload — a first name is all you need.":"Ajoutez une personne à votre clientèle — un prénom suffit.",
+    "Between gives you a one-time invite code. Share it with them.":"Between vous donne un code d'invitation à usage unique. Partagez-le avec elle.",
+    "They check in between visits, and a short summary is waiting for you before the next one.":"Elle fait ses suivis entre les visites, et un court résumé vous attend avant le prochain rendez-vous.",
+    "Nothing pings you. You are never on call — the summary just waits for your next session.":"Rien ne vous sonne. Vous n'êtes jamais de garde — le résumé attend simplement votre prochaine séance.",
     "No check-ins yet for":"Aucun suivi pour l'instant pour",
     "check-in":"suivi","check-ins":"suivis","Most affected areas":"Zones les plus touchées","up to":"jusqu'à",
     "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
@@ -3518,6 +3534,7 @@
       "J'ai 18 ans ou plus. Si j'ai moins de 18 ans, un parent ou tuteur a accepté que j'utilise Between.",
     "Already have an account?":"Vous avez déjà un compte?",
     "Your check-in":"Votre suivi",
+    "Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.":"Between n'est pas pour les situations urgentes ou d'urgence. Si vous avez besoin d'aide maintenant, composez le 988 ou le 911.",
     "A quick check-in whenever something comes up. It stays private to you.":"Un court suivi dès que quelque chose survient. Il reste privé.",
     "Your check-ins":"Vos suivis",
     "Your own history and trends, updating each time you check in.":"Votre propre historique et vos tendances, mis à jour à chaque suivi.",
@@ -9539,6 +9556,23 @@
     });
   })();
 
+  // A warm first-run for a newly approved clinician with an empty caseload:
+  // three plain steps and a button to add their first person, so the first
+  // few minutes are obvious instead of a blank screen.
+  function clinicianOnboardingHtml(){
+    const steps = [
+      t('Add someone to your caseload — a first name is all you need.'),
+      t('Between gives you a one-time invite code. Share it with them.'),
+      t('They check in between visits, and a short summary is waiting for you before the next one.')
+    ];
+    return '<div class="btw-onboard">'
+      + '<div class="btw-onboard-title">' + esc(t('Welcome — let\'s get your first check-ins coming in')) + '</div>'
+      + '<ol class="btw-onboard-steps">' + steps.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>'
+      + '<button type="button" class="btw-onboard-btn" id="btwOnboardAdd">' + esc(t('Add patient')) + '</button>'
+      + '<div class="btw-onboard-foot">' + esc(t('Nothing pings you. You are never on call — the summary just waits for your next session.')) + '</div>'
+      + '</div>';
+  }
+
   function renderDigest(){
     const el = document.getElementById('btwDigest');
     const titleEl = document.getElementById('btwTimelineTitle');
@@ -9546,7 +9580,9 @@
     const list = state.checkIns;
     if(titleEl) titleEl.textContent = t('Timeline') + (patient ? ' · ' + patient.display_name : '');
     if(!patient){
-      el.innerHTML = esc(t('No patients yet, add your first patient to start receiving check-ins.'));
+      el.innerHTML = ((state.patients||[]).length === 0) ? clinicianOnboardingHtml() : esc(t('No patients yet, add your first patient to start receiving check-ins.'));
+      const ob = document.getElementById('btwOnboardAdd');
+      if(ob) ob.addEventListener('click', function(){ const b = document.getElementById('btwAddPatient'); if(b) b.click(); });
       return;
     }
     if(list.length===0){
@@ -10046,6 +10082,7 @@
     if(isPatient()){
       document.getElementById('btwPatientPaneEyebrow').textContent = t('Your check-in');
       document.getElementById('btwSend').disabled = false;
+      const un = document.getElementById('btwUrgentNote'); if(un) un.style.display = '';
       syncConsentUi();
       renderCapNote();
       renderWeekSummary();
