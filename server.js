@@ -16,6 +16,7 @@ import {
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
   createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
+  setPatientReminders, disableRemindersByToken, findPatientsNeedingReminder, markPatientReminded,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
   createPhotoUploadToken, consumePhotoUploadToken, storePhotoUpload,
@@ -1676,6 +1677,7 @@ function publicPatient(p) {
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
+    reminders_enabled: !!p.reminders_enabled,
     is_premium: patientIsPremium(p),
     weekly_checkin_cap: patientWeeklyCap(p)
   };
@@ -2043,6 +2045,49 @@ app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res)
     console.error('Error recording patient consent:', err);
     res.status(500).json({ error: 'Could not record your choice.' });
   }
+});
+
+// Patient opts in/out of gentle check-in reminders. Off by default; their own
+// choice, no clinician involved. Turning it on mints a stable unsubscribe token
+// (kept across toggles so old email links keep working). Only meaningful when
+// the account has an email and the server can send mail, but the preference is
+// always recorded.
+app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const { enabled } = req.body || {};
+    const token = req.patient.reminder_token || generateSessionToken();
+    const patient = await setPatientReminders(req.patient.id, !!enabled, token);
+    res.json({ patient: publicPatient(patient), emailConfigured: emailConfigured() });
+  } catch (err) {
+    console.error('Error updating reminder preference:', err);
+    res.status(500).json({ error: 'Could not save your choice.' });
+  }
+});
+
+// One-click unsubscribe from the reminder email. A GET so it works straight from
+// an email client, authenticated only by the opaque token, and it returns a
+// small standalone confirmation page rather than JSON.
+app.get('/api/reminders/unsubscribe', requireDb, async (req, res) => {
+  const token = (req.query.token || '').toString();
+  let name = null;
+  try {
+    if (token) name = await disableRemindersByToken(token);
+  } catch (err) {
+    console.error('Error unsubscribing from reminders:', err);
+  }
+  const msg = name
+    ? `You're unsubscribed from Between check-in reminders. We won't email you these again. You can turn them back on anytime in your Between settings.`
+    : `This unsubscribe link is no longer valid. If you still get reminders, you can turn them off in your Between settings.`;
+  res.set('Content-Type', 'text/html; charset=utf-8').send(
+    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1">` +
+    `<title>Reminders — Between</title>` +
+    `<style>body{margin:0;background:#F5F4F1;color:#1A1E1C;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;}` +
+    `.wrap{max-width:460px;margin:12vh auto 0;padding:32px 24px;text-align:center;}` +
+    `h1{font-size:22px;margin:16px 0 8px;}p{color:#5A6169;font-size:15px;}a{color:#1E4C86;}</style></head>` +
+    `<body><div class="wrap"><h1>Check-in reminders</h1><p>${msg}</p>` +
+    `<p><a href="/">← Back to Between</a></p></div></body></html>`
+  );
 });
 
 // Voice memos, step 1: ask for a short-lived signed upload URL. Raw audio
@@ -2458,9 +2503,61 @@ function checkPatientPricing() {
   if (!problems) console.log('✅ Individual Stripe prices look consistent — each plan has its own price.');
 }
 
+// --- Check-in reminder sweep ---
+// A once-a-day pass that emails opted-in patients who've gone quiet. No new
+// infrastructure: a plain in-process timer, matching the lazy-GC approach used
+// elsewhere. It assumes a single running instance (as on Render's default) —
+// set DISABLE_REMINDER_SWEEP=1 on secondary instances if you ever scale out.
+const REMINDER_QUIET_DAYS = Math.max(1, Number(process.env.REMINDER_QUIET_DAYS || 7));
+const REMINDER_COOLDOWN_DAYS = Math.max(0, Number(process.env.REMINDER_COOLDOWN_DAYS || 7));
+const REMINDER_SWEEP_MS = 24 * 60 * 60 * 1000;
+
+async function runReminderSweep() {
+  if (!dbEnabled() || !emailConfigured()) return;
+  const base = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
+  try {
+    const due = await findPatientsNeedingReminder(REMINDER_QUIET_DAYS, REMINDER_COOLDOWN_DAYS);
+    for (const p of due) {
+      const name = p.display_name || 'there';
+      const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
+      try {
+        await sendEmail({
+          to: p.email,
+          subject: 'A gentle check-in from Between',
+          text: `Hi ${name},\n\n` +
+            `It's been a little while since your last check-in on Between. No pressure at all — ` +
+            `whenever you have a moment, even a short note about how you're doing gives your next ` +
+            `appointment something to start from.\n\n` +
+            `Open Between: ${base}/\n\n` +
+            `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
+            `— Between\n\n` +
+            `Don't want these reminders? Unsubscribe here: ${unsub}`
+        });
+      } catch (err) {
+        console.error('Reminder email failed for a patient:', err);
+      }
+      // Mark reminded either way so the cooldown holds and we never loop on one
+      // address if delivery is flaky.
+      try { await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
+    }
+    if (due.length) console.log(`📧 Reminder sweep: nudged ${due.length} quiet patient(s).`);
+  } catch (err) {
+    console.error('Reminder sweep failed:', err);
+  }
+}
+
+function startReminderSweep() {
+  if (process.env.DISABLE_REMINDER_SWEEP === '1') return;
+  if (!dbEnabled() || !emailConfigured()) return;
+  // First pass a minute after boot (let the DB settle), then daily.
+  setTimeout(runReminderSweep, 60 * 1000).unref?.();
+  setInterval(runReminderSweep, REMINDER_SWEEP_MS).unref?.();
+  console.log('📧 Check-in reminder sweep scheduled (daily).');
+}
+
 const PORT = process.env.PORT || 3000;
 initDb().then(() => {
-  app.listen(PORT, () => { console.log(`Between server running on port ${PORT}`); checkPatientPricing(); });
+  app.listen(PORT, () => { console.log(`Between server running on port ${PORT}`); checkPatientPricing(); startReminderSweep(); });
 }).catch(err => {
   console.error('Failed to initialize database:', err);
   app.listen(PORT, () => { console.log(`Between server running on port ${PORT} (without DB)`); checkPatientPricing(); });
