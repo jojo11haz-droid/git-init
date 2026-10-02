@@ -7723,7 +7723,11 @@
     });
     resetOverlay.style.display = 'flex';
   }
+  // The same reset UI serves clinicians and patients; this flag picks which
+  // endpoint to call. Set from the login role, or from the emailed link.
+  let resetIsPatient = false;
   document.getElementById('btwLoginForgot').addEventListener('click', ()=>{
+    resetIsPatient = (typeof loginRole !== 'undefined' && loginRole === 'patient');
     loginOverlay.style.display = 'none';
     document.getElementById('btwResetReqError').textContent = '';
     showResetStep('btwResetRequestStep');
@@ -7734,7 +7738,7 @@
     const err = document.getElementById('btwResetReqError');
     if(!email){ err.textContent = 'Enter your account email.'; return; }
     try{
-      const resp = await api('POST', '/api/auth/password/reset-request', { email });
+      const resp = await api('POST', resetIsPatient ? '/api/patient/password/reset-request' : '/api/auth/password/reset-request', { email });
       document.getElementById('btwResetSentMsg').textContent = resp.emailConfigured
         ? 'If an account exists for that address, a reset link is on its way. The link works for 60 minutes.'
         : 'Email delivery isn\'t configured on this server yet, the reset link was printed to the server logs (ask whoever runs the server).';
@@ -7747,15 +7751,17 @@
     const pw = document.getElementById('btwResetNewPw').value;
     if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
     try{
-      await api('POST', '/api/auth/password/reset-confirm', { token: resetToken, newPassword: pw });
+      await api('POST', resetIsPatient ? '/api/patient/password/reset-confirm' : '/api/auth/password/reset-confirm', { token: resetToken, newPassword: pw });
       resetOverlay.style.display = 'none';
-      history.replaceState(null, '', location.pathname); // drop ?reset= from the URL
+      history.replaceState(null, '', location.pathname); // drop the token from the URL
       alert('Password updated. Log in with your new password.');
-      openLogin();
+      openLogin(resetIsPatient ? 'patient' : undefined);
     }catch(e){ err.textContent = e.message; }
   });
-  // Arriving from the emailed link: ?reset=<token>
-  const resetToken = new URLSearchParams(location.search).get('reset');
+  // Arriving from the emailed link: ?reset=<token> (clinician) or ?preset=<token> (patient)
+  const _q = new URLSearchParams(location.search);
+  let resetToken = _q.get('reset');
+  if(!resetToken && _q.get('preset')){ resetToken = _q.get('preset'); resetIsPatient = true; }
   if(resetToken){
     document.getElementById('btwResetConfError').textContent = '';
     showResetStep('btwResetConfirmStep');

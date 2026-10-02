@@ -14,6 +14,7 @@ import {
   flagCheckInInaccurate, getCheckIn,
   createFutureNote, listFutureNotes, deleteFutureNote,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
+  createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
@@ -1101,6 +1102,54 @@ app.post('/api/auth/password/reset-confirm', requireDb, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Error in reset-confirm:', err);
+    res.status(500).json({ error: 'Could not reset the password.' });
+  }
+});
+
+// Patient password reset — same two-step flow as the clinician one, for both
+// self-serve patients and invited patients who set a password. The link uses
+// ?preset= so the client opens the patient reset form. No account enumeration.
+app.post('/api/patient/password/reset-request', requireDb, resetRequestLimiter, async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || !EMAIL_RE.test(email.trim())) {
+      return res.status(400).json({ error: 'A valid email is required.' });
+    }
+    const patient = await getPatientByEmail(email.trim());
+    if (patient && patient.password_hash && !patient.left_at) {
+      const token = generateSessionToken();
+      await createPatientPasswordReset(hashSessionToken(token), patient.id, RESET_TTL_MINUTES);
+      const origin = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
+      await sendEmail({
+        to: patient.email,
+        subject: 'Reset your Between password',
+        text: `Someone (hopefully you) asked to reset the password for this Between account.\n\n` +
+          `Open this link within ${RESET_TTL_MINUTES} minutes to choose a new password:\n` +
+          `${origin}/?preset=${token}\n\nIf this wasn't you, you can ignore this email.`
+      });
+    }
+    res.json({ ok: true, emailConfigured: emailConfigured() });
+  } catch (err) {
+    console.error('Error in patient reset-request:', err);
+    res.status(500).json({ error: 'Could not process the request.' });
+  }
+});
+
+app.post('/api/patient/password/reset-confirm', requireDb, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'Missing reset token.' });
+    if (!newPassword || newPassword.length < 10) {
+      return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    }
+    const reset = await getValidPatientPasswordReset(hashSessionToken(token));
+    if (!reset) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired. Request a new one.' });
+    }
+    await consumePatientPasswordReset(reset.token_hash, reset.patient_id, await hashPassword(newPassword));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error in patient reset-confirm:', err);
     res.status(500).json({ error: 'Could not reset the password.' });
   }
 });
