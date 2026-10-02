@@ -186,6 +186,10 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DE
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS input_mode TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMPTZ;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_token TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS patients_reminder_token_key ON patients (reminder_token) WHERE reminder_token IS NOT NULL;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
@@ -508,7 +512,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -793,6 +797,67 @@ export async function purgeExpiredPatients(graceDays = 14) {
     [String(Math.max(0, Math.floor(graceDays)))]
   );
   return rows.length;
+}
+
+// --- Check-in reminders ---
+// A patient can opt in to a gentle nudge when they've gone quiet. It's their
+// own choice (set from patient settings), off by default. The email carries a
+// stable per-patient token so it can be unsubscribed in one click without
+// signing in; the token is minted the first time reminders are turned on and
+// kept thereafter so old links keep working.
+export async function setPatientReminders(patientId, enabled, token) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET
+       reminders_enabled = $1,
+       reminder_token = CASE WHEN $1 AND reminder_token IS NULL THEN $2 ELSE reminder_token END
+     WHERE id = $3 RETURNING ${PATIENT_ROW_COLS}`,
+    [!!enabled, token || null, patientId]
+  );
+  return rows[0] || null;
+}
+
+// One-click unsubscribe from the email link. Scoped by the opaque token only —
+// no session needed. Returns the patient's display name so the landing page can
+// confirm, or null if the token is unknown.
+export async function disableRemindersByToken(token) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET reminders_enabled = false
+     WHERE reminder_token = $1 RETURNING display_name`,
+    [token]
+  );
+  return rows[0] ? rows[0].display_name : null;
+}
+
+// The daily sweep's query: patients who opted in, have a usable account, and
+// whose most recent live check-in (or account creation, if they've never
+// checked in) is older than quietDays — excluding anyone reminded within
+// cooldownDays so we never nag. Capped for safety. Returns only what the email
+// needs.
+export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
+  const { rows } = await pool.query(
+    `SELECT p.id, p.email, p.display_name, p.reminder_token
+     FROM patients p
+     LEFT JOIN LATERAL (
+       SELECT max(c.submitted_at) AS last_at
+       FROM check_ins c
+       WHERE c.patient_id = p.id AND c.deleted_at IS NULL
+     ) ci ON true
+     WHERE p.reminders_enabled = true
+       AND p.email IS NOT NULL
+       AND p.password_hash IS NOT NULL
+       AND p.reminder_token IS NOT NULL
+       AND p.left_at IS NULL
+       AND (p.last_reminded_at IS NULL OR p.last_reminded_at < now() - ($2 || ' days')::interval)
+       AND coalesce(ci.last_at, p.created_at) < now() - ($1 || ' days')::interval
+     ORDER BY coalesce(ci.last_at, p.created_at) ASC
+     LIMIT 500`,
+    [String(Math.max(1, Math.floor(quietDays))), String(Math.max(0, Math.floor(cooldownDays)))]
+  );
+  return rows;
+}
+
+export async function markPatientReminded(patientId) {
+  await pool.query(`UPDATE patients SET last_reminded_at = now() WHERE id = $1`, [patientId]);
 }
 
 // --- Audio uploads (voice memos) ---
