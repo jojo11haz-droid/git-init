@@ -133,6 +133,14 @@ CREATE TABLE IF NOT EXISTS password_resets (
   used_at TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS patient_password_resets (
+  token_hash TEXT PRIMARY KEY,
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   check_in_id UUID NOT NULL REFERENCES check_ins(id) ON DELETE CASCADE,
@@ -449,6 +457,42 @@ export async function consumePasswordReset(tokenHash, clinicianId, newPasswordHa
       `DELETE FROM auth_sessions WHERE clinician_id = $1`,
       [clinicianId]
     );
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+// --- Patient password resets (self-serve and invited patients) ---
+export async function createPatientPasswordReset(tokenHash, patientId, ttlMinutes) {
+  await pool.query(
+    `INSERT INTO patient_password_resets (token_hash, patient_id, expires_at)
+     VALUES ($1, $2, now() + ($3 || ' minutes')::interval)`,
+    [tokenHash, patientId, String(ttlMinutes)]
+  );
+}
+
+export async function getValidPatientPasswordReset(tokenHash) {
+  const { rows } = await pool.query(
+    `SELECT * FROM patient_password_resets
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function consumePatientPasswordReset(tokenHash, patientId, newPasswordHash) {
+  // One transaction: mark the token used, set the new password, and sign the
+  // patient out everywhere so an old session can't keep the previous password.
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`UPDATE patient_password_resets SET used_at = now() WHERE token_hash = $1`, [tokenHash]);
+    await client.query(`UPDATE patients SET password_hash = $1 WHERE id = $2`, [newPasswordHash, patientId]);
+    await client.query(`DELETE FROM patient_sessions WHERE patient_id = $1`, [patientId]);
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
