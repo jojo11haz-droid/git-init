@@ -1997,22 +1997,22 @@
 
   <div class="btw-modal-overlay" id="btwPracticeOverlay" style="display:none;">
     <div class="btw-modal">
-      <div class="btw-modal-eyebrow">Practice</div>
-      <h2 id="btwPracticeTitle">Your practice</h2>
+      <div class="btw-modal-eyebrow">Clinic</div>
+      <h2 id="btwPracticeTitle">Your clinic</h2>
 
       <div id="btwPracticeMember" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px;"></div>
 
       <div id="btwPracticeOwner" style="display:none;">
-        <div style="font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Add colleagues to your practice. Each gets their own login and their own private caseload — colleagues can't see each other's patients — and their seat is covered by your subscription.</div>
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Add clinicians to your clinic. Each gets their own login and their own private caseload — clinicians can't see each other's patients — and they're all covered by your clinic subscription.</div>
         <div id="btwSeatList" style="border:1px solid var(--line);border-radius:9px;margin-bottom:12px;"></div>
         <div id="btwPendingWrap" style="display:none;margin-bottom:12px;">
           <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">Pending invites</div>
           <div id="btwPendingList"></div>
         </div>
         <div id="btwInviteBox">
-          <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Invite a colleague by email</label>
+          <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Invite a clinician by email</label>
           <div style="display:flex;gap:8px;">
-            <input type="email" id="btwInviteEmail" placeholder="colleague@email.com" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--font-body);font-size:13px;">
+            <input type="email" id="btwInviteEmail" placeholder="clinician@email.com" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--font-body);font-size:13px;">
             <button id="btwInviteSend" style="background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;">Send invite</button>
           </div>
           <div class="btw-form-error" id="btwInviteError" style="display:none;color:var(--clay);font-size:12px;margin-top:6px;"></div>
@@ -2027,9 +2027,9 @@
 
   <div class="btw-modal-overlay" id="btwJoinOverlay" style="display:none;">
     <div class="btw-modal">
-      <div class="btw-modal-eyebrow">Join a practice</div>
+      <div class="btw-modal-eyebrow">Join a clinic</div>
       <h2>Create your clinician login</h2>
-      <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a practice</strong> on Between. Create your login below — you'll have your own account and your own private caseload.</div>
+      <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a clinic</strong> on Between. Create your login below — you'll have your own account and your own private caseload.</div>
       <input id="btwJoinName" placeholder="Your name" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
       <input id="btwJoinPassword" type="password" placeholder="Choose a password (10+ characters)" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
       <div id="btwJoinLicenceWrap" style="display:none;">
@@ -2091,7 +2091,7 @@
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
-          <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My practice</button>
+          <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My clinic</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
           <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
@@ -2612,7 +2612,7 @@
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
         <h2>Pricing for therapists and patients</h2>
-        <p>Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
+        <p>Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
         <div class="btw-ccy-toggle" role="group" aria-label="Currency">
           <button type="button" class="btw-ccy-btn active" data-ccy="CAD">CAD</button>
           <button type="button" class="btw-ccy-btn" data-ccy="USD">USD</button>
@@ -2669,15 +2669,15 @@
         </div>
 
         <div class="btw-price-card">
-          <div class="btw-price-tier">Group practice</div>
-          <div class="btw-price-name">For 2+ clinicians</div>
+          <div class="btw-price-tier">Clinic</div>
+          <div class="btw-price-name">For your whole clinic</div>
           <div class="btw-price-amount"><span class="num">Custom</span></div>
-          <div class="btw-price-note">Volume pricing per seat</div>
+          <div class="btw-price-note">One plan for the clinic</div>
           <ul class="btw-price-features">
-            <li>Everything in Solo, per seat</li>
-            <li>Shared practice billing</li>
-            <li>Admin and practice-manager role</li>
-            <li>Practice-level data agreement</li>
+            <li>Everything in Solo, for every clinician</li>
+            <li>One shared clinic bill</li>
+            <li>Admin and clinic-manager role</li>
+            <li>Clinic-level data agreement</li>
           </ul>
           <button class="btw-price-cta secondary" id="btwTalkToUs">Talk to us</button>
         </div>
@@ -3043,8 +3043,8 @@
       <button class="btw-modal-close" data-close="btwContactOverlay" type="button" aria-label="Close">✕</button>
       <div id="btwContactForm">
         <div class="btw-modal-eyebrow">Talk to us</div>
-        <h2>Group practice enquiry</h2>
-        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.</div>
+        <h2>Clinic enquiry</h2>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.</div>
         <div class="btw-form-field">
           <label>Your name</label>
           <input type="text" id="btwContactName" placeholder="Dr. Jamie Rivera">
@@ -3394,9 +3394,9 @@
     "Upgrade to Premium now?":"Passer à Premium maintenant ?",
     "Your plan has been updated.":"Votre forfait a été mis à jour.",
     "Early access to new features":"Accès anticipé aux nouveautés","Locked-in rate for 12 months":"Tarif garanti pendant 12 mois",
-    "Group practice":"Cabinet de groupe","For 2+ clinicians":"Pour 2 cliniciens et plus","Custom":"Sur mesure","Volume pricing per seat":"Tarif dégressif par siège",
-    "Everything in Solo, per seat":"Tout ce qui est dans Solo, par siège","Shared practice billing":"Facturation partagée du cabinet",
-    "Admin and practice-manager role":"Rôle d'administrateur et gestionnaire","Practice-level data agreement":"Entente de données au niveau du cabinet",
+    "Clinic":"Clinique","For your whole clinic":"Pour toute votre clinique","Custom":"Sur mesure","One plan for the clinic":"Un forfait pour la clinique",
+    "Everything in Solo, for every clinician":"Tout ce qui est dans Solo, pour chaque clinicien","One shared clinic bill":"Une seule facture pour la clinique",
+    "Admin and clinic-manager role":"Rôle d'administrateur et de gestionnaire de clinique","Clinic-level data agreement":"Entente de données au niveau de la clinique",
     "Talk to us":"Contactez-nous",
     "Needs attention now":"À contacter dès que possible","Doing okay":"Ça va","Doing well":"Va bien",
     "Team billing is not enabled yet.":"La facturation d'équipe n'est pas encore activée.",
@@ -3548,8 +3548,8 @@
     "Patient display name (as you'd like it to appear in your caseload):":"Nom d'affichage du patient (tel que vous voulez le voir dans votre clientèle) :",
     // --- patients-buy-too: pricing, patient auth and the patient dashboard ---
     "Pricing for therapists and patients":"Tarification pour thérapeutes et patients",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
-      "Payez un siège par clinicien et intégrez votre clientèle. Solo couvre jusqu'à 30 patients, et Premium est là pour les clientèles plus grandes. Les clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans thérapeute.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Payez par clinicien et intégrez votre clientèle. Solo couvre jusqu'à 30 patients, et Premium est là pour les clientèles plus grandes. Les clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans thérapeute.",
     "Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.":
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances. Le coût IA par suivi est assez faible pour qu'on ne le facture pas à l'unité, alors utilisez-le autant que vous le souhaitez.",
     "For therapists & practices":"Pour thérapeutes et cabinets",
@@ -3639,24 +3639,24 @@
       "Désactiver les résumés IA? Les prochains suivis seront enregistrés tels quels, sans analyse par IA.",
     "Turn on AI summaries? An AI will write a short summary and theme tags for each check-in. You can turn this off anytime.":
       "Activer les résumés IA? Une IA rédigera un court résumé et des étiquettes de thèmes pour chaque suivi. Vous pouvez le désactiver en tout temps.",
-    "your practice":"votre cabinet",
-    "a practice":"un cabinet",
+    "your clinic":"votre clinique",
+    "a clinic":"une clinique",
     "You are part of":"Vous faites partie de",
-    "You have your own login and your own private caseload. Your seat is covered by the practice subscription, so there is nothing for you to pay.":
-      "Vous avez votre propre compte et votre propre liste de clients, privée. Votre place est couverte par l'abonnement du cabinet; vous n'avez donc rien à payer.",
+    "You have your own login and your own private caseload. Your account is covered by the clinic subscription, so there is nothing for you to pay.":
+      "Vous avez votre propre compte et votre propre liste de clients, privée. Votre compte est couvert par l'abonnement de la clinique; vous n'avez donc rien à payer.",
     "you":"vous",
     "pending review":"en attente de validation",
     "patient":"patient",
     "patients":"patients",
+    "clinicians.":"cliniciens.",
     "Remove":"Retirer",
     "Revoke":"Révoquer",
-    "seats used.":"places utilisées.",
-    "Unlimited seats.":"Places illimitées.",
-    "You have used every seat on your plan.":"Vous avez utilisé toutes les places de votre forfait.",
-    "Upgrade to add more colleagues.":"Passez à un forfait supérieur pour ajouter des collègues.",
-    "Remove this colleague from your practice? Their account and patients stay theirs, but their seat is freed and they will need their own subscription.":
-      "Retirer ce collègue de votre cabinet? Son compte et ses patients lui restent, mais sa place est libérée et il lui faudra son propre abonnement.",
-    "Enter a colleague's email.":"Entrez le courriel d'un collègue.",
+    "Unlimited clinicians.":"Cliniciens illimités.",
+    "Your clinic is full on this plan.":"Votre clinique est complète avec ce forfait.",
+    "Upgrade to add more clinicians.":"Passez à un forfait supérieur pour ajouter des cliniciens.",
+    "Remove this clinician from your clinic? Their account and patients stay theirs, but their place is freed and they will need their own subscription.":
+      "Retirer ce clinicien de votre clinique? Son compte et ses patients lui restent, mais sa place est libérée et il lui faudra son propre abonnement.",
+    "Enter a clinician's email.":"Entrez le courriel d'un clinicien.",
     "Invite created. Email isn't set up on this server yet, so the join link is in the server logs.":
       "Invitation créée. Le courriel n'est pas encore configuré sur ce serveur; le lien d'accès se trouve dans les journaux du serveur.",
     "Invite sent.":"Invitation envoyée.",
@@ -3759,9 +3759,9 @@
     "Terms":"Conditions","Privacy":"Confidentialité","Subprocessors":"Sous-traitants",
     "Not a crisis service, in an emergency call 988 or 911.":"Pas un service de crise, en cas d'urgence, composez le 988 ou le 911.",
     "Between™ and the Between logo are trademarks of Between. All other product and company names may be trademarks of their respective owners.":"Between™ et le logo Between sont des marques de commerce de Between. Tous les autres noms de produits et d'entreprises peuvent être des marques de commerce de leurs propriétaires respectifs.",
-    "Group practice enquiry":"Demande, cabinet de groupe",
-    "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":
-      "Parlez-nous de votre cabinet et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
+    "Clinic enquiry":"Demande de clinique",
+    "Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.":
+      "Parlez-nous de votre clinique et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "Email (so we can reply)":"Courriel (pour vous répondre)","Message":"Message","Send message":"Envoyer le message",
     "Sent":"Envoyé","Thanks, message sent":"Merci, message envoyé","Done":"Terminé",
     "We got your message and will reply to the email you gave us.":"Nous avons reçu votre message et vous répondrons au courriel indiqué.",
@@ -3996,7 +3996,7 @@
     "Work":"Soreness",
     "Family":"Pressure","Win":"Confidence",
     // pricing
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Coaches pay per team and invite their players in for free. Players can also get Between on their own. They check in and track their own patterns with or without a coach.",
     "For therapists & practices":"For coaches & teams",
     "Solo":"Team",
@@ -4010,15 +4010,15 @@
     "$79.99":"$79",
     "Billed annually ($959.88/year), save ~20%":"Billed yearly at $948. You save 20 percent.",
     "Everything in Solo":"Everything in Team",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"For squads over 30 players",
+    "Clinic":"Premium",
+    "For your whole clinic":"For squads over 30 players",
     "Custom":"$199",
     "Talk to us":"Get Premium",
-    "Volume pricing per seat":"For squads over 30 players. Billed monthly.",
-    "Everything in Solo, per seat":"Everything in Team, for 30+ players",
-    "Shared practice billing":"Club-level billing",
-    "Admin and practice-manager role":"Multiple coach roles",
-    "Practice-level data agreement":"Club-level data agreement",
+    "One plan for the clinic":"For squads over 30 players. Billed monthly.",
+    "Everything in Solo, for every clinician":"Everything in Team, for 30+ players",
+    "One shared clinic bill":"Club-level billing",
+    "Admin and clinic-manager role":"Multiple coach roles",
+    "Clinic-level data agreement":"Club-level data agreement",
     "For patients, use Between on your own":"For players, use Between on your own",
     // pricing FAQ
     "Do my patients pay anything?":"Do my players pay anything?",
@@ -4130,7 +4130,7 @@
     "Work":"Courbatures",
     "Family":"Pression","Win":"Confiance",
     // pricing
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par équipe et invitent leurs joueurs gratuitement. Les joueurs peuvent aussi prendre Between par eux-mêmes. Ils font des suivis et suivent leurs tendances, avec ou sans entraîneur.",
     "For therapists & practices":"Pour entraîneurs et équipes",
     "Solo":"Équipe",
@@ -4144,15 +4144,15 @@
     "$79.99":"79 $",
     "Billed annually ($959.88/year), save ~20%":"Facturé une fois par année à 948 $. Vous économisez 20 pour cent.",
     "Everything in Solo":"Tout ce qu'inclut Équipe",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"Pour les groupes de plus de 30 joueurs",
+    "Clinic":"Premium",
+    "For your whole clinic":"Pour les groupes de plus de 30 joueurs",
     "Custom":"199 $",
     "Talk to us":"Obtenir Premium",
-    "Volume pricing per seat":"Pour les équipes de plus de 30 joueurs. Facturé chaque mois.",
-    "Everything in Solo, per seat":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
-    "Shared practice billing":"Facturation au niveau du club",
-    "Admin and practice-manager role":"Plusieurs rôles d'entraîneur",
-    "Practice-level data agreement":"Entente de données au niveau du club",
+    "One plan for the clinic":"Pour les équipes de plus de 30 joueurs. Facturé chaque mois.",
+    "Everything in Solo, for every clinician":"Tout ce qu'inclut Équipe, pour 30 joueurs et plus",
+    "One shared clinic bill":"Facturation au niveau du club",
+    "Admin and clinic-manager role":"Plusieurs rôles d'entraîneur",
+    "Clinic-level data agreement":"Entente de données au niveau du club",
     "For patients, use Between on your own":"Pour les joueurs, utilisez Between par vous-même",
     // pricing FAQ
     "Do my patients pay anything?":"Est-ce que mes joueurs paient quelque chose?",
@@ -4255,7 +4255,7 @@
     "she saw an old friend on the weekend.":"she got through Friday clean.",
     "Work":"Cravings",
     "Family":"Triggers",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Mentors pay per seat and invite the people they support in for free. Anyone can also get Between on their own, to check in and track their own patterns, with or without a mentor.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Mentors pay per seat and invite the people they support in for free. Anyone can also get Between on their own, to check in and track their own patterns, with or without a mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"For individual mentors",
     "CAD per clinician, per month":"CAD per mentor, per month",
@@ -4264,13 +4264,13 @@
     "Most practices":"Most mentors",
     "Solo Annual":"Mentor Annual",
     "Everything in Solo":"Everything in Mentor",
-    "Group practice":"Program",
-    "For 2+ clinicians":"For 2+ mentors",
-    "Volume pricing per seat":"Volume pricing per mentor",
-    "Everything in Solo, per seat":"Everything in Mentor, per seat",
-    "Shared practice billing":"Shared program billing",
-    "Admin and practice-manager role":"Program-manager role",
-    "Practice-level data agreement":"Program-level data agreement",
+    "Clinic":"Program",
+    "For your whole clinic":"For 2+ mentors",
+    "One plan for the clinic":"Volume pricing per mentor",
+    "Everything in Solo, for every clinician":"Everything in Mentor, per seat",
+    "One shared clinic bill":"Shared program billing",
+    "Admin and clinic-manager role":"Program-manager role",
+    "Clinic-level data agreement":"Program-level data agreement",
     "Do my patients pay anything?":"Do the people I mentor pay anything?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not on your list. When you invite someone in as their mentor, Between is covered by your seat and they're never billed. A person only pays if they choose a Personal plan and use Between on their own, independent of any mentor.",
     "Is this a replacement for my EHR?":"Is this a replacement for my notes?",
@@ -4359,7 +4359,7 @@
     "she saw an old friend on the weekend.":"elle a passé vendredi sans consommer.",
     "Work":"Envies",
     "Family":"Déclencheurs",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les mentors paient par place et invitent gratuitement les personnes qu'ils accompagnent. N'importe qui peut aussi prendre Between par soi-même, pour faire des suivis et suivre ses tendances, avec ou sans mentor.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les mentors paient par place et invitent gratuitement les personnes qu'ils accompagnent. N'importe qui peut aussi prendre Between par soi-même, pour faire des suivis et suivre ses tendances, avec ou sans mentor.",
     "Solo":"Mentor",
     "For individual practitioners":"Pour les mentors individuels",
     "CAD per clinician, per month":"CAD par mentor, par mois",
@@ -4368,13 +4368,13 @@
     "Most practices":"La plupart des mentors",
     "Solo Annual":"Mentor annuel",
     "Everything in Solo":"Tout ce qu'inclut Mentor",
-    "Group practice":"Programme",
-    "For 2+ clinicians":"Pour 2 mentors et plus",
-    "Volume pricing per seat":"Tarif de volume par mentor",
-    "Everything in Solo, per seat":"Tout ce qu'inclut Mentor, par place",
-    "Shared practice billing":"Facturation partagée du programme",
-    "Admin and practice-manager role":"Rôle de gestionnaire de programme",
-    "Practice-level data agreement":"Entente de données au niveau du programme",
+    "Clinic":"Programme",
+    "For your whole clinic":"Pour 2 mentors et plus",
+    "One plan for the clinic":"Tarif de volume par mentor",
+    "Everything in Solo, for every clinician":"Tout ce qu'inclut Mentor, par place",
+    "One shared clinic bill":"Facturation partagée du programme",
+    "Admin and clinic-manager role":"Rôle de gestionnaire de programme",
+    "Clinic-level data agreement":"Entente de données au niveau du programme",
     "Do my patients pay anything?":"Est-ce que les personnes que j'accompagne paient quelque chose?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas sur votre liste. Quand vous invitez quelqu'un en tant que mentor, Between est couvert par votre place et la personne n'est jamais facturée. Une personne ne paie que si elle choisit un forfait Personnel et utilise Between par elle-même, indépendamment de tout mentor.",
     "Is this a replacement for my EHR?":"Est-ce que ça remplace mes notes?",
@@ -4431,7 +4431,7 @@
     "Enter the invite code from your therapist.":"Enter the invite code from your nutritionist.",
     "Therapist view":"Nutritionist view",
     "Patient view":"Client view",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Pay one seat per nutritionist and bring your caseload on board. Solo covers up to 30 clients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a nutritionist.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Pay one seat per nutritionist and bring your caseload on board. Solo covers up to 30 clients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a nutritionist.",
     "For patients, use Between on your own":"For clients, use Between on your own",
     "Up to 30 patients & unlimited check-ins":"Up to 30 clients & unlimited check-ins",
     "In-app crisis resources for patients":"In-app crisis resources for clients",
@@ -4468,7 +4468,7 @@
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre nutritionniste.",
     "Therapist view":"Vue du nutritionniste",
     "Patient view":"Vue du client",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Payez un siège par nutritionniste et amenez votre clientèle. Le forfait Solo couvre jusqu'à 30 clients, et Premium est là pour de plus grandes clientèles. Vos clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans nutritionniste.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Payez un siège par nutritionniste et amenez votre clientèle. Le forfait Solo couvre jusqu'à 30 clients, et Premium est là pour de plus grandes clientèles. Vos clients peuvent aussi s'abonner de leur côté pour suivre leurs tendances, avec ou sans nutritionniste.",
     "For patients, use Between on your own":"Pour les clients, utilisez Between par vous-même",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 clients et suivis illimités",
     "In-app crisis resources for patients":"Ressources de crise dans l'app pour les clients",
@@ -4569,8 +4569,8 @@
       "Anyone can use it as a private diary. Check in whenever something comes up and watch your own mood and recurring themes over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not your school uses Between.",
     "Pricing for therapists and patients":"Pricing for schools and students",
     "For therapists & practices":"For schools & staff",
-    "Group practice enquiry":"School enquiry",
-    "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":"Tell us about your school and we'll get back to you. Everything goes straight to our inbox.",
+    "Clinic enquiry":"School enquiry",
+    "Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.":"Tell us about your school and we'll get back to you. Everything goes straight to our inbox.",
     "For patients, use Between on your own":"For students, use Between on your own",
     "I'm a therapist":"I'm staff",
     "I'm a patient":"I'm a student",
@@ -4604,7 +4604,7 @@
     "she saw an old friend on the weekend.":"class went better than she feared.",
     "Work":"School",
     "Family":"Home",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Schools pay per staff seat and invite students in for free. Students can also get Between on their own, to check in and track their own patterns, with or without a school.",
     "Solo":"Staff",
     "For individual practitioners":"Up to 30 students",
     "CAD per clinician, per month":"CAD per staff, per month",
@@ -4613,15 +4613,15 @@
     "Most practices":"Most schools",
     "Solo Annual":"Staff Annual",
     "Everything in Solo":"Everything in Staff",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"For 30+ students",
+    "Clinic":"Premium",
+    "For your whole clinic":"For 30+ students",
     "Custom":"$199",
-    "Volume pricing per seat":"For schools over 30 students. Billed monthly.",
+    "One plan for the clinic":"For schools over 30 students. Billed monthly.",
     "Talk to us":"Get Premium",
-    "Everything in Solo, per seat":"Everything in Staff, for 30+ students",
-    "Shared practice billing":"School-level billing",
-    "Admin and practice-manager role":"Multiple staff roles",
-    "Practice-level data agreement":"School-level data agreement",
+    "Everything in Solo, for every clinician":"Everything in Staff, for 30+ students",
+    "One shared clinic bill":"School-level billing",
+    "Admin and clinic-manager role":"Multiple staff roles",
+    "Clinic-level data agreement":"School-level data agreement",
     "Do my patients pay anything?":"Do my students pay anything?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Not for your students. When you invite a student in through your school, Between is covered by your seat and they're never billed. A student only pays if they choose a Personal plan and use Between on their own, independent of any school.",
     "Is this a replacement for my EHR?":"Is this a replacement for our student information system?",
@@ -4680,8 +4680,8 @@
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que quelque chose survient et observez votre humeur et vos thèmes récurrents au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que votre école utilise Between ou non.",
     "Pricing for therapists and patients":"Tarifs pour écoles et élèves",
     "For therapists & practices":"Pour écoles et personnel",
-    "Group practice enquiry":"Demande, école",
-    "Tell us about your practice and we'll get back to you. Everything goes straight to our inbox.":"Parlez-nous de votre école et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
+    "Clinic enquiry":"Demande, école",
+    "Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.":"Parlez-nous de votre école et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "For patients, use Between on your own":"Pour les élèves, utilisez Between par vous-même",
     "I'm a therapist":"Je fais partie du personnel",
     "I'm a patient":"Je suis un élève",
@@ -4715,7 +4715,7 @@
     "she saw an old friend on the weekend.":"la classe s'est mieux passée que prévu.",
     "Work":"École",
     "Family":"Maison",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":"Les écoles paient par place du personnel et invitent gratuitement les élèves. Les élèves peuvent aussi prendre Between par eux-mêmes, pour faire des suivis et suivre leurs tendances, avec ou sans école.",
     "Solo":"Personnel",
     "For individual practitioners":"Jusqu'à 30 élèves",
     "CAD per clinician, per month":"CAD par membre, par mois",
@@ -4724,15 +4724,15 @@
     "Most practices":"La plupart des écoles",
     "Solo Annual":"Personnel annuel",
     "Everything in Solo":"Tout ce qu'inclut Personnel",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"Pour plus de 30 élèves",
+    "Clinic":"Premium",
+    "For your whole clinic":"Pour plus de 30 élèves",
     "Custom":"199 $",
-    "Volume pricing per seat":"Pour les écoles de plus de 30 élèves. Facturé au mois.",
+    "One plan for the clinic":"Pour les écoles de plus de 30 élèves. Facturé au mois.",
     "Talk to us":"Obtenir Premium",
-    "Everything in Solo, per seat":"Tout ce qu'inclut Personnel, pour plus de 30 élèves",
-    "Shared practice billing":"Facturation au niveau de l'école",
-    "Admin and practice-manager role":"Plusieurs rôles du personnel",
-    "Practice-level data agreement":"Entente de données au niveau de l'école",
+    "Everything in Solo, for every clinician":"Tout ce qu'inclut Personnel, pour plus de 30 élèves",
+    "One shared clinic bill":"Facturation au niveau de l'école",
+    "Admin and clinic-manager role":"Plusieurs rôles du personnel",
+    "Clinic-level data agreement":"Entente de données au niveau de l'école",
     "Do my patients pay anything?":"Est-ce que mes élèves paient quelque chose?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":"Pas vos élèves. Quand vous invitez un élève par l'entremise de votre école, Between est couvert par votre place et il n'est jamais facturé. Un élève ne paie que s'il choisit un forfait Personnel et utilise Between par lui-même, indépendamment de toute école.",
     "Is this a replacement for my EHR?":"Est-ce que ça remplace notre système de dossiers élèves?",
@@ -4812,8 +4812,8 @@
     "CAD per clinician, per month":"CAD per teacher, per month",
     "Solo Annual":"Teacher Annual",
     "Everything in Solo":"Everything in Teacher",
-    "For 2+ clinicians":"For 30+ students",
-    "Everything in Solo, per seat":"Everything in Teacher, for 30+ students",
+    "For your whole clinic":"For 30+ students",
+    "Everything in Solo, for every clinician":"Everything in Teacher, for 30+ students",
     "Voicemails and phone tag between sessions":"Voicemails and phone tag between classes",
     "The first ten minutes of each session spent catching up":"The first minutes of class spent asking how everyone is",
     "A short summary you read before a session, with nothing to answer":"A short summary you read before class, with nothing to answer",
@@ -4867,8 +4867,8 @@
     "CAD per clinician, per month":"CAD par enseignant, par mois",
     "Solo Annual":"Enseignant annuel",
     "Everything in Solo":"Tout ce qu'inclut Enseignant",
-    "For 2+ clinicians":"Pour plus de 30 élèves",
-    "Everything in Solo, per seat":"Tout ce qu'inclut Enseignant, pour plus de 30 élèves",
+    "For your whole clinic":"Pour plus de 30 élèves",
+    "Everything in Solo, for every clinician":"Tout ce qu'inclut Enseignant, pour plus de 30 élèves",
     "Voicemails and phone tag between sessions":"Messages vocaux et appels manqués entre les cours",
     "The first ten minutes of each session spent catching up":"Les premières minutes du cours à demander comment va tout le monde",
     "A short summary you read before a session, with nothing to answer":"Un court résumé que vous lisez avant le cours, sans rien à répondre",
@@ -4941,7 +4941,7 @@
     // chips
     "Work":"Training","Family":"Nutrition",
     // pricing
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Trainers pay per seat and invite their clients in for free. Clients can also get Between on their own to track their energy and habits, with or without a trainer.",
     "For therapists & practices":"For trainers & studios",
     "Solo":"Trainer",
@@ -4955,15 +4955,15 @@
     "$79.99":"$39",
     "Billed annually ($959.88/year), save ~20%":"Billed yearly at $468. You save 20 percent.",
     "Everything in Solo":"Everything in Trainer",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"For 20+ clients",
+    "Clinic":"Premium",
+    "For your whole clinic":"For 20+ clients",
     "Custom":"$99",
     "Talk to us":"Get Premium",
-    "Volume pricing per seat":"For 20+ clients. Billed monthly.",
-    "Everything in Solo, per seat":"Everything in Trainer, for 20+ clients",
-    "Shared practice billing":"Studio-level billing",
-    "Admin and practice-manager role":"Multiple trainer roles",
-    "Practice-level data agreement":"Studio-level data agreement",
+    "One plan for the clinic":"For 20+ clients. Billed monthly.",
+    "Everything in Solo, for every clinician":"Everything in Trainer, for 20+ clients",
+    "One shared clinic bill":"Studio-level billing",
+    "Admin and clinic-manager role":"Multiple trainer roles",
+    "Clinic-level data agreement":"Studio-level data agreement",
     "For patients, use Between on your own":"For clients, use Between on your own",
     // pricing FAQ
     "Do my patients pay anything?":"Do my clients pay anything?",
@@ -5057,7 +5057,7 @@
     "up several nights. One good moment:":"gardée hors de deux séances. Une réussite :",
     "she saw an old friend on the weekend.":"un record au squat vendredi.",
     "Work":"Entraînement","Family":"Nutrition",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Les entraîneurs paient par place et invitent leurs clients gratuitement. Les clients peuvent aussi prendre Between par eux-mêmes pour suivre leur énergie et leurs habitudes, avec ou sans entraîneur.",
     "For therapists & practices":"Pour entraîneurs et studios",
     "Solo":"Entraîneur",
@@ -5071,15 +5071,15 @@
     "$79.99":"39 $",
     "Billed annually ($959.88/year), save ~20%":"Facturé à l'année (468 $/an). Économisez 20 pour cent.",
     "Everything in Solo":"Tout ce qu'inclut Entraîneur",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"Pour plus de 20 clients",
+    "Clinic":"Premium",
+    "For your whole clinic":"Pour plus de 20 clients",
     "Custom":"99 $",
     "Talk to us":"Obtenir Premium",
-    "Volume pricing per seat":"Pour plus de 20 clients. Facturé au mois.",
-    "Everything in Solo, per seat":"Tout ce qu'inclut Entraîneur, pour plus de 20 clients",
-    "Shared practice billing":"Facturation au niveau du studio",
-    "Admin and practice-manager role":"Plusieurs rôles d'entraîneur",
-    "Practice-level data agreement":"Entente de données au niveau du studio",
+    "One plan for the clinic":"Pour plus de 20 clients. Facturé au mois.",
+    "Everything in Solo, for every clinician":"Tout ce qu'inclut Entraîneur, pour plus de 20 clients",
+    "One shared clinic bill":"Facturation au niveau du studio",
+    "Admin and clinic-manager role":"Plusieurs rôles d'entraîneur",
+    "Clinic-level data agreement":"Entente de données au niveau du studio",
     "For patients, use Between on your own":"Pour les clients, utilisez Between par vous-même",
     "Do my patients pay anything?":"Mes clients paient-ils quelque chose?",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
@@ -5172,7 +5172,7 @@
       "Sore knee most of the week and she skipped a few exercises. One bright spot: she walked pain-free on the weekend. No safety concerns flagged.",
     // pricing (reuses the Sports team plan amounts, physio labels)
     "Pricing for therapists and patients":"Pricing for physios and patients",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Pay one seat per physio and bring your patients on board. Practice covers up to 30 patients and Premium is there for larger caseloads. Patients can also subscribe on their own to track their patterns, with or without a physio.",
     "For therapists & practices":"For physios & clinics",
     "Solo":"Practice",
@@ -5184,15 +5184,15 @@
     "$79.99":"$79",
     "Billed annually ($959.88/year), save ~20%":"Billed yearly at $948. You save 20 percent.",
     "Everything in Solo":"Everything in Practice",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"For 30+ patients",
+    "Clinic":"Premium",
+    "For your whole clinic":"For 30+ patients",
     "Custom":"$199",
     "Talk to us":"Get Premium",
-    "Volume pricing per seat":"For 30+ patients. Billed monthly.",
-    "Everything in Solo, per seat":"Everything in Practice",
-    "Shared practice billing":"For 30+ patients",
-    "Admin and practice-manager role":"Priority email support",
-    "Practice-level data agreement":"Consent-first data controls",
+    "One plan for the clinic":"For 30+ patients. Billed monthly.",
+    "Everything in Solo, for every clinician":"Everything in Practice",
+    "One shared clinic bill":"For 30+ patients",
+    "Admin and clinic-manager role":"Priority email support",
+    "Clinic-level data agreement":"Consent-first data controls",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
       "Not for your caseload. When you invite a patient in as their physio, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any physio.",
     "Is this a replacement for my EHR?":"Does this replace my clinic software?",
@@ -5256,7 +5256,7 @@
     "Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.":
       "Genou endolori une bonne partie de la semaine et elle a sauté quelques exercices. Un point positif : elle a marché sans douleur la fin de semaine. Aucun enjeu de sécurité.",
     "Pricing for therapists and patients":"Tarifs pour physios et patients",
-    "Pay one seat per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Payez une place par physio et amenez vos patients. Le forfait Cabinet couvre jusqu'à 30 patients, et Premium est là pour les clientèles plus grandes. Les patients peuvent aussi s'abonner par eux-mêmes pour suivre leurs tendances, avec ou sans physio.",
     "For therapists & practices":"Pour physios et cliniques",
     "Solo":"Cabinet",
@@ -5268,15 +5268,15 @@
     "$79.99":"$79",
     "Billed annually ($959.88/year), save ~20%":"Facturé à l'année, 948 $. Économisez 20 %.",
     "Everything in Solo":"Tout ce qui est dans Cabinet",
-    "Group practice":"Premium",
-    "For 2+ clinicians":"Pour 30+ patients",
+    "Clinic":"Premium",
+    "For your whole clinic":"Pour 30+ patients",
     "Custom":"$199",
     "Talk to us":"Obtenir Premium",
-    "Volume pricing per seat":"Pour 30+ patients. Facturé mensuellement.",
-    "Everything in Solo, per seat":"Tout ce qui est dans Cabinet",
-    "Shared practice billing":"Pour 30+ patients",
-    "Admin and practice-manager role":"Soutien prioritaire par courriel",
-    "Practice-level data agreement":"Contrôles axés sur le consentement",
+    "One plan for the clinic":"Pour 30+ patients. Facturé mensuellement.",
+    "Everything in Solo, for every clinician":"Tout ce qui est dans Cabinet",
+    "One shared clinic bill":"Pour 30+ patients",
+    "Admin and clinic-manager role":"Soutien prioritaire par courriel",
+    "Clinic-level data agreement":"Contrôles axés sur le consentement",
     "Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.":
       "Pas pour votre clientèle. Quand vous invitez un patient à titre de son physio, Between est couvert par votre place et il n'est jamais facturé. Les patients ne paient que s'ils choisissent un forfait Personnel pour utiliser Between par eux-mêmes, indépendamment de tout physio.",
     "Is this a replacement for my EHR?":"Est-ce que ça remplace le logiciel de ma clinique?",
@@ -8153,10 +8153,10 @@
     const ownerBox = document.getElementById('btwPracticeOwner');
     const memberBox = document.getElementById('btwPracticeMember');
     if(data.role === 'member'){
-      const pname = (data.owner && (data.owner.practice_name || data.owner.name)) || t('your practice');
+      const pname = (data.owner && (data.owner.practice_name || data.owner.name)) || t('your clinic');
       memberBox.style.display = '';
       memberBox.innerHTML = esc(t('You are part of')) + ' <strong>' + esc(pname) + '</strong>. ' +
-        esc(t('You have your own login and your own private caseload. Your seat is covered by the practice subscription, so there is nothing for you to pay.'));
+        esc(t('You have your own login and your own private caseload. Your account is covered by the clinic subscription, so there is nothing for you to pay.'));
       ownerBox.style.display = 'none';
       return;
     }
@@ -8189,17 +8189,17 @@
     const inviteBox = document.getElementById('btwInviteBox');
     inviteBox.style.display = data.canInvite ? '' : 'none';
     if(!data.canInvite && data.cap && used >= data.cap){
-      capNote.textContent = t('You have used every seat on your plan.') + ' ' + t('Upgrade to add more colleagues.');
+      capNote.textContent = t('Your clinic is full on this plan.') + ' ' + t('Upgrade to add more clinicians.');
     } else if(data.cap){
-      capNote.textContent = used + ' / ' + data.cap + ' ' + t('seats used.');
+      capNote.textContent = used + ' / ' + data.cap + ' ' + t('clinicians.');
     } else {
-      capNote.textContent = t('Unlimited seats.');
+      capNote.textContent = t('Unlimited clinicians.');
     }
     seatList.querySelectorAll('[data-removeseat]').forEach(b=> b.addEventListener('click', ()=> removeSeat(b.getAttribute('data-removeseat'))));
     pendList.querySelectorAll('[data-revokeinvite]').forEach(b=> b.addEventListener('click', ()=> revokeInvite(b.getAttribute('data-revokeinvite'))));
   }
   async function removeSeat(id){
-    if(!confirm(t('Remove this colleague from your practice? Their account and patients stay theirs, but their seat is freed and they will need their own subscription.'))) return;
+    if(!confirm(t('Remove this clinician from your clinic? Their account and patients stay theirs, but their place is freed and they will need their own subscription.'))) return;
     try{ renderPractice(await api('POST', '/api/practice/seats/' + id + '/remove').then(()=> api('GET', '/api/practice'))); }
     catch(e){ alert(e.message); }
   }
@@ -8213,7 +8213,7 @@
     const okEl = document.getElementById('btwInviteOk');
     err.style.display = 'none'; okEl.style.display = 'none';
     const email = emailEl.value.trim();
-    if(!email){ err.textContent = t('Enter a colleague\'s email.'); err.style.display = ''; return; }
+    if(!email){ err.textContent = t('Enter a clinician\'s email.'); err.style.display = ''; return; }
     try{
       const r = await api('POST', '/api/practice/invite', { email });
       emailEl.value = '';
@@ -8241,7 +8241,7 @@
     joinOverlay.style.display = 'flex';
     try{
       const info = await api('GET', '/api/practice/invite-info?token=' + encodeURIComponent(token));
-      document.getElementById('btwJoinPractice').textContent = info.practiceName || t('a practice');
+      document.getElementById('btwJoinPractice').textContent = info.practiceName || t('a clinic');
       document.getElementById('btwJoinLicenceWrap').style.display = info.needsLicence ? '' : 'none';
     }catch(e){ err.textContent = e.message; err.style.display = ''; }
   }

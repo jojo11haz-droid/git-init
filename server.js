@@ -995,7 +995,7 @@ app.post('/api/practice/invite', requireDb, requireAuth, requireVerifiedClinicia
   try {
     const owner = req.clinician;
     if (owner.practice_owner_id) {
-      return res.status(403).json({ error: 'Only the practice owner can add colleagues.' });
+      return res.status(403).json({ error: 'Only the clinic owner can add clinicians.' });
     }
     const email = String((req.body || {}).email || '').trim();
     if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'A valid email is required.' });
@@ -1005,30 +1005,30 @@ app.post('/api/practice/invite', requireDb, requireAuth, requireVerifiedClinicia
     const cap = seatCapForClinician(owner);
     const [seatCount, pending] = await Promise.all([countPracticeSeats(owner.id), listPendingPracticeInvites(owner.id)]);
     if (seatCount + pending.length >= cap) {
-      return res.status(400).json({ error: 'You have used every seat on your plan. Upgrade to add more colleagues.', code: 'seat_limit' });
+      return res.status(400).json({ error: 'Your clinic is full on this plan. Upgrade to add more clinicians.', code: 'seat_limit' });
     }
     if (await getClinicianByEmail(email)) {
       return res.status(409).json({ error: 'Someone already has a Between account with this email.' });
     }
     if (await hasPendingPracticeInvite(owner.id, email)) {
-      return res.status(409).json({ error: 'You have already invited this colleague.' });
+      return res.status(409).json({ error: 'You have already invited this clinician.' });
     }
     const token = generateSessionToken();
     await createPracticeInvite(hashSessionToken(token), owner.id, email, PRACTICE_INVITE_TTL_DAYS);
-    const practice = owner.practice_name || owner.name;
+    const clinic = owner.practice_name || owner.name;
     await sendEmail({
       to: email,
-      subject: `${owner.name} invited you to join ${practice} on Between`,
-      text: `${owner.name} has invited you to join ${practice} on Between, a between-visit check-in tool.\n\n` +
+      subject: `${owner.name} invited you to join ${clinic} on Between`,
+      text: `${owner.name} has invited you to join ${clinic} on Between, a between-visit check-in tool.\n\n` +
         `Create your clinician login here within ${PRACTICE_INVITE_TTL_DAYS} days:\n` +
         `${siteOrigin(req)}/?pjoin=${token}\n\n` +
-        `You'll have your own account and your own private caseload — colleagues can't see each other's patients. ` +
-        `Your seat is covered by ${practice}'s subscription, so there's nothing to pay.\n\n` +
+        `You'll have your own account and your own private caseload — clinicians at a clinic can't see each other's patients. ` +
+        `Your account is covered by ${clinic}'s subscription, so there's nothing to pay.\n\n` +
         `If you weren't expecting this, you can ignore this email.`
     });
     res.json({ ok: true, emailConfigured: emailConfigured() });
   } catch (err) {
-    console.error('Error inviting colleague:', err);
+    console.error('Error inviting clinician:', err);
     res.status(500).json({ error: 'Could not send the invite.' });
   }
 });
@@ -1036,7 +1036,7 @@ app.post('/api/practice/invite', requireDb, requireAuth, requireVerifiedClinicia
 // Owner revokes a pending invite.
 app.post('/api/practice/invites/revoke', requireDb, requireAuth, async (req, res) => {
   try {
-    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the practice owner can manage invites.' });
+    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the clinic owner can manage invites.' });
     const email = String((req.body || {}).email || '').trim();
     if (!email) return res.status(400).json({ error: 'An email is required.' });
     await revokePracticeInvite(req.clinician.id, email);
@@ -1050,9 +1050,9 @@ app.post('/api/practice/invites/revoke', requireDb, requireAuth, async (req, res
 // Owner removes a colleague's seat (their account and caseload stay theirs).
 app.post('/api/practice/seats/:id/remove', requireDb, requireAuth, async (req, res) => {
   try {
-    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the practice owner can remove a seat.' });
+    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the clinic owner can remove a clinician.' });
     const member = await removePracticeSeat(req.clinician.id, req.params.id);
-    if (!member) return res.status(404).json({ error: 'That colleague is not part of your practice.' });
+    if (!member) return res.status(404).json({ error: 'That clinician is not part of your clinic.' });
     res.json({ ok: true });
   } catch (err) {
     console.error('Error removing seat:', err);
@@ -1070,7 +1070,7 @@ app.get('/api/practice/invite-info', requireDb, async (req, res) => {
     const invite = await getValidPracticeInvite(hashSessionToken(token));
     if (!invite) return res.status(404).json({ error: 'This invite is invalid or has expired.' });
     const owner = await getClinicianById(invite.owner_id);
-    if (!owner || owner.practice_owner_id) return res.status(404).json({ error: 'This practice can no longer accept new seats.' });
+    if (!owner || owner.practice_owner_id) return res.status(404).json({ error: 'This clinic can no longer add clinicians.' });
     res.json({
       practiceName: owner.practice_name || owner.name,
       email: invite.email,
@@ -1090,10 +1090,10 @@ app.post('/api/practice/join', requireDb, signupLimiter, async (req, res) => {
     const { token, name, password, licenceNumber, licenceOrder, province } = req.body || {};
     if (!token) return res.status(400).json({ error: 'Missing invite token.' });
     const invite = await getValidPracticeInvite(hashSessionToken(token));
-    if (!invite) return res.status(400).json({ error: 'This invite is invalid or has expired. Ask the practice to send a new one.' });
+    if (!invite) return res.status(400).json({ error: 'This invite is invalid or has expired. Ask the clinic to send a new one.' });
     const owner = await getClinicianById(invite.owner_id);
     if (!owner || owner.practice_owner_id) {
-      return res.status(400).json({ error: 'This practice can no longer accept new seats.' });
+      return res.status(400).json({ error: 'This clinic can no longer add clinicians.' });
     }
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
