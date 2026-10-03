@@ -2097,6 +2097,7 @@
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
+      <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
         <button class="btw-nav-btn icon" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
@@ -3204,7 +3205,7 @@
     "Nutrition":"Nutrition","Energy and eating between sessions":"L'énergie et l'alimentation entre les séances",
     "Support between meetings":"Du soutien entre les rencontres",
     "Students between check-ins":"Les élèves entre les suivis",
-    "Log in":"Connexion","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
+    "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -7417,6 +7418,7 @@
   // --- auth state / header ---
   const authUserEl = document.getElementById('btwAuthUser');
   const loginBtn = document.getElementById('btwLoginBtn');
+  const signupBtn = document.getElementById('btwSignupBtn');
   const logoutBtn = document.getElementById('btwLogoutBtn');
   const signedOutBox = document.getElementById('btwSignedOutBox');
   const dashGrid = document.getElementById('btwDashGrid');
@@ -7430,6 +7432,7 @@
     authUserEl.style.display = signedIn ? '' : 'none';
     authUserEl.innerHTML = signedIn ? `${esc(t('Signed in as'))} <strong>${esc(name)}</strong>` : '';
     loginBtn.style.display = signedIn ? 'none' : '';
+    if(signupBtn) signupBtn.style.display = signedIn ? 'none' : '';
     // Two-factor is a clinician feature for now.
     const pendingVerify = asTherapist && needsVerification();
     const accountBtn = document.getElementById('btwAccountBtn');
@@ -7817,6 +7820,16 @@
     b.addEventListener('click', ()=>{ loginError.textContent = ''; setLoginRole(b.dataset.role); });
   });
   loginBtn.addEventListener('click', ()=> openLogin('therapist'));
+  // Sign up opens the right flow for whoever they are: individuals get the
+  // patient signup, every clinician audience gets the clinician/pro signup
+  // (btwOpenSignup derives the account type from the current audience).
+  if(signupBtn) signupBtn.addEventListener('click', ()=>{
+    if(curAudience === 'individual'){
+      if(window.btwOpenPatientSignup) window.btwOpenPatientSignup('patient_monthly');
+    } else if(window.btwOpenSignup){
+      window.btwOpenSignup('solo_monthly');
+    }
+  });
   document.getElementById('btwSignedOutLogin').addEventListener('click', ()=> openLogin('therapist'));
   document.getElementById('btwSignedOutSignup').addEventListener('click', ()=> window.btwOpenSignup('solo_monthly'));
   document.getElementById('btwLoginCancel').addEventListener('click', ()=>{ loginOverlay.style.display = 'none'; });
