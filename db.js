@@ -141,6 +141,15 @@ CREATE TABLE IF NOT EXISTS patient_password_resets (
   used_at TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS practice_invites (
+  token_hash TEXT PRIMARY KEY,
+  owner_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  accepted_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   check_in_id UUID NOT NULL REFERENCES check_ins(id) ON DELETE CASCADE,
@@ -186,6 +195,7 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DE
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS input_mode TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMPTZ;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_token TEXT;
@@ -212,7 +222,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, practice_owner_id, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -376,6 +386,110 @@ export async function deleteSession(tokenHash) {
 
 export async function deleteClinicianSessions(clinicianId) {
   await pool.query(`DELETE FROM auth_sessions WHERE clinician_id = $1`, [clinicianId]);
+}
+
+// --- Practices (multi-seat) ---
+// A "practice" is an owner clinician (practice_owner_id IS NULL) plus every
+// clinician whose practice_owner_id points at them. Each seat keeps its own
+// private caseload; the owner holds the one subscription that covers them all.
+// Seats are added by emailed invite, mirroring the patient invite-code flow.
+
+export async function createPracticeMember({ name, email, passwordHash, ownerId, accountType, discipline, licenceVerified, licenceNumber, licenceOrder, province }) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinicians (name, email, password_hash, account_type, discipline, practice_owner_id, licence_verified, licence_number, licence_order, province)
+     VALUES ($1, lower($2), $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [name, email, passwordHash, accountType || 'therapist', discipline || null, ownerId, !!licenceVerified, licenceNumber || null, licenceOrder || null, province || null]
+  );
+  return rows[0];
+}
+
+export async function createPracticeInvite(tokenHash, ownerId, email, ttlDays) {
+  await pool.query(
+    `INSERT INTO practice_invites (token_hash, owner_id, email, expires_at)
+     VALUES ($1, $2, lower($3), now() + ($4 || ' days')::interval)`,
+    [tokenHash, ownerId, email, String(ttlDays)]
+  );
+}
+
+export async function getValidPracticeInvite(tokenHash) {
+  const { rows } = await pool.query(
+    `SELECT token_hash, owner_id, email FROM practice_invites
+     WHERE token_hash = $1 AND accepted_at IS NULL AND expires_at > now()`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function markPracticeInviteAccepted(tokenHash) {
+  await pool.query(`UPDATE practice_invites SET accepted_at = now() WHERE token_hash = $1`, [tokenHash]);
+}
+
+export async function hasPendingPracticeInvite(ownerId, email) {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM practice_invites
+     WHERE owner_id = $1 AND email = lower($2) AND accepted_at IS NULL AND expires_at > now()`,
+    [ownerId, email]
+  );
+  return rows.length > 0;
+}
+
+export async function revokePracticeInvite(ownerId, email) {
+  const { rows } = await pool.query(
+    `DELETE FROM practice_invites
+     WHERE owner_id = $1 AND email = lower($2) AND accepted_at IS NULL RETURNING email`,
+    [ownerId, email]
+  );
+  return rows[0] ? rows[0].email : null;
+}
+
+// Pending (not-yet-accepted, not-expired) invites for an owner's practice.
+export async function listPendingPracticeInvites(ownerId) {
+  const { rows } = await pool.query(
+    `SELECT email, created_at, expires_at FROM practice_invites
+     WHERE owner_id = $1 AND accepted_at IS NULL AND expires_at > now()
+     ORDER BY created_at DESC`,
+    [ownerId]
+  );
+  return rows;
+}
+
+// Everyone in the practice: the owner first, then members. Each row carries a
+// live patient count so the owner can see activity without crossing into any
+// colleague's actual caseload.
+export async function listPracticeSeats(ownerId) {
+  const { rows } = await pool.query(
+    `SELECT c.id, c.name, c.email, c.account_type, c.discipline, c.licence_verified, c.created_at,
+            (c.id = $1) AS is_owner,
+            (SELECT count(*)::int FROM patients p WHERE p.clinician_id = c.id AND p.left_at IS NULL) AS patient_count
+     FROM clinicians c
+     WHERE c.id = $1 OR c.practice_owner_id = $1
+     ORDER BY (c.id = $1) DESC, c.created_at ASC`,
+    [ownerId]
+  );
+  return rows;
+}
+
+export async function countPracticeSeats(ownerId) {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM clinicians WHERE id = $1 OR practice_owner_id = $1`,
+    [ownerId]
+  );
+  return rows[0] ? rows[0].n : 0;
+}
+
+// Remove a member from a practice: their account and caseload stay theirs, but
+// they detach from the practice (and so lose the owner's billing cover). Scoped
+// to the owner, and can never target the owner's own row. Returns the member.
+export async function removePracticeSeat(ownerId, memberId) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians SET practice_owner_id = NULL
+     WHERE id = $1 AND practice_owner_id = $2 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [memberId, ownerId]
+  );
+  const member = rows[0] || null;
+  if (member) await pool.query(`DELETE FROM auth_sessions WHERE clinician_id = $1`, [memberId]);
+  return member;
 }
 
 // --- MFA (TOTP) ---

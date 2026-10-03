@@ -1995,6 +1995,53 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwPracticeOverlay" style="display:none;">
+    <div class="btw-modal">
+      <div class="btw-modal-eyebrow">Practice</div>
+      <h2 id="btwPracticeTitle">Your practice</h2>
+
+      <div id="btwPracticeMember" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px;"></div>
+
+      <div id="btwPracticeOwner" style="display:none;">
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Add colleagues to your practice. Each gets their own login and their own private caseload — colleagues can't see each other's patients — and their seat is covered by your subscription.</div>
+        <div id="btwSeatList" style="border:1px solid var(--line);border-radius:9px;margin-bottom:12px;"></div>
+        <div id="btwPendingWrap" style="display:none;margin-bottom:12px;">
+          <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">Pending invites</div>
+          <div id="btwPendingList"></div>
+        </div>
+        <div id="btwInviteBox">
+          <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Invite a colleague by email</label>
+          <div style="display:flex;gap:8px;">
+            <input type="email" id="btwInviteEmail" placeholder="colleague@email.com" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--font-body);font-size:13px;">
+            <button id="btwInviteSend" style="background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;">Send invite</button>
+          </div>
+          <div class="btw-form-error" id="btwInviteError" style="display:none;color:var(--clay);font-size:12px;margin-top:6px;"></div>
+          <div id="btwInviteOk" style="display:none;color:var(--moss);font-size:12px;margin-top:6px;"></div>
+        </div>
+        <div id="btwSeatCapNote" style="font-size:11.5px;color:var(--ink-soft);margin-top:10px;"></div>
+      </div>
+
+      <button id="btwClosePractice" class="btw-modal-continue" style="margin-top:14px;">Close</button>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwJoinOverlay" style="display:none;">
+    <div class="btw-modal">
+      <div class="btw-modal-eyebrow">Join a practice</div>
+      <h2>Create your clinician login</h2>
+      <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a practice</strong> on Between. Create your login below — you'll have your own account and your own private caseload.</div>
+      <input id="btwJoinName" placeholder="Your name" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
+      <input id="btwJoinPassword" type="password" placeholder="Choose a password (10+ characters)" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
+      <div id="btwJoinLicenceWrap" style="display:none;">
+        <input id="btwJoinLicence" placeholder="Professional licence/order number" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:4px;">
+        <div style="font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;">Your discipline is regulated, so your account is reviewed before it can reach patient data.</div>
+      </div>
+      <div class="btw-form-error" id="btwJoinError" style="display:none;color:var(--clay);font-size:12.5px;margin-bottom:10px;"></div>
+      <button id="btwJoinSubmit" class="btw-modal-continue">Create account</button>
+      <button id="btwJoinCancel" class="btw-modal-continue secondary" style="margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+
   <div class="btw-header">
     <div>
       <div class="btw-title"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
@@ -2044,6 +2091,7 @@
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
+          <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My practice</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
           <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
@@ -3591,6 +3639,30 @@
       "Désactiver les résumés IA? Les prochains suivis seront enregistrés tels quels, sans analyse par IA.",
     "Turn on AI summaries? An AI will write a short summary and theme tags for each check-in. You can turn this off anytime.":
       "Activer les résumés IA? Une IA rédigera un court résumé et des étiquettes de thèmes pour chaque suivi. Vous pouvez le désactiver en tout temps.",
+    "your practice":"votre cabinet",
+    "a practice":"un cabinet",
+    "You are part of":"Vous faites partie de",
+    "You have your own login and your own private caseload. Your seat is covered by the practice subscription, so there is nothing for you to pay.":
+      "Vous avez votre propre compte et votre propre liste de clients, privée. Votre place est couverte par l'abonnement du cabinet; vous n'avez donc rien à payer.",
+    "you":"vous",
+    "pending review":"en attente de validation",
+    "patient":"patient",
+    "patients":"patients",
+    "Remove":"Retirer",
+    "Revoke":"Révoquer",
+    "seats used.":"places utilisées.",
+    "Unlimited seats.":"Places illimitées.",
+    "You have used every seat on your plan.":"Vous avez utilisé toutes les places de votre forfait.",
+    "Upgrade to add more colleagues.":"Passez à un forfait supérieur pour ajouter des collègues.",
+    "Remove this colleague from your practice? Their account and patients stay theirs, but their seat is freed and they will need their own subscription.":
+      "Retirer ce collègue de votre cabinet? Son compte et ses patients lui restent, mais sa place est libérée et il lui faudra son propre abonnement.",
+    "Enter a colleague's email.":"Entrez le courriel d'un collègue.",
+    "Invite created. Email isn't set up on this server yet, so the join link is in the server logs.":
+      "Invitation créée. Le courriel n'est pas encore configuré sur ce serveur; le lien d'accès se trouve dans les journaux du serveur.",
+    "Invite sent.":"Invitation envoyée.",
+    "Please enter your name.":"Veuillez entrer votre nom.",
+    "Your account is created and pending licence review. You will get access once it is approved.":
+      "Votre compte est créé et en attente de validation de votre licence. Vous y aurez accès dès son approbation.",
     "Check-in reminders":"Rappels de suivi",
     "If you go quiet for a week, we'll send one gentle email nudge. Off by default; unsubscribe anytime.":
       "Si vous restez silencieux pendant une semaine, nous enverrons un doux rappel par courriel. Désactivé par défaut; désabonnement en tout temps.",
@@ -7348,6 +7420,8 @@
     if(dlData) dlData.style.display = signedIn ? '' : 'none';
     document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
+    const practiceBtn = document.getElementById('btwPracticeBtn');
+    if(practiceBtn) practiceBtn.style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     const adminBtn = document.getElementById('btwAdminBtn');
     if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
@@ -7782,6 +7856,10 @@
     document.getElementById('btwResetConfError').textContent = '';
     showResetStep('btwResetConfirmStep');
   }
+  // Arriving from a practice invite email: ?pjoin=<token> opens the join form.
+  // Deferred so the join handlers below have finished initializing first.
+  const _pjoin = _q.get('pjoin');
+  if(_pjoin){ setTimeout(()=> openJoin(_pjoin), 0); }
   async function finishLogin(clinician, biEnabled, freeAcc){
     // Clear any patient session in this browser so the two roles never mix.
     setPToken(null); state.patient = null;
@@ -8059,6 +8137,131 @@
   document.getElementById('btwAdminBtn').addEventListener('click', openAdmin);
   document.querySelectorAll('[data-admintab]').forEach(b=> b.addEventListener('click', ()=>{ _adminTab = b.getAttribute('data-admintab'); renderAdminTab(); }));
 
+  // --- Practice (multi-seat) ---
+  const practiceOverlay = document.getElementById('btwPracticeOverlay');
+  async function openPractice(){
+    const ownerBox = document.getElementById('btwPracticeOwner');
+    const memberBox = document.getElementById('btwPracticeMember');
+    ownerBox.style.display = 'none'; memberBox.style.display = 'none';
+    document.getElementById('btwInviteError').style.display = 'none';
+    document.getElementById('btwInviteOk').style.display = 'none';
+    practiceOverlay.style.display = 'flex';
+    try{ renderPractice(await api('GET', '/api/practice')); }
+    catch(e){ memberBox.style.display = ''; memberBox.textContent = e.message; }
+  }
+  function renderPractice(data){
+    const ownerBox = document.getElementById('btwPracticeOwner');
+    const memberBox = document.getElementById('btwPracticeMember');
+    if(data.role === 'member'){
+      const pname = (data.owner && (data.owner.practice_name || data.owner.name)) || t('your practice');
+      memberBox.style.display = '';
+      memberBox.innerHTML = esc(t('You are part of')) + ' <strong>' + esc(pname) + '</strong>. ' +
+        esc(t('You have your own login and your own private caseload. Your seat is covered by the practice subscription, so there is nothing for you to pay.'));
+      ownerBox.style.display = 'none';
+      return;
+    }
+    memberBox.style.display = 'none';
+    ownerBox.style.display = '';
+    const seats = data.seats || [], pending = data.pending || [];
+    const seatList = document.getElementById('btwSeatList');
+    seatList.innerHTML = seats.map(s=>{
+      const tag = s.is_owner ? (' · ' + esc(t('you'))) : '';
+      const pend = !s.licence_verified ? ' <span style="color:var(--amber,#B8860B);font-size:11px;">(' + esc(t('pending review')) + ')</span>' : '';
+      const pc = esc(String(s.patient_count)) + ' ' + esc(s.patient_count === 1 ? t('patient') : t('patients'));
+      const remove = s.is_owner ? '' :
+        '<button data-removeseat="' + esc(s.id) + '" class="btw-nav-btn" style="font-size:11.5px;">' + esc(t('Remove')) + '</button>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);">' +
+        '<div><div style="font-weight:600;font-size:13px;">' + esc(s.name) + tag + pend + '</div>' +
+        '<div style="font-size:11.5px;color:var(--ink-soft);">' + esc(s.email) + ' · ' + pc + '</div></div>' + remove + '</div>';
+    }).join('');
+    const pendWrap = document.getElementById('btwPendingWrap');
+    const pendList = document.getElementById('btwPendingList');
+    if(pending.length){
+      pendWrap.style.display = '';
+      pendList.innerHTML = pending.map(p=>
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;">' +
+        '<span style="font-size:12.5px;">' + esc(p.email) + '</span>' +
+        '<button data-revokeinvite="' + esc(p.email) + '" class="btw-nav-btn" style="font-size:11.5px;">' + esc(t('Revoke')) + '</button></div>'
+      ).join('');
+    } else { pendWrap.style.display = 'none'; pendList.innerHTML = ''; }
+    const used = seats.length + pending.length;
+    const capNote = document.getElementById('btwSeatCapNote');
+    const inviteBox = document.getElementById('btwInviteBox');
+    inviteBox.style.display = data.canInvite ? '' : 'none';
+    if(!data.canInvite && data.cap && used >= data.cap){
+      capNote.textContent = t('You have used every seat on your plan.') + ' ' + t('Upgrade to add more colleagues.');
+    } else if(data.cap){
+      capNote.textContent = used + ' / ' + data.cap + ' ' + t('seats used.');
+    } else {
+      capNote.textContent = t('Unlimited seats.');
+    }
+    seatList.querySelectorAll('[data-removeseat]').forEach(b=> b.addEventListener('click', ()=> removeSeat(b.getAttribute('data-removeseat'))));
+    pendList.querySelectorAll('[data-revokeinvite]').forEach(b=> b.addEventListener('click', ()=> revokeInvite(b.getAttribute('data-revokeinvite'))));
+  }
+  async function removeSeat(id){
+    if(!confirm(t('Remove this colleague from your practice? Their account and patients stay theirs, but their seat is freed and they will need their own subscription.'))) return;
+    try{ renderPractice(await api('POST', '/api/practice/seats/' + id + '/remove').then(()=> api('GET', '/api/practice'))); }
+    catch(e){ alert(e.message); }
+  }
+  async function revokeInvite(email){
+    try{ await api('POST', '/api/practice/invites/revoke', { email }); renderPractice(await api('GET', '/api/practice')); }
+    catch(e){ alert(e.message); }
+  }
+  document.getElementById('btwInviteSend').addEventListener('click', async ()=>{
+    const emailEl = document.getElementById('btwInviteEmail');
+    const err = document.getElementById('btwInviteError');
+    const okEl = document.getElementById('btwInviteOk');
+    err.style.display = 'none'; okEl.style.display = 'none';
+    const email = emailEl.value.trim();
+    if(!email){ err.textContent = t('Enter a colleague\'s email.'); err.style.display = ''; return; }
+    try{
+      const r = await api('POST', '/api/practice/invite', { email });
+      emailEl.value = '';
+      okEl.textContent = r.emailConfigured === false
+        ? t('Invite created. Email isn\'t set up on this server yet, so the join link is in the server logs.')
+        : t('Invite sent.');
+      okEl.style.display = '';
+      renderPractice(await api('GET', '/api/practice'));
+    }catch(e){ err.textContent = e.message; err.style.display = ''; }
+  });
+  const practiceBtnEl = document.getElementById('btwPracticeBtn');
+  if(practiceBtnEl) practiceBtnEl.addEventListener('click', ()=>{ const m = document.getElementById('btwNavMenu'); if(m) m.style.display = 'none'; openPractice(); });
+  document.getElementById('btwClosePractice').addEventListener('click', ()=>{ practiceOverlay.style.display = 'none'; });
+
+  // --- Join a practice (a colleague accepting an invite) ---
+  const joinOverlay = document.getElementById('btwJoinOverlay');
+  let joinToken = null;
+  async function openJoin(token){
+    joinToken = token;
+    const err = document.getElementById('btwJoinError'); err.style.display = 'none';
+    document.getElementById('btwJoinName').value = '';
+    document.getElementById('btwJoinPassword').value = '';
+    document.getElementById('btwJoinLicence').value = '';
+    document.getElementById('btwJoinLicenceWrap').style.display = 'none';
+    joinOverlay.style.display = 'flex';
+    try{
+      const info = await api('GET', '/api/practice/invite-info?token=' + encodeURIComponent(token));
+      document.getElementById('btwJoinPractice').textContent = info.practiceName || t('a practice');
+      document.getElementById('btwJoinLicenceWrap').style.display = info.needsLicence ? '' : 'none';
+    }catch(e){ err.textContent = e.message; err.style.display = ''; }
+  }
+  document.getElementById('btwJoinCancel').addEventListener('click', ()=>{ joinOverlay.style.display = 'none'; history.replaceState(null, '', location.pathname); });
+  document.getElementById('btwJoinSubmit').addEventListener('click', async ()=>{
+    const err = document.getElementById('btwJoinError'); err.style.display = 'none';
+    const name = document.getElementById('btwJoinName').value.trim();
+    const password = document.getElementById('btwJoinPassword').value;
+    const licenceNumber = document.getElementById('btwJoinLicence').value.trim();
+    if(!name){ err.textContent = t('Please enter your name.'); err.style.display = ''; return; }
+    if(password.length < 10){ err.textContent = t('Password needs to be at least 10 characters.'); err.style.display = ''; return; }
+    try{
+      const data = await api('POST', '/api/practice/join', { token: joinToken, name, password, licenceNumber });
+      joinOverlay.style.display = 'none';
+      history.replaceState(null, '', location.pathname);
+      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
+      if(data.verificationRequired){ alert(t('Your account is created and pending licence review. You will get access once it is approved.')); }
+    }catch(e){ err.textContent = e.message; err.style.display = ''; }
+  });
+
   document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
     try{
       const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly' });
@@ -8215,7 +8418,7 @@
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwContactOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwContactOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });
@@ -8227,7 +8430,7 @@
       if(el) el.style.display = 'none';
     });
   });
-  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwBillingOverlay'].forEach(id=>{
+  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwBillingOverlay','btwPracticeOverlay'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });

@@ -164,6 +164,18 @@ try {
     if ([401, 403, 503].includes(r.status)) ok(`POST /api/patient/reminders (unauthed) → ${r.status}`);
     else fail('POST /api/patient/reminders → ' + r.status + ' (expected 401/403/503)');
   }
+  {
+    // Multi-seat practice routes are registered and gated, not crashing.
+    const r = await get('/api/practice');
+    if ([401, 403, 503].includes(r.status)) ok(`GET /api/practice (unauthed) → ${r.status}`);
+    else fail('GET /api/practice → ' + r.status + ' (expected 401/403/503)');
+  }
+  {
+    const r = await get('/api/practice/invite-info?token=smoke-nope');
+    // requireDb runs first (503 in CI); with a DB it's a 404 for a bad token. Never 500.
+    if ([404, 503].includes(r.status)) ok(`GET /api/practice/invite-info → ${r.status}`);
+    else fail('GET /api/practice/invite-info → ' + r.status + ' (expected 404 or 503)');
+  }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);
 } finally {

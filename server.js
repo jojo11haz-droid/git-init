@@ -17,6 +17,9 @@ import {
   createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
   setPatientReminders, disableRemindersByToken, findPatientsNeedingReminder, markPatientReminded,
+  createPracticeMember, createPracticeInvite, getValidPracticeInvite, markPracticeInviteAccepted,
+  hasPendingPracticeInvite, revokePracticeInvite, listPendingPracticeInvites,
+  listPracticeSeats, countPracticeSeats, removePracticeSeat,
   createAudioUploadToken, consumeAudioUploadToken, storeAudioUpload,
   getAudioUploadOwned, getAudioForClinician,
   createPhotoUploadToken, consumePhotoUploadToken, storePhotoUpload,
@@ -945,6 +948,197 @@ app.post('/api/admin/clinicians/:id/verify', requireDb, requireAuth, requireOwne
   }
 });
 
+// --- Practices (multi-seat) ---
+// A practice owner adds colleagues by email. Each seat logs in as their own
+// clinician, runs their own private caseload, and is covered by the owner's one
+// subscription. Caseloads are never shared across seats (see the clinic data
+// agreement), so this is purely an access + billing grouping.
+const PRACTICE_INVITE_TTL_DAYS = 14;
+const COACH_REVIEWED_DISCIPLINES = ['physio', 'nutrition', 'neuropsych'];
+function memberNeedsReview(accountType, discipline) {
+  if (accountType === 'therapist') return true;
+  if (accountType === 'coach') return COACH_REVIEWED_DISCIPLINES.includes(discipline);
+  return false; // mentor / school / trainer self-verify
+}
+
+// What the signed-in clinician's practice looks like, for the settings panel.
+app.get('/api/practice', requireDb, requireAuth, async (req, res) => {
+  try {
+    const c = req.clinician;
+    if (c.practice_owner_id) {
+      const owner = await getClinicianById(c.practice_owner_id);
+      return res.json({
+        role: 'member',
+        owner: owner ? { name: owner.name, practice_name: owner.practice_name } : null
+      });
+    }
+    const [seats, pending] = await Promise.all([listPracticeSeats(c.id), listPendingPracticeInvites(c.id)]);
+    const cap = seatCapForClinician(c);
+    const used = seats.length + pending.length;
+    res.json({
+      role: 'owner',
+      practice_name: c.practice_name || null,
+      account_type: c.account_type,
+      seats, pending,
+      cap: cap === Infinity ? null : cap,
+      canInvite: clinicianVerified(c) && used < cap,
+      emailConfigured: emailConfigured()
+    });
+  } catch (err) {
+    console.error('Error loading practice:', err);
+    res.status(500).json({ error: 'Could not load your practice.' });
+  }
+});
+
+// Owner invites a colleague by email.
+app.post('/api/practice/invite', requireDb, requireAuth, requireVerifiedClinician, signupLimiter, async (req, res) => {
+  try {
+    const owner = req.clinician;
+    if (owner.practice_owner_id) {
+      return res.status(403).json({ error: 'Only the practice owner can add colleagues.' });
+    }
+    const email = String((req.body || {}).email || '').trim();
+    if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'A valid email is required.' });
+    if (email.toLowerCase() === String(owner.email).toLowerCase()) {
+      return res.status(400).json({ error: 'That is your own account.' });
+    }
+    const cap = seatCapForClinician(owner);
+    const [seatCount, pending] = await Promise.all([countPracticeSeats(owner.id), listPendingPracticeInvites(owner.id)]);
+    if (seatCount + pending.length >= cap) {
+      return res.status(400).json({ error: 'You have used every seat on your plan. Upgrade to add more colleagues.', code: 'seat_limit' });
+    }
+    if (await getClinicianByEmail(email)) {
+      return res.status(409).json({ error: 'Someone already has a Between account with this email.' });
+    }
+    if (await hasPendingPracticeInvite(owner.id, email)) {
+      return res.status(409).json({ error: 'You have already invited this colleague.' });
+    }
+    const token = generateSessionToken();
+    await createPracticeInvite(hashSessionToken(token), owner.id, email, PRACTICE_INVITE_TTL_DAYS);
+    const practice = owner.practice_name || owner.name;
+    await sendEmail({
+      to: email,
+      subject: `${owner.name} invited you to join ${practice} on Between`,
+      text: `${owner.name} has invited you to join ${practice} on Between, a between-visit check-in tool.\n\n` +
+        `Create your clinician login here within ${PRACTICE_INVITE_TTL_DAYS} days:\n` +
+        `${siteOrigin(req)}/?pjoin=${token}\n\n` +
+        `You'll have your own account and your own private caseload — colleagues can't see each other's patients. ` +
+        `Your seat is covered by ${practice}'s subscription, so there's nothing to pay.\n\n` +
+        `If you weren't expecting this, you can ignore this email.`
+    });
+    res.json({ ok: true, emailConfigured: emailConfigured() });
+  } catch (err) {
+    console.error('Error inviting colleague:', err);
+    res.status(500).json({ error: 'Could not send the invite.' });
+  }
+});
+
+// Owner revokes a pending invite.
+app.post('/api/practice/invites/revoke', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the practice owner can manage invites.' });
+    const email = String((req.body || {}).email || '').trim();
+    if (!email) return res.status(400).json({ error: 'An email is required.' });
+    await revokePracticeInvite(req.clinician.id, email);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error revoking invite:', err);
+    res.status(500).json({ error: 'Could not revoke the invite.' });
+  }
+});
+
+// Owner removes a colleague's seat (their account and caseload stay theirs).
+app.post('/api/practice/seats/:id/remove', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (req.clinician.practice_owner_id) return res.status(403).json({ error: 'Only the practice owner can remove a seat.' });
+    const member = await removePracticeSeat(req.clinician.id, req.params.id);
+    if (!member) return res.status(404).json({ error: 'That colleague is not part of your practice.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error removing seat:', err);
+    res.status(500).json({ error: 'Could not remove the seat.' });
+  }
+});
+
+// Public lookup for the join screen: given an invite token, what practice is
+// this, and will the new seat need a licence? Returns nothing identifying
+// beyond the practice's display name.
+app.get('/api/practice/invite-info', requireDb, async (req, res) => {
+  try {
+    const token = (req.query.token || '').toString();
+    if (!token) return res.status(400).json({ error: 'Missing token.' });
+    const invite = await getValidPracticeInvite(hashSessionToken(token));
+    if (!invite) return res.status(404).json({ error: 'This invite is invalid or has expired.' });
+    const owner = await getClinicianById(invite.owner_id);
+    if (!owner || owner.practice_owner_id) return res.status(404).json({ error: 'This practice can no longer accept new seats.' });
+    res.json({
+      practiceName: owner.practice_name || owner.name,
+      email: invite.email,
+      needsLicence: !isFreeAccess(invite.email) && memberNeedsReview(owner.account_type, owner.discipline || null)
+    });
+  } catch (err) {
+    console.error('Error reading invite info:', err);
+    res.status(500).json({ error: 'Could not read the invite.' });
+  }
+});
+
+// A colleague accepts a practice invite and creates their clinician login. Like
+// signup, but the account is attached to the owner's practice and inherits its
+// discipline so licence-review rules apply the same way.
+app.post('/api/practice/join', requireDb, signupLimiter, async (req, res) => {
+  try {
+    const { token, name, password, licenceNumber, licenceOrder, province } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'Missing invite token.' });
+    const invite = await getValidPracticeInvite(hashSessionToken(token));
+    if (!invite) return res.status(400).json({ error: 'This invite is invalid or has expired. Ask the practice to send a new one.' });
+    const owner = await getClinicianById(invite.owner_id);
+    if (!owner || owner.practice_owner_id) {
+      return res.status(400).json({ error: 'This practice can no longer accept new seats.' });
+    }
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
+    if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
+    const email = invite.email;
+    if (await getClinicianByEmail(email)) {
+      return res.status(409).json({ error: 'An account with this email already exists. Sign in instead.' });
+    }
+    const accountType = owner.account_type;
+    const discipline = owner.discipline || null;
+    const free = isFreeAccess(email);
+    const needsReview = !free && memberNeedsReview(accountType, discipline);
+    if (needsReview && (!licenceNumber || !licenceNumber.trim())) {
+      return res.status(400).json({ error: 'A professional licence/order number is required for this discipline.' });
+    }
+    const member = await createPracticeMember({
+      name: name.trim(),
+      email,
+      passwordHash: await hashPassword(password),
+      ownerId: owner.id,
+      accountType,
+      discipline,
+      licenceVerified: !needsReview,
+      licenceNumber: needsReview ? licenceNumber.trim() : null,
+      licenceOrder: needsReview && typeof licenceOrder === 'string' ? licenceOrder.trim() : null,
+      province: needsReview && typeof province === 'string' ? province.trim() : null
+    });
+    await markPracticeInviteAccepted(invite.token_hash);
+    await startSession(res, req, member.id);
+    sendWelcomeEmail({ to: member.email, name: member.name, kind: needsReview ? 'therapist' : 'pro' });
+    res.status(201).json({
+      clinician: member,
+      verificationRequired: needsReview,
+      billingEnabled: stripeConfigured(),
+      freeAccess: free,
+      practiceName: owner.practice_name || owner.name
+    });
+  } catch (err) {
+    if (err && err.code === '23505') {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+    console.error('Error joining practice:', err);
+    res.status(500).json({ error: 'Could not create your account.' });
+  }
+});
+
 // Start (or restart) clinician checkout — used after a cancel, or to add a card
 // during/after the trial.
 app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) => {
@@ -1772,6 +1966,10 @@ function patientNeedsSub(p) {
   return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
 }
 function clinicianNeedsSub(c) {
+  // A member seat in a practice is covered by the owner's subscription, so the
+  // member never owes one themselves (the owner holds the one plan that pays
+  // for every seat).
+  if (c && c.practice_owner_id) return false;
   // Coaches (team) and mentors (recovery) only owe a subscription once their
   // plans are configured in Stripe; until then they use the product free.
   if (c && (c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer')) {
@@ -1792,6 +1990,28 @@ function requireClinicianSubscription(req, res, next) {
     return res.status(402).json({ error: 'An active subscription is needed to continue — open Billing to subscribe.', code: 'subscription_required' });
   }
   next();
+}
+
+// The plan a clinician effectively runs on, even before they've picked one in
+// Stripe (account type implies the default plan).
+function effectivePlan(c) {
+  if (!c) return 'solo_monthly';
+  if (c.plan) return c.plan;
+  return c.account_type === 'coach' ? 'team_monthly'
+    : c.account_type === 'school' ? 'school_monthly'
+    : c.account_type === 'trainer' ? 'trainer_monthly'
+    : c.account_type === 'mentor' ? 'mentor_monthly'
+    : 'solo_monthly';
+}
+// How many total seats (owner + colleagues) a practice can hold. Premium tiers
+// get a larger practice; the owner's own account is always a free-access,
+// uncapped admin seat.
+function seatCapForClinician(c) {
+  if (!c || isFreeAccess(c.email)) return Infinity;
+  const plan = effectivePlan(c);
+  if (/premium/.test(plan)) return 10;
+  if (/^mentor/.test(plan)) return 2;
+  return 3;
 }
 // A clinician account can only reach patient data once its professional licence
 // has been confirmed by the owner. The owner's own (free-access) account is
