@@ -27,6 +27,7 @@ import {
   createAlert, listAlerts, markAlertViewed
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
+import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio } from './transcribe.js';
 import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
@@ -1872,6 +1873,7 @@ function publicPatient(p) {
     clinician_discipline: p.clinician_discipline || null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
     reminders_enabled: !!p.reminders_enabled,
+    phone: p.phone || null,
     is_premium: patientIsPremium(p),
     weekly_checkin_cap: patientWeeklyCap(p)
   };
@@ -2268,16 +2270,28 @@ app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res)
 });
 
 // Patient opts in/out of gentle check-in reminders. Off by default; their own
-// choice, no clinician involved. Turning it on mints a stable unsubscribe token
-// (kept across toggles so old email links keep working). Only meaningful when
-// the account has an email and the server can send mail, but the preference is
-// always recorded.
+// choice, no clinician involved. Reminders are texted to the phone number they
+// give, so turning them on requires a phone number. Turning it on also mints a
+// stable unsubscribe token (kept across toggles so old links keep working).
 app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, res) => {
   try {
-    const { enabled } = req.body || {};
+    const { enabled, phone } = req.body || {};
+    let normalizedPhone = null;
+    if (enabled) {
+      // A phone is required to turn reminders on: use the one just entered, or
+      // fall back to a number already on file.
+      const candidate = phone != null && String(phone).trim() !== '' ? phone : req.patient.phone;
+      normalizedPhone = normalizePhone(candidate);
+      if (!normalizedPhone) {
+        return res.status(400).json({ error: 'A valid mobile number is needed so we can text your reminders.', code: 'phone_required' });
+      }
+    } else if (phone != null && String(phone).trim() !== '') {
+      // Allow updating the number even while off.
+      normalizedPhone = normalizePhone(phone);
+    }
     const token = req.patient.reminder_token || generateSessionToken();
-    const patient = await setPatientReminders(req.patient.id, !!enabled, token);
-    res.json({ patient: publicPatient(patient), emailConfigured: emailConfigured() });
+    const patient = await setPatientReminders(req.patient.id, !!enabled, token, normalizedPhone);
+    res.json({ patient: publicPatient(patient), smsConfigured: smsConfigured() });
   } catch (err) {
     console.error('Error updating reminder preference:', err);
     res.status(500).json({ error: 'Could not save your choice.' });
@@ -2724,43 +2738,59 @@ function checkPatientPricing() {
 }
 
 // --- Check-in reminder sweep ---
-// A once-a-day pass that emails opted-in patients who've gone quiet. No new
-// infrastructure: a plain in-process timer, matching the lazy-GC approach used
-// elsewhere. It assumes a single running instance (as on Render's default) —
-// set DISABLE_REMINDER_SWEEP=1 on secondary instances if you ever scale out.
+// A once-a-day pass that nudges opted-in patients who've gone quiet. It texts
+// anyone with a phone number on file (the common case, since reminders require
+// one) and falls back to email otherwise. No new infrastructure: a plain
+// in-process timer, matching the lazy-GC approach used elsewhere. It assumes a
+// single running instance (as on Render's default) — set DISABLE_REMINDER_SWEEP=1
+// on secondary instances if you ever scale out.
 const REMINDER_QUIET_DAYS = Math.max(1, Number(process.env.REMINDER_QUIET_DAYS || 7));
 const REMINDER_COOLDOWN_DAYS = Math.max(0, Number(process.env.REMINDER_COOLDOWN_DAYS || 7));
 const REMINDER_SWEEP_MS = 24 * 60 * 60 * 1000;
+function reminderChannelReady() { return smsConfigured() || emailConfigured(); }
 
 async function runReminderSweep() {
-  if (!dbEnabled() || !emailConfigured()) return;
+  if (!dbEnabled() || !reminderChannelReady()) return;
   const base = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
   try {
     const due = await findPatientsNeedingReminder(REMINDER_QUIET_DAYS, REMINDER_COOLDOWN_DAYS);
+    let texted = 0, emailed = 0;
     for (const p of due) {
       const name = p.display_name || 'there';
       const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
       try {
-        await sendEmail({
-          to: p.email,
-          subject: 'A gentle check-in from Between',
-          text: `Hi ${name},\n\n` +
-            `It's been a little while since your last check-in on Between. No pressure at all — ` +
-            `whenever you have a moment, even a short note about how you're doing gives your next ` +
-            `appointment something to start from.\n\n` +
-            `Open Between: ${base}/\n\n` +
-            `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
-            `— Between\n\n` +
-            `Don't want these reminders? Unsubscribe here: ${unsub}`
-        });
+        if (p.phone && smsConfigured()) {
+          await sendSms({
+            to: p.phone,
+            text: `Hi ${name}, a gentle check-in reminder from Between — whenever you have a moment, ` +
+              `even a short note helps. ${base}/\n` +
+              `Not for emergencies; call 988 or 911 if you need help now.\n` +
+              `Stop reminders: ${unsub}`
+          });
+          texted++;
+        } else if (p.email) {
+          await sendEmail({
+            to: p.email,
+            subject: 'A gentle check-in from Between',
+            text: `Hi ${name},\n\n` +
+              `It's been a little while since your last check-in on Between. No pressure at all — ` +
+              `whenever you have a moment, even a short note about how you're doing gives your next ` +
+              `appointment something to start from.\n\n` +
+              `Open Between: ${base}/\n\n` +
+              `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
+              `— Between\n\n` +
+              `Don't want these reminders? Unsubscribe here: ${unsub}`
+          });
+          emailed++;
+        }
       } catch (err) {
-        console.error('Reminder email failed for a patient:', err);
+        console.error('Reminder delivery failed for a patient:', err);
       }
       // Mark reminded either way so the cooldown holds and we never loop on one
-      // address if delivery is flaky.
+      // patient if delivery is flaky.
       try { await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
     }
-    if (due.length) console.log(`📧 Reminder sweep: nudged ${due.length} quiet patient(s).`);
+    if (due.length) console.log(`📣 Reminder sweep: nudged ${due.length} quiet patient(s) (${texted} by text, ${emailed} by email).`);
   } catch (err) {
     console.error('Reminder sweep failed:', err);
   }
@@ -2768,11 +2798,11 @@ async function runReminderSweep() {
 
 function startReminderSweep() {
   if (process.env.DISABLE_REMINDER_SWEEP === '1') return;
-  if (!dbEnabled() || !emailConfigured()) return;
+  if (!dbEnabled() || !reminderChannelReady()) return;
   // First pass a minute after boot (let the DB settle), then daily.
   setTimeout(runReminderSweep, 60 * 1000).unref?.();
   setInterval(runReminderSweep, REMINDER_SWEEP_MS).unref?.();
-  console.log('📧 Check-in reminder sweep scheduled (daily).');
+  console.log('📣 Check-in reminder sweep scheduled (daily).');
 }
 
 const PORT = process.env.PORT || 3000;

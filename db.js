@@ -199,6 +199,7 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCE
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMPTZ;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_token TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS phone TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_reminder_token_key ON patients (reminder_token) WHERE reminder_token IS NOT NULL;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
@@ -626,7 +627,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -915,17 +916,19 @@ export async function purgeExpiredPatients(graceDays = 14) {
 
 // --- Check-in reminders ---
 // A patient can opt in to a gentle nudge when they've gone quiet. It's their
-// own choice (set from patient settings), off by default. The email carries a
-// stable per-patient token so it can be unsubscribed in one click without
-// signing in; the token is minted the first time reminders are turned on and
-// kept thereafter so old links keep working.
-export async function setPatientReminders(patientId, enabled, token) {
+// own choice (set from patient settings), off by default. Reminders go by text
+// to the phone number they give; the nudge also carries a stable per-patient
+// token so it can be unsubscribed in one click without signing in. The token is
+// minted the first time reminders are turned on and kept thereafter so old
+// links keep working. A null phone leaves the stored number as-is.
+export async function setPatientReminders(patientId, enabled, token, phone) {
   const { rows } = await pool.query(
     `UPDATE patients SET
        reminders_enabled = $1,
-       reminder_token = CASE WHEN $1 AND reminder_token IS NULL THEN $2 ELSE reminder_token END
+       reminder_token = CASE WHEN $1 AND reminder_token IS NULL THEN $2 ELSE reminder_token END,
+       phone = COALESCE($4, phone)
      WHERE id = $3 RETURNING ${PATIENT_ROW_COLS}`,
-    [!!enabled, token || null, patientId]
+    [!!enabled, token || null, patientId, phone || null]
   );
   return rows[0] || null;
 }
@@ -949,7 +952,7 @@ export async function disableRemindersByToken(token) {
 // needs.
 export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
   const { rows } = await pool.query(
-    `SELECT p.id, p.email, p.display_name, p.reminder_token
+    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token
      FROM patients p
      LEFT JOIN LATERAL (
        SELECT max(c.submitted_at) AS last_at
@@ -957,7 +960,7 @@ export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
        WHERE c.patient_id = p.id AND c.deleted_at IS NULL
      ) ci ON true
      WHERE p.reminders_enabled = true
-       AND p.email IS NOT NULL
+       AND (p.phone IS NOT NULL OR p.email IS NOT NULL)
        AND p.password_hash IS NOT NULL
        AND p.reminder_token IS NOT NULL
        AND p.left_at IS NULL
