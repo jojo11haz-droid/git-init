@@ -2804,6 +2804,12 @@ function tzDateOf(ts, tz) {
 // Send one reminder to a patient over the best available channel (text if they
 // have a number and texting is set up, else email), and record it.
 async function deliverReminder(p, base) {
+  // Claim first, send second: if an overlapping sweep already claimed this
+  // patient, markPatientReminded returns false and we don't send — so one
+  // patient can never be texted twice for the same slot.
+  let claimed = false;
+  try { claimed = await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
+  if (!claimed) return false;
   const name = p.display_name || 'there';
   const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
   let channel = null;
@@ -2832,11 +2838,10 @@ async function deliverReminder(p, base) {
       channel = 'email';
     }
   } catch (err) {
+    // Already claimed above, so a flaky send won't loop on this patient today.
     console.error('Reminder delivery failed for a patient:', err);
   }
-  // Mark reminded even on a flaky send so we don't loop on one patient.
-  try { await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
-  return channel;
+  return true; // claimed (and attempted); counted whether or not the send threw
 }
 
 async function runReminderSweep() {
@@ -2855,8 +2860,7 @@ async function runReminderSweep() {
       const [hh, mm] = String(p.reminder_time).split(':').map(Number);
       if (now.minutes < hh * 60 + mm) continue; // not yet their time today
       if (p.last_reminded_at && tzDateOf(new Date(p.last_reminded_at), tz) === now.date) continue; // already today
-      await deliverReminder(p, base);
-      scheduled++;
+      if (await deliverReminder(p, base)) scheduled++;
     }
   } catch (err) {
     console.error('Scheduled reminder sweep failed:', err);
@@ -2865,8 +2869,7 @@ async function runReminderSweep() {
     // 2) Legacy quiet-nudge fallback, only for opted-in patients who never set
     //    a schedule (reminder_time IS NULL).
     for (const p of await findPatientsNeedingReminder(REMINDER_QUIET_DAYS, REMINDER_COOLDOWN_DAYS)) {
-      await deliverReminder(p, base);
-      quiet++;
+      if (await deliverReminder(p, base)) quiet++;
     }
   } catch (err) {
     console.error('Quiet reminder sweep failed:', err);

@@ -1001,8 +1001,20 @@ export async function findScheduledReminderCandidates() {
   return rows;
 }
 
-export async function markPatientReminded(patientId) {
-  await pool.query(`UPDATE patients SET last_reminded_at = now() WHERE id = $1`, [patientId]);
+// Atomically claim the right to remind this patient now: stamps last_reminded_at
+// only if it's unset or older than minGapHours, and returns true only to the
+// caller that won the claim. This makes the sweep safe against overlapping runs
+// (or a mis-set tick) — two concurrent sweeps can never both text one patient,
+// because the loser's conditional UPDATE matches no row. Default gap (20h) sits
+// safely under a daily cadence so it never blocks the next day's reminder.
+export async function markPatientReminded(patientId, minGapHours = 20) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET last_reminded_at = now()
+     WHERE id = $1 AND (last_reminded_at IS NULL OR last_reminded_at < now() - ($2 || ' hours')::interval)
+     RETURNING id`,
+    [patientId, String(Math.max(0, Math.floor(minGapHours)))]
+  );
+  return rows.length > 0;
 }
 
 // --- Audio uploads (voice memos) ---
