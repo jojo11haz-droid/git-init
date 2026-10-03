@@ -1962,12 +1962,21 @@
       <div class="btw-modal-toggle-row" id="btwRemindersRow" style="display:none;">
         <div>
           <strong>Check-in reminders</strong>
-          If you go quiet for a week, we'll send one gentle email nudge. Off by default; unsubscribe anytime.
+          If you go quiet for a week, we'll text you one gentle reminder. Off by default; unsubscribe anytime.
         </div>
         <label class="btw-switch">
           <input type="checkbox" id="btwRemindersToggle">
           <span class="btw-switch-slider"></span>
         </label>
+      </div>
+      <div id="btwRemindersPhoneRow" style="display:none;margin:-4px 0 14px;">
+        <label style="display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;" for="btwRemindersPhone">Mobile number for reminders</label>
+        <div style="display:flex;gap:8px;">
+          <input type="tel" id="btwRemindersPhone" placeholder="+1 555 123 4567" autocomplete="tel" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--font-body);font-size:13px;">
+          <button id="btwRemindersPhoneSave" style="background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;">Save</button>
+        </div>
+        <div class="btw-form-error" id="btwRemindersPhoneError" style="display:none;color:var(--clay);font-size:12px;margin-top:5px;"></div>
+        <div id="btwRemindersPhoneOk" style="display:none;color:var(--moss);font-size:12px;margin-top:5px;"></div>
       </div>
 
       <div id="btwDataList" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:9px;margin-bottom:14px;"></div>
@@ -3664,10 +3673,15 @@
     "Your account is created and pending licence review. You will get access once it is approved.":
       "Votre compte est créé et en attente de validation de votre licence. Vous y aurez accès dès son approbation.",
     "Check-in reminders":"Rappels de suivi",
-    "If you go quiet for a week, we'll send one gentle email nudge. Off by default; unsubscribe anytime.":
-      "Si vous restez silencieux pendant une semaine, nous enverrons un doux rappel par courriel. Désactivé par défaut; désabonnement en tout temps.",
-    "Reminders are on. Email isn't set up on this server yet, so nudges will start once it is.":
-      "Les rappels sont activés. Le courriel n'est pas encore configuré sur ce serveur; les rappels commenceront dès qu'il le sera.",
+    "If you go quiet for a week, we'll text you one gentle reminder. Off by default; unsubscribe anytime.":
+      "Si vous restez silencieux pendant une semaine, nous vous enverrons un doux rappel par texto. Désactivé par défaut; désabonnement en tout temps.",
+    "Mobile number for reminders":"Numéro de mobile pour les rappels",
+    "Enter a mobile number.":"Entrez un numéro de mobile.",
+    "Reminders are on. Texting isn't set up on this server yet, so reminders will start once it is.":
+      "Les rappels sont activés. L'envoi de textos n'est pas encore configuré sur ce serveur; les rappels commenceront dès qu'il le sera.",
+    "Saved. Texting isn't set up on this server yet, so reminders will start once it is.":
+      "Enregistré. L'envoi de textos n'est pas encore configuré sur ce serveur; les rappels commenceront dès qu'il le sera.",
+    "Saved. We'll text you if you go quiet.":"Enregistré. Nous vous enverrons un texto si vous restez silencieux.",
     "Your data & settings":"Vos données et réglages",
     "This permanently deletes all of your check-in history and trends. Continue?":
       "Cela supprime définitivement tout votre historique de suivis et vos tendances. Continuer?",
@@ -8851,28 +8865,75 @@
   }
 
   // A patient opts in/out of gentle check-in reminders (their own choice).
+  // Reminders are texted, so turning them on asks for a mobile number.
   const remindersRow = document.getElementById('btwRemindersRow');
   const remindersToggle = document.getElementById('btwRemindersToggle');
+  const remindersPhoneRow = document.getElementById('btwRemindersPhoneRow');
+  const remindersPhone = document.getElementById('btwRemindersPhone');
   function syncRemindersUi(){
     if(!remindersRow || !remindersToggle) return;
-    // Only patients see this, and only when they have an email to reach.
-    const show = isPatient() && !!(state.patient && state.patient.email);
+    // Only patients see this. A phone number is collected here, so no email
+    // dependency — any signed-in patient can turn reminders on.
+    const show = isPatient() && !!state.patient;
     remindersRow.style.display = show ? '' : 'none';
-    if(show) remindersToggle.checked = !!state.patient.reminders_enabled;
+    if(!show){ if(remindersPhoneRow) remindersPhoneRow.style.display = 'none'; return; }
+    const on = !!state.patient.reminders_enabled;
+    remindersToggle.checked = on;
+    if(remindersPhone) remindersPhone.value = state.patient.phone || '';
+    if(remindersPhoneRow) remindersPhoneRow.style.display = on ? '' : 'none';
+    const okEl = document.getElementById('btwRemindersPhoneOk'); if(okEl) okEl.style.display = 'none';
+    const errEl = document.getElementById('btwRemindersPhoneError'); if(errEl) errEl.style.display = 'none';
+  }
+  async function saveReminders(enabled, phone){
+    const r = await pApi('POST', '/api/patient/reminders', phone != null ? { enabled, phone } : { enabled });
+    state.patient = {...state.patient, ...r.patient};
+    return r;
   }
   if(remindersToggle){
     remindersToggle.addEventListener('change', async ()=>{
       const enabled = remindersToggle.checked;
-      try{
-        const r = await pApi('POST', '/api/patient/reminders', { enabled });
-        state.patient = {...state.patient, ...r.patient};
-        if(enabled && r.emailConfigured === false){
-          alert(t('Reminders are on. Email isn\'t set up on this server yet, so nudges will start once it is.'));
+      if(enabled){
+        // Reveal the phone field; require a number before it's really on.
+        const phone = (remindersPhone && remindersPhone.value.trim()) || (state.patient && state.patient.phone) || '';
+        if(remindersPhoneRow) remindersPhoneRow.style.display = '';
+        if(!phone){
+          if(remindersPhone) remindersPhone.focus();
+          remindersToggle.checked = false; // not on until we have a number
+          return;
         }
-      }catch(e){
-        remindersToggle.checked = !enabled; // revert on failure
-        alert(e.message);
+        try{
+          const r = await saveReminders(true, phone);
+          syncRemindersUi();
+          if(r.smsConfigured === false){
+            alert(t('Reminders are on. Texting isn\'t set up on this server yet, so reminders will start once it is.'));
+          }
+        }catch(e){
+          remindersToggle.checked = false;
+          if(remindersPhone) remindersPhone.focus();
+          const errEl = document.getElementById('btwRemindersPhoneError');
+          if(errEl){ errEl.textContent = e.message; errEl.style.display = ''; }
+        }
+      } else {
+        try{ await saveReminders(false); syncRemindersUi(); }
+        catch(e){ remindersToggle.checked = true; alert(e.message); }
       }
+    });
+  }
+  const remindersPhoneSave = document.getElementById('btwRemindersPhoneSave');
+  if(remindersPhoneSave){
+    remindersPhoneSave.addEventListener('click', async ()=>{
+      const errEl = document.getElementById('btwRemindersPhoneError');
+      const okEl = document.getElementById('btwRemindersPhoneOk');
+      if(errEl) errEl.style.display = 'none';
+      if(okEl) okEl.style.display = 'none';
+      const phone = remindersPhone ? remindersPhone.value.trim() : '';
+      if(!phone){ if(errEl){ errEl.textContent = t('Enter a mobile number.'); errEl.style.display = ''; } return; }
+      try{
+        const r = await saveReminders(true, phone);
+        remindersToggle.checked = true;
+        if(remindersPhone) remindersPhone.value = state.patient.phone || phone;
+        if(okEl){ okEl.textContent = r.smsConfigured === false ? t('Saved. Texting isn\'t set up on this server yet, so reminders will start once it is.') : t('Saved. We\'ll text you if you go quiet.'); okEl.style.display = ''; }
+      }catch(e){ if(errEl){ errEl.textContent = e.message; errEl.style.display = ''; } }
     });
   }
   aiStatusEl.addEventListener('click', ()=>{
