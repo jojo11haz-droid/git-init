@@ -16,7 +16,7 @@ import {
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
   createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
-  setPatientReminders, disableRemindersByToken, findPatientsNeedingReminder, markPatientReminded,
+  setPatientReminders, disableRemindersByToken, findPatientsNeedingReminder, findScheduledReminderCandidates, markPatientReminded,
   createPracticeMember, createPracticeInvite, getValidPracticeInvite, markPracticeInviteAccepted,
   hasPendingPracticeInvite, revokePracticeInvite, listPendingPracticeInvites,
   listPracticeSeats, countPracticeSeats, removePracticeSeat,
@@ -1874,6 +1874,9 @@ function publicPatient(p) {
     check_in_mode_lock: p.check_in_mode_lock || 'any',
     reminders_enabled: !!p.reminders_enabled,
     phone: p.phone || null,
+    reminder_time: p.reminder_time || null,
+    reminder_days: p.reminder_days || null,
+    reminder_tz: p.reminder_tz || null,
     is_premium: patientIsPremium(p),
     weekly_checkin_cap: patientWeeklyCap(p)
   };
@@ -2269,28 +2272,56 @@ app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res)
   }
 });
 
-// Patient opts in/out of gentle check-in reminders. Off by default; their own
-// choice, no clinician involved. Reminders are texted to the phone number they
-// give, so turning them on requires a phone number. Turning it on also mints a
-// stable unsubscribe token (kept across toggles so old links keep working).
+// Patient opts in/out of check-in reminders and sets their own schedule. Off by
+// default; their own choice, no clinician involved. Reminders are texted to the
+// phone number they give, at the time (and on the weekdays) they pick, so
+// turning them on requires a phone number. Turning it on also mints a stable
+// unsubscribe token (kept across toggles so old links keep working).
+function validReminderTime(s) {
+  return typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+}
+function normalizeReminderDays(arr) {
+  if (!Array.isArray(arr)) return undefined; // not provided → leave as-is
+  const set = [...new Set(arr.map(Number).filter(n => Number.isInteger(n) && n >= 0 && n <= 6))].sort((a, b) => a - b);
+  // Empty or all seven both mean "every day"; store '' for that.
+  return (set.length === 0 || set.length === 7) ? '' : set.join(',');
+}
+function validTimeZone(s) {
+  if (typeof s !== 'string' || !s || s.length > 64) return null;
+  try { new Intl.DateTimeFormat('en-US', { timeZone: s }); return s; } catch (_) { return null; }
+}
 app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, res) => {
   try {
-    const { enabled, phone } = req.body || {};
+    const { enabled, phone, time, days, tz } = req.body || {};
     let normalizedPhone = null;
     if (enabled) {
-      // A phone is required to turn reminders on: use the one just entered, or
-      // fall back to a number already on file.
       const candidate = phone != null && String(phone).trim() !== '' ? phone : req.patient.phone;
       normalizedPhone = normalizePhone(candidate);
       if (!normalizedPhone) {
         return res.status(400).json({ error: 'A valid mobile number is needed so we can text your reminders.', code: 'phone_required' });
       }
     } else if (phone != null && String(phone).trim() !== '') {
-      // Allow updating the number even while off.
       normalizedPhone = normalizePhone(phone);
     }
+    // Schedule: a time of day is required to turn reminders on (so they fire on
+    // a schedule, not just when quiet). Default to a sensible evening time if
+    // the client didn't send one and none is stored.
+    let normalizedTime = null;
+    if (time != null && String(time).trim() !== '') {
+      if (!validReminderTime(time)) return res.status(400).json({ error: 'Please choose a valid time of day.' });
+      normalizedTime = time;
+    } else if (enabled && !req.patient.reminder_time) {
+      normalizedTime = '18:00';
+    }
+    const normalizedDays = normalizeReminderDays(days);
+    const normalizedTz = tz != null ? validTimeZone(tz) : null;
     const token = req.patient.reminder_token || generateSessionToken();
-    const patient = await setPatientReminders(req.patient.id, !!enabled, token, normalizedPhone);
+    const patient = await setPatientReminders(req.patient.id, !!enabled, token, {
+      phone: normalizedPhone,
+      time: normalizedTime,
+      days: normalizedDays,
+      tz: normalizedTz
+    });
     res.json({ patient: publicPatient(patient), smsConfigured: smsConfigured() });
   } catch (err) {
     console.error('Error updating reminder preference:', err);
@@ -2746,63 +2777,111 @@ function checkPatientPricing() {
 // on secondary instances if you ever scale out.
 const REMINDER_QUIET_DAYS = Math.max(1, Number(process.env.REMINDER_QUIET_DAYS || 7));
 const REMINDER_COOLDOWN_DAYS = Math.max(0, Number(process.env.REMINDER_COOLDOWN_DAYS || 7));
-const REMINDER_SWEEP_MS = 24 * 60 * 60 * 1000;
+// The sweep now ticks several times an hour so it can fire each patient's
+// chosen time in their own timezone (not just once a day).
+const REMINDER_TICK_MS = Math.max(1, Number(process.env.REMINDER_TICK_MINUTES || 15)) * 60 * 1000;
+const REMINDER_DEFAULT_TZ = process.env.REMINDER_DEFAULT_TZ || 'America/Toronto';
+const WEEKDAY_IDX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 function reminderChannelReady() { return smsConfigured() || emailConfigured(); }
+
+// Current weekday/minutes-of-day/date in a timezone, via Intl (DST-correct).
+function tzNow(tz) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false, weekday: 'short',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  }).formatToParts(new Date());
+  const m = {}; for (const p of parts) m[p.type] = p.value;
+  const hour = m.hour === '24' ? 0 : Number(m.hour);
+  return { weekday: WEEKDAY_IDX[m.weekday], minutes: hour * 60 + Number(m.minute), date: `${m.year}-${m.month}-${m.day}` };
+}
+// The calendar date (YYYY-MM-DD) of a timestamp in a timezone.
+function tzDateOf(ts, tz) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(ts);
+  const m = {}; for (const p of parts) m[p.type] = p.value;
+  return `${m.year}-${m.month}-${m.day}`;
+}
+
+// Send one reminder to a patient over the best available channel (text if they
+// have a number and texting is set up, else email), and record it.
+async function deliverReminder(p, base) {
+  const name = p.display_name || 'there';
+  const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
+  let channel = null;
+  try {
+    if (p.phone && smsConfigured()) {
+      await sendSms({
+        to: p.phone,
+        text: `Hi ${name}, your Between check-in reminder — whenever you have a moment, even a short note helps. ${base}/\n` +
+          `Not for emergencies; call 988 or 911 if you need help now.\n` +
+          `Stop reminders: ${unsub}`
+      });
+      channel = 'text';
+    } else if (p.email) {
+      await sendEmail({
+        to: p.email,
+        subject: 'Your Between check-in reminder',
+        text: `Hi ${name},\n\n` +
+          `This is your check-in reminder from Between. No pressure at all — whenever you have a ` +
+          `moment, even a short note about how you're doing gives your next appointment something ` +
+          `to start from.\n\n` +
+          `Open Between: ${base}/\n\n` +
+          `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
+          `— Between\n\n` +
+          `Don't want these reminders? Unsubscribe here: ${unsub}`
+      });
+      channel = 'email';
+    }
+  } catch (err) {
+    console.error('Reminder delivery failed for a patient:', err);
+  }
+  // Mark reminded even on a flaky send so we don't loop on one patient.
+  try { await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
+  return channel;
+}
 
 async function runReminderSweep() {
   if (!dbEnabled() || !reminderChannelReady()) return;
   const base = process.env.PUBLIC_BASE_URL || 'https://betweenpsych.com';
+  let scheduled = 0, quiet = 0;
   try {
-    const due = await findPatientsNeedingReminder(REMINDER_QUIET_DAYS, REMINDER_COOLDOWN_DAYS);
-    let texted = 0, emailed = 0;
-    for (const p of due) {
-      const name = p.display_name || 'there';
-      const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
-      try {
-        if (p.phone && smsConfigured()) {
-          await sendSms({
-            to: p.phone,
-            text: `Hi ${name}, a gentle check-in reminder from Between — whenever you have a moment, ` +
-              `even a short note helps. ${base}/\n` +
-              `Not for emergencies; call 988 or 911 if you need help now.\n` +
-              `Stop reminders: ${unsub}`
-          });
-          texted++;
-        } else if (p.email) {
-          await sendEmail({
-            to: p.email,
-            subject: 'A gentle check-in from Between',
-            text: `Hi ${name},\n\n` +
-              `It's been a little while since your last check-in on Between. No pressure at all — ` +
-              `whenever you have a moment, even a short note about how you're doing gives your next ` +
-              `appointment something to start from.\n\n` +
-              `Open Between: ${base}/\n\n` +
-              `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
-              `— Between\n\n` +
-              `Don't want these reminders? Unsubscribe here: ${unsub}`
-          });
-          emailed++;
-        }
-      } catch (err) {
-        console.error('Reminder delivery failed for a patient:', err);
-      }
-      // Mark reminded either way so the cooldown holds and we never loop on one
-      // patient if delivery is flaky.
-      try { await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
+    // 1) Patients on their own schedule: fire once per chosen day, at/after
+    //    their chosen local time, on their chosen weekdays.
+    for (const p of await findScheduledReminderCandidates()) {
+      const tz = validTimeZone(p.reminder_tz) || REMINDER_DEFAULT_TZ;
+      const now = tzNow(tz);
+      const days = (p.reminder_days && p.reminder_days.length)
+        ? p.reminder_days.split(',').map(Number) : null; // null / '' = every day
+      if (days && !days.includes(now.weekday)) continue;
+      const [hh, mm] = String(p.reminder_time).split(':').map(Number);
+      if (now.minutes < hh * 60 + mm) continue; // not yet their time today
+      if (p.last_reminded_at && tzDateOf(new Date(p.last_reminded_at), tz) === now.date) continue; // already today
+      await deliverReminder(p, base);
+      scheduled++;
     }
-    if (due.length) console.log(`📣 Reminder sweep: nudged ${due.length} quiet patient(s) (${texted} by text, ${emailed} by email).`);
   } catch (err) {
-    console.error('Reminder sweep failed:', err);
+    console.error('Scheduled reminder sweep failed:', err);
   }
+  try {
+    // 2) Legacy quiet-nudge fallback, only for opted-in patients who never set
+    //    a schedule (reminder_time IS NULL).
+    for (const p of await findPatientsNeedingReminder(REMINDER_QUIET_DAYS, REMINDER_COOLDOWN_DAYS)) {
+      await deliverReminder(p, base);
+      quiet++;
+    }
+  } catch (err) {
+    console.error('Quiet reminder sweep failed:', err);
+  }
+  if (scheduled || quiet) console.log(`📣 Reminder sweep: ${scheduled} scheduled, ${quiet} quiet-nudge.`);
 }
 
 function startReminderSweep() {
   if (process.env.DISABLE_REMINDER_SWEEP === '1') return;
   if (!dbEnabled() || !reminderChannelReady()) return;
-  // First pass a minute after boot (let the DB settle), then daily.
+  // First pass a minute after boot (let the DB settle), then on a short tick so
+  // patients' chosen times fire close to on time.
   setTimeout(runReminderSweep, 60 * 1000).unref?.();
-  setInterval(runReminderSweep, REMINDER_SWEEP_MS).unref?.();
-  console.log('📣 Check-in reminder sweep scheduled (daily).');
+  setInterval(runReminderSweep, REMINDER_TICK_MS).unref?.();
+  console.log(`📣 Check-in reminder sweep scheduled (every ${REMINDER_TICK_MS / 60000} min).`);
 }
 
 const PORT = process.env.PORT || 3000;

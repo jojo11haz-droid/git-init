@@ -200,6 +200,9 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMPTZ;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_token TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_time TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_days TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminder_tz TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_reminder_token_key ON patients (reminder_token) WHERE reminder_token IS NOT NULL;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'therapist';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
@@ -627,7 +630,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -915,20 +918,24 @@ export async function purgeExpiredPatients(graceDays = 14) {
 }
 
 // --- Check-in reminders ---
-// A patient can opt in to a gentle nudge when they've gone quiet. It's their
+// A patient can opt in to check-in reminders on their own schedule. It's their
 // own choice (set from patient settings), off by default. Reminders go by text
-// to the phone number they give; the nudge also carries a stable per-patient
-// token so it can be unsubscribed in one click without signing in. The token is
-// minted the first time reminders are turned on and kept thereafter so old
-// links keep working. A null phone leaves the stored number as-is.
-export async function setPatientReminders(patientId, enabled, token, phone) {
+// to the phone number they give, at the time(s) they pick; the nudge also
+// carries a stable per-patient token so it can be unsubscribed in one click
+// without signing in. The token is minted the first time reminders are turned
+// on and kept thereafter so old links keep working. Null phone/time/days/tz
+// leave the stored value as-is (so toggling off doesn't wipe the schedule).
+export async function setPatientReminders(patientId, enabled, token, { phone, time, days, tz } = {}) {
   const { rows } = await pool.query(
     `UPDATE patients SET
        reminders_enabled = $1,
        reminder_token = CASE WHEN $1 AND reminder_token IS NULL THEN $2 ELSE reminder_token END,
-       phone = COALESCE($4, phone)
+       phone = COALESCE($4, phone),
+       reminder_time = COALESCE($5, reminder_time),
+       reminder_days = COALESCE($6, reminder_days),
+       reminder_tz = COALESCE($7, reminder_tz)
      WHERE id = $3 RETURNING ${PATIENT_ROW_COLS}`,
-    [!!enabled, token || null, patientId, phone || null]
+    [!!enabled, token || null, patientId, phone || null, time || null, days == null ? null : days, tz || null]
   );
   return rows[0] || null;
 }
@@ -960,6 +967,7 @@ export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
        WHERE c.patient_id = p.id AND c.deleted_at IS NULL
      ) ci ON true
      WHERE p.reminders_enabled = true
+       AND p.reminder_time IS NULL
        AND (p.phone IS NOT NULL OR p.email IS NOT NULL)
        AND p.password_hash IS NOT NULL
        AND p.reminder_token IS NOT NULL
@@ -969,6 +977,26 @@ export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
      ORDER BY coalesce(ci.last_at, p.created_at) ASC
      LIMIT 500`,
     [String(Math.max(1, Math.floor(quietDays))), String(Math.max(0, Math.floor(cooldownDays)))]
+  );
+  return rows;
+}
+
+// Patients who set their own reminder schedule (a time of day, and optionally
+// which weekdays). Timezone/day/time matching is done in the app layer — SQL
+// just returns the opted-in, reachable ones with their schedule and when they
+// were last reminded, so the sweep can decide who's due right now.
+export async function findScheduledReminderCandidates() {
+  const { rows } = await pool.query(
+    `SELECT id, email, phone, display_name, reminder_token,
+            reminder_time, reminder_days, reminder_tz, last_reminded_at
+     FROM patients
+     WHERE reminders_enabled = true
+       AND reminder_time IS NOT NULL
+       AND (phone IS NOT NULL OR email IS NOT NULL)
+       AND password_hash IS NOT NULL
+       AND reminder_token IS NOT NULL
+       AND left_at IS NULL
+     LIMIT 2000`
   );
   return rows;
 }
