@@ -4,18 +4,21 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 /// Where the Between backend lives.
-/// - Optional override at build time (used for native mobile builds):
-///     flutter build apk --dart-define=API_BASE=https://your-app.onrender.com
+/// - Optional override at build time:
+///     flutter build ios --dart-define=API_BASE=http://localhost:3000   (local dev)
 /// - Web build with no override: talk to whatever origin served the page, so
 ///   the hosted web app (served by the same server at /app) just works with no
 ///   URL baked in.
-/// - Otherwise (local dev on device/emulator): localhost.
+/// - Native build (iPhone/Android) with no override: the live production site.
 const _apiBaseDefine = String.fromEnvironment('API_BASE', defaultValue: '');
+
+/// Production backend for shipped mobile builds (App Store / Play Store).
+const _prodApiBase = 'https://betweenpsych.com';
 
 Uri resolveApiUri(String path) {
   if (_apiBaseDefine.isNotEmpty) return Uri.parse('$_apiBaseDefine$path');
   if (kIsWeb) return Uri.base.resolve(path); // same origin as the served page
-  return Uri.parse('http://localhost:3000$path');
+  return Uri.parse('$_prodApiBase$path');
 }
 
 class ApiException implements Exception {
