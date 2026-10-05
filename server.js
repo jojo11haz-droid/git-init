@@ -2115,7 +2115,12 @@ function patientIsPremium(p) {
 app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
   try {
     const { name, email, password, guardianAck } = req.body || {};
-    const plan = PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'patient_monthly';
+    // plan:'free' creates a no-cost account on the free tier (used by the
+    // mobile app's "start on your own" flow — the App Store doesn't allow
+    // selling the paid plan via Stripe in-app). Otherwise a paid plan is
+    // chosen and the response carries a Stripe Checkout URL (the website flow).
+    const wantsFree = (req.body || {}).plan === 'free';
+    const plan = wantsFree ? null : (PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'patient_monthly');
     if (!name || !name.trim()) return res.status(400).json({ error: 'A name is required.' });
     if (!email || !EMAIL_RE.test(email.trim())) return res.status(400).json({ error: 'A valid email is required.' });
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
@@ -2135,7 +2140,7 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
     // created for free (dev/no-Stripe mode). Free-access (owner/comp) accounts
     // skip checkout entirely — they never owe a subscription.
     let checkoutUrl = null;
-    if (!isFreeAccess(patient.email)) {
+    if (plan && !isFreeAccess(patient.email)) {
       try { checkoutUrl = await startPatientCheckout(patient, plan, siteOrigin(req)); }
       catch (e) { console.error('Could not start checkout:', e.message); }
     }
