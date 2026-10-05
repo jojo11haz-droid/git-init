@@ -147,6 +147,38 @@ class S {
   String get high => _('High', 'Élevé');
   String get anythingFits => _('Anything that fits (optional)', 'Ce qui te correspond (facultatif)');
   String get sendToTherapist => _('Send to my therapist', 'Envoyer à mon thérapeute');
+  // Per-discipline send label. providerKey null = a solo account (no clinician).
+  String sendToProvider(String? providerKey) {
+    if (providerKey == null) return _('Save check-in', 'Enregistrer le suivi');
+    const en = {
+      'therapist': 'therapist',
+      'physio': 'physio',
+      'kinesiologist': 'kinesiologist',
+      'osteopath': 'osteopath',
+      'occupational therapist': 'occupational therapist',
+      'coach': 'coach',
+      'trainer': 'trainer',
+      'nutritionist': 'nutritionist',
+      'neuropsychologist': 'neuropsychologist',
+      'mentor': 'mentor',
+      'teacher': 'teacher',
+    };
+    const fr = {
+      'therapist': 'thérapeute',
+      'physio': 'physio',
+      'kinesiologist': 'kinésiologue',
+      'osteopath': 'ostéopathe',
+      'occupational therapist': 'ergothérapeute',
+      'coach': 'coach',
+      'trainer': 'entraîneur',
+      'nutritionist': 'nutritionniste',
+      'neuropsychologist': 'neuropsychologue',
+      'mentor': 'mentor',
+      'teacher': 'enseignant',
+    };
+    return _('Send to my ${en[providerKey] ?? 'provider'}',
+        'Envoyer à mon ${fr[providerKey] ?? 'intervenant'}');
+  }
   String get sending => _('Sending…', 'Envoi…');
 
   // Sent
@@ -214,10 +246,32 @@ class S {
       case 'Work': return 'Travail';
       case 'Conflict': return 'Conflit';
       case 'Craving': return 'Envie';
+      case 'Cravings': return 'Envies';
       case 'Panic': return 'Panique';
       case 'Family': return 'Famille';
       case 'Win': return 'Réussite';
       case 'Social': return 'Social';
+      case 'Mood': return 'Humeur';
+      case 'Anxiety': return 'Anxiété';
+      case 'Relationships': return 'Relations';
+      case 'Pain': return 'Douleur';
+      case 'Soreness': return 'Courbatures';
+      case 'Mobility': return 'Mobilité';
+      case 'Exercises': return 'Exercices';
+      case 'Energy': return 'Énergie';
+      case 'Training': return 'Entraînement';
+      case 'Meals': return 'Repas';
+      case 'Digestion': return 'Digestion';
+      case 'Hydration': return 'Hydratation';
+      case 'Triggers': return 'Déclencheurs';
+      case 'Support': return 'Soutien';
+      case 'Stress': return 'Stress';
+      case 'Focus': return 'Concentration';
+      case 'Memory': return 'Mémoire';
+      case 'Fatigue': return 'Fatigue';
+      case 'Overwhelm': return 'Débordement';
+      case 'Headache': return 'Maux de tête';
+      case 'Friends': return 'Amis';
       default: return key;
     }
   }

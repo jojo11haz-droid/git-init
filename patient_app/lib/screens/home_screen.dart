@@ -7,15 +7,12 @@ import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../recording_bytes.dart';
 import '../theme.dart';
 import 'history_screen.dart';
 import 'sent_screen.dart';
 import 'settings_screen.dart';
-
-const _quickTags = [
-  'Sleep', 'Work', 'Conflict', 'Craving', 'Panic', 'Family', 'Win', 'Social',
-];
 
 /// The core loop: one calm screen, one main thing to do. Writing comes first;
 /// mood and tags are a light optional step revealed afterwards — never a form
@@ -161,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final state = context.watch<AppState>();
     final s = state.s;
     final patient = state.patient!;
+    final profile = profileFor(patient); // themes + wording for this discipline
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -349,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            for (final tag in _quickTags)
+                            for (final tag in profile.themes)
                               FilterChip(
                                 label: Text(s.tagLabel(tag)),
                                 selected: _tags.contains(tag),
@@ -383,7 +381,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 22),
                   FilledButton(
                     onPressed: _sending ? null : _send,
-                    child: Text(_sending ? s.sending : s.sendToTherapist),
+                    child: Text(_sending
+                        ? s.sending
+                        : s.sendToProvider(profile.providerKey)),
                   ),
                 ],
               ),
