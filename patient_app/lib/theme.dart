@@ -86,7 +86,52 @@ ThemeData buildTheme() {
   );
 }
 
-/// The "Between." wordmark, shared across screens.
+/// The Between lens logo — the same mark as the website and the app icon:
+/// a rounded blue tile with two overlapping paper rings and a clay lens.
+class LogoMark extends StatelessWidget {
+  const LogoMark({super.key, this.size = 28});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _LensLogoPainter()),
+    );
+  }
+}
+
+class _LensLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 64.0; // the brand mark is drawn in a 64-unit box
+    final tile = RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(14 * s));
+    canvas.drawRRect(tile, Paint()..color = BtwColors.moss);
+    final r = 13 * s;
+    final lc = Offset(26 * s, 32 * s), rc = Offset(38 * s, 32 * s);
+    // Clay lens = the overlap of the two circles (right disk clipped to left).
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: lc, radius: r)));
+    canvas.drawCircle(rc, r, Paint()..color = BtwColors.clay);
+    canvas.restore();
+    // Paper ring outlines on top.
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5 * s
+      ..color = BtwColors.cream;
+    canvas.drawCircle(lc, r, ring);
+    canvas.drawCircle(rc, r, ring);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// The lens logo + "Between." wordmark, shared across screens — mirrors the
+/// website header.
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key, this.size = 30});
 
@@ -94,26 +139,33 @@ class Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
-      TextSpan(children: [
-        TextSpan(
-          text: 'Between',
-          style: TextStyle(
-            fontSize: size,
-            fontWeight: FontWeight.w700,
-            color: BtwColors.ink,
-            letterSpacing: -0.5,
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LogoMark(size: size * 0.95),
+        SizedBox(width: size * 0.32),
+        Text.rich(
+          TextSpan(children: [
+            TextSpan(
+              text: 'Between',
+              style: TextStyle(
+                fontSize: size,
+                fontWeight: FontWeight.w700,
+                color: BtwColors.ink,
+                letterSpacing: -0.5,
+              ),
+            ),
+            TextSpan(
+              text: '.',
+              style: TextStyle(
+                fontSize: size,
+                fontWeight: FontWeight.w700,
+                color: BtwColors.clay,
+              ),
+            ),
+          ]),
         ),
-        TextSpan(
-          text: '.',
-          style: TextStyle(
-            fontSize: size,
-            fontWeight: FontWeight.w700,
-            color: BtwColors.clay,
-          ),
-        ),
-      ]),
+      ],
     );
   }
 }
