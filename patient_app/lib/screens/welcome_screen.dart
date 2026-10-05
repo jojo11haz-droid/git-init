@@ -34,18 +34,28 @@ class WelcomeScreen extends StatelessWidget {
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
                 ),
-                child: Text(s.logIn),
+                child: Text(s.startOnYourOwn),
               ),
               const SizedBox(height: 14),
               OutlinedButton(
                 onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                ),
+                child: Text(s.logIn),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const InviteScreen()),
                 ),
-                child: Text(s.haveInvite, textAlign: TextAlign.center),
+                child: Text(s.haveInvite,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 14, color: BtwColors.inkSoft)),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               const CrisisFooter(),
             ],
           ),
@@ -251,6 +261,124 @@ class _InviteScreenState extends State<InviteScreen> {
             FilledButton(
               onPressed: _busy ? null : _submit,
               child: Text(_busy ? s.settingUp : s.continueBtn),
+            ),
+            const SizedBox(height: 20),
+            const CrisisFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Self-serve signup: someone starting Between on their own, no therapist.
+/// Creates a free-tier account (no payment in-app).
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _ageOk = false;
+  String? _error;
+  bool _busy = false;
+
+  Future<void> _submit() async {
+    final s = context.read<AppState>().s;
+    final name = _name.text.trim();
+    final email = _email.text.trim();
+    if (name.isEmpty || email.isEmpty || _password.text.isEmpty) {
+      setState(() => _error = s.fillNameEmailPassword);
+      return;
+    }
+    if (_password.text.length < 10) {
+      setState(() => _error = s.passwordTooShort);
+      return;
+    }
+    if (!_ageOk) {
+      setState(() => _error = s.pleaseConfirmAge);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await context.read<AppState>().signUpSolo(name, email, _password.text);
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = s.offlineError);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppState>().s;
+    return Scaffold(
+      appBar: AppBar(title: Text(s.soloTitle), actions: const [
+        Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: LanguageToggle())),
+      ]),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(28),
+          children: [
+            Text(s.soloIntro,
+                style: const TextStyle(
+                    fontSize: 15, height: 1.6, color: BtwColors.inkSoft)),
+            const SizedBox(height: 22),
+            TextField(
+              controller: _name,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(labelText: s.yourName),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              decoration: InputDecoration(labelText: s.email),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _password,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: s.choosePassword,
+                hintText: s.atLeast10,
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 10),
+            CheckboxListTile(
+              value: _ageOk,
+              onChanged: (v) => setState(() => _ageOk = v ?? false),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              activeColor: BtwColors.moss,
+              title: Text(s.ageConfirm,
+                  style: const TextStyle(
+                      fontSize: 13.5, height: 1.4, color: BtwColors.inkSoft)),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 6),
+              Text(_error!,
+                  style: const TextStyle(color: BtwColors.clay, fontSize: 14)),
+            ],
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: _busy ? null : _submit,
+              child: Text(_busy ? s.settingUp : s.createAccount),
             ),
             const SizedBox(height: 20),
             const CrisisFooter(),

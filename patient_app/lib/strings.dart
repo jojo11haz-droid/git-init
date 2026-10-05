@@ -39,10 +39,28 @@ class S {
 
   // Welcome
   String get welcomeTagline => _(
-      'A quiet place to tell your therapist\nhow things really are, between sessions.',
-      'Un endroit tranquille pour dire à ton ou ta thérapeute\ncomment ça va vraiment, entre les séances.');
+      'A quiet place to check in on how you\'re\nreally doing — on your own, or with a pro.',
+      'Un endroit tranquille pour faire le point sur\ncomment tu vas vraiment — seul, ou avec un pro.');
+  String get startOnYourOwn => _('Start on your own', 'Commence par toi-même');
   String get haveInvite =>
       _('I have an invite from my therapist', 'J\'ai une invitation de mon thérapeute');
+
+  // Solo (self-serve) signup
+  String get soloTitle => _('Create your account', 'Crée ton compte');
+  String get soloIntro => _(
+      'Use Between on your own to check in on how you\'re doing and watch your own patterns over time. It\'s free to start.',
+      'Utilise Between par toi-même pour faire le point et suivre tes tendances au fil du temps. C\'est gratuit pour commencer.');
+  String get yourName => _('Your name', 'Ton nom');
+  String get ageConfirm => _(
+      'I\'m 18 or older — or a parent or guardian agrees to my using Between.',
+      'J\'ai 18 ans ou plus — ou un parent ou tuteur accepte que j\'utilise Between.');
+  String get pleaseConfirmAge => _(
+      'Please confirm the box above to continue.',
+      'Confirme la case ci-dessus pour continuer.');
+  String get fillNameEmailPassword => _(
+      'Please fill in your name, email, and password.',
+      'Remplis ton nom, ton courriel et ton mot de passe.');
+  String get createAccount => _('Create account', 'Créer le compte');
   String get languageLabel => _('Language', 'Langue');
 
   // Login

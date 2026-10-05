@@ -131,6 +131,20 @@ class AppState extends ChangeNotifier {
     await _storeSession((data as Map).cast<String, dynamic>());
   }
 
+  /// Self-serve signup — someone starting Between on their own, no therapist.
+  /// plan:'free' creates a free-tier account (no in-app payment), matching the
+  /// website's "use it on your own" path without Apple's IAP requirement.
+  Future<void> signUpSolo(String name, String email, String password) async {
+    final data = await _api.post('/api/patient/signup', {
+      'name': name,
+      'email': email,
+      'password': password,
+      'guardianAck': true,
+      'plan': 'free',
+    });
+    await _storeSession((data as Map).cast<String, dynamic>());
+  }
+
   Future<void> logout() async {
     try {
       await _api.post('/api/patient/logout');
