@@ -14,6 +14,9 @@ class Patient {
   String get firstName => displayName.trim().split(' ').first;
   bool get aiConsentEnabled => raw['ai_consent_enabled'] == true;
   bool get hasRecordedConsent => raw['consent_recorded_at'] != null;
+  // The clinician who invited this patient, if any (null for solo accounts).
+  String? get clinicianAccountType => raw['clinician_account_type'] as String?;
+  String? get clinicianDiscipline => raw['clinician_discipline'] as String?;
 }
 
 class CheckIn {
@@ -106,6 +109,14 @@ class AppState extends ChangeNotifier {
     await _storage.write(key: _tokenKey, value: _api.token);
     patient = Patient((data['patient'] as Map).cast<String, dynamic>());
     notifyListeners();
+    // Enrich with the full profile (clinician discipline/type, etc.), which
+    // login/accept-invite/signup responses don't all carry — so the check-in
+    // screen is tailored to the right discipline straight away. Best effort.
+    try {
+      final me = await _api.get('/api/patient/me');
+      patient = Patient((me['patient'] as Map).cast<String, dynamic>());
+      notifyListeners();
+    } catch (_) {/* keep the session we already have */}
   }
 
   Future<void> _clearToken() async {
