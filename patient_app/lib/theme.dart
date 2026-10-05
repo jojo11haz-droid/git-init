@@ -4,19 +4,20 @@ import 'package:provider/provider.dart';
 import 'app_state.dart';
 import 'strings.dart';
 
-/// Between's patient-side palette: same moss green as the therapist web app
-/// so the brand is recognizable, but on a warmer cream — the softer sibling.
+/// Between's palette — matched to the betweenpsych.com website so the app and
+/// site look like one product: the brand blue ("moss"), the clay-red accent,
+/// and the soft off-white "paper" background. (The CSS var names are kept.)
 class BtwColors {
-  static const cream = Color(0xFFFBF6EF);
-  static const moss = Color(0xFF4C6B58);
-  static const mossLight = Color(0xFFDCE6DE);
-  static const ink = Color(0xFF1F2D28);
-  static const inkSoft = Color(0xFF5B6B62);
-  static const line = Color(0xFFE6DFD3);
-  static const clay = Color(0xFFB5654F);
-  static const amber = Color(0xFFC97A2C);
-  static const amberBg = Color(0xFFFBEEDD);
-  static const amberInk = Color(0xFF7A4A19);
+  static const cream = Color(0xFFF5F4F1); // site --paper (background)
+  static const moss = Color(0xFF1E4C86); // site --moss (brand blue, primary)
+  static const mossLight = Color(0xFFDDE6F2); // soft blue tint
+  static const ink = Color(0xFF1A1E1C); // site --ink (text)
+  static const inkSoft = Color(0xFF5A6169); // site --ink-soft (muted)
+  static const line = Color(0xFFE4E3DD); // site --line (borders)
+  static const clay = Color(0xFFC0392B); // site --clay (red accent)
+  static const amber = Color(0xFFE7C3BC); // crisis card border (clay-rose)
+  static const amberBg = Color(0xFFFBEFEC); // crisis card background
+  static const amberInk = Color(0xFF7A2C20); // crisis card text
 }
 
 ThemeData buildTheme() {
@@ -109,7 +110,7 @@ class Wordmark extends StatelessWidget {
           style: TextStyle(
             fontSize: size,
             fontWeight: FontWeight.w700,
-            color: BtwColors.moss,
+            color: BtwColors.clay,
           ),
         ),
       ]),
