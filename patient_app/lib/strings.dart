@@ -164,6 +164,9 @@ class S {
   String get takePhoto => _('Take a photo', 'Prendre une photo');
   String get chooseFromLibrary =>
       _('Choose from library', 'Choisir dans la galerie');
+  String get writeOrSpeak => _('Write or speak', 'Écrire ou parler');
+  String get answerQuestions => _('Answer questions', 'Répondre aux questions');
+  String get yourAnswerHint => _('Your answer…', 'Votre réponse…');
   String get low => _('Low', 'Bas');
   String get high => _('High', 'Élevé');
   String get anythingFits => _('Anything that fits (optional)', 'Ce qui te correspond (facultatif)');

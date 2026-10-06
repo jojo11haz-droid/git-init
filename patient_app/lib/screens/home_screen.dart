@@ -35,6 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
   double _mood = 5;
   bool _detailsOpen = false;
   bool _sending = false;
+  // "Write or speak" (free) vs. "Answer questions" (guided), mirroring the site.
+  bool _questionsMode = false;
+  List<TextEditingController> _answerCtrls = [];
 
   final _recorder = AudioRecorder();
   bool _recording = false;
@@ -59,7 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _recordTimer?.cancel();
     _recorder.dispose();
+    for (final c in _answerCtrls) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  /// Lazily size the per-question controllers to the discipline's prompts.
+  void _ensureAnswerCtrls(int n) {
+    if (_answerCtrls.length == n) return;
+    for (final c in _answerCtrls) {
+      c.dispose();
+    }
+    _answerCtrls = List.generate(n, (_) => TextEditingController());
   }
 
   Future<void> _toggleRecording() async {
@@ -156,17 +171,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _send() async {
-    final text = _text.text.trim();
     final app = context.read<AppState>();
+    final s = app.s;
     final messenger = ScaffoldMessenger.of(context);
     if (_recording) await _toggleRecording(); // sending while recording = stop first
     final recording = _recordingResult;
+    // In questions mode, stitch each answered prompt back into one check-in,
+    // the same shape the server reads as a guided ("questions") entry.
+    String text;
+    String? inputMode;
+    if (_questionsMode) {
+      final qs = questionsFor(profileFor(app.patient!), s.isFr);
+      final parts = <String>[];
+      for (var i = 0; i < qs.length && i < _answerCtrls.length; i++) {
+        final a = _answerCtrls[i].text.trim();
+        if (a.isNotEmpty) parts.add('${qs[i]}\n$a');
+      }
+      text = parts.join('\n\n');
+      inputMode = 'questions';
+    } else {
+      text = _text.text.trim();
+    }
     if (text.isEmpty &&
         _tags.isEmpty &&
         recording == null &&
         _painMap.isEmpty &&
         _photoBytes == null) {
-      messenger.showSnackBar(SnackBar(content: Text(app.s.saySomething)));
+      messenger.showSnackBar(SnackBar(content: Text(s.saySomething)));
       return;
     }
     setState(() => _sending = true);
@@ -187,9 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
             audioUploadId: audioUploadId,
             photoUploadId: photoUploadId,
             painMap: _painMap.isEmpty ? null : _painMap,
+            inputMode: inputMode,
           );
       if (!mounted) return;
       _text.clear();
+      for (final c in _answerCtrls) {
+        c.clear();
+      }
       setState(() {
         _tags.clear();
         _painMap = {};
@@ -218,6 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final s = state.s;
     final patient = state.patient!;
     final profile = profileFor(patient); // themes + wording for this discipline
+    _ensureAnswerCtrls(questionsFor(profile, s.isFr).length);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -264,7 +300,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BtwColors.inkSoft,
                         height: 1.5),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 18),
+                  // Write/speak vs. answer a few guided questions — the same
+                  // choice the website offers, flavoured per discipline.
+                  _ModeToggle(
+                    questionsMode: _questionsMode,
+                    writeLabel: s.writeOrSpeak,
+                    questionsLabel: s.answerQuestions,
+                    onChanged: (q) => setState(() => _questionsMode = q),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!_questionsMode) ...[
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -358,6 +404,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                  ] else ...[
+                    // Guided questions, tailored to the discipline.
+                    for (var i = 0;
+                        i < questionsFor(profile, s.isFr).length;
+                        i++) ...[
+                      Text(questionsFor(profile, s.isFr)[i],
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: BtwColors.line),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: TextField(
+                          controller: _answerCtrls[i],
+                          minLines: 2,
+                          maxLines: 6,
+                          maxLength: 2000,
+                          style: const TextStyle(fontSize: 15.5, height: 1.45),
+                          decoration: InputDecoration(
+                            hintText: s.yourAnswerHint,
+                            hintStyle:
+                                const TextStyle(color: BtwColors.inkSoft),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                            counterText: '',
+                            contentPadding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                  ],
                   const SizedBox(height: 16),
                   // Physical disciplines: a tap-where-it-hurts body map.
                   if (profile.isBody) ...[
@@ -504,6 +588,64 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const CrisisFooter(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A small two-option segmented control: write/speak vs. answer questions.
+class _ModeToggle extends StatelessWidget {
+  const _ModeToggle({
+    required this.questionsMode,
+    required this.writeLabel,
+    required this.questionsLabel,
+    required this.onChanged,
+  });
+
+  final bool questionsMode;
+  final String writeLabel;
+  final String questionsLabel;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: BtwColors.mossLight,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          _seg(writeLabel, !questionsMode, () => onChanged(false)),
+          _seg(questionsLabel, questionsMode, () => onChanged(true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg(String label, bool active, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: active ? BtwColors.moss : BtwColors.inkSoft,
+            ),
+          ),
         ),
       ),
     );

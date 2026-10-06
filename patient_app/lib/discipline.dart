@@ -37,6 +37,68 @@ const _schoolThemes = [
   'Focus', 'Mood', 'Friends', 'Sleep', 'Stress', 'Energy', 'Win',
 ];
 
+/// A couple of profession-specific prompts for the "answer questions" mode,
+/// mirroring betweenpsych.com's guided check-in. Returned as plain localised
+/// strings; the home screen stitches the answers back into one check-in and
+/// sends it with inputMode:'questions'. Body disciplines split into physical
+/// rehab (physio/kinesiology/osteo/occupational) vs. training (coach/trainer).
+List<String> questionsFor(DisciplineProfile p, bool isFr) {
+  List<String> q(String en, String fr) => isFr ? [fr] : [en];
+  switch (p.kind) {
+    case CheckInKind.body:
+      final training = p.providerKey == 'coach' || p.providerKey == 'trainer';
+      if (training) {
+        return [
+          ...q('How did your training go since last time?',
+              'Comment se sont passés vos entraînements depuis la dernière fois ?'),
+          ...q('What felt tough or held you back?',
+              'Qu\'est-ce qui a été dur ou vous a freiné ?'),
+        ];
+      }
+      return [
+        ...q('How has the pain been since last time?',
+            'Comment va la douleur depuis la dernière fois ?'),
+        ...q('How did your exercises go?',
+            'Comment se sont passés vos exercices ?'),
+      ];
+    case CheckInKind.nutrition:
+      return [
+        ...q('How did eating go since last time?',
+            'Comment s\'est passée l\'alimentation depuis la dernière fois ?'),
+        ...q('What felt good or worked well?',
+            'Qu\'est-ce qui a fait du bien ou a bien fonctionné ?'),
+      ];
+    case CheckInKind.recovery:
+      return [
+        ...q('How have the cravings or urges been?',
+            'Comment ont été les envies ou les pulsions ?'),
+        ...q('What helped you stay on track?',
+            'Qu\'est-ce qui vous a aidé à rester sur la bonne voie ?'),
+      ];
+    case CheckInKind.neuro:
+      return [
+        ...q('How has your focus and memory been?',
+            'Comment ont été votre concentration et votre mémoire ?'),
+        ...q('What was tiring or hard to manage?',
+            'Qu\'est-ce qui a été fatigant ou difficile à gérer ?'),
+      ];
+    case CheckInKind.school:
+      return [
+        ...q('How have things been at school?',
+            'Comment ça s\'est passé à l\'école ?'),
+        ...q('What went well or helped?',
+            'Qu\'est-ce qui a bien été ou vous a aidé ?'),
+      ];
+    case CheckInKind.mind:
+      return [
+        ...q('What stood out this week?',
+            'Qu\'est-ce qui vous a marqué cette semaine ?'),
+        ...q('What helped, even a little?',
+            'Qu\'est-ce qui a aidé, même un peu ?'),
+      ];
+  }
+}
+
 DisciplineProfile profileFor(Patient p) {
   final acct = p.clinicianAccountType; // therapist|coach|mentor|school|trainer|null
   final disc = p.clinicianDiscipline; // physio|kinesiology|osteo|occupational|neuropsych|nutrition|sports|null
