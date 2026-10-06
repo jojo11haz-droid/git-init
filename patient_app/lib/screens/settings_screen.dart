@@ -59,6 +59,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _toggleHealth(bool connect) async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    setState(() => _busy = true);
+    try {
+      if (connect) {
+        final ok = await app.connectHealth();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ok ? s.healthConnected : s.healthUnavailable)),
+        );
+      } else {
+        await app.disconnectHealth();
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _requestDeletion() async {
     final app = context.read<AppState>();
     final s = app.s;
@@ -158,6 +177,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+            if (state.healthSupported) ...[
+              const SizedBox(height: 12),
+              _Section(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(s.appleHealth,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(
+                            s.appleHealthDesc,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: BtwColors.inkSoft,
+                                height: 1.45),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: state.healthConnected,
+                      activeThumbColor: BtwColors.moss,
+                      onChanged: _busy ? null : _toggleHealth,
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             _Section(
               child: ListTile(

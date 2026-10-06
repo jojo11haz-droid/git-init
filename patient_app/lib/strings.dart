@@ -241,6 +241,15 @@ class S {
   String get aiSummariesDesc => _(
       'When on, an AI model summarizes your check-ins for your therapist. When off, they see exactly what you wrote.',
       'Quand c\'est activé, un modèle d\'IA résume tes nouvelles pour ton thérapeute. Quand c\'est désactivé, il voit exactement ce que tu as écrit.');
+  String get appleHealth => _('Apple Health', 'Apple Santé');
+  String get appleHealthDesc => _(
+      'Connect Apple Health so your sleep and activity show alongside your check-ins. Between only reads — it never writes back.',
+      'Connecte Apple Santé pour que ton sommeil et ton activité apparaissent avec tes suivis. Between ne fait que lire — il n\'écrit jamais rien.');
+  String get healthConnected =>
+      _('Apple Health connected.', 'Apple Santé connecté.');
+  String get healthUnavailable => _(
+      'Apple Health isn\'t available or access was declined.',
+      'Apple Santé n\'est pas disponible ou l\'accès a été refusé.');
   String get turnOnAiTitle => _('Turn on AI summaries?', 'Activer les résumés par IA?');
   String get turnOnAiBody => _(
       'An AI model will analyze your check-ins to write summaries for your therapist and find patterns over time. This counts as profiling of your health information, and you can turn it off again at any time.',
