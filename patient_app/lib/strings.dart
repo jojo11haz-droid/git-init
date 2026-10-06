@@ -214,6 +214,12 @@ class S {
       'Your check-in was sent and your therapist has been notified — but please don\'t wait on anyone if you\'re in danger right now.',
       'Tes nouvelles ont été envoyées et ton thérapeute a été avisé — mais n\'attends après personne si tu es en danger maintenant.');
   String get undo => _('Didn\'t mean to send it? Undo (15 min)', 'Envoyé par erreur? Annuler (15 min)');
+  String get aiSummaryLabel => _('AI summary', 'Résumé IA');
+  String get aiReadMood =>
+      _('Between read your mood as', 'Between a estimé votre humeur à');
+  String get aiSummaryNote => _(
+      'This short summary is what your clinician sees — not the raw text.',
+      'Ce court résumé est ce que voit votre intervenant — pas le texte brut.');
   String get removing => _('Removing…', 'Suppression…');
   String get removed =>
       _('Check-in removed. Nothing was kept.', 'Nouvelle supprimée. Rien n\'a été conservé.');
