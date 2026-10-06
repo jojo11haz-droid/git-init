@@ -1,9 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
 import '../app_state.dart';
 import '../theme.dart';
+
+/// betweenpsych.com, the public site. Used by the welcome footer and Settings.
+const String kWebsiteUrl = 'https://betweenpsych.com';
+
+Future<void> openWebsite() async {
+  final uri = Uri.parse(kWebsiteUrl);
+  try {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {/* no browser available — nothing we can do */}
+}
+
+/// A quiet "betweenpsych.com ↗" link.
+class WebsiteLink extends StatelessWidget {
+  const WebsiteLink({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: openWebsite,
+      icon: const Icon(Icons.open_in_new_rounded,
+          size: 15, color: BtwColors.inkSoft),
+      label: Text(label,
+          style: const TextStyle(fontSize: 13.5, color: BtwColors.inkSoft)),
+    );
+  }
+}
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -120,6 +149,8 @@ class WelcomeScreen extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 14, color: BtwColors.inkSoft)),
                   ),
+                  const SizedBox(height: 4),
+                  Center(child: WebsiteLink(label: s.visitWebsite)),
                 ],
               ),
             ),
