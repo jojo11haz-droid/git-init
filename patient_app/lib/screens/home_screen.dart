@@ -38,6 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // "Write or speak" (free) vs. "Answer questions" (guided), mirroring the site.
   bool _questionsMode = false;
   List<TextEditingController> _answerCtrls = [];
+  // "Can't decide?" options — let Between read mood/topic from the check-in.
+  bool _moodEstimate = false; // true = let Between estimate the mood
+  bool _topicAuto = false; // true = let Between pick the theme
 
   final _recorder = AudioRecorder();
   bool _recording = false;
@@ -181,7 +184,10 @@ class _HomeScreenState extends State<HomeScreen> {
     String text;
     String? inputMode;
     if (_questionsMode) {
-      final qs = questionsFor(profileFor(app.patient!), s.isFr);
+      final effProfile = app.previewCategory != null
+          ? profileByKey(app.previewCategory!)
+          : profileFor(app.patient!);
+      final qs = questionsFor(effProfile, s.isFr);
       final parts = <String>[];
       for (var i = 0; i < qs.length && i < _answerCtrls.length; i++) {
         final a = _answerCtrls[i].text.trim();
@@ -213,8 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       final result = await app.sendCheckIn(
             text: text.isEmpty ? null : text,
-            mood: _mood.round(),
-            tags: _tags.toList(),
+            mood: _moodEstimate ? null : _mood.round(),
+            tags: _topicAuto ? const <String>[] : _tags.toList(),
             audioUploadId: audioUploadId,
             photoUploadId: photoUploadId,
             painMap: _painMap.isEmpty ? null : _painMap,
@@ -230,6 +236,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _painMap = {};
         _photoBytes = null;
         _mood = 5;
+        _moodEstimate = false;
+        _topicAuto = false;
         _detailsOpen = false;
         _recordingResult = null;
         _recordSeconds = 0;
@@ -252,7 +260,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final state = context.watch<AppState>();
     final s = state.s;
     final patient = state.patient!;
-    final profile = profileFor(patient); // themes + wording for this discipline
+    // Normally derived from the account; the Settings preview switcher can
+    // override it so you can see any discipline's check-in.
+    final profile = state.previewCategory != null
+        ? profileByKey(state.previewCategory!)
+        : profileFor(patient);
+    final aiOn = patient.aiConsentEnabled; // "let Between decide" needs AI on
     _ensureAnswerCtrls(questionsFor(profile, s.isFr).length);
     return Scaffold(
       body: SafeArea(
@@ -515,32 +528,79 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(s.moodRightNow,
                             style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600)),
-                        Row(
-                          children: [
-                            Text(s.low,
-                                style: const TextStyle(
-                                    fontSize: 12, color: BtwColors.inkSoft)),
-                            Expanded(
-                              child: Slider(
-                                value: _mood,
-                                min: 1,
-                                max: 10,
-                                divisions: 9,
-                                activeColor: BtwColors.moss,
-                                label: _mood.round().toString(),
-                                onChanged: (v) => setState(() => _mood = v),
-                              ),
+                        // "I'll set it / Let Between estimate" — only when AI
+                        // summaries are on, since that's what reads it.
+                        if (aiOn) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _MiniToggle(
+                              leftLabel: s.illSetIt,
+                              rightLabel: s.letBetweenEstimate,
+                              rightSelected: _moodEstimate,
+                              onChanged: (v) =>
+                                  setState(() => _moodEstimate = v),
                             ),
-                            Text(s.high,
+                          ),
+                        ],
+                        if (_moodEstimate)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(s.betweenWillReadMood,
                                 style: const TextStyle(
-                                    fontSize: 12, color: BtwColors.inkSoft)),
-                          ],
-                        ),
+                                    fontSize: 13,
+                                    color: BtwColors.inkSoft,
+                                    height: 1.4)),
+                          )
+                        else
+                          Row(
+                            children: [
+                              Text(s.low,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: BtwColors.inkSoft)),
+                              Expanded(
+                                child: Slider(
+                                  value: _mood,
+                                  min: 1,
+                                  max: 10,
+                                  divisions: 9,
+                                  activeColor: BtwColors.moss,
+                                  label: _mood.round().toString(),
+                                  onChanged: (v) => setState(() => _mood = v),
+                                ),
+                              ),
+                              Text(s.high,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: BtwColors.inkSoft)),
+                            ],
+                          ),
                         const SizedBox(height: 8),
                         Text(s.anythingFits,
                             style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600)),
+                        if (aiOn) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: _MiniToggle(
+                              leftLabel: s.illPick,
+                              rightLabel: s.notSureYet,
+                              rightSelected: _topicAuto,
+                              onChanged: (v) => setState(() {
+                                _topicAuto = v;
+                                if (v) _tags.clear();
+                              }),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 10),
+                        if (_topicAuto)
+                          Text(s.betweenWillPickTopic,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: BtwColors.inkSoft,
+                                  height: 1.4))
+                        else
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -645,6 +705,63 @@ class _ModeToggle extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: active ? BtwColors.moss : BtwColors.inkSoft,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A compact inline two-option switch, e.g. "I'll set it · Let Between
+/// estimate", used for the "can't decide?" mood and topic options.
+class _MiniToggle extends StatelessWidget {
+  const _MiniToggle({
+    required this.leftLabel,
+    required this.rightLabel,
+    required this.rightSelected,
+    required this.onChanged,
+  });
+
+  final String leftLabel;
+  final String rightLabel;
+  final bool rightSelected;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: BtwColors.mossLight,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _pill(leftLabel, !rightSelected, () => onChanged(false)),
+          _pill(rightLabel, rightSelected, () => onChanged(true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _pill(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: active ? BtwColors.moss : BtwColors.inkSoft,
           ),
         ),
       ),

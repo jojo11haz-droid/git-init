@@ -156,6 +156,17 @@ class S {
       'Dis un mot sur ce qui s\'est passé — enregistre, écris ou touche une étiquette.');
   String get addMoodTags => _('Add mood & tags (optional)', 'Ajouter humeur et étiquettes (facultatif)');
   String get moodRightNow => _('Mood right now', 'Humeur en ce moment');
+  String get illSetIt => _('I\'ll set it', 'Je la règle');
+  String get letBetweenEstimate =>
+      _('Let Between estimate', 'Between l\'estime');
+  String get betweenWillReadMood => _(
+      'Between will read your mood from your check-in.',
+      'Between estimera votre humeur à partir de votre suivi.');
+  String get illPick => _('I\'ll pick', 'Je choisis');
+  String get notSureYet => _('Not sure yet', 'Pas encore sûr');
+  String get betweenWillPickTopic => _(
+      'No problem — Between will pick the theme from your check-in.',
+      'Pas de souci — Between choisira le thème à partir de votre suivi.');
   String get whereHurts =>
       _('Where does it hurt or feel sore?', 'Où avez-vous mal ou des courbatures?');
   String get addSorePhoto =>
@@ -242,6 +253,16 @@ class S {
       'When on, an AI model summarizes your check-ins for your therapist. When off, they see exactly what you wrote.',
       'Quand c\'est activé, un modèle d\'IA résume tes nouvelles pour ton thérapeute. Quand c\'est désactivé, il voit exactement ce que tu as écrit.');
   String get visitWebsite => _('betweenpsych.com', 'betweenpsych.com');
+  String get previewCategory =>
+      _('Preview a category', 'Aperçu d\'une catégorie');
+  String get previewCategoryDesc => _(
+      'See what the check-in looks like for each profession. Just for trying things out — it doesn\'t change your account.',
+      'Voyez à quoi ressemble le suivi pour chaque profession. Juste pour essayer — ça ne change pas votre compte.');
+  String get previewDefault =>
+      _('My account (default)', 'Mon compte (par défaut)');
+  String get viewHomepage => _('View the welcome screen', 'Voir l\'écran d\'accueil');
+  String get viewHomepageDesc =>
+      _('The Between home / landing page.', 'La page d\'accueil de Between.');
   String get appleHealth => _('Apple Health', 'Apple Santé');
   String get appleHealthDesc => _(
       'Connect Apple Health so your sleep and activity show alongside your check-ins. Between only reads — it never writes back.',
