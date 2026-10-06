@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api.dart';
+import 'health_service.dart';
 import 'strings.dart';
 
 class Patient {
@@ -60,12 +63,18 @@ class AppState extends ChangeNotifier {
 
   static const _tokenKey = 'between_patient_token';
   static const _langKey = 'between_patient_lang';
+  static const _healthKey = 'between_health_connected';
 
   final ApiClient _api;
   final FlutterSecureStorage _storage;
+  final HealthService _health = HealthService();
 
   Patient? patient;
   bool restoring = true;
+
+  /// Whether the person has connected Apple Health (persisted locally).
+  bool healthConnected = false;
+  bool get healthSupported => _health.isSupported;
 
   AppLang lang = detectInitialLang();
   S get s => S(lang);
@@ -88,6 +97,9 @@ class AppState extends ChangeNotifier {
       if (storedLang != null) lang = langFromCode(storedLang);
     } catch (_) {/* fall back to device language */}
     try {
+      healthConnected = (await _storage.read(key: _healthKey)) == '1';
+    } catch (_) {/* default off */}
+    try {
       final token = await _storage.read(key: _tokenKey);
       if (token != null) {
         _api.token = token;
@@ -103,6 +115,10 @@ class AppState extends ChangeNotifier {
     }
     restoring = false;
     notifyListeners();
+    // If Health is already connected, quietly refresh in the background.
+    if (patient != null && healthConnected) {
+      unawaited(syncHealth());
+    }
   }
 
   Future<void> _storeSession(Map<String, dynamic> data) async {
@@ -192,6 +208,45 @@ class AppState extends ChangeNotifier {
     final uploadUrl = (grant as Map)['uploadUrl'] as String;
     final result = await _api.putBytes(uploadUrl, bytes, mime);
     return (result as Map)['photoUploadId'] as String;
+  }
+
+  // --- Apple Health ---
+  // Connect asks HealthKit for read access, remembers the choice, and does a
+  // first sync. Returns false if HealthKit is unavailable or access is denied.
+  Future<bool> connectHealth() async {
+    final granted = await _health.requestAuthorization();
+    if (!granted) return false;
+    healthConnected = true;
+    try {
+      await _storage.write(key: _healthKey, value: '1');
+    } catch (_) {/* best effort */}
+    notifyListeners();
+    await syncHealth();
+    return true;
+  }
+
+  Future<void> disconnectHealth() async {
+    healthConnected = false;
+    try {
+      await _storage.delete(key: _healthKey);
+    } catch (_) {/* best effort */}
+    notifyListeners();
+  }
+
+  /// Read the last week from Apple Health and sync it to the server. Returns
+  /// how many days were saved (0 if nothing to send or not connected).
+  Future<int> syncHealth({int days = 7}) async {
+    if (!healthConnected || patient == null) return 0;
+    try {
+      final data = await _health.readRecent(days: days);
+      final payload = data.where((d) => d.hasAny).map((d) => d.toJson()).toList();
+      if (payload.isEmpty) return 0;
+      final res = await _api.post('/api/patient/health', {'days': payload});
+      return ((res as Map)['saved'] as int?) ?? 0;
+    } catch (e) {
+      debugPrint('Health sync failed: $e');
+      return 0;
+    }
   }
 
   Future<SendResult> sendCheckIn({
