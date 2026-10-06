@@ -189,12 +189,14 @@ class AppState extends ChangeNotifier {
     required int mood,
     required List<String> tags,
     String? audioUploadId,
+    Map<String, int>? painMap,
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       'text': text,
       'moodScore': mood,
       'manualTags': tags,
       'audioUploadId': audioUploadId,
+      if (painMap != null && painMap.isNotEmpty) 'painMap': painMap,
     });
     final map = (data as Map).cast<String, dynamic>();
     return SendResult(
