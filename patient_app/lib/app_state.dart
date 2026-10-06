@@ -26,6 +26,7 @@ class CheckIn {
 
   String get id => raw['id'] as String;
   int? get mood => raw['mood_score'] as int?;
+  bool get moodInferred => raw['mood_inferred'] == true;
   List<String> get tags => [
         ...((raw['manual_tags'] as List?) ?? const []),
         ...((raw['auto_tags'] as List?) ?? const []),
