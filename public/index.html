@@ -1560,6 +1560,15 @@
     font-size:10.5px;
     color:var(--ink-soft);
   }
+  .btw-appsoon{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-top:14px;padding:7px 13px;
+    background:var(--moss-light);border:1px solid var(--line);
+    border-radius:999px;
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;
+    color:var(--moss);font-weight:600;
+  }
+  .btw-appsoon svg{flex-shrink:0;}
   .btw-hero-solo-link{
     display:inline-flex;align-items:center;gap:8px;
     margin-top:18px;padding:12px 20px;
@@ -2156,6 +2165,7 @@
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works ↓</button>
           </div>
           <div class="btw-hero-meta">Free for 14 days. Private, secure and consent-first. Not a crisis service.</div>
+          <div class="btw-appsoon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg>iPhone &amp; iPad app coming soon</div>
           <div class="btw-hero-reassure" id="btwHeroReassure">You are never on call. Nothing pings you and you are never expected to reply. The summary is just waiting when you next sit down together.</div>
           <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-aud-btn[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
@@ -3196,6 +3206,7 @@
   // Static text is translated by walking the DOM text nodes and looking each
   // up by its exact English text; dynamic strings built in JS go through t().
   const FR = {
+    "iPhone & iPad app coming soon":"Application iPhone et iPad bientôt disponible",
     // Apple Health panel
     "Apple Health":"Apple Santé",
     "Sleep, last night":"Sommeil, la nuit dernière",

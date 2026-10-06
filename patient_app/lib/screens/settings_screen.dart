@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../theme.dart';
 import 'history_screen.dart';
+import 'welcome_screen.dart';
 
 /// My data & settings: the patient's controls over their own information —
 /// the AI toggle, the erasure request, and what's on file.
@@ -260,7 +261,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: _logout,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            Center(child: WebsiteLink(label: s.visitWebsite)),
+            const SizedBox(height: 12),
             const CrisisFooter(),
           ],
         ),

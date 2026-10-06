@@ -241,6 +241,7 @@ class S {
   String get aiSummariesDesc => _(
       'When on, an AI model summarizes your check-ins for your therapist. When off, they see exactly what you wrote.',
       'Quand c\'est activé, un modèle d\'IA résume tes nouvelles pour ton thérapeute. Quand c\'est désactivé, il voit exactement ce que tu as écrit.');
+  String get visitWebsite => _('betweenpsych.com', 'betweenpsych.com');
   String get appleHealth => _('Apple Health', 'Apple Santé');
   String get appleHealthDesc => _(
       'Connect Apple Health so your sleep and activity show alongside your check-ins. Between only reads — it never writes back.',
