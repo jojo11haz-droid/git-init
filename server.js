@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
   createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  upsertHealthDay, listRecentHealth, deleteAllHealth,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -1737,6 +1738,21 @@ app.get('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedCl
   }
 });
 
+// A patient's recent Apple Health data, for the clinician dashboard. Only data
+// the patient's device chose to sync is ever here — the website never reads
+// HealthKit directly. Clinician-scoped through getPatient.
+app.get('/api/patients/:id/health', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 30));
+    res.json(await listRecentHealth(patient.id, days));
+  } catch (err) {
+    console.error('Error listing patient health:', err);
+    res.status(500).json({ error: 'Could not load health data.' });
+  }
+});
+
 // Stream a check-in's voice memo to its treating clinician.
 app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
@@ -2540,6 +2556,62 @@ app.get('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res
   }
 });
 
+// --- Apple Health sync ---
+// The app reads HealthKit on-device and POSTs a batch of daily snapshots here.
+// Each day is validated and upserted. Metrics are whole, non-negative numbers
+// within sane bounds so a glitchy reading can't poison the record.
+const HEALTH_BOUNDS = {
+  sleepMinutes: 24 * 60,   // a day's worth, at most
+  steps: 200000,
+  activeEnergy: 20000,     // kcal
+  restingHr: 250,          // bpm
+  mindfulMinutes: 24 * 60
+};
+function cleanHealthNumber(v, max) {
+  if (v == null) return null;
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n) || n < 0 || n > max) return null;
+  return n;
+}
+function validHealthDay(day) {
+  return typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day);
+}
+
+app.post('/api/patient/health', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const raw = Array.isArray((req.body || {}).days) ? req.body.days : [];
+    if (!raw.length) return res.status(400).json({ error: 'No health data provided.' });
+    if (raw.length > 90) return res.status(400).json({ error: 'Too many days in one sync.' });
+    const saved = [];
+    for (const d of raw) {
+      if (!d || !validHealthDay(d.day)) continue;
+      const row = await upsertHealthDay(req.patient.id, d.day, {
+        sleepMinutes: cleanHealthNumber(d.sleepMinutes, HEALTH_BOUNDS.sleepMinutes),
+        steps: cleanHealthNumber(d.steps, HEALTH_BOUNDS.steps),
+        activeEnergy: cleanHealthNumber(d.activeEnergy, HEALTH_BOUNDS.activeEnergy),
+        restingHr: cleanHealthNumber(d.restingHr, HEALTH_BOUNDS.restingHr),
+        mindfulMinutes: cleanHealthNumber(d.mindfulMinutes, HEALTH_BOUNDS.mindfulMinutes),
+        source: 'apple_health'
+      });
+      saved.push(row);
+    }
+    res.status(201).json({ saved: saved.length });
+  } catch (err) {
+    console.error('Error saving health data:', err);
+    res.status(500).json({ error: 'Could not save your health data.' });
+  }
+});
+
+app.get('/api/patient/health', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 30));
+    res.json(await listRecentHealth(req.patient.id, days));
+  } catch (err) {
+    console.error('Error listing patient health:', err);
+    res.status(500).json({ error: 'Could not load your health data.' });
+  }
+});
+
 // --- Future-self notes ---
 // A private note a patient leaves for a harder day; the app surfaces it back to
 // them when their mood is low. Patient-scoped only; never visible to a clinician.
@@ -2604,6 +2676,8 @@ app.delete('/api/patient/check-ins/:id', requireDb, requirePatientAuth, async (r
 app.delete('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res) => {
   try {
     await deleteAllCheckIns(req.patient.id);
+    // Erasure covers synced health data too — it's part of their record.
+    await deleteAllHealth(req.patient.id);
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting patient history:', err);

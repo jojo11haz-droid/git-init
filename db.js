@@ -159,6 +159,24 @@ CREATE TABLE IF NOT EXISTS alerts (
   viewed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- One row per patient per day of health data synced from Apple Health (or any
+-- future source). The patient's device reads HealthKit on-device and syncs a
+-- daily snapshot here; the website only ever displays what was synced, since
+-- Apple Health has no web API. Upserted on (patient_id, day).
+CREATE TABLE IF NOT EXISTS patient_health (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  day DATE NOT NULL,
+  sleep_minutes INT,
+  steps INT,
+  active_energy_kcal INT,
+  resting_hr INT,
+  mindful_minutes INT,
+  source TEXT NOT NULL DEFAULT 'apple_health',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (patient_id, day)
+);
 `;
 
 // Databases created before the auth release have a patients table without
@@ -1222,6 +1240,53 @@ export async function softDeleteCheckIn(checkInId, patientId) {
 
 export async function deleteAllCheckIns(patientId) {
   await pool.query(`UPDATE check_ins SET deleted_at = now() WHERE patient_id = $1`, [patientId]);
+}
+
+// --- Apple Health (and future sources) ---
+// The patient's device reads HealthKit on-device and syncs a daily snapshot.
+// Upsert one row per (patient, day); re-syncing the same day overwrites it.
+// Null metrics are left alone on conflict so a partial sync never wipes a
+// value an earlier, fuller sync wrote.
+export async function upsertHealthDay(patientId, day, metrics) {
+  const { sleepMinutes, steps, activeEnergy, restingHr, mindfulMinutes, source } = metrics;
+  const { rows } = await pool.query(
+    `INSERT INTO patient_health
+       (patient_id, day, sleep_minutes, steps, active_energy_kcal, resting_hr, mindful_minutes, source, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now())
+     ON CONFLICT (patient_id, day) DO UPDATE SET
+       sleep_minutes = COALESCE(EXCLUDED.sleep_minutes, patient_health.sleep_minutes),
+       steps = COALESCE(EXCLUDED.steps, patient_health.steps),
+       active_energy_kcal = COALESCE(EXCLUDED.active_energy_kcal, patient_health.active_energy_kcal),
+       resting_hr = COALESCE(EXCLUDED.resting_hr, patient_health.resting_hr),
+       mindful_minutes = COALESCE(EXCLUDED.mindful_minutes, patient_health.mindful_minutes),
+       source = EXCLUDED.source,
+       updated_at = now()
+     RETURNING *`,
+    [patientId, day,
+     sleepMinutes == null ? null : sleepMinutes,
+     steps == null ? null : steps,
+     activeEnergy == null ? null : activeEnergy,
+     restingHr == null ? null : restingHr,
+     mindfulMinutes == null ? null : mindfulMinutes,
+     source || 'apple_health']
+  );
+  return rows[0];
+}
+
+// Most recent `days` days of synced health data, newest first.
+export async function listRecentHealth(patientId, days = 30) {
+  const { rows } = await pool.query(
+    `SELECT day, sleep_minutes, steps, active_energy_kcal, resting_hr, mindful_minutes, source, updated_at
+       FROM patient_health
+      WHERE patient_id = $1 AND day >= (current_date - ($2::int - 1))
+      ORDER BY day DESC`,
+    [patientId, days]
+  );
+  return rows;
+}
+
+export async function deleteAllHealth(patientId) {
+  await pool.query(`DELETE FROM patient_health WHERE patient_id = $1`, [patientId]);
 }
 
 // --- Future-self notes ---

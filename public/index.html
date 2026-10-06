@@ -1068,6 +1068,14 @@
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
+  .btw-health{margin:2px 0 18px;padding:14px 16px 13px;border:1px solid var(--line);border-radius:14px;background:#fff;}
+  .btw-health-l{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .btw-health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:10px;}
+  .btw-health-stat{background:var(--moss-light);border-radius:11px;padding:10px 12px;}
+  .btw-health-val{font-size:19px;font-weight:700;color:var(--ink);line-height:1.1;}
+  .btw-health-unit{font-size:11px;font-weight:600;color:var(--ink-soft);margin-left:2px;}
+  .btw-health-lab{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .btw-health-note{font-size:11px;color:var(--ink-soft);margin-top:10px;}
   .btw-bodyov{margin:2px 0 18px;padding:14px 16px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;}
   .btw-bodyov-l{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
   .btw-bodyov-top{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
@@ -2586,6 +2594,8 @@
 
       <div class="btw-bodyov" id="btwBodyOverview" style="display:none;"></div>
 
+      <div class="btw-health" id="btwHealth" style="display:none;"></div>
+
       <button type="button" class="btw-stats-btn" id="btwStatsBtn" style="display:none;">
         <span>View advanced stats</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
@@ -3186,6 +3196,15 @@
   // Static text is translated by walking the DOM text nodes and looking each
   // up by its exact English text; dynamic strings built in JS go through t().
   const FR = {
+    // Apple Health panel
+    "Apple Health":"Apple Santé",
+    "Sleep, last night":"Sommeil, la nuit dernière",
+    "Steps, 7-day avg":"Pas, moyenne 7 jours",
+    "Active energy, 7-day avg":"Énergie active, moyenne 7 jours",
+    "Resting heart rate, 7-day avg":"Fréquence cardiaque au repos, moyenne 7 jours",
+    "Mindful, 7-day avg":"Pleine conscience, moyenne 7 jours",
+    "Synced from Apple Health. Last update:":"Synchronisé depuis Apple Santé. Dernière mise à jour :",
+    "h":" h","m":" min","kcal":"kcal","bpm":"bpm","min":"min",
     // header / nav
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
@@ -6019,6 +6038,7 @@
     patients: [],           // caseload from GET /api/patients
     selectedPatientId: null,
     checkIns: [],           // check-ins for the selected patient (or own, as a patient)
+    health: [],             // recent Apple Health days, synced from the device
     selectedTags: new Set()
   };
   function selectedPatient(){ return state.patients.find(p=>p.id===state.selectedPatientId) || null; }
@@ -7557,6 +7577,7 @@
     const rows = await pApi('GET', '/api/patient/check-ins');
     state.checkIns = rows.map(mapCheckIn);
     await loadFutureNotes();
+    await loadHealth();
     renderAll();
   }
 
@@ -7568,6 +7589,61 @@
     try { state.futureNotes = await pApi('GET', '/api/patient/future-notes'); }
     catch(e){ state.futureNotes = []; }
   }
+  // Apple Health, synced from the patient's device. The clinician reads their
+  // patient's; a signed-in patient reads their own. Never fetches HealthKit —
+  // only what was already synced to the server.
+  async function loadHealth(){
+    try {
+      if(isPatient()){
+        state.health = await pApi('GET', '/api/patient/health');
+      } else if(state.selectedPatientId){
+        state.health = await api('GET', '/api/patients/' + state.selectedPatientId + '/health');
+      } else {
+        state.health = [];
+      }
+    } catch(e){ state.health = []; }
+  }
+  function fmtSleep(mins){
+    if(mins==null) return null;
+    const h = Math.floor(mins/60), m = mins%60;
+    return h + t('h') + (m ? ' ' + m + t('m') : '');
+  }
+  function healthAvg(rows, key){
+    const vals = rows.map(function(r){ return r[key]; }).filter(function(v){ return v!=null; });
+    if(!vals.length) return null;
+    return Math.round(vals.reduce(function(a,b){ return a+b; }, 0) / vals.length);
+  }
+  function renderHealth(){
+    const el = document.getElementById('btwHealth'); if(!el) return;
+    const rows = state.health || [];
+    if(!rows.length){ el.style.display='none'; el.innerHTML=''; return; }
+    // rows are newest-first. Latest night's sleep, 7-day averages for the rest.
+    const recent = rows.slice(0, 7);
+    const latestSleep = rows.find(function(r){ return r.sleep_minutes!=null; });
+    const tiles = [];
+    if(latestSleep){ tiles.push({ v: fmtSleep(latestSleep.sleep_minutes), lab: t('Sleep, last night') }); }
+    const steps = healthAvg(recent, 'steps');
+    if(steps!=null){ tiles.push({ v: steps.toLocaleString(), lab: t('Steps, 7-day avg') }); }
+    const energy = healthAvg(recent, 'active_energy_kcal');
+    if(energy!=null){ tiles.push({ v: energy, unit: t('kcal'), lab: t('Active energy, 7-day avg') }); }
+    const hr = healthAvg(recent, 'resting_hr');
+    if(hr!=null){ tiles.push({ v: hr, unit: t('bpm'), lab: t('Resting heart rate, 7-day avg') }); }
+    const mindful = healthAvg(recent, 'mindful_minutes');
+    if(mindful!=null && mindful>0){ tiles.push({ v: mindful, unit: t('min'), lab: t('Mindful, 7-day avg') }); }
+    if(!tiles.length){ el.style.display='none'; el.innerHTML=''; return; }
+    const heart = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>';
+    const tilesHtml = tiles.map(function(tl){
+      return '<div class="btw-health-stat"><div class="btw-health-val">' + esc(String(tl.v))
+        + (tl.unit ? '<span class="btw-health-unit">' + esc(tl.unit) + '</span>' : '')
+        + '</div><div class="btw-health-lab">' + esc(tl.lab) + '</div></div>';
+    }).join('');
+    const last = rows[0].day;
+    el.innerHTML = '<div class="btw-health-l">' + heart + esc(t('Apple Health')) + '</div>'
+      + '<div class="btw-health-grid">' + tilesHtml + '</div>'
+      + '<div class="btw-health-note">' + esc(t('Synced from Apple Health. Last update:')) + ' ' + esc(last) + '</div>';
+    el.style.display='';
+  }
+  window.__btwRenderHealth = renderHealth;
   function latestRatedMood(){
     const rated = (state.checkIns||[]).filter(c=>c.mood!=null).sort((a,b)=>b.time-a.time);
     return rated.length ? rated[0].mood : null;
@@ -7732,8 +7808,10 @@
       // badge locally so it updates right away without a full reload.
       const sel = state.patients.find(p=>p.id===state.selectedPatientId);
       if(sel) sel.new_check_in_count = 0;
+      await loadHealth();
     } else {
       state.checkIns = [];
+      state.health = [];
     }
     renderAll();
   }
@@ -10470,6 +10548,7 @@
       renderDigestSelf();
       renderInsights();
       renderBodyOverview();
+      renderHealth();
       renderFutureCard();
       renderTimeline();
       renderMoodChart();
@@ -10482,6 +10561,7 @@
     renderDigest();
     renderInsights();
     renderBodyOverview();
+    renderHealth();
     renderTimeline();
     renderMoodChart();
     renderPie();
