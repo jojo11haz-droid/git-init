@@ -260,6 +260,9 @@ class S {
       'Voyez à quoi ressemble le suivi pour chaque profession. Juste pour essayer — ça ne change pas votre compte.');
   String get previewDefault =>
       _('My account (default)', 'Mon compte (par défaut)');
+  String get groupOnYourOwn => _('On your own', 'Par vous-même');
+  String get groupWithProfessional =>
+      _('With a professional', 'Avec un professionnel');
   String get viewHomepage => _('View the welcome screen', 'Voir l\'écran d\'accueil');
   String get viewHomepageDesc =>
       _('The Between home / landing page.', 'La page d\'accueil de Between.');
