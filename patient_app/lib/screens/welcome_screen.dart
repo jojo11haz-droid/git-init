@@ -11,54 +11,120 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>().s;
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+
+    Widget step(IconData icon, String title, String body) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Align(
-                alignment: Alignment.topRight,
-                child: LanguageToggle(),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: const BoxDecoration(
+                    color: BtwColors.mossLight, shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: BtwColors.moss),
               ),
-              const Spacer(),
-              const Center(child: Wordmark(size: 40)),
-              const SizedBox(height: 16),
-              Text(
-                s.welcomeTagline,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 16, height: 1.6, color: BtwColors.inkSoft),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(body,
+                        style: const TextStyle(
+                            fontSize: 13.5,
+                            height: 1.45,
+                            color: BtwColors.inkSoft)),
+                  ],
                 ),
-                child: Text(s.startOnYourOwn),
               ),
-              const SizedBox(height: 14),
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                ),
-                child: Text(s.logIn),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const InviteScreen()),
-                ),
-                child: Text(s.haveInvite,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 14, color: BtwColors.inkSoft)),
-              ),
-              const SizedBox(height: 4),
-              const CrisisFooter(),
             ],
           ),
+        );
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 8, 16, 0),
+                child: const LanguageToggle(),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(28, 6, 28, 8),
+                children: [
+                  const SizedBox(height: 14),
+                  const Center(child: Wordmark(size: 34)),
+                  const SizedBox(height: 18),
+                  Text(
+                    s.welcomeTagline,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 17, height: 1.55, color: BtwColors.inkSoft),
+                  ),
+                  const SizedBox(height: 28),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: BtwColors.line),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.howItWorks.toUpperCase(),
+                            style: const TextStyle(
+                                fontSize: 11.5,
+                                letterSpacing: 0.6,
+                                fontWeight: FontWeight.w700,
+                                color: BtwColors.moss)),
+                        const SizedBox(height: 14),
+                        step(Icons.edit_note_rounded, s.stepCheckTitle,
+                            s.stepCheckBody),
+                        step(Icons.insights_rounded, s.stepPatternsTitle,
+                            s.stepPatternsBody),
+                        step(Icons.lock_outline_rounded, s.stepShareTitle,
+                            s.stepShareBody),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                    ),
+                    child: Text(s.startOnYourOwn),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    ),
+                    child: Text(s.logIn),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const InviteScreen()),
+                    ),
+                    child: Text(s.haveInvite,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 14, color: BtwColors.inkSoft)),
+                  ),
+                ],
+              ),
+            ),
+            const CrisisFooter(),
+          ],
         ),
       ),
     );
