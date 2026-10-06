@@ -176,6 +176,15 @@ try {
     if ([404, 503].includes(r.status)) ok(`GET /api/practice/invite-info → ${r.status}`);
     else fail('GET /api/practice/invite-info → ' + r.status + ' (expected 404 or 503)');
   }
+  {
+    // Apple Health sync route is registered and gated, not crashing.
+    const r = await get('/api/patient/health', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: '{"days":[{"day":"2024-01-01","sleepMinutes":440}]}'
+    });
+    if ([401, 403, 503].includes(r.status)) ok(`POST /api/patient/health (unauthed) → ${r.status}`);
+    else fail('POST /api/patient/health → ' + r.status + ' (expected 401/403/503)');
+  }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);
 } finally {
