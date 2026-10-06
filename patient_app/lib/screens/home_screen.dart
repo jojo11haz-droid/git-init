@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 
 import '../app_state.dart';
+import '../body_map.dart';
 import '../discipline.dart';
 import '../recording_bytes.dart';
 import '../theme.dart';
@@ -27,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _text = TextEditingController();
   final Set<String> _tags = {};
+  Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
   double _mood = 5;
   bool _detailsOpen = false;
   bool _sending = false;
@@ -114,7 +116,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     if (_recording) await _toggleRecording(); // sending while recording = stop first
     final recording = _recordingResult;
-    if (text.isEmpty && _tags.isEmpty && recording == null) {
+    if (text.isEmpty &&
+        _tags.isEmpty &&
+        recording == null &&
+        _painMap.isEmpty) {
       messenger.showSnackBar(SnackBar(content: Text(app.s.saySomething)));
       return;
     }
@@ -130,11 +135,13 @@ class _HomeScreenState extends State<HomeScreen> {
             mood: _mood.round(),
             tags: _tags.toList(),
             audioUploadId: audioUploadId,
+            painMap: _painMap.isEmpty ? null : _painMap,
           );
       if (!mounted) return;
       _text.clear();
       setState(() {
         _tags.clear();
+        _painMap = {};
         _mood = 5;
         _detailsOpen = false;
         _recordingResult = null;
@@ -300,6 +307,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Physical disciplines: a tap-where-it-hurts body map.
+                  if (profile.isBody) ...[
+                    Text(s.whereHurts,
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 12),
+                    BodyMap(
+                      isFr: s.isFr,
+                      onChanged: (m) => _painMap = m,
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                   // Optional, after writing — never a gate.
                   AnimatedCrossFade(
                     duration: const Duration(milliseconds: 250),
