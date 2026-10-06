@@ -4,6 +4,10 @@
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Between uses the microphone so you can send voice-memo check-ins to your therapist.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Between lets you attach a photo of a sore area to a check-in, so your clinician can see what you mean.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Between lets you take a photo of a sore area to attach to a check-in, so your clinician can see what you mean.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

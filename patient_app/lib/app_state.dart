@@ -184,11 +184,21 @@ class AppState extends ChangeNotifier {
     return (result as Map)['audioUploadId'] as String;
   }
 
+  /// Photo of a sore area, same signed-URL dance as audio. Returns the
+  /// photoUploadId to attach to a check-in.
+  Future<String> uploadPhoto(List<int> bytes, String mime) async {
+    final grant = await _api.post('/api/patient/check-ins/photo-upload-url');
+    final uploadUrl = (grant as Map)['uploadUrl'] as String;
+    final result = await _api.putBytes(uploadUrl, bytes, mime);
+    return (result as Map)['photoUploadId'] as String;
+  }
+
   Future<SendResult> sendCheckIn({
     String? text,
     required int mood,
     required List<String> tags,
     String? audioUploadId,
+    String? photoUploadId,
     Map<String, int>? painMap,
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
@@ -196,6 +206,7 @@ class AppState extends ChangeNotifier {
       'moodScore': mood,
       'manualTags': tags,
       'audioUploadId': audioUploadId,
+      if (photoUploadId != null) 'photoUploadId': photoUploadId,
       if (painMap != null && painMap.isNotEmpty) 'painMap': painMap,
     });
     final map = (data as Map).cast<String, dynamic>();

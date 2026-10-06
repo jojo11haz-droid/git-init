@@ -158,6 +158,12 @@ class S {
   String get moodRightNow => _('Mood right now', 'Humeur en ce moment');
   String get whereHurts =>
       _('Where does it hurt or feel sore?', 'Où avez-vous mal ou des courbatures?');
+  String get addSorePhoto =>
+      _('Add a photo of the sore area', 'Ajouter une photo de la zone douloureuse');
+  String get photoAttached => _('Photo attached', 'Photo jointe');
+  String get takePhoto => _('Take a photo', 'Prendre une photo');
+  String get chooseFromLibrary =>
+      _('Choose from library', 'Choisir dans la galerie');
   String get low => _('Low', 'Bas');
   String get high => _('High', 'Élevé');
   String get anythingFits => _('Anything that fits (optional)', 'Ce qui te correspond (facultatif)');

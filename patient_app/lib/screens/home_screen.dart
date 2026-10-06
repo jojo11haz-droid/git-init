@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _text = TextEditingController();
   final Set<String> _tags = {};
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
+  Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
   bool _detailsOpen = false;
   bool _sending = false;
@@ -110,6 +113,48 @@ class _HomeScreenState extends State<HomeScreen> {
   String _fmtSeconds(int s) =>
       '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 
+  Future<void> _pickPhoto() async {
+    final s = context.read<AppState>().s;
+    final messenger = ScaffoldMessenger.of(context);
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: BtwColors.cream,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined,
+                  color: BtwColors.moss),
+              title: Text(s.takePhoto),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.photo_library_outlined, color: BtwColors.moss),
+              title: Text(s.chooseFromLibrary),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    try {
+      final file = await ImagePicker()
+          .pickImage(source: source, maxWidth: 1600, imageQuality: 80);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() => _photoBytes = bytes); // re-encoded to JPEG by the picker
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
   Future<void> _send() async {
     final text = _text.text.trim();
     final app = context.read<AppState>();
@@ -119,7 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (text.isEmpty &&
         _tags.isEmpty &&
         recording == null &&
-        _painMap.isEmpty) {
+        _painMap.isEmpty &&
+        _photoBytes == null) {
       messenger.showSnackBar(SnackBar(content: Text(app.s.saySomething)));
       return;
     }
@@ -130,11 +176,16 @@ class _HomeScreenState extends State<HomeScreen> {
         final bytes = await readRecordingBytes(recording);
         audioUploadId = await app.uploadAudio(bytes, _audioMime);
       }
+      String? photoUploadId;
+      if (_photoBytes != null) {
+        photoUploadId = await app.uploadPhoto(_photoBytes!, 'image/jpeg');
+      }
       final result = await app.sendCheckIn(
             text: text.isEmpty ? null : text,
             mood: _mood.round(),
             tags: _tags.toList(),
             audioUploadId: audioUploadId,
+            photoUploadId: photoUploadId,
             painMap: _painMap.isEmpty ? null : _painMap,
           );
       if (!mounted) return;
@@ -142,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _tags.clear();
         _painMap = {};
+        _photoBytes = null;
         _mood = 5;
         _detailsOpen = false;
         _recordingResult = null;
@@ -317,6 +369,49 @@ class _HomeScreenState extends State<HomeScreen> {
                       isFr: s.isFr,
                       onChanged: (m) => _painMap = m,
                     ),
+                    const SizedBox(height: 16),
+                    // Optional photo of the sore area.
+                    if (_photoBytes == null)
+                      OutlinedButton.icon(
+                        onPressed: _sending ? null : _pickPhoto,
+                        icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                        label: Text(s.addSorePhoto),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: BtwColors.moss,
+                          side: const BorderSide(color: BtwColors.line),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                      )
+                    else
+                      Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              _photoBytes!,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(s.photoAttached,
+                                style: const TextStyle(
+                                    fontSize: 13.5, color: BtwColors.moss)),
+                          ),
+                          IconButton(
+                            tooltip: s.close,
+                            icon: const Icon(Icons.close_rounded,
+                                size: 18, color: BtwColors.inkSoft),
+                            onPressed: () =>
+                                setState(() => _photoBytes = null),
+                          ),
+                        ],
+                      ),
                     const SizedBox(height: 20),
                   ],
                   // Optional, after writing — never a gate.
