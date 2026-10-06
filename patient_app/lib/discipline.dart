@@ -144,11 +144,23 @@ DisciplineProfile profileFor(Patient p) {
   }
 }
 
-/// The full set of categories, for the in-app preview switcher. Each key maps
-/// to the profile a real patient of that discipline would get, so previewing
-/// shows exactly what that person's check-in looks like.
-const List<String> kPreviewCategories = [
-  'solo',
+// Categories for the in-app preview switcher, split into two groups the way
+// the website frames them: using Between on your own, vs. with a professional.
+// Each key maps (via profileByKey) to the profile that person would get, so
+// previewing shows exactly what their check-in looks like. The individual keys
+// use the same theme sets but with no provider, so the button reads "Save
+// check-in" rather than "Send to your …".
+
+/// On-your-own flavours — no clinician behind them.
+const List<String> kIndividualCategories = [
+  'ind_general',
+  'ind_sport',
+  'ind_fitness',
+  'ind_nutrition',
+];
+
+/// With-a-professional flavours — tied to a clinician/coach.
+const List<String> kProfessionalCategories = [
   'therapist',
   'physio',
   'kinesiology',
@@ -157,47 +169,64 @@ const List<String> kPreviewCategories = [
   'sports',
   'trainer',
   'nutrition',
-  'recovery',
   'neuro',
+  'recovery',
   'school',
 ];
 
 /// Human label for a preview category key (localised).
 String previewCategoryLabel(String key, bool isFr) {
   const en = {
-    'solo': 'On your own',
+    'ind_general': 'General / mood',
+    'ind_sport': 'Sport',
+    'ind_fitness': 'Fitness',
+    'ind_nutrition': 'Nutrition',
     'therapist': 'Therapy',
     'physio': 'Physiotherapy',
     'kinesiology': 'Kinesiology',
     'osteo': 'Osteopathy',
     'occupational': 'Occupational therapy',
     'sports': 'Sport psychology',
-    'trainer': 'Fitness training',
-    'nutrition': 'Nutrition',
-    'recovery': 'Addiction & recovery',
+    'trainer': 'Personal training',
+    'nutrition': 'Nutrition coaching',
     'neuro': 'Neuropsychology',
+    'recovery': 'Addiction & recovery',
     'school': 'School',
   };
   const fr = {
-    'solo': 'Par vous-même',
+    'ind_general': 'Général / humeur',
+    'ind_sport': 'Sport',
+    'ind_fitness': 'Mise en forme',
+    'ind_nutrition': 'Nutrition',
     'therapist': 'Thérapie',
     'physio': 'Physiothérapie',
     'kinesiology': 'Kinésiologie',
     'osteo': 'Ostéopathie',
     'occupational': 'Ergothérapie',
     'sports': 'Psychologie du sport',
-    'trainer': 'Entraînement',
-    'nutrition': 'Nutrition',
-    'recovery': 'Dépendance et rétablissement',
+    'trainer': 'Entraînement personnel',
+    'nutrition': 'Coaching nutrition',
     'neuro': 'Neuropsychologie',
+    'recovery': 'Dépendance et rétablissement',
     'school': 'École',
   };
   return (isFr ? fr : en)[key] ?? key;
 }
 
-/// Profile for a preview category key (mirrors profileFor's mappings).
+/// Profile for a preview category key (mirrors profileFor's mappings). The
+/// ind_* keys are the solo versions: same themes, no provider.
 DisciplineProfile profileByKey(String key) {
   switch (key) {
+    // On your own — no clinician, so providerKey is null ("Save check-in").
+    case 'ind_sport':
+    case 'ind_fitness':
+      return const DisciplineProfile(CheckInKind.body, _bodyThemes, null);
+    case 'ind_nutrition':
+      return const DisciplineProfile(
+          CheckInKind.nutrition, _nutritionThemes, null);
+    case 'ind_general':
+      return const DisciplineProfile(CheckInKind.mind, _mindThemes, null);
+    // With a professional.
     case 'therapist':
       return const DisciplineProfile(CheckInKind.mind, _mindThemes, 'therapist');
     case 'physio':
@@ -225,7 +254,6 @@ DisciplineProfile profileByKey(String key) {
           CheckInKind.neuro, _neuroThemes, 'neuropsychologist');
     case 'school':
       return const DisciplineProfile(CheckInKind.school, _schoolThemes, 'teacher');
-    case 'solo':
     default:
       return const DisciplineProfile(CheckInKind.mind, _mindThemes, null);
   }

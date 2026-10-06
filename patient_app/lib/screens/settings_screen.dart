@@ -261,24 +261,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           fontSize: 13,
                           color: BtwColors.inkSoft,
                           height: 1.45)),
-                  const SizedBox(height: 10),
-                  DropdownButton<String?>(
-                    isExpanded: true,
-                    value: state.previewCategory,
-                    underline: const SizedBox.shrink(),
-                    items: [
-                      DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text(s.previewDefault),
-                      ),
-                      for (final key in kPreviewCategories)
-                        DropdownMenuItem<String?>(
-                          value: key,
-                          child: Text(previewCategoryLabel(key, s.isFr)),
-                        ),
-                    ],
-                    onChanged: (v) =>
-                        context.read<AppState>().setPreviewCategory(v),
+                  const SizedBox(height: 12),
+                  _PreviewChip(
+                    label: s.previewDefault,
+                    selected: state.previewCategory == null,
+                    onTap: () =>
+                        context.read<AppState>().setPreviewCategory(null),
+                  ),
+                  const SizedBox(height: 14),
+                  _PreviewGroupLabel(s.groupOnYourOwn),
+                  const SizedBox(height: 8),
+                  _PreviewChips(
+                    keys: kIndividualCategories,
+                    selected: state.previewCategory,
+                    isFr: s.isFr,
+                  ),
+                  const SizedBox(height: 14),
+                  _PreviewGroupLabel(s.groupWithProfessional),
+                  const SizedBox(height: 8),
+                  _PreviewChips(
+                    keys: kProfessionalCategories,
+                    selected: state.previewCategory,
+                    isFr: s.isFr,
                   ),
                 ],
               ),
@@ -342,6 +346,86 @@ class _Section extends StatelessWidget {
         border: Border.all(color: BtwColors.line),
       ),
       child: child,
+    );
+  }
+}
+
+/// A small uppercase group header inside the preview switcher.
+class _PreviewGroupLabel extends StatelessWidget {
+  const _PreviewGroupLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 10.5,
+        letterSpacing: 0.6,
+        fontWeight: FontWeight.w700,
+        color: BtwColors.moss,
+      ),
+    );
+  }
+}
+
+/// A wrap of selectable preview-category chips.
+class _PreviewChips extends StatelessWidget {
+  const _PreviewChips(
+      {required this.keys, required this.selected, required this.isFr});
+
+  final List<String> keys;
+  final String? selected;
+  final bool isFr;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final key in keys)
+          _PreviewChip(
+            label: previewCategoryLabel(key, isFr),
+            selected: selected == key,
+            onTap: () => context.read<AppState>().setPreviewCategory(key),
+          ),
+      ],
+    );
+  }
+}
+
+class _PreviewChip extends StatelessWidget {
+  const _PreviewChip(
+      {required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? BtwColors.moss : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: selected ? BtwColors.moss : BtwColors.line),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : BtwColors.inkSoft,
+          ),
+        ),
+      ),
     );
   }
 }
