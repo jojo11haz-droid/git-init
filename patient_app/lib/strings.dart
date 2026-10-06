@@ -42,6 +42,19 @@ class S {
       'A quiet place to check in on how you\'re\nreally doing — on your own, or with a pro.',
       'Un endroit tranquille pour faire le point sur\ncomment tu vas vraiment — seul, ou avec un pro.');
   String get startOnYourOwn => _('Start on your own', 'Commence par toi-même');
+  String get howItWorks => _('How it works', 'Comment ça marche');
+  String get stepCheckTitle => _('Check in, your way', 'Fais le point, à ta façon');
+  String get stepCheckBody => _(
+      'A quick note, a voice memo, or a few taps — whenever something comes up.',
+      'Une note rapide, un mémo vocal ou quelques touches — quand quelque chose survient.');
+  String get stepPatternsTitle => _('See your patterns', 'Vois tes tendances');
+  String get stepPatternsBody => _(
+      'Your mood and themes take shape over time, so you can spot what helps.',
+      'Ton humeur et tes thèmes se dessinent avec le temps, pour repérer ce qui aide.');
+  String get stepShareTitle => _('On your own, or with a pro', 'Seul, ou avec un pro');
+  String get stepShareBody => _(
+      'Keep it private, or share it with a professional who\'s helping you.',
+      'Garde-le privé, ou partage-le avec un professionnel qui t\'accompagne.');
   String get haveInvite =>
       _('I have an invite from my therapist', 'J\'ai une invitation de mon thérapeute');
 
