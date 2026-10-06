@@ -143,3 +143,90 @@ DisciplineProfile profileFor(Patient p) {
       return const DisciplineProfile(CheckInKind.mind, _mindThemes, 'therapist');
   }
 }
+
+/// The full set of categories, for the in-app preview switcher. Each key maps
+/// to the profile a real patient of that discipline would get, so previewing
+/// shows exactly what that person's check-in looks like.
+const List<String> kPreviewCategories = [
+  'solo',
+  'therapist',
+  'physio',
+  'kinesiology',
+  'osteo',
+  'occupational',
+  'sports',
+  'trainer',
+  'nutrition',
+  'recovery',
+  'neuro',
+  'school',
+];
+
+/// Human label for a preview category key (localised).
+String previewCategoryLabel(String key, bool isFr) {
+  const en = {
+    'solo': 'On your own',
+    'therapist': 'Therapy',
+    'physio': 'Physiotherapy',
+    'kinesiology': 'Kinesiology',
+    'osteo': 'Osteopathy',
+    'occupational': 'Occupational therapy',
+    'sports': 'Sport psychology',
+    'trainer': 'Fitness training',
+    'nutrition': 'Nutrition',
+    'recovery': 'Addiction & recovery',
+    'neuro': 'Neuropsychology',
+    'school': 'School',
+  };
+  const fr = {
+    'solo': 'Par vous-même',
+    'therapist': 'Thérapie',
+    'physio': 'Physiothérapie',
+    'kinesiology': 'Kinésiologie',
+    'osteo': 'Ostéopathie',
+    'occupational': 'Ergothérapie',
+    'sports': 'Psychologie du sport',
+    'trainer': 'Entraînement',
+    'nutrition': 'Nutrition',
+    'recovery': 'Dépendance et rétablissement',
+    'neuro': 'Neuropsychologie',
+    'school': 'École',
+  };
+  return (isFr ? fr : en)[key] ?? key;
+}
+
+/// Profile for a preview category key (mirrors profileFor's mappings).
+DisciplineProfile profileByKey(String key) {
+  switch (key) {
+    case 'therapist':
+      return const DisciplineProfile(CheckInKind.mind, _mindThemes, 'therapist');
+    case 'physio':
+      return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'physio');
+    case 'kinesiology':
+      return const DisciplineProfile(
+          CheckInKind.body, _bodyThemes, 'kinesiologist');
+    case 'osteo':
+      return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'osteopath');
+    case 'occupational':
+      return const DisciplineProfile(
+          CheckInKind.body, _bodyThemes, 'occupational therapist');
+    case 'sports':
+      return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'coach');
+    case 'trainer':
+      return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'trainer');
+    case 'nutrition':
+      return const DisciplineProfile(
+          CheckInKind.nutrition, _nutritionThemes, 'nutritionist');
+    case 'recovery':
+      return const DisciplineProfile(
+          CheckInKind.recovery, _recoveryThemes, 'mentor');
+    case 'neuro':
+      return const DisciplineProfile(
+          CheckInKind.neuro, _neuroThemes, 'neuropsychologist');
+    case 'school':
+      return const DisciplineProfile(CheckInKind.school, _schoolThemes, 'teacher');
+    case 'solo':
+    default:
+      return const DisciplineProfile(CheckInKind.mind, _mindThemes, null);
+  }
+}

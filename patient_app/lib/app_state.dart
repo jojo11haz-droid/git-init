@@ -76,6 +76,14 @@ class AppState extends ChangeNotifier {
   bool healthConnected = false;
   bool get healthSupported => _health.isSupported;
 
+  /// Preview a different discipline's check-in (a testing aid). Null = use the
+  /// account's real discipline. Not persisted — it resets on relaunch.
+  String? previewCategory;
+  void setPreviewCategory(String? key) {
+    previewCategory = key;
+    notifyListeners();
+  }
+
   AppLang lang = detectInitialLang();
   S get s => S(lang);
 
@@ -251,7 +259,7 @@ class AppState extends ChangeNotifier {
 
   Future<SendResult> sendCheckIn({
     String? text,
-    required int mood,
+    int? mood, // null = let Between estimate it from the check-in (needs AI on)
     required List<String> tags,
     String? audioUploadId,
     String? photoUploadId,
@@ -260,7 +268,7 @@ class AppState extends ChangeNotifier {
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       'text': text,
-      'moodScore': mood,
+      if (mood != null) 'moodScore': mood,
       'manualTags': tags,
       'audioUploadId': audioUploadId,
       if (photoUploadId != null) 'photoUploadId': photoUploadId,

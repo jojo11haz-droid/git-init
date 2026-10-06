@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../theme.dart';
 import 'history_screen.dart';
 import 'welcome_screen.dart';
@@ -244,6 +245,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const TextStyle(fontSize: 13, color: BtwColors.inkSoft),
                 ),
                 onTap: _busy ? null : _requestDeletion,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s.previewCategory,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(s.previewCategoryDesc,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          color: BtwColors.inkSoft,
+                          height: 1.45)),
+                  const SizedBox(height: 10),
+                  DropdownButton<String?>(
+                    isExpanded: true,
+                    value: state.previewCategory,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text(s.previewDefault),
+                      ),
+                      for (final key in kPreviewCategories)
+                        DropdownMenuItem<String?>(
+                          value: key,
+                          child: Text(previewCategoryLabel(key, s.isFr)),
+                        ),
+                    ],
+                    onChanged: (v) =>
+                        context.read<AppState>().setPreviewCategory(v),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s.viewHomepage,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                subtitle: Text(s.viewHomepageDesc,
+                    style: const TextStyle(
+                        fontSize: 13, color: BtwColors.inkSoft)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const WelcomeScreen(preview: true)),
+                ),
               ),
             ),
             const SizedBox(height: 12),

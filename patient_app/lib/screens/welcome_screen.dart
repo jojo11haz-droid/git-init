@@ -35,7 +35,11 @@ class WebsiteLink extends StatelessWidget {
 }
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.preview = false});
+
+  /// When opened from Settings while signed in, show a back button so it reads
+  /// as a preview rather than the real signed-out landing.
+  final bool preview;
 
   @override
   Widget build(BuildContext context) {
@@ -78,11 +82,19 @@ class WelcomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 8, 16, 0),
-                child: const LanguageToggle(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 8, 16, 0),
+              child: Row(
+                children: [
+                  if (preview)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          color: BtwColors.inkSoft),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
+                  const Spacer(),
+                  const LanguageToggle(),
+                ],
               ),
             ),
             Expanded(
