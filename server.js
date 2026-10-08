@@ -236,7 +236,7 @@ PRIVACY & CONSENT
 PRICING (Canadian dollars, taxes at checkout)
 - Clinicians/professionals: Solo $99.99 per clinician per month (up to 30 patients), Solo Annual $79.99 per month, Premium $149.99 per month (30+ patients), Team is custom (contact us). All start with a 14-day free trial with a card on file, nothing charged during it.
 - Patients invited by a professional NEVER pay — they are covered by the professional's seat.
-- Individuals on their own: Personal $14.99 per month (up to 5 check-ins a week), Personal Annual $9.99 per month, Premium $24.99 per month (unlimited check-ins, guided journaling packs, a weekly reflection, attach a photo to any entry, the full advanced-stats view), Premium Annual $19.99 per month. Individuals get a 3-day free trial.
+- Individuals on their own: a free plan (3 check-ins a week, by voice or text, with mood and theme trends); Personal $14.99 per month (up to 5 check-ins a week), Personal Annual $9.99 per month, Premium $24.99 per month (unlimited check-ins, guided journaling packs, a weekly reflection, attach a photo to any entry, the full advanced-stats view), Premium Annual $19.99 per month. Paid individual plans start with a 3-day free trial.
 - Regulated professions (physiotherapy, nutrition, neuropsychology) verify a professional licence before their account goes live.
 
 LANGUAGES: English and French.`;
@@ -1878,13 +1878,20 @@ async function startPatientSession(patientId) {
 
 // Free-tier weekly check-in cap for self-serve individuals. Premium is
 // unlimited; invited patients (they have a clinician) are never capped.
-const WEEKLY_CHECKIN_CAP = 5;
+const WEEKLY_CHECKIN_CAP = 5;        // paid "Personal" tier
+const FREE_WEEKLY_CHECKIN_CAP = 3;   // the $0 free tier — cheaper to serve, and
+                                     // a real reason to upgrade to Personal
 const WEEKLY_CHECKIN_WINDOW_DAYS = 7;
-// A patient is capped when they signed up on their own (no clinician) and are
-// not on a Premium plan. Returns the cap number, or null for unlimited.
+// A self-serve individual (no clinician, not Premium) is capped. The paid
+// Personal plan gets the higher cap; the $0 free tier gets the lower one — this
+// keeps the free tier cheap to serve (fewer AI calls and transcriptions) and
+// gives Personal an actual benefit over free. Clinician-covered patients,
+// Premium, and owner/comp accounts are never capped. Returns null = unlimited.
 function patientWeeklyCap(p) {
-  if (!p || p.clinician_id || patientIsPremium(p)) return null;
-  return WEEKLY_CHECKIN_CAP;
+  if (!p || p.clinician_id || patientIsPremium(p) || isFreeAccess(p.email)) return null;
+  const paidPersonal = (p.plan === 'patient_monthly' || p.plan === 'patient_annual')
+    && subActive(p.subscription_status);
+  return paidPersonal ? WEEKLY_CHECKIN_CAP : FREE_WEEKLY_CHECKIN_CAP;
 }
 
 function publicPatient(p) {
