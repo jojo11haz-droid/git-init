@@ -1739,6 +1739,7 @@
   .btw-solo-step .n::before{content:"";width:15px;height:2px;background:var(--clay);border-radius:1px;}
   .btw-solo-step h4{font-family:var(--font-body);font-size:14.5px;font-weight:700;margin:0 0 6px;color:var(--ink);}
   .btw-solo-step p{font-size:12.5px;line-height:1.55;color:var(--ink-soft);margin:0;max-width:none;text-align:left;}
+  .btw-forclinics{margin-top:44px;}
   .btw-savetime{margin-top:44px;text-align:center;}
   .btw-savetime-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:820px;margin:22px auto 0;text-align:left;}
   @media (max-width:640px){.btw-savetime-grid{grid-template-columns:1fr;}}
@@ -2401,6 +2402,32 @@
             <h4>Built-in safety net</h4>
             <p>Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.</p>
           </div>
+        </div>
+      </section>
+
+      <section class="btw-forclinics">
+        <div class="btw-section-label">For clinics &amp; practices</div>
+        <div class="btw-solo">
+          <h3>Bring your whole team onto one plan.</h3>
+          <p>Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.</p>
+          <div class="btw-solo-steps">
+            <div class="btw-solo-step">
+              <div class="n">One bill</div>
+              <h4>One plan for the team</h4>
+              <p>The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.</p>
+            </div>
+            <div class="btw-solo-step">
+              <div class="n">Private</div>
+              <h4>Separate caseloads</h4>
+              <p>Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.</p>
+            </div>
+            <div class="btw-solo-step">
+              <div class="n">Minutes</div>
+              <h4>Set up fast</h4>
+              <p>Invite a colleague by email and they are in, with their own login and their own dashboard.</p>
+            </div>
+          </div>
+          <button class="btw-hero-btn secondary" id="btwClinicsCta" type="button">Talk to us about your clinic</button>
         </div>
       </section>
 
@@ -3207,6 +3234,20 @@
   // up by its exact English text; dynamic strings built in JS go through t().
   const FR = {
     "iPhone & iPad app coming soon":"Application iPhone et iPad bientôt disponible",
+    // For clinics & practices band
+    "For clinics & practices":"Pour les cliniques et cabinets",
+    "Bring your whole team onto one plan.":"Réunissez toute votre équipe sur un seul forfait.",
+    "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte du praticien seul à la clinique entière — un seul forfait couvre l'équipe, et chaque clinicien garde sa propre liste de clients privée.",
+    "One bill":"Une facture",
+    "One plan for the team":"Un forfait pour l'équipe",
+    "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le cabinet est facturé une seule fois. Ajoutez des cliniciens à mesure que vous grandissez, au lieu que chacun achète le sien.",
+    "Private":"Privé",
+    "Separate caseloads":"Listes de clients séparées",
+    "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque clinicien invite ses propres clients et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
+    "Minutes":"En minutes",
+    "Set up fast":"Configuration rapide",
+    "Invite a colleague by email and they are in, with their own login and their own dashboard.":"Invitez un collègue par courriel et il est prêt, avec son propre identifiant et son propre tableau de bord.",
+    "Talk to us about your clinic":"Parlez-nous de votre clinique",
     // Apple Health panel
     "Apple Health":"Apple Santé",
     "Sleep, last night":"Sommeil, la nuit dernière",
@@ -5784,7 +5825,7 @@
     // practice" caseload features) have no meaning for someone using Between
     // only for themselves, so hide them on the individual page.
     var _soloHide = (curAudience === 'individual');
-    document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
+    document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features, .btw-forclinics').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
     renderHeroThread();
     applyCurrency();
   }
@@ -7239,6 +7280,9 @@
     if(state.me && state.me.account_type === prem.acct) changePlan(prem.plan);
     else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
   });
+  // "For clinics & practices" band CTA → the same clinic enquiry form.
+  const clinicsCta = document.getElementById('btwClinicsCta');
+  if(clinicsCta) clinicsCta.addEventListener('click', openContact);
 
   // Floating AI chat: a launcher bubble in the corner opens a Q&A panel that
   // works site-wide, so a visitor can ask a question the moment it comes up
