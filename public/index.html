@@ -2127,6 +2127,7 @@
         <button class="btw-nav-btn icon" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
+          <button class="btw-nav-btn" id="btwEngagementBtn" style="display:none;">Engagement</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
           <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My clinic</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
@@ -3046,6 +3047,17 @@
       </div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwEngagementOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:640px;">
+      <button class="btw-modal-close" data-close="btwEngagementOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Owner · Engagement</div>
+      <h2>Are people checking in?</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:16px;">The one number that decides the business: do clients keep checking in on their own. Retention is the share still checking in N weeks after their first check-in.</div>
+      <div class="btw-form-error" id="btwEngError"></div>
+      <div id="btwEngBody" style="max-height:62vh;overflow-y:auto;"></div>
     </div>
   </div>
 
@@ -7533,6 +7545,8 @@
     if(practiceBtn) practiceBtn.style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     const adminBtn = document.getElementById('btwAdminBtn');
     if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    const engBtn = document.getElementById('btwEngagementBtn');
+    if(engBtn) engBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     logoutBtn.style.display = signedIn ? '' : 'none';
     const gated = signedIn && !pendingVerify && isGated();
     signedOutBox.style.display = signedIn ? 'none' : '';
@@ -8314,6 +8328,77 @@
   document.getElementById('btwAdminBtn').addEventListener('click', openAdmin);
   document.querySelectorAll('[data-admintab]').forEach(b=> b.addEventListener('click', ()=>{ _adminTab = b.getAttribute('data-admintab'); renderAdminTab(); }));
 
+  // --- Owner: engagement analytics (the D2 "are people checking in?" view) ---
+  const engOverlay = document.getElementById('btwEngagementOverlay');
+  async function openEngagement(){
+    const err = document.getElementById('btwEngError');
+    const body = document.getElementById('btwEngBody');
+    err.textContent = '';
+    body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
+    engOverlay.style.display = 'flex';
+    try{ renderEngagement(await api('GET', '/api/admin/engagement')); }
+    catch(e){ err.textContent = e.message; body.innerHTML = ''; }
+  }
+  function engKpi(label, value, sub){
+    return '<div style="flex:1;min-width:120px;background:var(--moss-light);border-radius:12px;padding:12px 14px;">'
+      + '<div style="font-size:22px;font-weight:700;color:var(--ink);line-height:1.1;">' + esc(String(value)) + '</div>'
+      + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:3px;">' + esc(label) + '</div>'
+      + (sub ? '<div style="font-size:10.5px;color:var(--ink-soft);opacity:.8;margin-top:2px;">' + esc(sub) + '</div>' : '')
+      + '</div>';
+  }
+  function engBar(label, pct, caption){
+    const w = Math.max(0, Math.min(100, pct == null ? 0 : pct));
+    return '<div style="margin-bottom:9px;">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:3px;">'
+      +   '<span>' + esc(label) + '</span><span>' + (pct == null ? '—' : pct + '%') + (caption ? ' <span style="opacity:.65;">' + esc(caption) + '</span>' : '') + '</span>'
+      + '</div>'
+      + '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;">'
+      +   '<div style="height:100%;width:' + w + '%;background:var(--moss);border-radius:4px;"></div>'
+      + '</div></div>';
+  }
+  function renderEngagement(data){
+    const body = document.getElementById('btwEngBody');
+    const t0 = data.totals || {};
+    const remPct = t0.total_patients ? Math.round(100 * t0.reminders_on / t0.total_patients) : 0;
+    let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">'
+      + engKpi('Patients', t0.total_patients || 0)
+      + engKpi('Have checked in', t0.patients_with_checkins || 0)
+      + engKpi('Total check-ins', t0.total_checkins || 0)
+      + engKpi('Reminders on', remPct + '%')
+      + '</div>';
+
+    // Retention curve — the headline signal. Skip week 0 (always ~100%).
+    html += '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:4px 0 10px;">Retention — still checking in N weeks after their first</div>';
+    const ret = (data.retention || []).filter(r => r.week >= 1);
+    if(!ret.some(r => r.eligible > 0)){
+      html += '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">Not enough history yet — needs patients whose first check-in was at least two weeks ago.</div>';
+    } else {
+      for(const r of ret){
+        const pct = r.eligible ? Math.round(100 * r.active / r.eligible) : null;
+        html += engBar('Week ' + r.week, pct, r.eligible ? '(' + r.active + '/' + r.eligible + ')' : '(no data yet)');
+      }
+    }
+
+    // Weekly activity — active patients per week, last 12 weeks.
+    const wk = data.weekly || [];
+    const maxActive = Math.max(1, ...wk.map(w => w.active_patients || 0));
+    html += '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:18px 0 10px;">Active patients per week (last 12)</div>';
+    html += '<div style="display:flex;align-items:flex-end;gap:5px;height:90px;">';
+    for(const w of wk){
+      const h = Math.round(100 * (w.active_patients || 0) / maxActive);
+      html += '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;" title="' + esc(w.week + ': ' + (w.active_patients||0) + ' active, ' + (w.checkins||0) + ' check-ins') + '">'
+        + '<div style="font-size:9px;color:var(--ink-soft);margin-bottom:2px;">' + (w.active_patients || 0) + '</div>'
+        + '<div style="width:100%;background:var(--moss);border-radius:3px 3px 0 0;height:' + Math.max(2, h) + '%;"></div>'
+        + '</div>';
+    }
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--ink-soft);opacity:.7;margin-top:4px;"><span>' + (wk[0] ? esc(wk[0].week.slice(5)) : '') + '</span><span>' + (wk.length ? esc(wk[wk.length-1].week.slice(5)) : '') + '</span></div>';
+
+    body.innerHTML = html;
+  }
+  const engBtnEl = document.getElementById('btwEngagementBtn');
+  if(engBtnEl) engBtnEl.addEventListener('click', openEngagement);
+
   // --- Practice (multi-seat) ---
   const practiceOverlay = document.getElementById('btwPracticeOverlay');
   async function openPractice(){
@@ -8595,7 +8680,7 @@
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwContactOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwContactOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay','btwEngagementOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });
