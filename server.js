@@ -236,7 +236,7 @@ PRIVACY & CONSENT
 PRICING (Canadian dollars, taxes at checkout)
 - Clinicians/professionals: Solo $99.99 per clinician per month (up to 30 patients), Solo Annual $79.99 per month, Premium $149.99 per month (30+ patients), Team is custom (contact us). All start with a 14-day free trial with a card on file, nothing charged during it.
 - Patients invited by a professional NEVER pay — they are covered by the professional's seat.
-- Individuals on their own: a free plan (3 check-ins a week, by voice or text, with mood and theme trends); Personal $14.99 per month (up to 5 check-ins a week), Personal Annual $9.99 per month, Premium $24.99 per month (unlimited check-ins, guided journaling packs, a weekly reflection, attach a photo to any entry, the full advanced-stats view), Premium Annual $19.99 per month. Paid individual plans start with a 3-day free trial.
+- Individuals on their own: Personal $14.99 per month (up to 5 check-ins a week), Personal Annual $9.99 per month, Premium $24.99 per month (unlimited check-ins, guided journaling packs, a weekly reflection, attach a photo to any entry, the full advanced-stats view), Premium Annual $19.99 per month. Individuals get a 3-day free trial.
 - Regulated professions (physiotherapy, nutrition, neuropsychology) verify a professional licence before their account goes live.
 
 LANGUAGES: English and French.`;
