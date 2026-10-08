@@ -185,6 +185,12 @@ try {
     if ([401, 403, 503].includes(r.status)) ok(`POST /api/patient/health (unauthed) → ${r.status}`);
     else fail('POST /api/patient/health → ' + r.status + ' (expected 401/403/503)');
   }
+  {
+    // Owner engagement analytics is registered and gated, not crashing.
+    const r = await get('/api/admin/engagement');
+    if ([401, 403, 503].includes(r.status)) ok(`GET /api/admin/engagement (unauthed) → ${r.status}`);
+    else fail('GET /api/admin/engagement → ' + r.status + ' (expected 401/403/503)');
+  }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);
 } finally {

@@ -6,6 +6,7 @@ import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
   createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
+  getEngagementStats,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -935,6 +936,17 @@ app.get('/api/admin/clinicians', requireDb, requireAuth, requireOwner, async (re
   } catch (err) {
     console.error('Error listing clinicians for review:', err);
     res.status(500).json({ error: 'Could not load clinicians.' });
+  }
+});
+
+// Owner-only engagement analytics — the D2 "do clients keep checking in?"
+// instrumentation. Platform-wide counts and a retention curve; no content.
+app.get('/api/admin/engagement', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await getEngagementStats());
+  } catch (err) {
+    console.error('Error loading engagement stats:', err);
+    res.status(500).json({ error: 'Could not load engagement stats.' });
   }
 });
 

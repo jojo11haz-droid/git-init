@@ -1289,6 +1289,65 @@ export async function deleteAllHealth(patientId) {
   await pool.query(`DELETE FROM patient_health WHERE patient_id = $1`, [patientId]);
 }
 
+// --- Engagement analytics (owner only) ---
+// Measures the D2 assumption from the EMT pass: do clients actually keep
+// checking in on their own? Returns headline totals, 12 weeks of activity,
+// and a retention curve (what share of people are still checking in N weeks
+// after their first check-in). All platform-wide; no per-patient content.
+export async function getEngagementStats() {
+  const totals = (await pool.query(`
+    SELECT
+      (SELECT count(*)::int FROM patients) AS total_patients,
+      (SELECT count(DISTINCT patient_id)::int FROM check_ins WHERE deleted_at IS NULL) AS patients_with_checkins,
+      (SELECT count(*)::int FROM patients WHERE reminders_enabled = true) AS reminders_on,
+      (SELECT count(*)::int FROM check_ins WHERE deleted_at IS NULL) AS total_checkins
+  `)).rows[0];
+
+  // Last 12 ISO weeks: new patients, active patients, check-ins.
+  const weekly = (await pool.query(`
+    WITH weeks AS (
+      SELECT generate_series(
+        date_trunc('week', now()) - interval '11 weeks',
+        date_trunc('week', now()), interval '1 week') AS wk
+    )
+    SELECT to_char(w.wk, 'YYYY-MM-DD') AS week,
+      (SELECT count(*)::int FROM patients p
+         WHERE date_trunc('week', p.created_at) = w.wk) AS new_patients,
+      (SELECT count(DISTINCT c.patient_id)::int FROM check_ins c
+         WHERE c.deleted_at IS NULL AND date_trunc('week', c.submitted_at) = w.wk) AS active_patients,
+      (SELECT count(*)::int FROM check_ins c
+         WHERE c.deleted_at IS NULL AND date_trunc('week', c.submitted_at) = w.wk) AS checkins
+    FROM weeks w ORDER BY w.wk
+  `)).rows;
+
+  // Retention curve by whole weeks since each patient's first check-in. For
+  // week k, eligible = patients whose first check-in is at least k+1 weeks ago
+  // (so the window has fully elapsed); active = those with a check-in in that
+  // week. Week 0 is ~100% by definition; the decay after it is the signal.
+  const retention = (await pool.query(`
+    WITH firsts AS (
+      SELECT patient_id, min(submitted_at) AS first_at
+        FROM check_ins WHERE deleted_at IS NULL GROUP BY patient_id
+    ),
+    off AS (
+      SELECT c.patient_id,
+             floor(EXTRACT(EPOCH FROM (c.submitted_at - f.first_at)) / 604800)::int AS wk
+        FROM check_ins c JOIN firsts f ON f.patient_id = c.patient_id
+       WHERE c.deleted_at IS NULL
+    )
+    SELECT k AS week,
+      (SELECT count(*)::int FROM firsts f
+         WHERE f.first_at <= now() - ((k + 1) * interval '1 week')) AS eligible,
+      (SELECT count(DISTINCT o.patient_id)::int FROM off o
+         WHERE o.wk = k AND o.patient_id IN (
+           SELECT patient_id FROM firsts f
+            WHERE f.first_at <= now() - ((k + 1) * interval '1 week'))) AS active
+    FROM generate_series(0, 5) AS k ORDER BY k
+  `)).rows;
+
+  return { totals, weekly, retention };
+}
+
 // --- Future-self notes ---
 // A patient's private encouragement to themselves, surfaced back to them on a
 // hard day. Private to the patient — never exposed on the clinician side.
