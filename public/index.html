@@ -5586,6 +5586,95 @@
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que votre concentration, votre mémoire ou votre énergie change et observez vos tendances cognitives et d'humeur au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un neuropsychologue ou non."
   });
 
+  // "For clinics & practices" band — adapt the wording to each field. Audiences
+  // not listed here (therapy, physio/kinesiology/osteo/occupational, neuro) keep
+  // the default clinic/clinician/caseload copy, which already fits them.
+  (function(){
+    Object.assign(SPORTS_EN, {
+      "For clinics & practices":"For teams & clubs",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single coach to a full club — one plan covers the staff, and every coach keeps their own private roster.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The club is billed once. Add coaches as you grow, instead of everyone buying their own.",
+      "Separate caseloads":"Separate rosters",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each coach invites their own athletes and sees only their own. Nothing is shared across the staff.",
+      "Talk to us about your clinic":"Talk to us about your club"
+    });
+    Object.assign(SPORTS_FR, {
+      "For clinics & practices":"Pour les équipes et les clubs",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un club — un forfait couvre le personnel, et chaque entraîneur garde sa propre liste d'athlètes privée.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le club est facturé une seule fois. Ajoutez des entraîneurs à mesure que vous grandissez, au lieu que chacun achète le sien.",
+      "Separate caseloads":"Listes d'athlètes séparées",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque entraîneur invite ses propres athlètes et ne voit que les siens. Rien n'est partagé au sein du personnel.",
+      "Talk to us about your clinic":"Parlez-nous de votre club"
+    });
+    Object.assign(FITNESS_EN, {
+      "For clinics & practices":"For gyms & studios",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single trainer to a full studio — one plan covers the team, and every trainer keeps their own private client list.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The studio is billed once. Add trainers as you grow, instead of everyone buying their own.",
+      "Separate caseloads":"Separate client lists",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each trainer invites their own clients and sees only their own. Nothing is shared across the team.",
+      "Talk to us about your clinic":"Talk to us about your gym"
+    });
+    Object.assign(FITNESS_FR, {
+      "For clinics & practices":"Pour les gyms et les studios",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un studio — un forfait couvre l'équipe, et chaque entraîneur garde sa propre liste de clients privée.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le studio est facturé une seule fois. Ajoutez des entraîneurs à mesure que vous grandissez, au lieu que chacun achète le sien.",
+      "Separate caseloads":"Listes de clients séparées",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque entraîneur invite ses propres clients et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
+      "Talk to us about your clinic":"Parlez-nous de votre gym"
+    });
+    Object.assign(NUTRITION_EN, {
+      "For clinics & practices":"For nutrition practices",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a solo nutritionist to a full practice — one plan covers the team, and every nutritionist keeps their own private client list.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The practice is billed once. Add nutritionists as you grow, instead of everyone buying their own.",
+      "Separate caseloads":"Separate client lists",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each nutritionist invites their own clients and sees only their own. Nothing is shared across the team.",
+      "Talk to us about your clinic":"Talk to us about your practice"
+    });
+    Object.assign(NUTRITION_FR, {
+      "For clinics & practices":"Pour les cabinets de nutrition",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul nutritionniste à tout un cabinet — un forfait couvre l'équipe, et chaque nutritionniste garde sa propre liste de clients privée.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le cabinet est facturé une seule fois. Ajoutez des nutritionnistes à mesure que vous grandissez, au lieu que chacun achète le sien.",
+      "Separate caseloads":"Listes de clients séparées",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque nutritionniste invite ses propres clients et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
+      "Talk to us about your clinic":"Parlez-nous de votre cabinet"
+    });
+    Object.assign(RECOVERY_EN, {
+      "For clinics & practices":"For programs & teams",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a full program — one plan covers the team, and every counsellor keeps their own private group.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The program is billed once. Add counsellors as you grow, instead of everyone buying their own.",
+      "Separate caseloads":"Separate groups",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each counsellor invites their own members and sees only their own. Nothing is shared across the team.",
+      "Talk to us about your clinic":"Talk to us about your program"
+    });
+    Object.assign(RECOVERY_FR, {
+      "For clinics & practices":"Pour les programmes et les équipes",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à tout un programme — un forfait couvre l'équipe, et chaque intervenant garde son propre groupe privé.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le programme est facturé une seule fois. Ajoutez des intervenants à mesure que vous grandissez, au lieu que chacun achète le sien.",
+      "Separate caseloads":"Groupes séparés",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque intervenant invite ses propres membres et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
+      "Talk to us about your clinic":"Parlez-nous de votre programme"
+    });
+    const schoolsEN = {
+      "For clinics & practices":"For schools & boards",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a whole school — one plan covers the staff, and every counsellor keeps their own private student list.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The school is billed once. Add staff as you grow, instead of everyone buying their own.",
+      "Separate caseloads":"Separate student lists",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each counsellor invites their own students and sees only their own. Nothing is shared across the staff.",
+      "Talk to us about your clinic":"Talk to us about your school"
+    };
+    const schoolsFR = {
+      "For clinics & practices":"Pour les écoles et les commissions",
+      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à toute une école — un forfait couvre le personnel, et chaque intervenant garde sa propre liste d'élèves privée.",
+      "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"L'école est facturée une seule fois. Ajoutez du personnel à mesure que vous grandissez, au lieu que chacun achète le sien.",
+      "Separate caseloads":"Listes d'élèves séparées",
+      "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque intervenant invite ses propres élèves et ne voit que les siens. Rien n'est partagé au sein du personnel.",
+      "Talk to us about your clinic":"Parlez-nous de votre école"
+    };
+    Object.assign(SCHOOLS_EN, schoolsEN); Object.assign(SCHOOLS_FR, schoolsFR);
+    // Classroom mode is a copy of SCHOOLS_* made earlier, so apply it too.
+    Object.assign(SCHOOLS_CLASS_EN, schoolsEN); Object.assign(SCHOOLS_CLASS_FR, schoolsFR);
+  })();
+
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
