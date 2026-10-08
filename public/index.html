@@ -1149,6 +1149,13 @@
     color:var(--ink-soft);
     line-height:1.6;
   }
+  .btw-price-value{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--ink);
+    font-weight:600;
+    margin:0 0 10px;
+  }
   .btw-pricing-cards{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
@@ -2671,6 +2678,7 @@
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
         <h2>Pricing for therapists and patients</h2>
+        <p class="btw-price-value">The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.</p>
         <p>Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
         <div class="btw-ccy-toggle" role="group" aria-label="Currency">
           <button type="button" class="btw-ccy-btn active" data-ccy="CAD">CAD</button>
@@ -3234,6 +3242,8 @@
   // up by its exact English text; dynamic strings built in JS go through t().
   const FR = {
     "iPhone & iPad app coming soon":"Application iPhone et iPad bientôt disponible",
+    // Pricing value anchor
+    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":"Le vrai coût, ce n'est pas l'abonnement — ce sont les minutes au début de chaque séance passées à faire le point. Between vous les redonne, et signale les risques entre les visites, pour toutes les personnes que vous accompagnez.",
     // For clinics & practices band
     "For clinics & practices":"Pour les cliniques et cabinets",
     "Bring your whole team onto one plan.":"Réunissez toute votre équipe sur un seul forfait.",
