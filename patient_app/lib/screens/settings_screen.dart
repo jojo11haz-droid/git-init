@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../discipline.dart';
 import '../theme.dart';
+import 'future_note_screen.dart';
 import 'history_screen.dart';
 import 'welcome_screen.dart';
 
@@ -211,6 +212,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s.futureNoteTitle,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                subtitle: Text(s.futureNoteIntro,
+                    style: const TextStyle(
+                        fontSize: 13, color: BtwColors.inkSoft, height: 1.4)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const FutureNoteScreen()),
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             _Section(
               child: ListTile(

@@ -243,6 +243,24 @@ class S {
   String get trendFlaring => _('flaring', 'en hausse');
   String get wasLabel => _('was', 'était');
   String get nowLabel => _('now', 'maintenant');
+  // A note to your future self
+  String get futureNoteTitle =>
+      _('A note to your future self', 'Un mot à votre futur vous');
+  String get futureNoteIntro => _(
+      'Leave yourself something kind for a harder day. Between shows it back to you after a low check-in.',
+      'Laissez-vous un mot bienveillant pour une journée difficile. Between vous le remontre après un suivi plus bas.');
+  String get futureNoteHint =>
+      _('Write a few words…', 'Écrivez quelques mots…');
+  String get saveNote => _('Save note', 'Enregistrer le mot');
+  String get futureNotePremium => _(
+      'Writing a note is part of Premium. You can still read any note you\'ve already saved.',
+      'Écrire un mot fait partie de Premium. Vous pouvez quand même relire les mots déjà enregistrés.');
+  String get futureNoteEmpty =>
+      _('No notes yet.', 'Aucun mot pour l\'instant.');
+  String get noteSaved => _('Saved.', 'Enregistré.');
+  String get delete => _('Delete', 'Supprimer');
+  String get aNoteYouLeft => _(
+      'A note you left yourself', 'Un mot que vous vous êtes laissé');
   String get moodOverTime => _('Mood over time', 'Humeur au fil du temps');
   String checkedInDays(int n) => isFr
       ? 'Suivi fait $n ${n == 1 ? 'jour' : 'jours'} sur les 7 derniers.'

@@ -20,6 +20,11 @@ class Patient {
   // The clinician who invited this patient, if any (null for solo accounts).
   String? get clinicianAccountType => raw['clinician_account_type'] as String?;
   String? get clinicianDiscipline => raw['clinician_discipline'] as String?;
+  bool get isPremium => raw['is_premium'] == true;
+  bool get hasClinician => clinicianAccountType != null;
+  // Writing a future-self note is covered for clinician patients and Premium
+  // individuals (mirrors the server's subscription gate). Reading is always on.
+  bool get canWriteFutureNote => hasClinician || isPremium;
 }
 
 class CheckIn {
@@ -309,4 +314,18 @@ class AppState extends ChangeNotifier {
 
   Future<void> flagInaccurate(String id) =>
       _api.post('/api/patient/check-ins/$id/flag-inaccurate');
+
+  // --- Future-self notes ---
+  // A private note the person leaves for a harder day; surfaced back to them
+  // when a check-in's mood is low. Patient-scoped; never shown to a clinician.
+  Future<List<Map<String, dynamic>>> fetchFutureNotes() async {
+    final data = await _api.get('/api/patient/future-notes') as List;
+    return data.map((e) => (e as Map).cast<String, dynamic>()).toList();
+  }
+
+  Future<void> createFutureNote(String body) =>
+      _api.post('/api/patient/future-notes', {'body': body, 'kind': 'note'});
+
+  Future<void> deleteFutureNote(String id) =>
+      _api.delete('/api/patient/future-notes/$id');
 }
