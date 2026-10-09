@@ -225,6 +225,33 @@ class S {
       'Your check-in was sent and your therapist has been notified — but please don\'t wait on anyone if you\'re in danger right now.',
       'Tes nouvelles ont été envoyées et ton thérapeute a été avisé — mais n\'attends après personne si tu es en danger maintenant.');
   String get undo => _('Didn\'t mean to send it? Undo (15 min)', 'Envoyé par erreur? Annuler (15 min)');
+  // My progress / recovery-over-time view
+  String get myProgress => _('My progress', 'Mes progrès');
+  String get progressLede => _(
+      'A picture of how you\'ve been — the part a checklist can\'t show you.',
+      'Un portrait de comment vous allez — ce qu\'une simple liste ne peut pas montrer.');
+  String get yourRecovery => _('Your recovery', 'Votre rétablissement');
+  String get recoverySub => _(
+      'Where it hurt, and how each spot has changed since you started.',
+      'Où ça faisait mal, et comment chaque zone a changé depuis le début.');
+  String get recoveryAllClear => _(
+      'No sore spots in your latest check-in — nice work.',
+      'Aucune zone sensible dans votre dernier suivi — beau travail.');
+  String get trendCleared => _('cleared', 'disparue');
+  String get trendEasing => _('easing', 'en amélioration');
+  String get trendSteady => _('about the same', 'stable');
+  String get trendFlaring => _('flaring', 'en hausse');
+  String get wasLabel => _('was', 'était');
+  String get nowLabel => _('now', 'maintenant');
+  String get lastTwoWeeks => _('Your last two weeks', 'Vos deux dernières semaines');
+  String get checkInsLabel => _('Check-ins', 'Suivis');
+  String get goodDaysLabel => _('Good days', 'Bonnes journées');
+  String get harderDaysLabel => _('Harder days', 'Journées difficiles');
+  String get progressEmptyTitle =>
+      _('Your progress will show here', 'Vos progrès apparaîtront ici');
+  String get progressEmptyBody => _(
+      'Send a few check-ins and you\'ll see your patterns — and for body check-ins, how your sore spots change over time.',
+      'Envoyez quelques suivis et vous verrez vos tendances — et pour les suivis du corps, comment vos zones sensibles évoluent avec le temps.');
   String get aiSummaryLabel => _('AI summary', 'Résumé IA');
   String get aiReadMood =>
       _('Between read your mood as', 'Between a estimé votre humeur à');

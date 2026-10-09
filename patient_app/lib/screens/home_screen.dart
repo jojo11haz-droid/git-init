@@ -14,6 +14,7 @@ import '../discipline.dart';
 import '../recording_bytes.dart';
 import '../theme.dart';
 import 'history_screen.dart';
+import 'progress_screen.dart';
 import 'sent_screen.dart';
 import 'settings_screen.dart';
 
@@ -277,6 +278,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Wordmark(size: 24),
                   const Spacer(),
+                  IconButton(
+                    tooltip: s.myProgress,
+                    icon: const Icon(Icons.insights_rounded,
+                        color: BtwColors.inkSoft),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ProgressScreen()),
+                    ),
+                  ),
                   IconButton(
                     tooltip: s.myHistory,
                     icon: const Icon(Icons.history_rounded,
