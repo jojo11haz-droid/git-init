@@ -286,6 +286,54 @@ class _BodyMapState extends State<BodyMap> {
   }
 }
 
+/// Read-only body figure(s) coloured by a pain map — reuses the same painter
+/// and regions as the interactive map. Shows front and back side by side.
+class BodyMapView extends StatelessWidget {
+  const BodyMapView({super.key, required this.map, this.width = 108});
+
+  final Map<String, int> map; // "view:region" -> level
+  final double width;
+
+  Widget _figure(String view, List<_Region> regions) {
+    final h = width * 198 / 100;
+    return SizedBox(
+      width: width,
+      height: h,
+      child: CustomPaint(
+        painter: _BodyPainter(
+          regions: regions,
+          levels: {
+            for (final e in map.entries)
+              if (e.key.startsWith('$view:')) e.key.split(':')[1]: e.value
+          },
+          scale: width / 100.0,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _figure('front', _front),
+        const SizedBox(width: 22),
+        _figure('back', _back),
+      ],
+    );
+  }
+}
+
+/// Localised label for a "view:region" pain-map key (e.g. "front:lower_back").
+String regionLabel(String key, bool isFr) {
+  final parts = key.split(':');
+  final id = parts.length > 1 ? parts[1] : key;
+  final r = [..._front, ..._back]
+      .firstWhere((x) => x.id == id, orElse: () => _Region(id, id, id, 0, 0, 0, 0));
+  return isFr ? r.fr : r.en;
+}
+
 class _BodyPainter extends CustomPainter {
   _BodyPainter(
       {required this.regions, required this.levels, required this.scale});

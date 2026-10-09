@@ -40,6 +40,18 @@ class CheckIn {
       (hasAudio ? 'Voice memo (no transcript yet).' : 'Check-in sent.');
   bool get hasAudio => raw['audio_upload_id'] != null;
   bool get isAiSummary => raw['model_version'] != null;
+  // Pain map for body disciplines: { "view:region": level 1..10 }, or null.
+  Map<String, int>? get painMap {
+    final pm = raw['pain_map'];
+    if (pm is Map && pm.isNotEmpty) {
+      final out = <String, int>{};
+      pm.forEach((k, v) {
+        if (v is num) out[k.toString()] = v.toInt();
+      });
+      return out.isEmpty ? null : out;
+    }
+    return null;
+  }
   bool get riskFlag => raw['risk_flag'] == true;
   bool get flaggedInaccurate => raw['patient_flagged_inaccurate'] == true;
   DateTime get submittedAt =>
