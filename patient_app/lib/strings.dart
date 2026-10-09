@@ -243,6 +243,10 @@ class S {
   String get trendFlaring => _('flaring', 'en hausse');
   String get wasLabel => _('was', 'était');
   String get nowLabel => _('now', 'maintenant');
+  String get moodOverTime => _('Mood over time', 'Humeur au fil du temps');
+  String checkedInDays(int n) => isFr
+      ? 'Suivi fait $n ${n == 1 ? 'jour' : 'jours'} sur les 7 derniers.'
+      : 'Checked in on $n of the last 7 days.';
   String get lastTwoWeeks => _('Your last two weeks', 'Vos deux dernières semaines');
   String get checkInsLabel => _('Check-ins', 'Suivis');
   String get goodDaysLabel => _('Good days', 'Bonnes journées');

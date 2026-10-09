@@ -105,6 +105,30 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return _history.where((c) => c.submittedAt.isAfter(cutoff)).toList();
   }
 
+  // Mood values oldest -> newest, last 12, for the trend line.
+  List<int> get _moodSeries {
+    final pts = _history
+        .where((c) => c.mood != null)
+        .map((c) => c.mood!)
+        .toList()
+        .reversed
+        .toList();
+    return pts.length > 12 ? pts.sublist(pts.length - 12) : pts;
+  }
+
+  // Distinct days with a check-in in the last 7 days.
+  int get _daysActiveLast7 {
+    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+    final days = <String>{};
+    for (final c in _history) {
+      if (c.submittedAt.isAfter(cutoff)) {
+        final d = c.submittedAt;
+        days.add('${d.year}-${d.month}-${d.day}');
+      }
+    }
+    return days.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>().s;
@@ -163,8 +187,42 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _recoveryCard(s),
           const SizedBox(height: 16),
         ],
+        if (_moodSeries.length >= 2) ...[
+          _moodCard(s),
+          const SizedBox(height: 16),
+        ],
         _lastTwoWeeksCard(s),
       ],
+    );
+  }
+
+  Widget _moodCard(S s) {
+    final series = _moodSeries;
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CardLabel(s.moodOverTime),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 76,
+            width: double.infinity,
+            child: CustomPaint(painter: _SparklinePainter(series)),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(s.low,
+                  style:
+                      const TextStyle(fontSize: 11, color: BtwColors.inkSoft)),
+              Text(s.high,
+                  style:
+                      const TextStyle(fontSize: 11, color: BtwColors.inkSoft)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -273,6 +331,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
               _stat(hard.toString(), s.harderDaysLabel),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(s.checkedInDays(_daysActiveLast7),
+              style: const TextStyle(
+                  fontSize: 13, height: 1.4, color: BtwColors.inkSoft)),
         ],
       ),
     );
@@ -320,6 +382,53 @@ class _Card extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// A small line chart of mood values (1..10), oldest -> newest.
+class _SparklinePainter extends CustomPainter {
+  _SparklinePainter(this.values);
+  final List<int> values;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2) return;
+    const pad = 6.0;
+    final w = size.width - pad * 2;
+    final h = size.height - pad * 2;
+    double x(int i) => pad + w * (i / (values.length - 1));
+    // Mood 1..10 -> y (10 at top). Clamp to the 1..10 range.
+    double y(int v) {
+      final t = ((v.clamp(1, 10)) - 1) / 9.0;
+      return pad + h * (1 - t);
+    }
+
+    // Baseline.
+    final base = Paint()
+      ..color = BtwColors.line
+      ..strokeWidth = 1;
+    canvas.drawLine(
+        Offset(pad, size.height - pad), Offset(size.width - pad, size.height - pad), base);
+
+    final path = Path()..moveTo(x(0), y(values[0]));
+    for (var i = 1; i < values.length; i++) {
+      path.lineTo(x(i), y(values[i]));
+    }
+    final line = Paint()
+      ..color = BtwColors.moss
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, line);
+
+    final dot = Paint()..color = BtwColors.moss;
+    for (var i = 0; i < values.length; i++) {
+      canvas.drawCircle(Offset(x(i), y(values[i])), i == values.length - 1 ? 4 : 2.4, dot);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparklinePainter old) => old.values != values;
 }
 
 class _CardLabel extends StatelessWidget {
