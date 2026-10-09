@@ -1748,8 +1748,8 @@
   .btw-solo-step p{font-size:12.5px;line-height:1.55;color:var(--ink-soft);margin:0;max-width:none;text-align:left;}
   .btw-forclinics{margin-top:44px;}
   .btw-recovery{margin-top:44px;text-align:center;}
-  .btw-rec-wrap{display:flex;align-items:center;justify-content:center;gap:20px;margin:22px 0 18px;flex-wrap:wrap;}
-  .btw-rec-fig{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid var(--line);border-radius:16px;}
+  .btw-rec-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px 0 18px;flex-wrap:wrap;}
+  .btw-rec-fig{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;background:#fff;border:1px solid var(--line);border-radius:16px;}
   .btw-rec-when{font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
   .btw-rec-arrow{color:var(--moss);}
   .btw-rec-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
@@ -2435,8 +2435,10 @@
         <p class="btw-demo-lead">Patients don't just rate their pain — they watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.</p>
         <div class="btw-rec-wrap">
           <div class="btw-rec-fig"><div class="btw-rec-when">Week 1</div><div id="btwRecThen"></div></div>
-          <div class="btw-rec-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
-          <div class="btw-rec-fig"><div class="btw-rec-when">This week</div><div id="btwRecNow"></div></div>
+          <div class="btw-rec-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+          <div class="btw-rec-fig"><div class="btw-rec-when">Week 3</div><div id="btwRecMid"></div></div>
+          <div class="btw-rec-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+          <div class="btw-rec-fig"><div class="btw-rec-when">Now</div><div id="btwRecNow"></div></div>
         </div>
         <div class="btw-rec-chips">
           <span class="btw-rec-chip">Lower back — easing · was 8, now 3</span>
@@ -3412,6 +3414,8 @@
     "Your recovery, seen":"Votre rétablissement, en images",
     "Patients don't just rate their pain — they watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.":"Les patients ne font pas que noter leur douleur — ils la voient s'estomper. Between montre à chacun son propre rétablissement au fil du temps, ce qu'une liste d'exercices ne fait jamais.",
     "Week 1":"Semaine 1",
+    "Week 3":"Semaine 3",
+    "Now":"Maintenant",
     "This week":"Cette semaine",
     "Lower back — easing · was 8, now 3":"Bas du dos — en amélioration · était 8, maintenant 3",
     "Right shoulder — cleared":"Épaule droite — disparue",
@@ -7444,8 +7448,9 @@
   // (visibility toggled in translateStatic).
   (function(){
     const thenEl = document.getElementById('btwRecThen');
+    const midEl = document.getElementById('btwRecMid');
     const nowEl = document.getElementById('btwRecNow');
-    if(!thenEl || !nowEl) return;
+    if(!thenEl || !midEl || !nowEl) return;
     const FILL = ['transparent','#7FB84F','#9CC63E','#C9D630','#EAC72E','#F0AE33','#EF8E38','#EA6F3B','#DE5238','#CF3B33','#C0392B'];
     const GREY = '#D7DBE3';
     const BASE = [
@@ -7472,12 +7477,13 @@
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     function shape(m, fill){ return '<' + m.el + attrs(m.a) + ' fill="' + fill + '"></' + m.el + '>'; }
     function fig(marks){
-      var g = '<svg viewBox="0 0 100 198" width="76" height="150" aria-hidden="true">';
+      var g = '<svg viewBox="0 0 100 198" width="66" height="131" aria-hidden="true">';
       BASE.forEach(function(b){ g += shape(b, GREY); });
       marks.forEach(function(m){ if(m.level > 0) g += shape(m, FILL[m.level]); });
       return g + '</svg>';
     }
     thenEl.innerHTML = fig([Object.assign({level:8}, LOWER_BACK), Object.assign({level:5}, R_SHOULDER)]);
+    midEl.innerHTML = fig([Object.assign({level:5}, LOWER_BACK)]);
     nowEl.innerHTML = fig([Object.assign({level:3}, LOWER_BACK)]);
   })();
 
