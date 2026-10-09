@@ -89,6 +89,14 @@ class AppState extends ChangeNotifier {
   Patient? patient;
   bool restoring = true;
 
+  /// Shown once, right after a brand-new account is created (signup or accepted
+  /// invite), between consent and the home screen. Not shown to returning users.
+  bool showOnboarding = false;
+  void finishOnboarding() {
+    showOnboarding = false;
+    notifyListeners();
+  }
+
   /// Whether the person has connected Apple Health (persisted locally).
   bool healthConnected = false;
   bool get healthSupported => _health.isSupported;
@@ -181,6 +189,7 @@ class AppState extends ChangeNotifier {
       'email': email,
       'password': password,
     });
+    showOnboarding = true; // brand-new account → show the intro once
     await _storeSession((data as Map).cast<String, dynamic>());
   }
 
@@ -195,6 +204,7 @@ class AppState extends ChangeNotifier {
       'guardianAck': true,
       'plan': 'free',
     });
+    showOnboarding = true; // brand-new account → show the intro once
     await _storeSession((data as Map).cast<String, dynamic>());
   }
 

@@ -243,6 +243,22 @@ class S {
   String get trendFlaring => _('flaring', 'en hausse');
   String get wasLabel => _('was', 'était');
   String get nowLabel => _('now', 'maintenant');
+  // First-run onboarding
+  String get skip => _('Skip', 'Passer');
+  String get onbNext => _('Next', 'Suivant');
+  String get onbStart => _('Start my first check-in', 'Faire mon premier suivi');
+  String get onbTitle1 => _('Check in, your way', 'Un suivi, à votre façon');
+  String get onbBody1 => _(
+      'Write a line, record a quick voice memo, or tap where it hurts. Thirty seconds, whenever something comes up.',
+      'Écrivez un mot, enregistrez un court mémo vocal ou touchez où ça fait mal. Trente secondes, dès que quelque chose survient.');
+  String get onbTitle2 => _('Watch your patterns', 'Voyez vos tendances');
+  String get onbBody2 => _(
+      'Between gathers your check-ins into a clear picture over time — your mood, your sore spots, your recovery.',
+      'Between rassemble vos suivis en un portrait clair au fil du temps — votre humeur, vos zones sensibles, votre rétablissement.');
+  String get onbTitle3 => _('Private by default', 'Privé par défaut');
+  String get onbBody3 => _(
+      'Your check-ins are yours. Shared only with the person supporting you, and only if you have one. You can delete everything anytime.',
+      'Vos suivis vous appartiennent. Partagés seulement avec la personne qui vous accompagne, et seulement si vous en avez une. Vous pouvez tout supprimer en tout temps.');
   // A note to your future self
   String get futureNoteTitle =>
       _('A note to your future self', 'Un mot à votre futur vous');

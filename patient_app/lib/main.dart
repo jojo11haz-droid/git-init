@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'app_state.dart';
 import 'screens/consent_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'theme.dart';
 
@@ -50,6 +51,7 @@ class _Gate extends StatelessWidget {
     }
     if (!state.signedIn) return const WelcomeScreen();
     if (!state.patient!.hasRecordedConsent) return const ConsentScreen();
+    if (state.showOnboarding) return const OnboardingScreen();
     return const HomeScreen();
   }
 }
