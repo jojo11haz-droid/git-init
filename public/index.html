@@ -2443,6 +2443,11 @@
             <h4>Fits your stack</h4>
             <p>Between does one thing well: the between-visit check-in. It runs alongside whatever practice, notes or exercise software you already use — nothing to switch, nothing to migrate.</p>
           </div>
+          <div class="btw-feature">
+            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+            <h4>Gentle reminders</h4>
+            <p>Patients get an automatic nudge on their own schedule, by text or email. Nothing for you to send, no one left to chase between visits.</p>
+          </div>
         </div>
       </section>
 
@@ -3422,6 +3427,8 @@
     "Clients see their progress":"Les clients voient leurs progrès",
     "Between shows each client their own recovery over time — sore spots easing week by week, good days adding up. The feedback loop that keeps them checking in.":"Between montre à chaque client son propre rétablissement au fil du temps — les zones sensibles qui s'apaisent semaine après semaine, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.",
     "Fits your stack":"S'intègre à vos outils",
+    "Gentle reminders":"Rappels en douceur",
+    "Patients get an automatic nudge on their own schedule, by text or email. Nothing for you to send, no one left to chase between visits.":"Les patients reçoivent un rappel automatique selon leur propre horaire, par texto ou courriel. Rien à envoyer de votre côté, personne à relancer entre les visites.",
     "Between does one thing well: the between-visit check-in. It runs alongside whatever practice, notes or exercise software you already use — nothing to switch, nothing to migrate.":"Between fait une chose, bien : le suivi entre les visites. Il fonctionne avec le logiciel de gestion, de notes ou d'exercices que vous utilisez déjà — rien à changer, rien à migrer.",
     "Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.":"Des ressources de crise sont montrées au patient immédiatement si un langage à risque est détecté. Sans jamais attendre personne.",
     // trust / cta
@@ -5984,7 +5991,7 @@
     document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features, .btw-forclinics').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
     // The "Your recovery, seen" showcase is a pain-map story — physical fields only.
     var _recEl = document.getElementById('btwRecovery');
-    if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
+    if(_recEl) _recEl.style.display = (['therapy','physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
     renderHeroThread();
     applyCurrency();
   }
