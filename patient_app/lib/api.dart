@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
@@ -68,6 +69,18 @@ class ApiClient {
   }
 
   Future<dynamic> get(String path) => _send('GET', path);
+
+  /// Authenticated GET returning raw bytes (e.g. the patient's own photo).
+  Future<Uint8List> getBytes(String path) async {
+    final response = await http
+        .get(resolveApiUri(path), headers: _headers())
+        .timeout(const Duration(seconds: 30));
+    if (response.statusCode >= 400) {
+      throw ApiException(
+          response.statusCode, 'Could not load (${response.statusCode}).');
+    }
+    return response.bodyBytes;
+  }
   Future<dynamic> post(String path, [Object? body]) =>
       _send('POST', path, body ?? const {});
   Future<dynamic> delete(String path) => _send('DELETE', path);

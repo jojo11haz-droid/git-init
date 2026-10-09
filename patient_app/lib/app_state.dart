@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -43,6 +44,8 @@ class CheckIn {
       (raw['summary_text'] as String?) ??
       (raw['raw_text'] as String?) ??
       (hasAudio ? 'Voice memo (no transcript yet).' : 'Check-in sent.');
+  String? get rawText => raw['raw_text'] as String?;
+  bool get hasPhoto => raw['photo_upload_id'] != null;
   bool get hasAudio => raw['audio_upload_id'] != null;
   bool get isAiSummary => raw['model_version'] != null;
   // Pain map for body disciplines: { "view:region": level 1..10 }, or null.
@@ -315,6 +318,10 @@ class AppState extends ChangeNotifier {
         .map((row) => CheckIn((row as Map).cast<String, dynamic>()))
         .toList();
   }
+
+  /// The patient's own sore-area photo for a check-in (authed bytes).
+  Future<Uint8List> fetchCheckInPhoto(String id) =>
+      _api.getBytes('/api/patient/check-ins/$id/photo');
 
   /// Grace-period undo for a just-sent check-in.
   Future<void> undoCheckIn(String id) => _api.delete('/api/patient/check-ins/$id');
