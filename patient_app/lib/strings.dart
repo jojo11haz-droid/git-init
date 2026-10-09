@@ -243,6 +243,13 @@ class S {
   String get trendFlaring => _('flaring', 'en hausse');
   String get wasLabel => _('was', 'était');
   String get nowLabel => _('now', 'maintenant');
+  // Check-in detail
+  String get checkInDetail => _('Check-in', 'Suivi');
+  String get yourWords => _('Your words', 'Vos mots');
+  String get painMapLabel => _('Pain map', 'Carte de la douleur');
+  String get photoLabel => _('Photo', 'Photo');
+  String get photoUnavailable =>
+      _('Photo unavailable.', 'Photo indisponible.');
   // First-run onboarding
   String get skip => _('Skip', 'Passer');
   String get onbNext => _('Next', 'Suivant');

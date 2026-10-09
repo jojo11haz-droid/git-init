@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../app_state.dart';
 import '../theme.dart';
+import 'checkin_detail_screen.dart';
 
 /// The patient's own history — every check-in on file, exactly what the
 /// therapist can see. AI summaries are labeled, and each can be flagged as
@@ -100,7 +101,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, i) {
                 final c = items[i];
-                return Container(
+                return GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => CheckInDetailScreen(checkIn: c)),
+                  ),
+                  child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -201,6 +207,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ],
                     ],
                   ),
+                ),
                 );
               },
             );
