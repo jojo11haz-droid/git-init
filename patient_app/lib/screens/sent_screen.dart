@@ -19,6 +19,28 @@ class SentScreen extends StatefulWidget {
 
 class _SentScreenState extends State<SentScreen> {
   bool _undoing = false;
+  String? _futureNote; // a note they left themselves, surfaced on a low day
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeSurfaceNote();
+  }
+
+  // On a low check-in (no crisis), gently show the most recent note they left
+  // for their future self. Best-effort; silent on any failure.
+  Future<void> _maybeSurfaceNote() async {
+    final c = widget.result.checkIn;
+    if (widget.result.crisis != null || c.mood == null || c.mood! > 4) return;
+    try {
+      final notes = await context.read<AppState>().fetchFutureNotes();
+      if (!mounted || notes.isEmpty) return;
+      final body = notes.first['body'] as String?;
+      if (body != null && body.trim().isNotEmpty) {
+        setState(() => _futureNote = body.trim());
+      }
+    } catch (_) {/* best effort */}
+  }
 
   Future<void> _undo() async {
     final s = context.read<AppState>().s;
@@ -98,6 +120,10 @@ class _SentScreenState extends State<SentScreen> {
                           _AiSummaryCard(
                               checkIn: widget.result.checkIn, s: s),
                         ],
+                        if (_futureNote != null) ...[
+                          const SizedBox(height: 20),
+                          _FutureNoteCard(note: _futureNote!, s: s),
+                        ],
                       ],
                       const SizedBox(height: 24),
                     ],
@@ -124,6 +150,52 @@ class _SentScreenState extends State<SentScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A note the person left for their future self, surfaced gently on a low day.
+class _FutureNoteCard extends StatelessWidget {
+  const _FutureNoteCard({required this.note, required this.s});
+
+  final String note;
+  final S s;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: BtwColors.amberBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: BtwColors.amber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.favorite_rounded,
+                  size: 14, color: BtwColors.amberInk),
+              const SizedBox(width: 6),
+              Text(
+                s.aNoteYouLeft.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 0.6,
+                  fontWeight: FontWeight.w700,
+                  color: BtwColors.amberInk,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(note,
+              style: const TextStyle(
+                  fontSize: 15, height: 1.5, color: BtwColors.ink)),
+        ],
       ),
     );
   }
