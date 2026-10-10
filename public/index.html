@@ -5991,7 +5991,7 @@
     document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features, .btw-forclinics').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
     // The "Your recovery, seen" showcase is a pain-map story — physical fields only.
     var _recEl = document.getElementById('btwRecovery');
-    if(_recEl) _recEl.style.display = (['therapy','physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
+    if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
     renderHeroThread();
     applyCurrency();
   }
@@ -11235,7 +11235,10 @@
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
     else if (['individual','myself','me','self','personal','solo','yourself'].includes(forParam)) _startAud = 'individual';
   } catch(e){}
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'occupational' || s === 'neuropsych' || s === 'nutrition') ? s : 'therapy'; } } catch(e){}
+  // Default landing field is physiotherapy (the beachhead) when the visitor has
+  // no explicit field: an explicit /field URL, a ?for= link, a signed-in account
+  // and a previously-chosen (remembered) field all still win over this default.
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'occupational' || s === 'neuropsych' || s === 'nutrition' || s === 'therapy') ? s : 'physio'; } } catch(e){}
   curAudience = (_startAud === 'individual' || _startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'occupational' || _startAud === 'neuropsych' || _startAud === 'nutrition') ? _startAud : 'therapy';
   try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
