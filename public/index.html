@@ -533,6 +533,17 @@
     border-bottom:1px solid var(--line);
   }
   .btw-entry:last-child{border-bottom:none;}
+  .btw-timeline-more{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:12px;
+    background:transparent;color:var(--moss);
+    border:1px solid var(--line);border-radius:100px;
+    padding:8px 15px;font-family:var(--font-body);font-weight:600;font-size:12.5px;
+    cursor:pointer;transition:background .2s ease,border-color .2s ease;
+  }
+  .btw-timeline-more:hover{background:var(--moss-light);border-color:var(--moss);}
+  .btw-timeline-more svg{transition:transform .2s ease;}
+  .btw-timeline-more.open svg{transform:rotate(180deg);}
   .btw-entry-time{
     font-family:var(--font-mono);
     font-size:10.5px;
@@ -3772,6 +3783,7 @@
     "mood mostly":"humeur surtout","pain mostly":"douleur surtout",
     "and improving":"et en amélioration","and slipping":"et en recul","and holding steady":"et stable",
     "came up most":"est revenu le plus souvent",
+    "See more":"Voir plus","See less":"Voir moins",
     "Your week, reflected":"Votre semaine, en réflexion",
     "You checked in":"Vous avez fait un suivi","time":"fois","times":"fois",
     "more than the week before":"plus que la semaine précédente",
@@ -10486,10 +10498,24 @@
       + '</div>';
   }
 
+  // The timeline can run long, so by default it shows just the two most recent
+  // check-ins with a "See more" toggle to open the full history. The expanded
+  // state is kept per patient (and reset when you switch) so a background
+  // refresh doesn't snap it shut while you're reading.
+  let timelineExpandedFor = null;
   function renderTimeline(){
     const el = document.getElementById('btwTimeline');
     const sorted = [...state.checkIns].sort((a,b)=>b.time-a.time);
-    el.innerHTML = sorted.length ? sorted.map(c=>{
+    const tlKey = state.selectedPatientId || (isPatient() ? 'self' : null);
+    const INITIAL = 2;
+    const collapsible = sorted.length > INITIAL;
+    const expanded = timelineExpandedFor === tlKey && tlKey != null;
+    const shown = (collapsible && !expanded) ? sorted.slice(0, INITIAL) : sorted;
+    const caret = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    const toggleHtml = collapsible
+      ? `<button type="button" id="btwTimelineToggle" class="btw-timeline-more${expanded?' open':''}">${expanded ? esc(t('See less')) : esc(t('See more')) + ' (' + (sorted.length - INITIAL) + ')'}${caret}</button>`
+      : '';
+    el.innerHTML = sorted.length ? shown.map(c=>{
       const [datePart,timePart] = fmtTimeParts(c.time);
       const tagsHtml = c.tags.map(tg=>`<span class="btw-entry-tag">${esc(curLang==='fr'?(FR[tg]||tg):tg)}</span>`).join('') + (c.risk ? `<span class="btw-entry-risk-tag">${esc(t('safety flag'))}</span>` : '');
       // Show how the check-in was sent so the clinician can tell a guided
@@ -10523,7 +10549,14 @@
           ${painHtml}
         </div>
       </div>`;
-    }).join('') : (isPatient() ? journalWelcomeHtml() : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>');
+    }).join('') + toggleHtml : (isPatient() ? journalWelcomeHtml() : '<div style="padding:14px 0;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No check-ins yet.'))+'</div>');
+    const toggle = document.getElementById('btwTimelineToggle');
+    if(toggle){
+      toggle.addEventListener('click', function(){
+        timelineExpandedFor = expanded ? null : tlKey;
+        renderTimeline();
+      });
+    }
     // Attach a read-only body map to each entry that has one.
     el.querySelectorAll('.btw-ci-pain[data-pain]').forEach(function(host){
       const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
