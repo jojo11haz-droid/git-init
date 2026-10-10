@@ -6219,6 +6219,11 @@
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
     else if(state.me.account_type === 'school' && curAudience !== 'schools') setAudience('schools');
     else if(state.me.account_type === 'trainer' && curAudience !== 'fitness') setAudience('fitness');
+    // A therapist carries no discipline, so pin them to the therapy wording
+    // explicitly. The landing default is physio, so without this a signed-in
+    // therapist would inherit physio labels (e.g. the pane eyebrow) even though
+    // their check-ins correctly read as mood.
+    else if(state.me.account_type === 'therapist' && curAudience !== 'therapy') setAudience('therapy');
   }
 
   // The field an account is tied to. A subscription is for one field, so a
