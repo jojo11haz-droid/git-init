@@ -1076,6 +1076,16 @@
   .btw-photo-remove{background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
   .btw-photo-remove:hover{color:var(--ink);}
   .btw-ci-photo img{max-width:150px;max-height:150px;object-fit:cover;border-radius:9px;border:1px solid var(--line);margin:6px 0 2px;display:block;}
+  /* The timeline thumbnail is a small preview; clicking it opens the full photo
+     in a lightbox so the professional can look closely without leaving the page. */
+  .btw-photo-zoom{display:inline-block;position:relative;cursor:zoom-in;}
+  .btw-photo-zoom::after{content:"";position:absolute;right:8px;bottom:8px;width:20px;height:20px;border-radius:50%;background:rgba(27,31,38,.55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'/%3E%3C/svg%3E") center/12px no-repeat;opacity:0;transition:opacity .15s ease;pointer-events:none;}
+  .btw-photo-zoom:hover::after{opacity:1;}
+  .btw-lightbox{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;background:rgba(20,22,27,.82);padding:28px;cursor:zoom-out;}
+  .btw-lightbox.show{display:flex;}
+  .btw-lightbox img{max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.5);cursor:default;}
+  .btw-lightbox-close{position:absolute;top:18px;right:22px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease;}
+  .btw-lightbox-close:hover{background:rgba(255,255,255,.26);}
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
@@ -2724,6 +2734,11 @@
     </div>
   </div>
 
+  <div class="btw-lightbox" id="btwLightbox" role="dialog" aria-modal="true" aria-label="Photo">
+    <button class="btw-lightbox-close" id="btwLightboxClose" aria-label="Close">&times;</button>
+    <img id="btwLightboxImg" alt="">
+  </div>
+
   <div class="btw-view" id="btwViewPricing">
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
@@ -3924,6 +3939,7 @@
     "records added. Trends updated.":"données ajoutées. Tendances mises à jour.",
     "Take or add a photo":"Prendre ou ajouter une photo","Remove":"Retirer",
     "Photo of the sore area":"Photo de la zone douloureuse",
+    "Open photo":"Ouvrir la photo",
     "Please choose an image file.":"Veuillez choisir un fichier image.",
     "That image is too large. Please choose one under 12 MB.":"Cette image est trop grande. Veuillez en choisir une de moins de 12 Mo.",
     "Front":"Avant","Back":"Arrière","Pain map":"Carte de douleur","Where it hurts":"Où ça fait mal",
@@ -10537,9 +10553,9 @@
       if(c.hasPhoto){
         if(!isPatient() && state.selectedPatientId){
           const u = `/api/patients/${esc(state.selectedPatientId)}/check-ins/${esc(c.id)}/photo`;
-          photoHtml = `<div class="btw-ci-photo"><a href="${u}" target="_blank" rel="noopener"><img loading="lazy" src="${u}" alt="${esc(t('Photo of the sore area'))}"></a></div>`;
+          photoHtml = `<div class="btw-ci-photo"><a class="btw-photo-zoom" href="${u}" rel="noopener" aria-label="${esc(t('Open photo'))}"><img loading="lazy" src="${u}" alt="${esc(t('Photo of the sore area'))}"></a></div>`;
         } else if(isPatient()){
-          photoHtml = `<div class="btw-ci-photo"><img data-photo-ci="${esc(c.id)}" alt="${esc(t('Photo of the sore area'))}"></div>`;
+          photoHtml = `<div class="btw-ci-photo"><span class="btw-photo-zoom" role="button" tabindex="0" aria-label="${esc(t('Open photo'))}"><img data-photo-ci="${esc(c.id)}" alt="${esc(t('Photo of the sore area'))}"></span></div>`;
         }
       }
       return `<div class="btw-entry">
@@ -10911,6 +10927,41 @@
     document.getElementById('btwStatsClose').addEventListener('click', close);
     overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
     document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && overlay.style.display==='flex') close(); });
+  })();
+
+  // Lightbox for timeline photos: click a thumbnail to see the sore-area photo
+  // full size without leaving the dashboard. Works for the clinician (the image
+  // is a cookie-authed URL) and the patient's own view (a loaded blob URL) —
+  // either way we open whatever src the thumbnail resolved to at click time.
+  (function wireLightbox(){
+    const box = document.getElementById('btwLightbox');
+    const img = document.getElementById('btwLightboxImg');
+    const closeBtn = document.getElementById('btwLightboxClose');
+    if(!box || !img || !closeBtn) return;
+    const open = (src, alt)=>{ img.src = src; img.alt = alt || ''; box.classList.add('show'); };
+    const close = ()=>{ box.classList.remove('show'); img.removeAttribute('src'); };
+    window.__btwOpenLightbox = open;
+    // Delegate so it covers every photo the timeline re-renders.
+    document.addEventListener('click', (e)=>{
+      const zoom = e.target.closest && e.target.closest('.btw-photo-zoom');
+      if(!zoom) return;
+      const photo = zoom.querySelector('img');
+      const src = (photo && (photo.currentSrc || photo.src)) || zoom.getAttribute('href');
+      if(!src) return; // photo hasn't loaded yet, let the link fall through
+      e.preventDefault();
+      open(src, photo ? photo.alt : '');
+    });
+    // Keyboard affordance for the patient view's non-anchor trigger.
+    document.addEventListener('keydown', (e)=>{
+      if((e.key==='Enter'||e.key===' ') && document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('btw-photo-zoom')){
+        const photo = document.activeElement.querySelector('img');
+        const src = (photo && (photo.currentSrc || photo.src)) || document.activeElement.getAttribute('href');
+        if(src){ e.preventDefault(); open(src, photo ? photo.alt : ''); }
+      }
+    });
+    closeBtn.addEventListener('click', close);
+    box.addEventListener('click', (e)=>{ if(e.target===box) close(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && box.classList.contains('show')) close(); });
   })();
 
   function renderAlertBanner(){
