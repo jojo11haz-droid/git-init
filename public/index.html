@@ -380,17 +380,17 @@
   }
   .btw-patient-del:hover{background:var(--clay);color:#fff;}
   .btw-digest{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:12px 14px;
+    background:transparent;
+    border:none;
+    border-radius:0;
+    padding:2px 2px 0;
     font-size:12.5px;
     line-height:1.6;
-    color:var(--ink);
-    margin-bottom:16px;
+    color:var(--ink-soft);
+    margin-bottom:22px;
   }
   .btw-digest strong{color:var(--moss);}
-  .btw-week-summary{background:var(--moss-light);border:1px solid var(--moss-light);border-radius:12px;padding:12px 15px;margin-bottom:16px;}
+  .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
   .btw-reflection{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#fff 0%,var(--moss-light) 140%);padding:15px 16px;margin-bottom:16px;}
@@ -415,15 +415,15 @@
   .btw-onboard-foot{font-size:11.5px;color:var(--ink-soft);margin-top:12px;line-height:1.5;}
   .btw-insights{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-    gap:10px;
-    margin-bottom:16px;
+    grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
+    gap:14px;
+    margin-bottom:24px;
   }
   .btw-insight{
     background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:11px 13px;
+    border:1px solid transparent;
+    border-radius:13px;
+    padding:14px 16px;
   }
   .btw-insight-label{
     font-family:var(--font-mono);
@@ -431,9 +431,9 @@
     letter-spacing:0.05em;
     text-transform:uppercase;
     color:var(--ink-soft);
-    margin-bottom:4px;
+    margin-bottom:5px;
   }
-  .btw-insight-value{font-size:15px;font-weight:600;color:var(--ink);line-height:1.35;}
+  .btw-insight-value{font-size:15.5px;font-weight:600;color:var(--ink);line-height:1.35;}
   .btw-insight-value .up{color:var(--moss);}
   .btw-insight-value .down{color:var(--clay);}
   .btw-insight-sub{font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.4;}
@@ -486,14 +486,14 @@
   .btw-charts{
     display:grid;
     grid-template-columns:1.3fr 1fr;
-    gap:16px;
-    margin-bottom:20px;
+    gap:18px;
+    margin-bottom:26px;
   }
   @media (max-width:520px){.btw-charts{grid-template-columns:1fr;}}
   .btw-chart-box{
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:14px;
+    border:1px solid transparent;
+    border-radius:13px;
+    padding:16px 18px;
     background:var(--paper);
   }
   .btw-chart-title{
@@ -9715,6 +9715,23 @@
     Panic:'#9C4A4A', Family:'#8C7AA8', Win:'#1E4C86', Social:'#5B8A72',
     Health:'#4C8C7A', Money:'#8A7B3B', Loneliness:'#6B7B9C', Anger:'#A23B3B', Other:'#8A8A8A'
   };
+  // Disciplines outside therapy (physio, sports, nutrition…) bring their own
+  // themes — pain, exercise, progress, flare — that aren't in the map above, so
+  // without help they'd all fall back to grey and the pie would be one flat
+  // disc. We match known themes case-insensitively and hand anything new a
+  // distinct colour from a shared palette, so every theme reads as its own slice.
+  const tagColorsLc = {};
+  Object.keys(tagColors).forEach(function(k){ tagColorsLc[k.toLowerCase()] = tagColors[k]; });
+  const THEME_PALETTE = ['#1E4C86','#5B8A72','#B08968','#7A93A8','#8C7AA8','#4C8C7A','#C98A3B','#9C6B8A','#6B8CA8','#8A7B3B','#A2585B','#5E7E6B'];
+  function themeColorMap(tags){
+    const map = {}; let pi = 0;
+    tags.forEach(function(tag){
+      const lc = String(tag).toLowerCase();
+      if(tagColorsLc[lc] && lc !== 'other'){ map[tag] = tagColorsLc[lc]; }
+      else { map[tag] = THEME_PALETTE[pi % THEME_PALETTE.length]; pi++; }
+    });
+    return map;
+  }
 
   const moodEl = document.getElementById('btwMood');
   const moodValEl = document.getElementById('btwMoodVal');
@@ -10137,13 +10154,11 @@
   // Green: doing well (7+). Orange: middle (4-6). Red: needs attention now
   // (a safety flag, or a very low mood) — reach out as soon as you can.
   function statusPing(p){
-    let cls = 'none', label = t('No check-ins yet');
-    if(p.has_recent_risk){ cls = 'high'; label = t('Needs attention now'); }
-    else if(p.last_mood != null){
-      if(p.last_mood <= 3){ cls = 'high'; label = t('Needs attention now'); }
-      else if(p.last_mood <= 6){ cls = 'mid'; label = t('Doing okay'); }
-      else { cls = 'good'; label = t('Doing well'); }
-    }
+    // Same rule as the caseload grouping, so the dot and the group a card sits
+    // in always agree — including the pain-aware flip for physio-style scores.
+    const cls = patientColor(p);
+    const LABELS = { high: t('Needs attention now'), mid: t('Doing okay'), good: t('Doing well'), none: t('No check-ins yet') };
+    const label = LABELS[cls] || LABELS.none;
     return '<span class="btw-ping ' + cls + '" title="' + esc(label) + '" aria-label="' + esc(label) + '"></span>';
   }
   // The status colour of a patient, same rule as the dot: red (high) when
@@ -10152,6 +10167,13 @@
   function patientColor(p){
     if(p.has_recent_risk) return 'high';
     if(p.last_mood == null) return 'none';
+    // The scalar means pain for physio-style disciplines (higher = worse), so
+    // the status scale flips: high pain needs attention, low pain reads well.
+    if(painMode()){
+      if(p.last_mood >= 7) return 'high';
+      if(p.last_mood >= 4) return 'mid';
+      return 'good';
+    }
     if(p.last_mood <= 3) return 'high';
     if(p.last_mood <= 6) return 'mid';
     return 'good';
@@ -10555,17 +10577,21 @@
     const counts = {};
     state.checkIns.forEach(c=> c.tags.forEach(t=> counts[t]=(counts[t]||0)+1));
     const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
+    // Assign colours by frequency so the biggest slices get the lead palette
+    // tones, and pie and legend stay in step since both read the same map.
+    const ordered = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const colorMap = themeColorMap(ordered.map(([tag])=>tag));
     let acc = 0;
     const stops = Object.entries(counts).map(([tag,count])=>{
       const start = (acc/total)*360;
       acc += count;
       const end = (acc/total)*360;
-      const color = tagColors[tag] || tagColors.Other;
+      const color = colorMap[tag] || tagColors.Other;
       return `${color} ${start}deg ${end}deg`;
     });
     document.getElementById('btwPie').style.background = stops.length ? `conic-gradient(${stops.join(',')})` : '#E4E3DD';
-    document.getElementById('btwLegend').innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([tag,count])=>{
-      const color = tagColors[tag]||tagColors.Other;
+    document.getElementById('btwLegend').innerHTML = ordered.map(([tag,count])=>{
+      const color = colorMap[tag] || tagColors.Other;
       return `<div><span class="btw-legend-dot" style="background:${color}"></span>${esc(curLang==='fr'?(FR[tag]||tag):tag)} (${count})</div>`;
     }).join('');
   }
@@ -10670,29 +10696,10 @@
       const rest = ins.topThemes.slice(1).map(([tag])=>themeName(tag)).join(' · ');
       cards.push(card(t('Recurring themes'), esc(themeName(top[0])) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + top[1] + '×)</span>', rest ? t('also') + ': ' + rest : ''));
     }
-    // Themes that line up with lower / higher moods than usual.
-    if(ins.avg != null && ins.themeMood && ins.themeMood.length){
-      const byScore = [...ins.themeMood].sort((a,b)=>a.avg-b.avg);
-      const lowest = byScore[0];
-      const highest = byScore[byScore.length-1];
-      const span = (v)=> ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">' + esc(scoreWord(v)) + ' (' + v.toFixed(1) + '/10)</span>';
-      // The "concern" theme is the lowest mood, or for pain the highest pain.
-      const concern = pm ? highest : lowest;
-      const good = pm ? lowest : highest;
-      const concernGap = pm ? (highest.avg - ins.avg) : (ins.avg - lowest.avg);
-      const goodGap = pm ? (ins.avg - lowest.avg) : (highest.avg - ins.avg);
-      if(concern && concernGap >= 0.8){
-        cards.push(card(pm ? t('Tied to more pain') : t('Tied to lower mood'), '<span class="down">' + esc(themeName(concern.tag)) + '</span>' + span(concern.avg), t('vs') + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
-      }
-      if(good && good.tag !== concern.tag && goodGap >= 0.8){
-        cards.push(card(pm ? t('Tied to less pain') : t('Tied to better mood'), '<span class="up">' + esc(themeName(good.tag)) + '</span>' + span(good.avg), t('vs') + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + ') ' + t('overall')));
-      }
-    }
-    // How steady the score has been.
-    if(ins.moodSd != null){
-      const label = ins.moodSd < 1.2 ? t('steady') : (ins.moodSd < 2.2 ? t('some ups and downs') : t('highly variable'));
-      cards.push(card(pm ? t('Pain stability') : t('Mood stability'), esc(label), '±' + ins.moodSd.toFixed(1) + ' ' + t('pts')));
-    }
+    // A safety flag always earns its place in the at-a-glance row. The deeper
+    // correlations (which themes track with more/less pain, how steady the
+    // score has been) live in "View advanced stats" so this row stays a clean,
+    // scannable set of headline cards rather than a dense wall of boxes.
     if(ins.recentRisk > 0 && !isPatient()){
       cards.push(card(t('Safety flags'), String(ins.recentRisk), t('in the last 14 days')));
     }
