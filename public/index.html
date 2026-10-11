@@ -3739,6 +3739,13 @@
     "For patients, use Between on your own":"Pour les patients, utilisez Between par vous-même",
     "Billed annually ($959.88/year), save ~20%":"Facturé annuellement (959,88 $/an), économisez ~20 %",
     "Billed annually ($119.88/year), save ~33%":"Facturé annuellement (119,88 $/an), économisez ~33 %",
+    // The billing note wraps a live price <span> (for the CAD/USD switch), so the
+    // DOM splits it into fragments and the full-string keys above never match.
+    // Translate the word fragments on either side of the amount instead.
+    "Billed annually (":"Facturé annuellement (",
+    "/year), save ~20%":"/an), économisez ~20 %",
+    "/year), save ~33%":"/an), économisez ~33 %",
+    "per year), save ~20%":"par an), économisez ~20 %",
     "Personal":"Personnel","Check in for yourself":"Faites vos propres suivis","CAD per month":"CAD par mois",
     "Unlimited voice & text check-ins":"Suivis voix et texte illimités",
     "Your own mood & theme trends":"Vos propres tendances d'humeur et de thèmes",
