@@ -1237,14 +1237,8 @@
     font-size:21px;
     margin-bottom:4px;
   }
-  .btw-price-mode{
-    font-family:var(--font-mono);
-    font-size:11px;
-    letter-spacing:.04em;
-    color:var(--ink-soft);
-    margin:10px 0 -2px;
-  }
-  .btw-price-mode[hidden]{display:none;}
+  .btw-seg-mode{color:var(--ink-soft);margin-left:4px;}
+  .btw-seg-mode[hidden]{display:none;}
   .btw-price-amount{
     display:flex;
     align-items:baseline;
@@ -2823,12 +2817,11 @@
         </div>
       </div>
 
-      <div class="btw-pricing-segment">For patients, use Between on your own</div>
+      <div class="btw-pricing-segment">For patients, use Between on your own <span class="btw-seg-mode" data-price-mode hidden></span></div>
       <div class="btw-pricing-cards">
         <div class="btw-price-card">
           <div class="btw-price-tier">Personal</div>
           <div class="btw-price-name">Check in for yourself</div>
-          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="14.99">$14.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
@@ -2845,7 +2838,6 @@
           <div class="btw-price-badge">Best value</div>
           <div class="btw-price-tier">Personal Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
-          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="9.99">$9.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="119.88">$119.88</span>/year), save ~33%</div>
           <ul class="btw-price-features">
@@ -2859,7 +2851,6 @@
         <div class="btw-price-card">
           <div class="btw-price-tier">Premium</div>
           <div class="btw-price-name">Journaling with more depth</div>
-          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="24.99">$24.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
@@ -2877,7 +2868,6 @@
           <div class="btw-price-badge">Most complete</div>
           <div class="btw-price-tier">Premium Annual</div>
           <div class="btw-price-name">Everything, paid yearly</div>
-          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="19.99">$19.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="239.88">$239.88</span> per year), save ~20%</div>
           <ul class="btw-price-features">
