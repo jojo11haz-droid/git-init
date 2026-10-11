@@ -1237,6 +1237,14 @@
     font-size:21px;
     margin-bottom:4px;
   }
+  .btw-price-mode{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    margin:10px 0 -2px;
+  }
+  .btw-price-mode[hidden]{display:none;}
   .btw-price-amount{
     display:flex;
     align-items:baseline;
@@ -2820,6 +2828,7 @@
         <div class="btw-price-card">
           <div class="btw-price-tier">Personal</div>
           <div class="btw-price-name">Check in for yourself</div>
+          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="14.99">$14.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
@@ -2836,6 +2845,7 @@
           <div class="btw-price-badge">Best value</div>
           <div class="btw-price-tier">Personal Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
+          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="9.99">$9.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="119.88">$119.88</span>/year), save ~33%</div>
           <ul class="btw-price-features">
@@ -2849,6 +2859,7 @@
         <div class="btw-price-card">
           <div class="btw-price-tier">Premium</div>
           <div class="btw-price-name">Journaling with more depth</div>
+          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="24.99">$24.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed monthly.</div>
           <ul class="btw-price-features">
@@ -2866,6 +2877,7 @@
           <div class="btw-price-badge">Most complete</div>
           <div class="btw-price-tier">Premium Annual</div>
           <div class="btw-price-name">Everything, paid yearly</div>
+          <div class="btw-price-mode" data-price-mode hidden></div>
           <div class="btw-price-amount"><span class="num" data-cad="19.99">$19.99</span><span class="unit">CAD per month</span></div>
           <div class="btw-price-note">Billed annually (<span data-cad="239.88">$239.88</span> per year), save ~20%</div>
           <ul class="btw-price-features">
@@ -6036,6 +6048,7 @@
     if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
     renderHeroThread();
     applyCurrency();
+    updatePriceModeLabels();
   }
 
   // Pricing currency: US visitors see amounts converted to USD (approximate;
@@ -6101,6 +6114,26 @@
     const picker = document.getElementById('btwIndividualMode');
     if(picker) picker.classList.toggle('on', curAudience === 'individual');
     document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.imode === curIndividualMode));
+    updatePriceModeLabels();
+  }
+  // On the "use Between on your own" pricing cards, show what the person is
+  // tracking — Mind, Body, Sport or Eating — above the price, so it's clear the
+  // plan they're buying is set up for that focus. Only on the individual page,
+  // where that choice exists; hidden in the clinician-facing fields.
+  const INDIVIDUAL_MODE_LABEL = {
+    mind:  { en:'Mind',   fr:'Esprit' },
+    body:  { en:'Body',   fr:'Corps' },
+    sport: { en:'Sport',  fr:'Sport' },
+    eating:{ en:'Eating', fr:'Alimentation' }
+  };
+  function updatePriceModeLabels(){
+    const m = INDIVIDUAL_MODE_LABEL[curIndividualMode] || INDIVIDUAL_MODE_LABEL.mind;
+    const label = (curLang === 'fr') ? m.fr : m.en;
+    const show = (curAudience === 'individual');
+    document.querySelectorAll('[data-price-mode]').forEach(function(el){
+      el.textContent = show ? ('(' + label + ')') : '';
+      el.hidden = !show;
+    });
   }
 
   // The header switcher is a compact dropdown; keep its label on the current
