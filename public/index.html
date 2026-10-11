@@ -2769,7 +2769,7 @@
             <li>In-app crisis resources for patients</li>
             <li>Consent-first data controls</li>
           </ul>
-          <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_monthly')">Start 14-day free trial</button>
+          <button class="btw-price-cta" data-aud-fixed onclick="window.btwOpenSignup && window.btwOpenSignup('solo_monthly')">Start 14-day free trial</button>
         </div>
 
         <div class="btw-price-card featured">
@@ -2784,7 +2784,7 @@
             <li>Early access to new features</li>
             <li>Locked-in rate for 12 months</li>
           </ul>
-          <button class="btw-price-cta" onclick="window.btwOpenSignup && window.btwOpenSignup('solo_annual')">Start 14-day free trial</button>
+          <button class="btw-price-cta" data-aud-fixed onclick="window.btwOpenSignup && window.btwOpenSignup('solo_annual')">Start 14-day free trial</button>
         </div>
 
         <div class="btw-price-card" id="btwSoloPremiumCard">
@@ -2797,7 +2797,7 @@
             <li>For 30+ patients</li>
             <li>Priority email support</li>
           </ul>
-          <button class="btw-price-cta" id="btwSoloPremiumCta">Start 14-day free trial</button>
+          <button class="btw-price-cta" id="btwSoloPremiumCta" data-aud-fixed>Start 14-day free trial</button>
         </div>
 
         <div class="btw-price-card">
@@ -5970,7 +5970,14 @@
       if(!_orig.has(n)){ if(!n.nodeValue.trim()) continue; _orig.set(n, n.nodeValue); }
       const original = _orig.get(n); if(original === undefined) continue;
       const key = original.trim();
-      const repl = pickCopy(key);
+      // Some text is tied to a fixed audience no matter which field the visitor
+      // is browsing — the clinician plan cards keep their clinician wording even
+      // on the individual pricing page, so a self-serve reader doesn't see
+      // "Start my own check-ins" on a "For individual practitioners" plan. These
+      // nodes still translate for language, they just skip the per-audience copy.
+      const host = n.parentElement;
+      const fixed = host && host.closest && host.closest('[data-aud-fixed]');
+      const repl = fixed ? (curLang === 'fr' ? (FR[key] || null) : null) : pickCopy(key);
       n.nodeValue = repl != null ? original.replace(key, repl) : original;
     }
     if(heroH1){
