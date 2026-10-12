@@ -1086,6 +1086,28 @@
   .btw-lightbox img{max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.5);cursor:default;}
   .btw-lightbox-close{position:absolute;top:18px;right:22px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s ease;}
   .btw-lightbox-close:hover{background:rgba(255,255,255,.26);}
+  /* Guided tour: a spotlight that dims everything but the highlighted element,
+     with a card explaining it. Shown once on a new account, replayable. */
+  .btw-tour{position:fixed;inset:0;z-index:1300;display:none;}
+  .btw-tour.show{display:block;}
+  .btw-tour-block{position:absolute;inset:0;cursor:default;}
+  .btw-tour-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(20,22,27,.60);transition:all .28s cubic-bezier(.4,0,.2,1);pointer-events:none;}
+  .btw-tour-card{position:absolute;width:min(340px,calc(100vw - 32px));background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:18px 18px 15px;transition:top .28s ease,left .28s ease;}
+  .btw-tour-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
+  .btw-tour-title{font-family:var(--font-display);font-size:18px;color:var(--ink);line-height:1.3;margin-bottom:7px;}
+  .btw-tour-body{font-size:13.5px;line-height:1.55;color:var(--ink-soft);}
+  .btw-tour-foot{display:flex;align-items:center;gap:10px;margin-top:15px;}
+  .btw-tour-dots{display:flex;gap:5px;flex:1;}
+  .btw-tour-dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .btw-tour-dot.on{background:var(--moss);}
+  .btw-tour-back{background:none;border:none;color:var(--ink-soft);font-family:var(--font-body);font-size:13px;cursor:pointer;padding:6px 4px;}
+  .btw-tour-back:hover{color:var(--ink);}
+  .btw-tour-next{background:var(--moss);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;}
+  .btw-tour-next:hover{background:var(--ink);}
+  .btw-tour-skip{position:absolute;top:12px;right:13px;background:none;border:none;color:var(--ink-soft);font-size:20px;line-height:1;cursor:pointer;padding:2px 4px;}
+  .btw-tour-skip:hover{color:var(--ink);}
+  .btw-tour-start{display:inline-flex;align-items:center;gap:7px;margin-top:12px;background:transparent;color:var(--moss);border:1px solid var(--line);border-radius:100px;padding:8px 15px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;}
+  .btw-tour-start:hover{background:var(--moss-light);border-color:var(--moss);}
   .btw-pm.ro{margin-top:6px;}
   .btw-pm.ro .btw-bodysvg{width:66px;}
   .btw-pm.ro .btw-mk-moodmode{margin-bottom:6px;}
@@ -2741,6 +2763,22 @@
     <img id="btwLightboxImg" alt="">
   </div>
 
+  <div class="btw-tour" id="btwTour" role="dialog" aria-modal="true" aria-label="Tour">
+    <div class="btw-tour-block" id="btwTourBlock"></div>
+    <div class="btw-tour-spot" id="btwTourSpot"></div>
+    <div class="btw-tour-card" id="btwTourCard">
+      <button class="btw-tour-skip" id="btwTourSkip" aria-label="Close tour">&times;</button>
+      <div class="btw-tour-eyebrow" id="btwTourEyebrow">Quick tour</div>
+      <div class="btw-tour-title" id="btwTourTitle"></div>
+      <div class="btw-tour-body" id="btwTourBody"></div>
+      <div class="btw-tour-foot">
+        <div class="btw-tour-dots" id="btwTourDots"></div>
+        <button class="btw-tour-back" id="btwTourBack">Back</button>
+        <button class="btw-tour-next" id="btwTourNext">Next</button>
+      </div>
+    </div>
+  </div>
+
   <div class="btw-view" id="btwViewPricing">
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
@@ -3811,6 +3849,23 @@
     "and improving":"et en amélioration","and slipping":"et en recul","and holding steady":"et stable",
     "came up most":"est revenu le plus souvent",
     "See more":"Voir plus","See less":"Voir moins",
+    "Take a quick tour":"Faire une visite rapide","Quick tour":"Visite rapide",
+    "Welcome to Between":"Bienvenue sur Between",
+    "A quick tour of your dashboard — about 30 seconds. You can skip anytime.":"Une visite rapide de votre tableau de bord — environ 30 secondes. Vous pouvez passer à tout moment.",
+    "Your caseload":"Votre clientèle",
+    "Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.":"Toutes les personnes que vous suivez apparaissent ici, regroupées selon leur état : vert pour sur la bonne voie, ambre pour correct, rouge pour à examiner maintenant.",
+    "Add your first patient":"Ajoutez votre premier patient",
+    "They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.":"Ils reçoivent un lien d'invitation privé et font un suivi par texte, par voix ou avec quelques questions guidées. Rien ne vous sollicite — le résumé attend simplement votre prochaine séance.",
+    "Trends at a glance":"Les tendances en un coup d'œil",
+    "Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances d'humeur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
+    "Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances de douleur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
+    "The timeline":"La chronologie",
+    "Every check-in lands here as a short, dated summary you can read in seconds.":"Chaque suivi apparaît ici sous forme d'un court résumé daté, lisible en quelques secondes.",
+    "Consent and private notes":"Consentement et notes privées",
+    "Pick a patient and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.":"Sélectionnez un patient et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées — visibles de vous seul.",
+    "You are all set":"Vous êtes prêt",
+    "Add your first patient to start receiving check-ins. You can replay this tour anytime from the welcome card.":"Ajoutez votre premier patient pour commencer à recevoir des suivis. Vous pouvez revoir cette visite à tout moment depuis la carte de bienvenue.",
+    "Done":"Terminé",
     "Your week, reflected":"Votre semaine, en réflexion",
     "You checked in":"Vous avez fait un suivi","time":"fois","times":"fois",
     "more than the week before":"plus que la semaine précédente",
@@ -6383,6 +6438,9 @@
     // Widen the layout on the dashboard; keep marketing pages comfortably narrow.
     if(btwRoot) btwRoot.classList.toggle('btw-dash-wide', view === viewProduct);
     window.scrollTo({top:0, behavior:'instant'});
+    // Landing on the dashboard is the moment to offer the first-run tour (it
+    // self-guards: clinician only, once, and only when not pending verification).
+    if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
@@ -10383,6 +10441,9 @@
         }
       }
     });
+    // First visit after signup: offer the guided tour (self-guards so it only
+    // auto-starts once, and only for a verified clinician on the dashboard).
+    if(window.btwMaybeStartTour) window.btwMaybeStartTour();
   }
 
   function renderPatientPane(){
@@ -10471,6 +10532,9 @@
       + '<div class="btw-onboard-title">' + esc(t('Welcome — let\'s get your first check-ins coming in')) + '</div>'
       + '<ol class="btw-onboard-steps">' + steps.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>'
       + '<button type="button" class="btw-onboard-btn" id="btwOnboardAdd">' + esc(t('Add patient')) + '</button>'
+      + '<button type="button" class="btw-tour-start" id="btwOnboardTour">'
+      + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+      + esc(t('Take a quick tour')) + '</button>'
       + '<div class="btw-onboard-foot">' + esc(t('Nothing pings you. You are never on call — the summary just waits for your next session.')) + '</div>'
       + '</div>';
   }
@@ -10485,6 +10549,8 @@
       el.innerHTML = ((state.patients||[]).length === 0) ? clinicianOnboardingHtml() : esc(t('No patients yet, add your first patient to start receiving check-ins.'));
       const ob = document.getElementById('btwOnboardAdd');
       if(ob) ob.addEventListener('click', function(){ const b = document.getElementById('btwAddPatient'); if(b) b.click(); });
+      const ot = document.getElementById('btwOnboardTour');
+      if(ot) ot.addEventListener('click', function(){ if(window.btwStartTour) window.btwStartTour(); });
       return;
     }
     if(list.length===0){
@@ -11013,6 +11079,105 @@
     closeBtn.addEventListener('click', close);
     box.addEventListener('click', (e)=>{ if(e.target===box) close(); });
     document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && box.classList.contains('show')) close(); });
+  })();
+
+  // Guided dashboard tour — a spotlight walkthrough shown once to a new clinician
+  // after signup, and replayable from the welcome card. Steps whose target isn't
+  // on screen fall back to a centred card, so it never points at nothing.
+  (function wireTour(){
+    const overlay = document.getElementById('btwTour');
+    const block = document.getElementById('btwTourBlock');
+    const spot = document.getElementById('btwTourSpot');
+    const card = document.getElementById('btwTourCard');
+    if(!overlay || !block || !spot || !card) return;
+    const elTitle = document.getElementById('btwTourTitle');
+    const elBody = document.getElementById('btwTourBody');
+    const elDots = document.getElementById('btwTourDots');
+    const btnBack = document.getElementById('btwTourBack');
+    const btnNext = document.getElementById('btwTourNext');
+    const btnSkip = document.getElementById('btwTourSkip');
+    let steps = [], idx = 0, active = false, posTimer = null;
+
+    function buildSteps(){
+      const pm = (typeof painMode === 'function') && painMode();
+      const trend = pm
+        ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.')
+        : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.');
+      return [
+        { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard — about 30 seconds. You can skip anytime.') },
+        { sel:'#btwPatientList', title:t('Your caseload'), body:t('Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.') },
+        { sel:'#btwAddPatient', title:t('Add your first patient'), body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.') },
+        { sel:'.btw-charts', title:t('Trends at a glance'), body:trend },
+        { sel:'.btw-timeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
+        { sel:'#btwDashGrid .btw-pane', title:t('Consent and private notes'), body:t('Pick a patient and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.') },
+        { sel:null, title:t('You are all set'), body:t('Add your first patient to start receiving check-ins. You can replay this tour anytime from the welcome card.') }
+      ];
+    }
+    function visible(el){ return !!(el && el.offsetParent !== null && el.getBoundingClientRect().width > 4); }
+    function positionTo(target){
+      const r = target.getBoundingClientRect(), pad = 8;
+      spot.style.top = (r.top - pad) + 'px';
+      spot.style.left = (r.left - pad) + 'px';
+      spot.style.width = (r.width + pad*2) + 'px';
+      spot.style.height = (r.height + pad*2) + 'px';
+      const cardH = card.offsetHeight || 190, cardW = card.offsetWidth || 320;
+      let top = r.bottom + 14;
+      if(top + cardH > window.innerHeight - 12) top = Math.max(12, r.top - cardH - 14);
+      let left = r.left + r.width/2 - cardW/2;
+      left = Math.max(16, Math.min(left, window.innerWidth - cardW - 16));
+      card.style.top = top + 'px';
+      card.style.left = left + 'px';
+    }
+    function positionCenter(){
+      spot.style.width = '0px'; spot.style.height = '0px';
+      spot.style.top = '50%'; spot.style.left = '50%';
+      const cardH = card.offsetHeight || 190, cardW = card.offsetWidth || 320;
+      card.style.top = Math.max(16, window.innerHeight/2 - cardH/2) + 'px';
+      card.style.left = (window.innerWidth/2 - cardW/2) + 'px';
+    }
+    function render(){
+      const step = steps[idx]; if(!step) return;
+      elTitle.textContent = step.title;
+      elBody.textContent = step.body;
+      elDots.innerHTML = steps.map(function(_,i){ return '<span class="btw-tour-dot'+(i===idx?' on':'')+'"></span>'; }).join('');
+      btnBack.style.visibility = (idx === 0) ? 'hidden' : 'visible';
+      btnNext.textContent = (idx === steps.length-1) ? t('Done') : t('Next');
+      const target = step.sel ? document.querySelector(step.sel) : null;
+      if(posTimer){ clearTimeout(posTimer); posTimer = null; }
+      if(target && visible(target)){
+        try { target.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){ target.scrollIntoView(); }
+        posTimer = setTimeout(function(){ positionTo(target); }, 300);
+      } else {
+        positionCenter();
+      }
+    }
+    function go(n){ idx = Math.max(0, Math.min(steps.length-1, n)); render(); }
+    function start(){ steps = buildSteps(); idx = 0; active = true; overlay.classList.add('show'); render(); }
+    function end(){ active = false; overlay.classList.remove('show'); try{ localStorage.setItem('btw_tour_v1','done'); }catch(e){} }
+
+    btnNext.addEventListener('click', function(){ if(idx >= steps.length-1) end(); else go(idx+1); });
+    btnBack.addEventListener('click', function(){ go(idx-1); });
+    btnSkip.addEventListener('click', end);
+    block.addEventListener('click', end);
+    window.addEventListener('resize', function(){ if(active) render(); });
+    document.addEventListener('keydown', function(e){
+      if(!active) return;
+      if(e.key === 'Escape') end();
+      else if(e.key === 'ArrowRight'){ if(idx < steps.length-1) go(idx+1); }
+      else if(e.key === 'ArrowLeft') go(idx-1);
+    });
+
+    window.btwStartTour = start;
+    // Auto-start once for a verified clinician sitting on the dashboard.
+    window.btwMaybeStartTour = function(){
+      if(active) return;
+      if(!state.me || (typeof isPatient === 'function' && isPatient())) return;
+      if(typeof needsVerification === 'function' && needsVerification()) return;
+      if(!viewProduct || !viewProduct.classList.contains('active')) return;
+      let done = false; try{ done = localStorage.getItem('btw_tour_v1') === 'done'; }catch(e){}
+      if(done) return;
+      start();
+    };
   })();
 
   function renderAlertBanner(){
