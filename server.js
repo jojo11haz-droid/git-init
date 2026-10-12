@@ -43,7 +43,7 @@ import {
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
 import {
-  stripeConfigured, priceForPlan, createSubscriptionCheckout,
+  stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice
 } from './stripe.js';
 
@@ -148,6 +148,15 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) =
 });
 
 app.use(express.json());
+
+// Public, unauthenticated config the marketing page reads on load. Only
+// non-sensitive flags belong here: whether billing is live, and whether US
+// visitors are billed in real USD (vs. the CAD-conversion fallback) so the
+// pricing disclaimer can be accurate.
+app.get('/api/public-config', (req, res) => {
+  res.json({ stripe: stripeConfigured(), usdBilling: usdConfigured() });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -1166,9 +1175,12 @@ app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) =>
     // everyone else is restricted to their account type's plans.
     const canAny = isFreeAccess(req.clinician.email) && !!priceForPlan(requested);
     const plan = (allowedPlans.includes(requested) || canAny) ? requested : (req.clinician.plan || defaultPlan);
-    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
+    const currency = billingCurrency(req);
+    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req), currency);
     if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
-    if (plan !== req.clinician.plan) await updateClinicianSubscription(req.clinician.id, { plan });
+    if (plan !== req.clinician.plan || currency !== req.clinician.billing_currency) {
+      await updateClinicianSubscription(req.clinician.id, { plan, currency });
+    }
     res.json({ checkoutUrl: url });
   } catch (err) {
     console.error('Error starting clinician checkout:', err);
@@ -1214,7 +1226,11 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     const acctType = req.clinician.account_type;
     const allowedPlans = acctType === 'coach' ? TEAM_PLANS : acctType === 'mentor' ? MENTOR_PLANS : acctType === 'school' ? SCHOOL_PLANS : acctType === 'trainer' ? TRAINER_PLANS : THERAPIST_PLANS;
     const plan = (req.body || {}).plan;
-    const newPriceId = priceForPlan(plan);
+    // Keep an existing subscriber on the currency they signed up in — a Stripe
+    // subscription can't switch currency, so a USD customer's new price must
+    // also be USD.
+    const currency = (String(req.clinician.billing_currency).toUpperCase() === 'USD') ? 'USD' : 'CAD';
+    const newPriceId = priceForPlan(plan, currency);
     // Owner/admin accounts may pick any plan (to test every price id); everyone
     // else is restricted to their account type's plans.
     const canAny = isFreeAccess(req.clinician.email) && !!newPriceId;
@@ -1230,7 +1246,7 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
       return res.json({ upgraded: true, clinician: pub });
     }
     // No live subscription — send them through checkout for the new plan.
-    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req));
+    const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req), currency);
     if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
     await updateClinicianSubscription(req.clinician.id, { plan });
     return res.json({ checkoutUrl: url });
@@ -1920,8 +1936,8 @@ function publicPatient(p) {
 // Build the Checkout URL for a plan, or null if Stripe/plan isn't set up.
 // Individuals (Personal plan) get a shorter 3-day trial than professionals.
 const PATIENT_TRIAL_DAYS = 3;
-async function startPatientCheckout(patient, plan, origin) {
-  const priceId = priceForPlan(plan);
+async function startPatientCheckout(patient, plan, origin, currency) {
+  const priceId = priceForPlan(plan, currency);
   if (!stripeConfigured() || !priceId) return null;
   const session = await createSubscriptionCheckout({
     priceId,
@@ -1959,8 +1975,8 @@ function trialDaysFor(email) {
   }
   return CLINICIAN_TRIAL_DAYS;
 }
-async function startClinicianCheckout(clinician, plan, origin) {
-  const priceId = priceForPlan(plan);
+async function startClinicianCheckout(clinician, plan, origin, currency) {
+  const priceId = priceForPlan(plan, currency);
   if (!stripeConfigured() || !priceId) return null;
   // Trial length follows the plan, not the account: an Individual (Personal)
   // plan always gets the 3-day trial, even when checked out through this
@@ -1981,6 +1997,13 @@ async function startClinicianCheckout(clinician, plan, origin) {
 
 function siteOrigin(req) {
   return process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+// The billing currency the visitor picked on the pricing page (CAD or USD).
+// Defaults to CAD; USD only takes effect where a USD price is configured
+// (priceForPlan falls back to CAD otherwise).
+function billingCurrency(req) {
+  return (String((req.body || {}).currency || '').toUpperCase() === 'USD') ? 'USD' : 'CAD';
 }
 
 // --- Subscription gating ---
@@ -2196,9 +2219,10 @@ app.post('/api/patient/checkout/start', requireDb, requirePatientAuth, async (re
   try {
     if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
     const plan = PATIENT_PLANS.includes((req.body || {}).plan) ? req.body.plan : (req.patient.plan || 'patient_monthly');
-    const url = await startPatientCheckout(req.patient, plan, siteOrigin(req));
+    const currency = billingCurrency(req);
+    const url = await startPatientCheckout(req.patient, plan, siteOrigin(req), currency);
     if (!url) return res.status(400).json({ error: 'That plan is not available for checkout.' });
-    if (plan !== req.patient.plan) await updatePatientSubscription(req.patient.id, { plan });
+    await updatePatientSubscription(req.patient.id, { plan, currency });
     res.json({ checkoutUrl: url });
   } catch (err) {
     console.error('Error starting checkout:', err);

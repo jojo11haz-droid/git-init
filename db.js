@@ -226,6 +226,8 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAU
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'patient';
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS billing_currency TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE future_notes ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'note';
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
@@ -244,7 +246,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, practice_owner_id, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -339,15 +341,16 @@ export async function setClinicianLicenceVerified(clinicianId, verified) {
 }
 
 // Stripe subscription state for a clinician (mirrors the patient helper).
-export async function updateClinicianSubscription(clinicianId, { status, plan, customerId, subscriptionId }) {
+export async function updateClinicianSubscription(clinicianId, { status, plan, customerId, subscriptionId, currency }) {
   const { rows } = await pool.query(
     `UPDATE clinicians SET
        subscription_status = coalesce($1, subscription_status),
        plan = coalesce($2, plan),
        stripe_customer_id = coalesce($3, stripe_customer_id),
-       stripe_subscription_id = coalesce($4, stripe_subscription_id)
-     WHERE id = $5 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
-    [status || null, plan || null, customerId || null, subscriptionId || null, clinicianId]
+       stripe_subscription_id = coalesce($4, stripe_subscription_id),
+       billing_currency = coalesce($5, billing_currency)
+     WHERE id = $6 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [status || null, plan || null, customerId || null, subscriptionId || null, currency || null, clinicianId]
   );
   return rows[0] || null;
 }
@@ -785,15 +788,16 @@ export async function createSelfServePatient(displayName, email, passwordHash, p
 
 // Stripe subscription state for a self-serve patient. Scoped by id only — a
 // patient owns exactly one row and there's no clinician in this flow.
-export async function updatePatientSubscription(patientId, { status, plan, customerId, subscriptionId }) {
+export async function updatePatientSubscription(patientId, { status, plan, customerId, subscriptionId, currency }) {
   const { rows } = await pool.query(
     `UPDATE patients SET
        subscription_status = coalesce($1, subscription_status),
        plan = coalesce($2, plan),
        stripe_customer_id = coalesce($3, stripe_customer_id),
-       stripe_subscription_id = coalesce($4, stripe_subscription_id)
-     WHERE id = $5 RETURNING ${PATIENT_ROW_COLS}`,
-    [status || null, plan || null, customerId || null, subscriptionId || null, patientId]
+       stripe_subscription_id = coalesce($4, stripe_subscription_id),
+       billing_currency = coalesce($5, billing_currency)
+     WHERE id = $6 RETURNING ${PATIENT_ROW_COLS}`,
+    [status || null, plan || null, customerId || null, subscriptionId || null, currency || null, patientId]
   );
   return rows[0] || null;
 }

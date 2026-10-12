@@ -2538,7 +2538,7 @@
   </div>
   <div class="btw-signedout-box" id="btwVerifyPending" style="display:none;">
     <h3>Your account is pending verification</h3>
-    <p>We're confirming your professional licence against your order's public registry. As soon as it's approved, usually within a day or two, your dashboard opens and your 14-day free trial begins. We'll email <strong id="btwVerifyEmail"></strong> when you're in. Nothing is charged in the meantime.</p>
+    <p>We're confirming your professional licence against your licensing board or professional order's public registry. As soon as it's approved, usually within a day or two, your dashboard opens and your 14-day free trial begins. We'll email <strong id="btwVerifyEmail"></strong> when you're in. Nothing is charged in the meantime.</p>
     <div style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
       If you need this sooner, reply to your confirmation email or reach us from the contact form and we'll prioritize your review.
     </div>
@@ -2752,6 +2752,7 @@
           <button type="button" class="btw-ccy-btn" data-ccy="USD">USD</button>
         </div>
         <div class="btw-ccy-note" id="btwUsdNote" hidden>Prices in USD are approximate. Billing is processed in Canadian dollars, with taxes (if applicable) calculated at checkout.</div>
+        <div class="btw-ccy-note" id="btwUsdLiveNote" hidden>US customers are billed in US dollars, with taxes (if applicable) calculated at checkout.</div>
       </div>
 
       <div class="btw-pricing-cost-note">Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.</div>
@@ -3057,7 +3058,7 @@
         <div class="btw-signup-step" id="btwStepDone" style="display:none;">
           <div class="btw-modal-eyebrow">Account created</div>
           <h2>We're verifying your licence</h2>
-          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Thanks, your account (<strong id="btwDoneEmail"></strong>) is created and pending verification. We check your licence against your order's public registry, usually within a day or two and email you when it's approved. You'll start your 14-day free trial then, nothing is charged in the meantime.</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Thanks, your account (<strong id="btwDoneEmail"></strong>) is created and pending verification. We check your licence against your licensing board or professional order's public registry, usually within a day or two and email you when it's approved. You'll start your 14-day free trial then, nothing is charged in the meantime.</div>
           <button class="btw-modal-continue" id="btwSignupClose">Got it</button>
         </div>
 
@@ -3104,7 +3105,7 @@
       <button class="btw-modal-close" data-close="btwAdminOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Owner · Licence review</div>
       <h2>Verify clinicians</h2>
-      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their licensing board or professional order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
       <div class="btw-aud" style="margin-bottom:14px;">
         <button type="button" class="btw-aud-btn active" id="btwAdminTabTherapist" data-admintab="therapist">Therapists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physios</button>
@@ -3569,6 +3570,8 @@
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
     "CAD per clinician, per month":"CAD par clinicien, par mois","Billed monthly.":"Facturé mensuellement.",
     "Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.":"Les prix sont en dollars canadiens. Les taxes, le cas échéant, sont calculées au moment du paiement.",
+    "Prices in USD are approximate. Billing is processed in Canadian dollars, with taxes (if applicable) calculated at checkout.":"Les prix en USD sont approximatifs. La facturation est traitée en dollars canadiens, les taxes (le cas échéant) étant calculées au moment du paiement.",
+    "US customers are billed in US dollars, with taxes (if applicable) calculated at checkout.":"Les clients américains sont facturés en dollars américains, les taxes (le cas échéant) étant calculées au moment du paiement.",
     "Up to 30 patients & unlimited check-ins":"Jusqu'à 30 patients et suivis illimités","Text + voice check-ins":"Suivis texte et voix",
     "AI summaries & theme tagging":"Résumés IA et étiquetage des thèmes","Mood trend & theme charts":"Graphiques d'humeur et de thèmes",
     "In-app crisis resources for patients":"Ressources de crise dans l'app pour les patients",
@@ -6041,11 +6044,13 @@
     updatePriceModeLabels();
   }
 
-  // Pricing currency: US visitors see amounts converted to USD (approximate;
-  // the actual charge stays in CAD, since Stripe is configured with CAD prices).
-  // A toggle lets anyone switch and the choice is remembered.
+  // Pricing currency: US visitors see amounts in USD. If the server has USD
+  // Stripe prices configured (usdBillingLive), US customers are billed in USD;
+  // otherwise the figure is an approximate conversion and the charge stays in
+  // CAD. A toggle lets anyone switch and the choice is remembered.
   const USD_RATE = 0.73;
   let btwCurrency = 'CAD';
+  let usdBillingLive = false; // set from /api/public-config on load
   try {
     const savedCcy = localStorage.getItem('btw_ccy');
     if(savedCcy === 'USD' || savedCcy === 'CAD'){ btwCurrency = savedCcy; }
@@ -6069,9 +6074,18 @@
       if(tn && tn.nodeType === 3) tn.nodeValue = tn.nodeValue.replace(/\b(?:CAD|USD)\b/, btwCurrency);
     });
     document.querySelectorAll('.btw-ccy-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ccy') === btwCurrency); });
-    const usdNote = document.getElementById('btwUsdNote'); if(usdNote) usdNote.hidden = (btwCurrency !== 'USD');
-    const cadNote = document.getElementById('btwCadNote'); if(cadNote) cadNote.hidden = (btwCurrency === 'USD');
+    // Show the matching disclaimer: in USD, either the real "billed in USD" note
+    // (when USD billing is live) or the "approximate, billed in CAD" one.
+    const isUsd = (btwCurrency === 'USD');
+    const usdNote = document.getElementById('btwUsdNote'); if(usdNote) usdNote.hidden = !(isUsd && !usdBillingLive);
+    const usdLiveNote = document.getElementById('btwUsdLiveNote'); if(usdLiveNote) usdLiveNote.hidden = !(isUsd && usdBillingLive);
+    const cadNote = document.getElementById('btwCadNote'); if(cadNote) cadNote.hidden = isUsd;
   }
+  // Ask the server whether USD billing is actually configured, so the disclaimer
+  // tells US visitors the truth (billed in USD vs. approximate/CAD).
+  fetch('/api/public-config').then(function(r){ return r.ok ? r.json() : null; }).then(function(cfg){
+    if(cfg && cfg.usdBilling){ usdBillingLive = true; applyCurrency(); }
+  }).catch(function(){});
   function setCurrency(c){ btwCurrency = (c === 'USD') ? 'USD' : 'CAD'; try{ localStorage.setItem('btw_ccy', btwCurrency); }catch(e){} applyCurrency(); }
   document.querySelectorAll('.btw-ccy-btn').forEach(function(b){ b.addEventListener('click', function(){ setCurrency(b.getAttribute('data-ccy')); }); });
 
@@ -7869,10 +7883,10 @@
   document.getElementById('btwPaywallSubscribe').addEventListener('click', async ()=>{
     try{
       if(isTherapist()){
-        const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly' });
+        const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly', currency: btwCurrency });
         if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
       } else if(isPatient()){
-        const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly' });
+        const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly', currency: btwCurrency });
         if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
       }
     }catch(e){ alert(e.message); }
@@ -8784,7 +8798,7 @@
 
   document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
     try{
-      const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly' });
+      const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly', currency: btwCurrency });
       if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
     }catch(e){ alert(e.message); }
   });
@@ -9299,7 +9313,7 @@
     const wire = (id, fn)=>{ const b = el.querySelector('#'+id); if(b) b.addEventListener('click', fn); };
     wire('btwSubscribeBtn', async ()=>{
       try{
-        const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly' });
+        const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly', currency: btwCurrency });
         if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
       }catch(e){ alert(e.message); }
     });
@@ -10504,7 +10518,7 @@
   // Start a Premium upgrade for a signed-in individual (Stripe Checkout).
   async function startPremiumUpgrade(){
     try{
-      const r = await pApi('POST', '/api/patient/checkout/start', { plan: 'patient_premium' });
+      const r = await pApi('POST', '/api/patient/checkout/start', { plan: 'patient_premium', currency: btwCurrency });
       if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
       alert(t('Premium checkout is not set up on this server yet.'));
     }catch(e){ alert(e.message); }

@@ -11,29 +11,47 @@ export function stripeConfigured() {
   return !!process.env.STRIPE_SECRET_KEY;
 }
 
-// Which Stripe Price a plan id maps to. Set these to your real price_… ids.
-export function priceForPlan(plan) {
-  const map = {
-    patient_monthly: process.env.STRIPE_PRICE_PATIENT_MONTHLY,
-    patient_annual: process.env.STRIPE_PRICE_PATIENT_ANNUAL,
-    patient_premium: process.env.STRIPE_PRICE_PATIENT_PREMIUM,
-    patient_premium_annual: process.env.STRIPE_PRICE_PATIENT_PREMIUM_ANNUAL,
-    solo_monthly: process.env.STRIPE_PRICE_THERAPIST_MONTHLY,
-    solo_annual: process.env.STRIPE_PRICE_THERAPIST_ANNUAL,
-    solo_premium: process.env.STRIPE_PRICE_THERAPIST_PREMIUM,
-    team_monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY,
-    team_annual: process.env.STRIPE_PRICE_TEAM_ANNUAL,
-    team_premium: process.env.STRIPE_PRICE_TEAM_PREMIUM,
-    school_monthly: process.env.STRIPE_PRICE_SCHOOL_MONTHLY,
-    school_annual: process.env.STRIPE_PRICE_SCHOOL_ANNUAL,
-    school_premium: process.env.STRIPE_PRICE_SCHOOL_PREMIUM,
-    trainer_monthly: process.env.STRIPE_PRICE_TRAINER_MONTHLY,
-    trainer_annual: process.env.STRIPE_PRICE_TRAINER_ANNUAL,
-    trainer_premium: process.env.STRIPE_PRICE_TRAINER_PREMIUM,
-    mentor_monthly: process.env.STRIPE_PRICE_MENTOR_MONTHLY,
-    mentor_annual: process.env.STRIPE_PRICE_MENTOR_ANNUAL
-  };
-  return map[plan] || null;
+// The env var base name for each plan. The CAD price lives in that var; the USD
+// price (for US customers) lives in the same name with a _USD suffix, e.g.
+// STRIPE_PRICE_PATIENT_MONTHLY (CAD) and STRIPE_PRICE_PATIENT_MONTHLY_USD.
+const PLAN_PRICE_VAR = {
+  patient_monthly: 'STRIPE_PRICE_PATIENT_MONTHLY',
+  patient_annual: 'STRIPE_PRICE_PATIENT_ANNUAL',
+  patient_premium: 'STRIPE_PRICE_PATIENT_PREMIUM',
+  patient_premium_annual: 'STRIPE_PRICE_PATIENT_PREMIUM_ANNUAL',
+  solo_monthly: 'STRIPE_PRICE_THERAPIST_MONTHLY',
+  solo_annual: 'STRIPE_PRICE_THERAPIST_ANNUAL',
+  solo_premium: 'STRIPE_PRICE_THERAPIST_PREMIUM',
+  team_monthly: 'STRIPE_PRICE_TEAM_MONTHLY',
+  team_annual: 'STRIPE_PRICE_TEAM_ANNUAL',
+  team_premium: 'STRIPE_PRICE_TEAM_PREMIUM',
+  school_monthly: 'STRIPE_PRICE_SCHOOL_MONTHLY',
+  school_annual: 'STRIPE_PRICE_SCHOOL_ANNUAL',
+  school_premium: 'STRIPE_PRICE_SCHOOL_PREMIUM',
+  trainer_monthly: 'STRIPE_PRICE_TRAINER_MONTHLY',
+  trainer_annual: 'STRIPE_PRICE_TRAINER_ANNUAL',
+  trainer_premium: 'STRIPE_PRICE_TRAINER_PREMIUM',
+  mentor_monthly: 'STRIPE_PRICE_MENTOR_MONTHLY',
+  mentor_annual: 'STRIPE_PRICE_MENTOR_ANNUAL'
+};
+
+// Which Stripe Price a plan id maps to, in the requested currency. Pass 'USD'
+// to bill a US customer in dollars — if a USD price isn't configured for that
+// plan it safely falls back to the CAD price (the customer's bank converts), so
+// enabling USD is purely additive and never breaks an unconfigured plan.
+export function priceForPlan(plan, currency) {
+  const base = PLAN_PRICE_VAR[plan];
+  if (!base) return null;
+  if (String(currency).toUpperCase() === 'USD' && process.env[base + '_USD']) {
+    return process.env[base + '_USD'];
+  }
+  return process.env[base] || null;
+}
+
+// True once at least one USD price id is configured, so the site can tell US
+// visitors they'll be billed in USD (rather than the CAD-conversion fallback).
+export function usdConfigured() {
+  return Object.values(PLAN_PRICE_VAR).some(base => !!process.env[base + '_USD']);
 }
 
 async function stripeRequest(method, path, params) {
