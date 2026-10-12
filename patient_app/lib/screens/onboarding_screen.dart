@@ -7,7 +7,11 @@ import '../theme.dart';
 /// A warm two-step intro shown once, right after a new account is created, so
 /// the person knows what Between is before their first check-in.
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  /// First run gates on this and calls finishOnboarding() when done. When
+  /// replayed from the Guide, [replay] is true so finishing just pops back.
+  const OnboardingScreen({super.key, this.replay = false});
+
+  final bool replay;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -23,9 +27,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  void _finish() {
+    if (widget.replay) {
+      Navigator.of(context).maybePop();
+    } else {
+      context.read<AppState>().finishOnboarding();
+    }
+  }
+
   void _next(int last) {
     if (_page >= last) {
-      context.read<AppState>().finishOnboarding();
+      _finish();
     } else {
       _controller.nextPage(
           duration: const Duration(milliseconds: 260), curve: Curves.easeOut);
@@ -48,8 +60,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () => context.read<AppState>().finishOnboarding(),
-                child: Text(s.skip,
+                onPressed: _finish,
+                child: Text(widget.replay ? s.onbDone : s.skip,
                     style: const TextStyle(color: BtwColors.inkSoft)),
               ),
             ),
@@ -83,7 +95,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => _next(last),
-                  child: Text(_page >= last ? s.onbStart : s.onbNext),
+                  child: Text(_page >= last
+                      ? (widget.replay ? s.onbDone : s.onbStart)
+                      : s.onbNext),
                 ),
               ),
             ),

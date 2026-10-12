@@ -254,6 +254,7 @@ class S {
   String get skip => _('Skip', 'Passer');
   String get onbNext => _('Next', 'Suivant');
   String get onbStart => _('Start my first check-in', 'Faire mon premier suivi');
+  String get onbDone => _('Done', 'Terminé');
   String get onbTitle1 => _('Check in, your way', 'Un suivi, à votre façon');
   String get onbBody1 => _(
       'Write a line, record a quick voice memo, or tap where it hurts. Thirty seconds, whenever something comes up.',
@@ -266,6 +267,35 @@ class S {
   String get onbBody3 => _(
       'Your check-ins are yours. Shared only with the person supporting you, and only if you have one. You can delete everything anytime.',
       'Vos suivis vous appartiennent. Partagés seulement avec la personne qui vous accompagne, et seulement si vous en avez une. Vous pouvez tout supprimer en tout temps.');
+  // How-to / guide
+  String get guideTitle => _('How to use Between', 'Comment utiliser Between');
+  String get guideTooltip => _('How to use Between', 'Comment utiliser Between');
+  String get guideSub => _(
+      'Between turns short check-ins into a clear picture over time. Here is how it works.',
+      'Between transforme de courts suivis en un portrait clair au fil du temps. Voici comment ça marche.');
+  String get guideStep1 => _(
+      'Capture the moment something comes up — write a line, record a voice note, tap where it hurts, or answer a few short questions.',
+      'Notez-le dès que quelque chose survient — écrivez un mot, enregistrez une note vocale, touchez où ça fait mal, ou répondez à quelques courtes questions.');
+  String get guideStep2 => _(
+      "Set how you're doing on the slider, or let Between estimate it from what you wrote.",
+      "Indiquez comment vous allez avec le curseur, ou laissez Between l'estimer à partir de ce que vous avez écrit.");
+  String get guideStep3 => _(
+      'Send it. A check-in takes under a minute.',
+      'Envoyez. Un suivi prend moins d\'une minute.');
+  String get guideStep4 => _(
+      'Open My progress to see your trends and recovery over time.',
+      'Ouvrez Mes progrès pour voir vos tendances et votre rétablissement au fil du temps.');
+  String get guideStep5 => _(
+      "Open My history to read every check-in you've made.",
+      'Ouvrez Mon historique pour relire tous vos suivis.');
+  String get guideStep6 => _(
+      'Your data is yours — delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.',
+      'Vos données vous appartiennent — supprimez-les à tout moment. Si vous avez un clinicien, il ne voit qu\'un court résumé, et seulement avec votre consentement.');
+  String get guideGoodTitle => _('Good to know', 'Bon à savoir');
+  String get guideGoodBody => _(
+      'AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911.',
+      "Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911.");
+  String get guideReplayIntro => _('Replay the intro', "Revoir l'intro");
   // A note to your future self
   String get futureNoteTitle =>
       _('A note to your future self', 'Un mot à votre futur vous');

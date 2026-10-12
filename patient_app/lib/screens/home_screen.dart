@@ -13,6 +13,7 @@ import '../body_map.dart';
 import '../discipline.dart';
 import '../recording_bytes.dart';
 import '../theme.dart';
+import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'progress_screen.dart';
 import 'sent_screen.dart';
@@ -292,6 +293,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BtwColors.inkSoft),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: s.guideTooltip,
+                    icon: const Icon(Icons.help_outline_rounded,
+                        color: BtwColors.inkSoft),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const GuideScreen()),
                     ),
                   ),
                   IconButton(

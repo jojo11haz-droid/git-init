@@ -5,6 +5,7 @@ import '../app_state.dart';
 import '../discipline.dart';
 import '../theme.dart';
 import 'future_note_screen.dart';
+import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'welcome_screen.dart';
 
@@ -148,6 +149,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const LanguageToggle(),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.help_outline_rounded,
+                    color: BtwColors.moss),
+                title: Text(s.guideTitle,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const GuideScreen()),
+                ),
               ),
             ),
             const SizedBox(height: 12),
