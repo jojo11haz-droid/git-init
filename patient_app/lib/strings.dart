@@ -296,6 +296,33 @@ class S {
       'AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911.',
       "Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911.");
   String get guideReplayIntro => _('Replay the intro', "Revoir l'intro");
+  String get guideReplayTour => _('Replay the app tour', "Revoir la visite de l'application");
+  // Spotlight coach tour on the home screen
+  String get tourBack => _('Back', 'Retour');
+  String get coachWelcomeTitle => _('Welcome to Between', 'Bienvenue sur Between');
+  String get coachWelcomeBody =>
+      _('A quick tour — tap Next, or skip anytime.',
+          'Une visite rapide — touchez Suivant, ou passez à tout moment.');
+  String get coachComposerTitle => _('Check in here', 'Faites un suivi ici');
+  String get coachComposerBody => _(
+      'Write a line, record a voice note, or answer a few questions — the moment something comes up.',
+      'Écrivez un mot, enregistrez une note vocale, ou répondez à quelques questions — dès que quelque chose survient.');
+  String get coachProgressTitle => _('Your progress', 'Vos progrès');
+  String get coachProgressBody => _(
+      'Tap here anytime to see your trends and recovery over time.',
+      'Touchez ici à tout moment pour voir vos tendances et votre rétablissement au fil du temps.');
+  String get coachHistoryTitle => _('Your history', 'Votre historique');
+  String get coachHistoryBody => _(
+      'Every check-in you make is saved here to read back.',
+      'Chaque suivi que vous faites est enregistré ici pour le relire.');
+  String get coachHelpTitle => _('Help anytime', 'De l\'aide à tout moment');
+  String get coachHelpBody => _(
+      'This opens the guide — how to use Between, whenever you need it.',
+      'Ceci ouvre le guide — comment utiliser Between, quand vous en avez besoin.');
+  String get coachDoneTitle => _('You are all set', 'Vous êtes prêt');
+  String get coachDoneBody => _(
+      "Your check-ins are private to you. Add one whenever you're ready.",
+      'Vos suivis sont privés. Faites-en un dès que vous êtes prêt.');
   // A note to your future self
   String get futureNoteTitle =>
       _('A note to your future self', 'Un mot à votre futur vous');

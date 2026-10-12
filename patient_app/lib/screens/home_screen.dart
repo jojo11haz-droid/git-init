@@ -12,7 +12,9 @@ import '../app_state.dart';
 import '../body_map.dart';
 import '../discipline.dart';
 import '../recording_bytes.dart';
+import '../strings.dart';
 import '../theme.dart';
+import 'coach_tour.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'progress_screen.dart';
@@ -52,6 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // Web records webm/opus via MediaRecorder; mobile records AAC in an m4a.
   String get _audioMime => kIsWeb ? 'audio/webm' : 'audio/mp4';
 
+  // Spotlight-tour targets and guard.
+  final _kComposer = GlobalKey();
+  final _kProgress = GlobalKey();
+  final _kHistory = GlobalKey();
+  final _kHelp = GlobalKey();
+  bool _tourActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +70,48 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _detailsOpen = true);
       }
     });
+    // First run (after the intro): show the spotlight tour once.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final st = context.read<AppState>();
+      if (!st.tourSeen && !st.showOnboarding) _startTour();
+    });
+  }
+
+  List<CoachStep> _buildSteps(S s) => [
+        CoachStep(title: s.coachWelcomeTitle, body: s.coachWelcomeBody),
+        CoachStep(
+            targetKey: _kComposer,
+            title: s.coachComposerTitle,
+            body: s.coachComposerBody),
+        CoachStep(
+            targetKey: _kProgress,
+            title: s.coachProgressTitle,
+            body: s.coachProgressBody),
+        CoachStep(
+            targetKey: _kHistory,
+            title: s.coachHistoryTitle,
+            body: s.coachHistoryBody),
+        CoachStep(
+            targetKey: _kHelp,
+            title: s.coachHelpTitle,
+            body: s.coachHelpBody),
+        CoachStep(title: s.coachDoneTitle, body: s.coachDoneBody),
+      ];
+
+  void _startTour() {
+    if (_tourActive) return;
+    _tourActive = true;
+    final s = context.read<AppState>().s;
+    startCoachTour(
+      context,
+      strings: s,
+      steps: _buildSteps(s),
+      onDone: () {
+        _tourActive = false;
+        if (mounted) context.read<AppState>().markTourSeen();
+      },
+    );
   }
 
   @override
@@ -262,6 +313,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final state = context.watch<AppState>();
     final s = state.s;
     final patient = state.patient!;
+    // Replay requested from the Guide: start the tour after this frame.
+    if (state.startTourRequested && !_tourActive) {
+      state.clearTourRequest();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startTour();
+      });
+    }
     // Normally derived from the account; the Settings preview switcher can
     // override it so you can see any discipline's check-in.
     final profile = state.previewCategory != null
@@ -280,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Wordmark(size: 24),
                   const Spacer(),
                   IconButton(
+                    key: _kProgress,
                     tooltip: s.myProgress,
                     icon: const Icon(Icons.insights_rounded,
                         color: BtwColors.inkSoft),
@@ -288,6 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   IconButton(
+                    key: _kHistory,
                     tooltip: s.myHistory,
                     icon: const Icon(Icons.history_rounded,
                         color: BtwColors.inkSoft),
@@ -296,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   IconButton(
+                    key: _kHelp,
                     tooltip: s.guideTooltip,
                     icon: const Icon(Icons.help_outline_rounded,
                         color: BtwColors.inkSoft),
@@ -343,6 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   if (!_questionsMode) ...[
                   Container(
+                    key: _kComposer,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(26),

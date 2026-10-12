@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../app_state.dart';
 import '../theme.dart';
-import 'onboarding_screen.dart';
 
 /// "How to use Between" — a plain, scrollable how-to for the person checking in,
 /// mirroring the Guide on the website. Reachable anytime from the home screen,
@@ -65,12 +64,13 @@ class GuideScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const OnboardingScreen(replay: true)),
-              ),
+              onPressed: () {
+                // Ask the home screen to run the spotlight tour, then return to it.
+                context.read<AppState>().requestTour();
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              },
               icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
-              label: Text(s.guideReplayIntro),
+              label: Text(s.guideReplayTour),
             ),
           ],
         ),

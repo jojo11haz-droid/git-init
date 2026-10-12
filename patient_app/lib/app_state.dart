@@ -84,6 +84,7 @@ class AppState extends ChangeNotifier {
   static const _tokenKey = 'between_patient_token';
   static const _langKey = 'between_patient_lang';
   static const _healthKey = 'between_health_connected';
+  static const _tourKey = 'between_tour_seen';
 
   final ApiClient _api;
   final FlutterSecureStorage _storage;
@@ -98,6 +99,27 @@ class AppState extends ChangeNotifier {
   void finishOnboarding() {
     showOnboarding = false;
     notifyListeners();
+  }
+
+  /// The home-screen spotlight tour shows once (tracked locally), and can be
+  /// replayed from the Guide, which sets [startTourRequested] for the home
+  /// screen to pick up.
+  bool tourSeen = false;
+  bool startTourRequested = false;
+  Future<void> markTourSeen() async {
+    tourSeen = true;
+    try {
+      await _storage.write(key: _tourKey, value: '1');
+    } catch (_) {/* best effort */}
+  }
+
+  void requestTour() {
+    startTourRequested = true;
+    notifyListeners();
+  }
+
+  void clearTourRequest() {
+    startTourRequested = false;
   }
 
   /// Whether the person has connected Apple Health (persisted locally).
@@ -135,6 +157,9 @@ class AppState extends ChangeNotifier {
     try {
       healthConnected = (await _storage.read(key: _healthKey)) == '1';
     } catch (_) {/* default off */}
+    try {
+      tourSeen = (await _storage.read(key: _tourKey)) == '1';
+    } catch (_) {/* default: show the tour */}
     try {
       final token = await _storage.read(key: _tokenKey);
       if (token != null) {
