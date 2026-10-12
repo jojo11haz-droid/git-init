@@ -1336,6 +1336,19 @@
     gap:20px 32px;
   }
   @media (max-width:700px){.btw-pricing-faq{grid-template-columns:1fr;}}
+  /* Guide / how-to page */
+  .btw-guide-wrap{max-width:880px;margin:0 auto;padding:4px 0 44px;}
+  .btw-guide-h{font-family:var(--font-display);font-size:28px;color:var(--ink);margin-bottom:8px;line-height:1.2;}
+  .btw-guide-sub{font-size:14.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:26px;max-width:640px;}
+  .btw-guide-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+  @media (max-width:720px){.btw-guide-cards{grid-template-columns:1fr;}}
+  .btw-guide-card{border:1px solid var(--line);border-radius:16px;padding:20px 20px 16px;background:#fff;}
+  .btw-guide-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
+  .btw-guide-card h3{font-family:var(--font-display);font-size:19px;margin-bottom:14px;color:var(--ink);line-height:1.25;}
+  .btw-guide-note{margin-top:22px;border-radius:14px;background:var(--paper);padding:16px 18px;font-size:13px;line-height:1.65;color:var(--ink-soft);}
+  .btw-guide-note strong{color:var(--ink);}
+  .btw-guide-note .crisis{color:var(--clay,#C0392B);font-weight:600;}
+  .btw-guide-actions{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px;}
   /* Floating AI chat widget */
   #btwChat{position:fixed;right:18px;bottom:34px;z-index:45;}
   /* Sits quietly in the corner, lifting to full opacity on hover, focus or open. */
@@ -2138,6 +2151,7 @@
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
         <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
+        <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
       </div>
     </div>
     <div class="btw-auth-area">
@@ -2939,6 +2953,48 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="btw-view" id="btwViewGuide">
+    <div class="btw-guide-wrap">
+      <h2 class="btw-guide-h">How to use Between</h2>
+      <p class="btw-guide-sub">Between turns short check-ins between sessions into a clear summary and a trend. Here's how it works on both sides — it's the same on the web and in the Between app.</p>
+      <div class="btw-guide-cards">
+        <div class="btw-guide-card">
+          <div class="btw-guide-eyebrow">For professionals</div>
+          <h3>Follow people between sessions</h3>
+          <ol class="btw-onboard-steps">
+            <li>Create your account and choose your field. Regulated fields are verified against your licensing board before your dashboard opens.</li>
+            <li>Add someone to your caseload — a first name is all you need.</li>
+            <li>Share the one-time invite link so they can set up their own private check-in.</li>
+            <li>They check in between visits by text, voice memo, or a few guided questions.</li>
+            <li>Before the next session, read the short summary, the mood or pain trend and the recurring themes — waiting in your dashboard.</li>
+            <li>Keep private follow-up notes, and manage each person's AI-summary consent. Nothing pings you — it just waits for your next session.</li>
+          </ol>
+        </div>
+        <div class="btw-guide-card">
+          <div class="btw-guide-eyebrow">For people checking in</div>
+          <h3>Keep track of yourself</h3>
+          <ol class="btw-onboard-steps">
+            <li>Open your check-in screen — on the web or in the app.</li>
+            <li>The moment something comes up, capture it: write it, record a voice note, or answer a few short questions.</li>
+            <li>Set how you're doing on the slider, or let Between estimate it from what you wrote.</li>
+            <li>Send it. A check-in takes under a minute.</li>
+            <li>Watch your trends and recurring themes build over time on your history.</li>
+            <li>Your data is yours — export or delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="btw-guide-note">
+        <strong>Good to know.</strong> <span>AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911. You can use Between on your own, or alongside a professional.</span>
+      </div>
+      <div class="btw-guide-actions">
+        <button type="button" class="btw-tour-start" id="btwGuideTour">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Replay the app tour
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3865,7 +3921,49 @@
     "Pick a patient and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.":"Sélectionnez un patient et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées — visibles de vous seul.",
     "You are all set":"Vous êtes prêt",
     "Add your first patient to start receiving check-ins. You can replay this tour anytime from the welcome card.":"Ajoutez votre premier patient pour commencer à recevoir des suivis. Vous pouvez revoir cette visite à tout moment depuis la carte de bienvenue.",
+    "Add your first person to start receiving check-ins. You can replay this tour anytime from the welcome card.":"Ajoutez votre première personne pour commencer à recevoir des suivis. Vous pouvez revoir cette visite à tout moment depuis la carte de bienvenue.",
+    "Pick someone and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.":"Sélectionnez une personne et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées — visibles de vous seul.",
     "Done":"Terminé",
+    "A quick tour of your check-ins — about 30 seconds. You can skip anytime.":"Une visite rapide de vos suivis — environ 30 secondes. Vous pouvez passer à tout moment.",
+    "Check in here":"Faites un suivi ici",
+    "The moment something comes up, capture it — by writing, a voice note, or a few guided questions.":"Dès que quelque chose survient, notez-le — par écrit, par note vocale ou avec quelques questions guidées.",
+    "Rate your pain":"Évaluez votre douleur","Set how you are doing":"Indiquez comment vous allez",
+    "Slide to show your pain right now, or let Between estimate it from what you wrote.":"Glissez pour indiquer votre douleur en ce moment, ou laissez Between l'estimer à partir de ce que vous avez écrit.",
+    "Slide to show how you are feeling, or let Between estimate it from what you wrote.":"Glissez pour indiquer comment vous vous sentez, ou laissez Between l'estimer à partir de ce que vous avez écrit.",
+    "Send it":"Envoyez",
+    "That is it — a check-in takes under a minute, whenever something happens.":"C'est tout — un suivi prend moins d'une minute, dès que quelque chose arrive.",
+    "Your trends":"Vos tendances",
+    "Mood and theme trends build here as check-ins come in.":"Les tendances d'humeur et de thèmes se construisent ici au fil des suivis.",
+    "Pain and theme trends build here as check-ins come in.":"Les tendances de douleur et de thèmes se construisent ici au fil des suivis.",
+    "Your history":"Votre historique",
+    "Every check-in you make is saved here, so a rough stretch is something you can actually see.":"Chaque suivi que vous faites est enregistré ici, pour qu'une période difficile devienne visible.",
+    "Private to you. Your data is yours — export or delete it anytime.":"Privé pour vous. Vos données vous appartiennent — exportez-les ou supprimez-les à tout moment.",
+    "Your clinician sees a short summary, not the raw recording — and only with your consent.":"Votre clinicien voit un court résumé, pas l'enregistrement brut — et seulement avec votre consentement.",
+    "You can replay this tour anytime from your check-in screen.":"Vous pouvez revoir cette visite à tout moment depuis votre écran de suivi.",
+    "You can replay this tour anytime from the Guide.":"Vous pouvez revoir cette visite à tout moment depuis le Guide.",
+    "Add your first person to start receiving check-ins.":"Ajoutez votre première personne pour commencer à recevoir des suivis.",
+    "Guide":"Guide",
+    "How to use Between":"Comment utiliser Between",
+    "Between turns short check-ins between sessions into a clear summary and a trend. Here's how it works on both sides — it's the same on the web and in the Between app.":"Between transforme de courts suivis entre les séances en un résumé clair et une tendance. Voici comment ça marche des deux côtés — c'est identique sur le web et dans l'application Between.",
+    "For professionals":"Pour les professionnels",
+    "Follow people between sessions":"Suivez vos patients entre les séances",
+    "Create your account and choose your field. Regulated fields are verified against your licensing board before your dashboard opens.":"Créez votre compte et choisissez votre domaine. Les domaines réglementés sont vérifiés auprès de votre ordre professionnel avant l'ouverture de votre tableau de bord.",
+    "Add someone to your caseload — a first name is all you need.":"Ajoutez une personne à votre clientèle — un prénom suffit.",
+    "Share the one-time invite link so they can set up their own private check-in.":"Partagez le lien d'invitation unique pour qu'elle configure son propre suivi privé.",
+    "They check in between visits by text, voice memo, or a few guided questions.":"Elle fait un suivi entre les visites par texte, note vocale ou quelques questions guidées.",
+    "Before the next session, read the short summary, the mood or pain trend and the recurring themes — waiting in your dashboard.":"Avant la prochaine séance, lisez le court résumé, la tendance d'humeur ou de douleur et les thèmes récurrents — qui vous attendent dans votre tableau de bord.",
+    "Keep private follow-up notes, and manage each person's AI-summary consent. Nothing pings you — it just waits for your next session.":"Gardez des notes de suivi privées et gérez le consentement de chaque personne aux résumés par IA. Rien ne vous sollicite — le résumé attend simplement votre prochaine séance.",
+    "For people checking in":"Pour ceux qui font des suivis",
+    "Keep track of yourself":"Gardez le fil de votre état",
+    "Open your check-in screen — on the web or in the app.":"Ouvrez votre écran de suivi — sur le web ou dans l'application.",
+    "The moment something comes up, capture it: write it, record a voice note, or answer a few short questions.":"Dès que quelque chose survient, notez-le : par écrit, par note vocale ou en répondant à quelques courtes questions.",
+    "Set how you're doing on the slider, or let Between estimate it from what you wrote.":"Indiquez comment vous allez avec le curseur, ou laissez Between l'estimer à partir de ce que vous avez écrit.",
+    "Send it. A check-in takes under a minute.":"Envoyez. Un suivi prend moins d'une minute.",
+    "Watch your trends and recurring themes build over time on your history.":"Voyez vos tendances et vos thèmes récurrents se construire au fil du temps dans votre historique.",
+    "Your data is yours — export or delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.":"Vos données vous appartiennent — exportez-les ou supprimez-les à tout moment. Si vous avez un clinicien, il ne voit qu'un court résumé, et seulement avec votre consentement.",
+    "Replay the app tour":"Revoir la visite de l'application",
+    "Good to know.":"Bon à savoir.",
+    "AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911. You can use Between on your own, or alongside a professional.":"Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911. Vous pouvez utiliser Between seul ou avec un professionnel.",
     "Your week, reflected":"Votre semaine, en réflexion",
     "You checked in":"Vous avez fait un suivi","time":"fois","times":"fois",
     "more than the week before":"plus que la semaine précédente",
@@ -6424,11 +6522,13 @@
   const navHome = document.getElementById('btwNavHome');
   const navProduct = document.getElementById('btwNavProduct');
   const navPricing = document.getElementById('btwNavPricing');
+  const navGuide = document.getElementById('btwNavGuide');
   const viewHome = document.getElementById('btwViewHome');
   const viewProduct = document.getElementById('btwViewProduct');
   const viewPricing = document.getElementById('btwViewPricing');
-  const allNavBtns = [navHome, navProduct, navPricing];
-  const allViews = [viewHome, viewProduct, viewPricing];
+  const viewGuide = document.getElementById('btwViewGuide');
+  const allNavBtns = [navHome, navProduct, navPricing, navGuide];
+  const allViews = [viewHome, viewProduct, viewPricing, viewGuide];
   const btwRoot = document.querySelector('.btw-root');
   function goToView(nav, view){
     allNavBtns.forEach(b=>b.classList.remove('active'));
@@ -6445,6 +6545,9 @@
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
+  if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
+  const guideTourBtn = document.getElementById('btwGuideTour');
+  if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
 
   document.getElementById('btwHeroDemo').addEventListener('click', ()=> goToView(navProduct, viewProduct));
 
@@ -11098,19 +11201,44 @@
     const btnSkip = document.getElementById('btwTourSkip');
     let steps = [], idx = 0, active = false, posTimer = null;
 
+    // The word for the person being supported, matched to the field and language
+    // so a sports coach sees "player", a school sees "student", etc.
+    function personNoun(){
+      const EN = { sports:'player', fitness:'member', recovery:'client', schools:'student' };
+      const FR = { sports:'joueur', fitness:'membre', recovery:'client', schools:'élève' };
+      const a = (typeof curAudience !== 'undefined') ? curAudience : 'therapy';
+      return (curLang === 'fr') ? (FR[a] || 'patient') : (EN[a] || 'patient');
+    }
     function buildSteps(){
       const pm = (typeof painMode === 'function') && painMode();
-      const trend = pm
-        ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.')
-        : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.');
+      const scoreTrend = pm ? t('Pain and theme trends build here as check-ins come in.') : t('Mood and theme trends build here as check-ins come in.');
+      // Patient / individual tour: the dashboard is their own check-in + history.
+      if(typeof isPatient === 'function' && isPatient()){
+        const solo = (typeof soloIndividual === 'function') && soloIndividual();
+        const privacy = solo
+          ? t('Private to you. Your data is yours — export or delete it anytime.')
+          : t('Your clinician sees a short summary, not the raw recording — and only with your consent.');
+        return [
+          { sel:null, title:t('Welcome to Between'), body: solo ? t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') : t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') },
+          { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it — by writing, a voice note, or a few guided questions.') },
+          { sel:'#btwMoodSlider', title: pm ? t('Rate your pain') : t('Set how you are doing'), body: pm ? t('Slide to show your pain right now, or let Between estimate it from what you wrote.') : t('Slide to show how you are feeling, or let Between estimate it from what you wrote.') },
+          { sel:'#btwSend', title:t('Send it'), body:t('That is it — a check-in takes under a minute, whenever something happens.') },
+          { sel:'.btw-charts', title:t('Your trends'), body:scoreTrend },
+          { sel:'.btw-timeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
+          { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime from the Guide.') }
+        ];
+      }
+      // Clinician tour.
+      const noun = personNoun();
+      const addTitle = (curLang === 'fr' ? 'Ajoutez votre premier ' : 'Add your first ') + noun;
       return [
         { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard — about 30 seconds. You can skip anytime.') },
         { sel:'#btwPatientList', title:t('Your caseload'), body:t('Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.') },
-        { sel:'#btwAddPatient', title:t('Add your first patient'), body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.') },
-        { sel:'.btw-charts', title:t('Trends at a glance'), body:trend },
+        { sel:'#btwAddPatient', title:addTitle, body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.') },
+        { sel:'.btw-charts', title:t('Trends at a glance'), body: pm ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.') : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.') },
         { sel:'.btw-timeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
-        { sel:'#btwDashGrid .btw-pane', title:t('Consent and private notes'), body:t('Pick a patient and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.') },
-        { sel:null, title:t('You are all set'), body:t('Add your first patient to start receiving check-ins. You can replay this tour anytime from the welcome card.') }
+        { sel:'#btwDashGrid .btw-pane', title:t('Consent and private notes'), body:t('Pick someone and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.') },
+        { sel:null, title:t('You are all set'), body:t('Add your first person to start receiving check-ins.') + ' ' + t('You can replay this tour anytime from the Guide.') }
       ];
     }
     function visible(el){ return !!(el && el.offsetParent !== null && el.getBoundingClientRect().width > 4); }
@@ -11168,11 +11296,13 @@
     });
 
     window.btwStartTour = start;
-    // Auto-start once for a verified clinician sitting on the dashboard.
+    // Auto-start once for a signed-in clinician or patient sitting on the
+    // dashboard (a pending, unverified clinician is skipped until they're in).
     window.btwMaybeStartTour = function(){
       if(active) return;
-      if(!state.me || (typeof isPatient === 'function' && isPatient())) return;
-      if(typeof needsVerification === 'function' && needsVerification()) return;
+      const signedIn = state.me || state.patient;
+      if(!signedIn) return;
+      if(state.me && typeof needsVerification === 'function' && needsVerification()) return;
       if(!viewProduct || !viewProduct.classList.contains('active')) return;
       let done = false; try{ done = localStorage.getItem('btw_tour_v1') === 'done'; }catch(e){}
       if(done) return;
