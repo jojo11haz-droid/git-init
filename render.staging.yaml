@@ -1,0 +1,58 @@
+# Render Blueprint for a STAGING copy of Between.
+#
+# This is deliberately a separate file (render.staging.yaml), not render.yaml,
+# so adopting it never touches your existing production service. To use it:
+#   1. Push a `staging` branch:  git push origin HEAD:staging
+#   2. In Render: New → Blueprint → pick this repo → choose render.staging.yaml
+#      (or temporarily copy it to render.yaml, create, then revert).
+#   3. Fill in the env vars marked `sync: false` when prompted.
+#
+# Staging is for TEST DATA ONLY — never real patient data. That keeps it out of
+# HIPAA scope. Use Stripe TEST keys here, not live keys.
+
+databases:
+  - name: between-staging-db
+    databaseName: between_staging
+    plan: free            # free Postgres expires after a while — fine for staging; bump to a paid plan if you want it to persist
+    region: oregon        # match your production region if different
+
+services:
+  - type: web
+    name: between-staging
+    runtime: node
+    plan: free            # staging can run on free; it sleeps when idle
+    region: oregon
+    branch: staging       # deploys from the `staging` branch, so prod (main) is untouched
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: between-staging-db
+          property: connectionString
+      # DATABASE_SSL left unset → the app uses SSL (rejectUnauthorized:false),
+      # which is what Render's managed Postgres expects.
+      - key: NODE_VERSION
+        value: "20"
+      # --- Secrets: set these in the Render dashboard (not stored in git) ---
+      - key: ANTHROPIC_API_KEY       # AI summaries; omit to disable summaries on staging
+        sync: false
+      - key: DEEPGRAM_API_KEY        # voice-memo transcription; optional
+        sync: false
+      - key: RESEND_API_KEY          # outbound email; optional
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: STRIPE_SECRET_KEY       # USE A TEST KEY (sk_test_…) on staging
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET   # test-mode webhook signing secret
+        sync: false
+      - key: FREE_ACCESS_EMAILS      # your own email, for owner/full access on staging
+        sync: false
+      # PUBLIC_BASE_URL is optional — the app falls back to the request host.
+      # After the service is created, set it to the staging URL so Stripe
+      # redirect links are correct:
+      - key: PUBLIC_BASE_URL
+        sync: false
