@@ -26,7 +26,8 @@ import {
   getAudioUploadOwned, getAudioForClinician,
   createPhotoUploadToken, consumePhotoUploadToken, storePhotoUpload,
   getPhotoUploadOwned, getPhotoForClinician,
-  createAlert, listAlerts, markAlertViewed
+  createAlert, listAlerts, markAlertViewed,
+  storeContactMessage, listContactMessages
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
@@ -956,6 +957,17 @@ app.get('/api/admin/engagement', requireDb, requireAuth, requireOwner, async (re
   } catch (err) {
     console.error('Error loading engagement stats:', err);
     res.status(500).json({ error: 'Could not load engagement stats.' });
+  }
+});
+
+// Contact-form inbox: every submission, newest first. A safety net so messages
+// are readable here even if email delivery isn't set up yet.
+app.get('/api/admin/contact-messages', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await listContactMessages());
+  } catch (err) {
+    console.error('Error loading contact messages:', err);
+    res.status(500).json({ error: 'Could not load contact messages.' });
   }
 });
 
@@ -2805,6 +2817,19 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
       text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`,
       html
     });
+    // Persist every submission so a message is never lost if email delivery
+    // isn't configured or fails. Best-effort — a storage error never blocks the
+    // reply to the sender.
+    try {
+      await storeContactMessage({
+        name: name.trim(),
+        email: email.trim(),
+        message: message.trim(),
+        delivered
+      });
+    } catch (e) {
+      console.error('Could not store contact message:', e.message);
+    }
     res.json({ ok: true, delivered });
   } catch (err) {
     console.error('Error handling contact form:', err);

@@ -177,6 +177,18 @@ CREATE TABLE IF NOT EXISTS patient_health (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (patient_id, day)
 );
+
+-- Contact-form submissions. Stored so a message is never lost even if email
+-- delivery isn't configured or fails; delivered flags whether the notification
+-- email went out. Read by the owner via the admin API.
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  message TEXT NOT NULL,
+  delivered BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 // Databases created before the auth release have a patients table without
@@ -1144,6 +1156,24 @@ export async function createAlert({ checkInId, clinicianId, deliveryChannel, del
     [checkInId, clinicianId, deliveryChannel || null, deliveredAt || null]
   );
   return rows[0];
+}
+
+export async function storeContactMessage({ name, email, message, delivered }) {
+  const { rows } = await pool.query(
+    `INSERT INTO contact_messages (name, email, message, delivered)
+     VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+    [name, email, message, !!delivered]
+  );
+  return rows[0];
+}
+
+export async function listContactMessages(limit = 200) {
+  const { rows } = await pool.query(
+    `SELECT id, name, email, message, delivered, created_at
+       FROM contact_messages ORDER BY created_at DESC LIMIT $1`,
+    [Math.min(Math.max(1, limit), 500)]
+  );
+  return rows;
 }
 
 export async function listAlerts(clinicianId) {
