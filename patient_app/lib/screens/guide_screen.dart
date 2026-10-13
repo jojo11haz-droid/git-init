@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
 import '../theme.dart';
+
+const String _contactEmail = 'owner@betweenpsych.com';
+
+Future<void> _emailUs() async {
+  try {
+    await launchUrl(Uri(scheme: 'mailto', path: _contactEmail),
+        mode: LaunchMode.externalApplication);
+  } catch (_) {/* no mail app — the address is shown so it can be copied */}
+}
 
 /// "How to use Between" — a plain, scrollable how-to for the person checking in,
 /// mirroring the Guide on the website. Reachable anytime from the home screen,
@@ -71,6 +81,21 @@ class GuideScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
               label: Text(s.guideReplayTour),
+            ),
+            const SizedBox(height: 24),
+            Text(s.guideContact,
+                style:
+                    const TextStyle(fontSize: 13.5, color: BtwColors.inkSoft)),
+            const SizedBox(height: 4),
+            GestureDetector(
+              onTap: _emailUs,
+              child: const Text(
+                _contactEmail,
+                style: TextStyle(
+                    fontSize: 15,
+                    color: BtwColors.moss,
+                    fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         ),

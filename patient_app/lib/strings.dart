@@ -297,6 +297,8 @@ class S {
       "Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911.");
   String get guideReplayIntro => _('Replay the intro', "Revoir l'intro");
   String get guideReplayTour => _('Replay the app tour', "Revoir la visite de l'application");
+  String get guideContact =>
+      _('Questions? Email us:', 'Des questions ? Écrivez-nous :');
   // Spotlight coach tour on the home screen
   String get tourBack => _('Back', 'Retour');
   String get coachWelcomeTitle => _('Welcome to Between', 'Bienvenue sur Between');
