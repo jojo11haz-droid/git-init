@@ -1840,6 +1840,12 @@
     font-size:22px;
     margin:0 0 18px;
   }
+  .btw-contact{margin-top:44px;text-align:center;}
+  .btw-contact h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:8px 0 8px;}
+  .btw-contact p{font-size:15px;color:var(--ink-soft);line-height:1.6;max-width:480px;margin:0 auto 20px;}
+  .btw-contact-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;}
+  .btw-contact-email{font-size:15px;color:var(--moss);text-decoration:none;font-weight:600;}
+  .btw-contact-email:hover{text-decoration:underline;}
   /* ---- auth area ---- */
   .btw-auth-area{
     display:flex;
@@ -2550,6 +2556,16 @@
       <section class="btw-cta-banner">
         <h2>See what's happening between sessions.</h2>
         <button class="btw-hero-btn primary" id="btwHomeTrialBottom">Start 14-day free trial</button>
+      </section>
+
+      <section class="btw-contact" id="btwContactSection">
+        <div class="btw-section-label">Contact</div>
+        <h2>Questions, or Between for your clinic?</h2>
+        <p>We're happy to help — send us a message and we'll get back to you.</p>
+        <div class="btw-contact-actions">
+          <button class="btw-hero-btn primary" id="btwContactSectionBtn" type="button">Send a message</button>
+          <a class="btw-contact-email" href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>
+        </div>
       </section>
 
     </div>
@@ -3967,6 +3983,10 @@
     "Your data is yours — export or delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.":"Vos données vous appartiennent — exportez-les ou supprimez-les à tout moment. Si vous avez un clinicien, il ne voit qu'un court résumé, et seulement avec votre consentement.",
     "Replay the app tour":"Revoir la visite de l'application",
     "Questions, or want Between for your clinic? Email":"Des questions, ou Between pour votre clinique ? Écrivez à",
+    "Contact":"Contact",
+    "Questions, or Between for your clinic?":"Des questions, ou Between pour votre clinique ?",
+    "We're happy to help — send us a message and we'll get back to you.":"Nous sommes là pour aider — écrivez-nous et nous vous répondrons.",
+    "Send a message":"Envoyer un message",
     "Good to know.":"Bon à savoir.",
     "AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911. You can use Between on your own, or alongside a professional.":"Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911. Vous pouvez utiliser Between seul ou avec un professionnel.",
     "Your week, reflected":"Votre semaine, en réflexion",
@@ -7699,6 +7719,8 @@
   // "For clinics & practices" band CTA → the same clinic enquiry form.
   const clinicsCta = document.getElementById('btwClinicsCta');
   if(clinicsCta) clinicsCta.addEventListener('click', openContact);
+  const contactSectionBtn = document.getElementById('btwContactSectionBtn');
+  if(contactSectionBtn) contactSectionBtn.addEventListener('click', openContact);
 
   // "Your recovery, seen": two static body figures (week 1 -> now) showing the
   // pain fading, mirroring the app's My progress view. Physical audiences only
