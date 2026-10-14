@@ -1077,6 +1077,8 @@
   .btw-bodyov-readl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);}
   .btw-bodyov-readv{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:3px;text-transform:capitalize;}
   .btw-bodyov-flag{margin-top:7px;font-size:11.5px;font-weight:600;color:#9a3412;background:#fef2e7;border:1px solid #f6d6b8;border-radius:8px;padding:6px 9px;line-height:1.35;}
+  .btw-nerve-ico{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;color:#b45309;}
+  .btw-nerve-ico svg{display:block;}
   .btw-compose-pain{margin:16px 0;}
   .btw-compose-photo{margin:16px 0;}
   .btw-photo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -3532,6 +3534,7 @@
     "For individuals, too":"Pour les particuliers aussi",
     "Notes and follow-ups":"Notes et suivis",
     "Has notes":"Contient des notes",
+    "Reported tingling or numbness recently":"A signalé des picotements ou un engourdissement récemment",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -10545,6 +10548,13 @@
   window.__btwScoreMode = applyScoreMode;
   // Warning-triangle icon marking a patient in a critical situation.
   const RISK_ICO = '<svg class="btw-risk-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+  // Caseload badge for a patient who reported tingling/numbness on the body map
+  // recently — the one sensation worth a look before the next visit. A soft
+  // nudge, not a crisis flag, so it's visually quieter than RISK_ICO.
+  function nerveBadge(){
+    const lbl = t('Reported tingling or numbness recently');
+    return ' <span class="btw-nerve-ico" title="' + esc(lbl) + '" aria-label="' + esc(lbl) + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 11 14 9 22 21 10 13 10 13 2"></polyline></svg></span>';
+  }
   // Traffic-light status dot from the latest mood and any safety flag.
   // Green: doing well (7+). Orange: middle (4-6). Red: needs attention now
   // (a safety flag, or a very low mood) — reach out as soon as you can.
@@ -10635,7 +10645,7 @@
         <button class="btw-patient-del" data-del="${esc(p.id)}" title="${esc(t('Delete patient'))}" aria-label="${esc(t('Delete patient'))}">×</button>
         ${p.clinician_note ? `<span class="btw-patient-note" title="${esc(t('Has notes'))}" aria-label="${esc(t('Has notes'))}"></span>` : ''}
         <div class="btw-patient-avatar">${esc(initials(p.display_name))}</div>
-        <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}</div>
+        <div class="btw-patient-name">${statusPing(p)}${p.has_recent_risk ? RISK_ICO + ' ' : ''}${esc(p.display_name)}${(painMode() && p.has_recent_nerve_flag) ? nerveBadge() : ''}</div>
         ${leftMeta}
       </div>`;
     }

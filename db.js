@@ -749,6 +749,7 @@ export async function listPatients(clinicianId) {
        count(c.id) FILTER (WHERE c.deleted_at IS NULL AND c.submitted_at > coalesce(p.last_reviewed_at, '-infinity'::timestamptz))::int AS new_check_in_count,
        max(c.submitted_at) FILTER (WHERE c.deleted_at IS NULL) AS last_check_in_at,
        coalesce(bool_or(c.risk_flag AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '48 hours'), false) AS has_recent_risk,
+       coalesce(bool_or((c.pain_sensations @? '$.* ? (@ == "numb")') AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '14 days'), false) AS has_recent_nerve_flag,
        last.mood_score AS last_mood
      FROM patients p
      LEFT JOIN check_ins c ON c.patient_id = p.id
