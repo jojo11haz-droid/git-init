@@ -5843,6 +5843,9 @@
   })();
   // Cognition-flavored overrides on top of the word swap.
   Object.assign(NEURO_EN, {
+    // Demo check-in example (the hero bubble and the try-it box): cognition, not work stress.
+    "Rough week. Work stress kept me up again.":"Foggy week. Couldn't focus and words kept slipping.",
+    "Rough week, work stress kept me up again.":"Foggy week, couldn't focus and words kept slipping.",
     "For therapists, counsellors & anyone on their own":"For neuropsychologists & anyone on their own",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
       "Your patients check in the moment something shifts — a lapse in focus, a word that wouldn't come, a foggy afternoon. Between turns each one into a clear summary and a trend across focus, memory, mental fatigue and mood, ready in your dashboard before the next session. You walk in already knowing their week.",
@@ -5857,6 +5860,8 @@
       "Anyone can use it as a private diary. Check in whenever your focus, memory or energy shifts and watch your own cognitive and mood patterns over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a neuropsychologist."
   });
   Object.assign(NEURO_FR, {
+    "Rough week. Work stress kept me up again.":"Semaine brumeuse. Difficile de me concentrer et les mots m'échappaient.",
+    "Rough week, work stress kept me up again.":"Semaine brumeuse, difficile de me concentrer et les mots m'échappaient.",
     "For therapists, counsellors & anyone on their own":"Pour neuropsychologues et particuliers",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
       "Vos patients font un suivi dès que quelque chose change — une baisse de concentration, un mot qui ne vient pas, un après-midi embrumé. Between transforme chacun en un résumé clair et une tendance de la concentration, de la mémoire, de la fatigue mentale et de l'humeur, prête dans votre tableau de bord avant la prochaine séance. Vous arrivez en sachant déjà leur semaine.",
@@ -6167,6 +6172,12 @@
         '</div>';
     }
   }
+  // The demo check-in box is a <textarea>: once its .value is set (its dirty
+  // flag), mutating the child text node no longer changes what's shown, so the
+  // example would stick on whichever audience rendered first. Track the last
+  // seeded value so translateStatic can reset it per audience without ever
+  // clobbering text a visitor actually typed.
+  let _mkSeed = 'Rough week, work stress kept me up again.';
   function translateStatic(){
     const walker = document.createTreeWalker(btwRoot, NodeFilter.SHOW_TEXT, null);
     const nodes = [];
@@ -6235,6 +6246,17 @@
     renderHeroThread();
     applyCurrency();
     updatePriceModeLabels();
+    // Reseed the demo check-in box for this audience/language (see _mkSeed).
+    // Only when it still holds the previous example, so a visitor's own text,
+    // a recorded memo or a sent check-in is never overwritten.
+    (function(){
+      const ta = document.getElementById('btwMkInput');
+      if(!ta) return;
+      const key = 'Rough week, work stress kept me up again.';
+      const seed = pickCopy(key) || key;
+      if(ta.value === '' || ta.value === _mkSeed) ta.value = seed;
+      _mkSeed = seed;
+    })();
   }
 
   // Pricing currency: US visitors see amounts in USD. If the server has USD
