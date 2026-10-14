@@ -64,6 +64,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return const {};
   }
 
+  // Sensations from the same (latest) check-in the pain map above came from,
+  // so the recovery card can read muscle/joint/nerve alongside the figure.
+  Map<String, String> get _latestSens {
+    for (final c in _history) {
+      final pm = c.painMap;
+      if (pm != null && pm.isNotEmpty) return c.painSens ?? const {};
+    }
+    return const {};
+  }
+
   // Each area's earliest recorded level — the baseline to measure against.
   Map<String, int> get _firstPain {
     final first = <String, int>{};
@@ -252,8 +262,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
               ],
             )
-          else
+          else ...[
             BodyMapView(map: latest),
+            const SizedBox(height: 10),
+            Text(painSummary(latest, _latestSens, s.isFr),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 13, height: 1.4, color: BtwColors.inkSoft)),
+          ],
           const SizedBox(height: 16),
           for (final a in trends) _trendRow(s, a),
         ],
