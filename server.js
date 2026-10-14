@@ -1570,7 +1570,8 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         has_voice_memo: !!c.audio_upload_id,
         has_photo: !!c.photo_upload_id,
         via_questions: c.input_mode === 'questions',
-        pain_map: c.pain_map || null
+        pain_map: c.pain_map || null,
+        pain_sensations: c.pain_sensations || null
       }))
     };
     const safeName = String(patient.display_name || 'patient')
@@ -1678,7 +1679,24 @@ function sanitizePainMap(pm) {
   return Object.keys(out).length ? out : null;
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, inputMode }) {
+// Sensation quality per sore spot, keyed like the pain map ("view:region").
+// The patient picks how it feels in plain words; only this known set is stored,
+// so the clinician read (muscle / joint / nerve) stays well-defined.
+const PAIN_SENS_CODES = new Set(['ache', 'tight', 'stiff', 'sharp', 'numb', 'throb']);
+function sanitizePainSens(ps) {
+  if (!ps || typeof ps !== 'object' || Array.isArray(ps)) return null;
+  const out = {};
+  let n = 0;
+  for (const k of Object.keys(ps)) {
+    if (n >= 60) break;
+    if (typeof k !== 'string' || k.length > 40 || !/^[a-z]+:[a-z_]+$/.test(k)) continue;
+    const v = ps[k];
+    if (typeof v === 'string' && PAIN_SENS_CODES.has(v)) { out[k] = v; n++; }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -1713,6 +1731,7 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
   const checkIn = await createCheckIn({
     patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
     summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap: sanitizePainMap(painMap),
+    painSens: sanitizePainSens(painSens),
     inputMode: inputMode === 'questions' ? 'questions' : null
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
@@ -1721,12 +1740,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, inputMode } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, inputMode });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -2528,7 +2547,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, inputMode } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -2589,7 +2608,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, inputMode });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.

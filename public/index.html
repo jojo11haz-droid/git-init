@@ -1066,6 +1066,17 @@
   .btw-pain-cur .s{font-size:12px;color:var(--ink-soft);}
   .btw-pain-range{width:132px;max-width:100%;accent-color:var(--pc,#EA6F3B);}
   .btw-pain-ends{display:flex;justify-content:space-between;width:132px;max-width:100%;font-size:9.5px;color:var(--ink-soft);letter-spacing:.02em;}
+  .btw-pain-sens{margin-top:12px;max-width:190px;}
+  .btw-pain-sens-lbl{font-size:11px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;letter-spacing:.01em;}
+  .btw-pain-sens.empty .btw-pain-sens-lbl{font-weight:500;font-style:italic;}
+  .btw-pain-sens-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .btw-pain-sens-chip{background:var(--card,#fff);color:var(--ink);border:1px solid var(--line,#dcd7cd);border-radius:999px;padding:5px 11px;font-family:var(--font-body);font-size:11.5px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease;}
+  .btw-pain-sens-chip:hover{border-color:var(--moss);}
+  .btw-pain-sens-chip.active{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-bodyov-read{margin-top:12px;padding-top:11px;border-top:1px solid var(--line,#e5e0d6);}
+  .btw-bodyov-readl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);}
+  .btw-bodyov-readv{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:3px;text-transform:capitalize;}
+  .btw-bodyov-flag{margin-top:7px;font-size:11.5px;font-weight:600;color:#9a3412;background:#fef2e7;border:1px solid #f6d6b8;border-radius:8px;padding:6px 9px;line-height:1.35;}
   .btw-compose-pain{margin:16px 0;}
   .btw-compose-photo{margin:16px 0;}
   .btw-photo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -2377,10 +2388,11 @@
                       <div class="btw-pain-cur" id="btwMkPainCur"><span class="e">😐</span><span class="n">4</span><span class="s">/10</span></div>
                       <input type="range" min="1" max="10" step="any" value="4" id="btwMkPainLevel" class="btw-pain-range" aria-label="Pain level">
                       <div class="btw-pain-ends"><span>1 · mild</span><span>10 · worst</span></div>
+                      <div class="btw-pain-sens empty" id="btwMkSens"><div class="btw-pain-sens-lbl"></div><div class="btw-pain-sens-chips"></div></div>
                       <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
                     </div>
                   </div>
-                  <div class="btw-mk-bodyhint">Tap where it hurts, then slide to set how strong.</div>
+                  <div class="btw-mk-bodyhint">Tap where it hurts, slide to set how strong, then say how it feels.</div>
                 </div>
                 <div class="btw-mk-photo" id="btwMkPhoto" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Add a photo of the sore area</div>
@@ -6539,7 +6551,8 @@
       hasAudio: !!row.audio_upload_id,
       hasPhoto: !!row.photo_upload_id,
       viaQuestions: row.input_mode === 'questions',
-      painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null
+      painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null,
+      painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null
     };
   }
 
@@ -7132,6 +7145,47 @@
     return '<g class="btw-bz-art">' + half + '<g transform="matrix(-1,0,0,1,100,0)">' + half + '</g></g>';
   }
 
+  // How a sore spot feels, in words a patient actually uses. Each maps to the
+  // tissue an osteo/physio would think of — so the clinician gets a muscle vs
+  // joint vs nerve read without the patient ever having to self-diagnose.
+  // "numb" (tingling/numbness) carries a flag because it's the one quality
+  // worth surfacing before the next visit. Declared here, ahead of both body
+  // maps, so the try-it demo IIFE below can use it when it runs.
+  const BTW_SENS = [
+    { code:'ache',  en:'Aching',           fr:'Courbatures',            cat:'muscle' },
+    { code:'tight', en:'Tight',            fr:'Tendu',                  cat:'muscle' },
+    { code:'stiff', en:'Stiff / locking',  fr:'Raide / bloqué',         cat:'joint' },
+    { code:'sharp', en:'Sharp / shooting', fr:'Vif / fulgurant',        cat:'nerve' },
+    { code:'numb',  en:'Tingling / numb',  fr:'Picotements / engourdi', cat:'nerve', flag:true },
+    { code:'throb', en:'Throbbing / hot',  fr:'Lancinant / chaud',      cat:'inflam' }
+  ];
+  const BTW_SENS_BY = {}; BTW_SENS.forEach(function(s){ BTW_SENS_BY[s.code] = s; });
+  function btwSensIsFr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
+  function btwSensLabel(code){ const s = BTW_SENS_BY[code]; return s ? (btwSensIsFr() ? s.fr : s.en) : ''; }
+  const BTW_SENS_CAT_LABEL = {
+    muscle: { en:'mostly muscular',           fr:'surtout musculaire' },
+    joint:  { en:'joint / mobility',          fr:'articulaire / mobilité' },
+    nerve:  { en:'possible nerve involvement', fr:'possible atteinte nerveuse' },
+    inflam: { en:'inflammatory',              fr:'inflammatoire' }
+  };
+  // Collapse one or more sensation maps into a single clinician read: the
+  // dominant tissue category and whether a nerve red flag was reported. Ties
+  // resolve toward the categories worth noticing first (nerve, then joint).
+  function btwSensRead(maps){
+    const counts = { muscle:0, joint:0, nerve:0, inflam:0 };
+    let flag = false, any = false;
+    (maps || []).forEach(function(m){
+      if(!m || typeof m !== 'object') return;
+      Object.keys(m).forEach(function(k){
+        const s = BTW_SENS_BY[m[k]]; if(!s) return;
+        any = true; counts[s.cat] = (counts[s.cat] || 0) + 1; if(s.flag) flag = true;
+      });
+    });
+    if(!any) return null;
+    let best = 'muscle', bestN = -1;
+    ['nerve','joint','inflam','muscle'].forEach(function(c){ if(counts[c] > bestN){ bestN = counts[c]; best = c; } });
+    return { cat:best, flag:flag };
+  }
   // Body pain map: the patient taps where it hurts and how much and the
   // therapist card mirrors it as a colour-coded map plus a summary. Shown only
   // for the physical audiences (sports / fitness / physio / kinesiology).
@@ -7245,8 +7299,38 @@
     function baseFor(v){ return btwIsSide(v) ? BTW_SIDE_BASE : BASE; }
     let view = 'front';
     const state = {}; // (view + ':' + id) -> 0..10
+    const sens = {};  // (view + ':' + id) -> sensation code
     let selected = null; // region key the slider is currently dialing
+    const sensWrap = document.getElementById('btwMkSens');
+    const sensLbl = sensWrap ? sensWrap.querySelector('.btw-pain-sens-lbl') : null;
+    const sensChips = sensWrap ? sensWrap.querySelector('.btw-pain-sens-chips') : null;
     function fr(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
+    function renderMkSens(){
+      if(!sensWrap) return;
+      if(!selected){
+        if(sensLbl) sensLbl.textContent = fr() ? 'Touchez une zone, puis dites comment elle se sent.' : 'Tap a spot, then say how it feels.';
+        if(sensChips) sensChips.innerHTML = '';
+        sensWrap.classList.add('empty');
+        return;
+      }
+      sensWrap.classList.remove('empty');
+      if(sensLbl) sensLbl.textContent = fr() ? 'Comment ça se sent ?' : 'How does it feel?';
+      if(sensChips){
+        sensChips.innerHTML = '';
+        BTW_SENS.forEach(function(s){
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btw-pain-sens-chip' + (sens[selected] === s.code ? ' active' : '');
+          b.textContent = fr() ? s.fr : s.en;
+          b.addEventListener('click', function(){
+            if(sens[selected] === s.code) delete sens[selected];
+            else sens[selected] = s.code;
+            renderMkSens(); updateSummary();
+          });
+          sensChips.appendChild(b);
+        });
+      }
+    }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     function svg(v, uid){
       const cid = 'bpc_' + uid;
@@ -7274,10 +7358,10 @@
     function updateSummary(){
       if(!sumEl) return;
       const hurts = [];
-      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const vk = v + ':' + z.id; const lv = state[vk] || 0; if(lv > 0) hurts.push({ z:z, lv:lv, vk:vk }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
-      const parts = hurts.map(function(h){ return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10)'; });
+      const parts = hurts.map(function(h){ const sc = sens[h.vk]; const sl = sc ? ', ' + btwSensLabel(sc).toLowerCase() : ''; return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10' + sl + ')'; });
       sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
     }
     function updBrush(){
@@ -7293,18 +7377,18 @@
     fig.addEventListener('click', function(e){
       const z = btwPickZone(fig.querySelector('svg'), zonesFor(view), view === 'right', e.clientX, e.clientY); if(!z) return;
       const key = view + ':' + z.id;
-      if(selected === key){ delete state[key]; selected = null; } // tap the active spot again to clear it
+      if(selected === key){ delete state[key]; delete sens[key]; selected = null; } // tap the active spot again to clear it
       else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); }
-      paint(); updateSummary();
+      paint(); updateSummary(); renderMkSens();
     });
     const VIEWS = { front:1, back:1, left:1, right:1 };
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
       view = VIEWS[b.dataset.view] ? b.dataset.view : 'front';
       selected = null;
       viewBtns.forEach(function(x){ x.classList.toggle('active', x === b); });
-      render();
+      render(); renderMkSens();
     }); });
-    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; selected = null; paint(); updateSummary(); });
+    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; for(var sk in sens) delete sens[sk]; selected = null; paint(); updateSummary(); renderMkSens(); });
     const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1, occupational:1 };
     const photoEl = document.getElementById('btwMkPhoto');
     function refresh(){
@@ -7315,7 +7399,7 @@
       // The photo attaches only to a pain check-in, so show it for physio,
       // kinesiology and osteopathy but not the load-focused sports and fitness.
       if(photoEl) photoEl.hidden = !(aud === 'physio' || aud === 'kinesiology' || aud === 'osteo' || aud === 'occupational');
-      render(); updateSummary();
+      render(); updateSummary(); renderMkSens();
     }
     // Highlight body regions from a typed check-in ("sore knee", "lower back",
     // "tight hamstring") so the demo body map reacts to what the person wrote.
@@ -7407,6 +7491,7 @@
   // Reusable body pain map for the real app: interactive picker (check-in
   // composer) or read-only display (dashboard). Self-contained; front/back
   // views, muscle regions, severity 1..3. State is { "view:region": level }.
+  // A parallel sensation map { "view:region": sens-code } rides alongside it.
   function btwCreateBodyMap(opts){
     opts = opts || {};
     const readOnly = !!opts.readOnly;
@@ -7508,6 +7593,7 @@
     const uid = 'bpm' + btwCreateBodyMap._n;
     let view = 'front';
     let state = {};
+    let sens = {}; // parallel { "view:region": sens-code } — how each spot feels
     let brush = 4; // currently selected pain level for tapping
     let selected = null; // region key the slider is currently dialing
     const root = document.createElement('div');
@@ -7532,7 +7618,37 @@
       const ends = document.createElement('div'); ends.className = 'btw-pain-ends';
       ends.innerHTML = '<span>1 · ' + esc(frL()?'léger':'mild') + '</span><span>10 · ' + esc(frL()?'pire':'worst') + '</span>';
       const clr = document.createElement('button'); clr.type = 'button'; clr.className = 'btw-mk-bodyclear'; clr.textContent = frL()?'Effacer':'Clear';
-      clr.addEventListener('click', function(){ state = {}; selected = null; render(); });
+      clr.addEventListener('click', function(){ state = {}; sens = {}; selected = null; render(); renderSens(); });
+      // "How does it feel?" — optional sensation chips for the picked spot. The
+      // patient describes it in plain words; we store the mapped code so the
+      // clinician reads muscle vs joint vs nerve from it.
+      const sensWrap = document.createElement('div'); sensWrap.className = 'btw-pain-sens';
+      const sensLbl = document.createElement('div'); sensLbl.className = 'btw-pain-sens-lbl';
+      const sensChips = document.createElement('div'); sensChips.className = 'btw-pain-sens-chips';
+      sensWrap.appendChild(sensLbl); sensWrap.appendChild(sensChips);
+      function renderSens(){
+        if(!selected){
+          sensLbl.textContent = frL() ? 'Touchez une zone, puis dites comment elle se sent (facultatif).' : 'Tap a spot, then say how it feels (optional).';
+          sensChips.innerHTML = '';
+          sensWrap.classList.add('empty');
+          return;
+        }
+        sensWrap.classList.remove('empty');
+        sensLbl.textContent = frL() ? 'Comment ça se sent ?' : 'How does it feel?';
+        sensChips.innerHTML = '';
+        BTW_SENS.forEach(function(s){
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btw-pain-sens-chip' + (sens[selected] === s.code ? ' active' : '');
+          b.textContent = frL() ? s.fr : s.en;
+          b.addEventListener('click', function(){
+            if(sens[selected] === s.code) delete sens[selected]; // tap again to unset
+            else sens[selected] = s.code;
+            renderSens();
+          });
+          sensChips.appendChild(b);
+        });
+      }
       function updBrush(){
         // Continuous drag, but each spot stores a whole 1-10 pain level.
         brush = Math.min(10, Math.max(1, Math.round(parseFloat(rng.value)))) || 1;
@@ -7546,12 +7662,12 @@
       figWrap.addEventListener('click', function(e){
         const z = btwPickZone(figWrap.querySelector('svg'), zonesFor(view), view === 'right', e.clientX, e.clientY); if(!z) return;
         const key = view + ':' + z.id;
-        if(selected === key){ delete state[key]; selected = null; }
+        if(selected === key){ delete state[key]; delete sens[key]; selected = null; }
         else { selected = key; if(!state[key]) state[key] = brush; rng.value = state[key]; updBrush(); }
-        paint();
+        paint(); renderSens();
       });
-      side.appendChild(cur); side.appendChild(rng); side.appendChild(ends); side.appendChild(clr);
-      updBrush();
+      side.appendChild(cur); side.appendChild(rng); side.appendChild(ends); side.appendChild(sensWrap); side.appendChild(clr);
+      updBrush(); renderSens();
     }
     function svg(v){
       const cid = 'bpc_' + uid;
@@ -7565,10 +7681,13 @@
     function paint(){ figWrap.querySelectorAll('.btw-bz').forEach(function(el){ const key = view + ':' + el.getAttribute('data-zone'); el.style.fill = FILL[state[key] || 0]; if(!readOnly && key === selected){ el.style.stroke = 'var(--ink)'; el.style.strokeWidth = '1.6'; el.style.strokeOpacity = '.85'; } else { el.style.stroke = 'none'; } }); }
     function summary(){
       const hurts = [];
-      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const lv = state[v + ':' + z.id] || 0; if(lv > 0) hurts.push({ z:z, lv:lv }); }); });
+      ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const vk = v + ':' + z.id; const lv = state[vk] || 0; if(lv > 0) hurts.push({ z:z, lv:lv, vk:vk }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length) return frL() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.';
-      return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){ return (frL()?h.z.fr:h.z.en) + ' (' + h.lv + '/10)'; }).join(', ') + '.';
+      return (frL() ? 'Zones sensibles : ' : 'Sore spots: ') + hurts.map(function(h){
+        const sc = sens[h.vk]; const sl = sc ? ', ' + btwSensLabel(sc).toLowerCase() : '';
+        return (frL()?h.z.fr:h.z.en) + ' (' + h.lv + '/10' + sl + ')';
+      }).join(', ') + '.';
     }
     function render(){ figWrap.innerHTML = svg(view); paint(); if(readOnly) side.textContent = summary(); }
     const VIEWS = { front:1, back:1, left:1, right:1 };
@@ -7632,7 +7751,11 @@
       el: root,
       getMap: function(){ return Object.keys(state).length ? Object.assign({}, state) : null; },
       setMap: function(m){ state = (m && typeof m === 'object') ? Object.assign({}, m) : {}; selected = null; render(); },
-      clear: function(){ state = {}; selected = null; render(); },
+      // Sensations only count where a pain level exists, so a cleared spot never
+      // leaves an orphan quality behind.
+      getSens: function(){ const out = {}; Object.keys(sens).forEach(function(k){ if(state[k]) out[k] = sens[k]; }); return Object.keys(out).length ? out : null; },
+      setSens: function(m){ sens = (m && typeof m === 'object') ? Object.assign({}, m) : {}; render(); },
+      clear: function(){ state = {}; sens = {}; selected = null; render(); },
       fromText: fromText,
       // Human label for a "view:id" pain-map key, e.g. "front:r_knee" -> "right knee".
       labelFor: function(key){
@@ -10828,7 +10951,7 @@
     // Attach a read-only body map to each entry that has one.
     el.querySelectorAll('.btw-ci-pain[data-pain]').forEach(function(host){
       const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
-      if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true }); bm.setMap(ci.painMap); host.appendChild(bm.el); }
+      if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true }); bm.setMap(ci.painMap); if(ci.painSens) bm.setSens(ci.painSens); host.appendChild(bm.el); }
     });
     hydratePatientPhotos();
   }
@@ -11050,6 +11173,25 @@
       top.className = 'btw-bodyov-top';
       top.innerHTML = '<div class="btw-bodyov-topl">' + esc(t('Most affected areas')) + '</div>' + rows;
       host.appendChild(top);
+    }
+    // A muscle / joint / nerve read from how the patient described the spots —
+    // the osteo/physio lens, derived from their own words, never a diagnosis.
+    const sensRead = btwSensRead(list.map(function(c){ return c.painSens; }));
+    if(sensRead){
+      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+      const cl = BTW_SENS_CAT_LABEL[sensRead.cat];
+      const catLbl = cl ? (fr ? cl.fr : cl.en) : '';
+      const read = document.createElement('div');
+      read.className = 'btw-bodyov-read';
+      let html = '<div class="btw-bodyov-readl">' + esc(fr ? 'Ce que décrit le patient' : 'How it reads') + '</div>'
+        + '<div class="btw-bodyov-readv">' + esc(catLbl) + '</div>';
+      if(sensRead.flag){
+        html += '<div class="btw-bodyov-flag">⚑ ' + esc(fr
+          ? 'Signale des picotements / engourdissements — à revoir avant la prochaine visite.'
+          : 'Reports tingling / numbness — worth a look before the next visit.') + '</div>';
+      }
+      read.innerHTML = html;
+      host.appendChild(read);
     }
     host.style.display = '';
   }
@@ -11618,6 +11760,7 @@
     const mood = moodSkipped ? null : Math.round(parseFloat(moodEl.value));
     const manualTags = [...state.selectedTags];
     const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
+    const painSens = (painMapContext() && composeBodyMap) ? composeBodyMap.getSens() : null;
     if(!text && manualTags.length===0 && !painMap && !composePhoto){
       if(composeMode === 'questions'){ const first = document.querySelector('#btwComposeQuestions textarea'); if(first) first.focus(); }
       else { textEl.placeholder = t('Say a bit about what happened before sending…'); textEl.focus(); }
@@ -11638,12 +11781,12 @@
       if(isPatient()){
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, photoUploadId, inputMode: composeMode
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, inputMode: composeMode
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode
         });
         risk = !!checkIn.risk_flag;
       }

@@ -223,6 +223,10 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
+-- How each sore spot feels (aching/stiff/sharp/tingling...), keyed the same
+-- "view:region" way as pain_map, so an osteo/physio reads muscle vs joint vs
+-- nerve from the patient's own words without the patient having to diagnose.
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_sensations JSONB;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS input_mode TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
@@ -1222,11 +1226,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, inputMode }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, input_mode)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, inputMode || null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null]
   );
   return rows[0];
 }
