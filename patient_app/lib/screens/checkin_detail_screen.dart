@@ -115,6 +115,12 @@ class CheckInDetailScreen extends StatelessWidget {
                       color: BtwColors.moss)),
               const SizedBox(height: 12),
               BodyMapView(map: painMap),
+              const SizedBox(height: 10),
+              Text(
+                painSummary(painMap, c.painSens, s.isFr),
+                style: const TextStyle(
+                    fontSize: 13, color: BtwColors.inkSoft, height: 1.4),
+              ),
             ],
             if (c.hasPhoto) ...[
               const SizedBox(height: 22),

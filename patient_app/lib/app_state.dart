@@ -60,6 +60,18 @@ class CheckIn {
     }
     return null;
   }
+  // How each sore spot feels: { "view:region": sensation code }, or null.
+  Map<String, String>? get painSens {
+    final ps = raw['pain_sensations'];
+    if (ps is Map && ps.isNotEmpty) {
+      final out = <String, String>{};
+      ps.forEach((k, v) {
+        if (v is String) out[k.toString()] = v;
+      });
+      return out.isEmpty ? null : out;
+    }
+    return null;
+  }
   bool get riskFlag => raw['risk_flag'] == true;
   bool get flaggedInaccurate => raw['patient_flagged_inaccurate'] == true;
   DateTime get submittedAt =>
@@ -319,6 +331,7 @@ class AppState extends ChangeNotifier {
     String? audioUploadId,
     String? photoUploadId,
     Map<String, int>? painMap,
+    Map<String, String>? painSens,
     String? inputMode,
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
@@ -328,6 +341,7 @@ class AppState extends ChangeNotifier {
       'audioUploadId': audioUploadId,
       if (photoUploadId != null) 'photoUploadId': photoUploadId,
       if (painMap != null && painMap.isNotEmpty) 'painMap': painMap,
+      if (painSens != null && painSens.isNotEmpty) 'painSens': painSens,
       if (inputMode != null) 'inputMode': inputMode,
     });
     final map = (data as Map).cast<String, dynamic>();

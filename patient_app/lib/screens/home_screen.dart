@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _text = TextEditingController();
   final Set<String> _tags = {};
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
+  Map<String, String> _painSens = {}; // "view:region" -> sensation code
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
   bool _detailsOpen = false;
@@ -277,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
             audioUploadId: audioUploadId,
             photoUploadId: photoUploadId,
             painMap: _painMap.isEmpty ? null : _painMap,
+            painSens: _painSens.isEmpty ? null : _painSens,
             inputMode: inputMode,
           );
       if (!mounted) return;
@@ -287,6 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _tags.clear();
         _painMap = {};
+        _painSens = {};
         _photoBytes = null;
         _mood = 5;
         _moodEstimate = false;
@@ -545,6 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     BodyMap(
                       isFr: s.isFr,
                       onChanged: (m) => _painMap = m,
+                      onSensChanged: (m) => _painSens = m,
                     ),
                     const SizedBox(height: 16),
                     // Optional photo of the sore area.

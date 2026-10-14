@@ -16,6 +16,53 @@ const _fill = <Color>[
 ];
 const _bodyGrey = Color(0xFFD7DBE3);
 
+/// How a sore spot feels, in words a patient actually uses — mirrors the web.
+/// Each maps to the tissue an osteo/physio would think of, so the clinician
+/// gets a muscle vs joint vs nerve read without the patient self-diagnosing.
+class BtwSensation {
+  const BtwSensation(this.code, this.en, this.fr, this.cat, {this.flag = false});
+  final String code, en, fr, cat;
+  final bool flag; // true for tingling/numb — the one worth a look before next visit
+}
+
+const btwSensations = <BtwSensation>[
+  BtwSensation('ache', 'Aching', 'Courbatures', 'muscle'),
+  BtwSensation('tight', 'Tight', 'Tendu', 'muscle'),
+  BtwSensation('stiff', 'Stiff / locking', 'Raide / bloqué', 'joint'),
+  BtwSensation('sharp', 'Sharp / shooting', 'Vif / fulgurant', 'nerve'),
+  BtwSensation('numb', 'Tingling / numb', 'Picotements / engourdi', 'nerve',
+      flag: true),
+  BtwSensation('throb', 'Throbbing / hot', 'Lancinant / chaud', 'inflam'),
+];
+
+/// Localised label for a sensation code, or '' if unknown.
+String sensationLabel(String code, bool isFr) {
+  for (final s in btwSensations) {
+    if (s.code == code) return isFr ? s.fr : s.en;
+  }
+  return '';
+}
+
+/// "Sore spots: lower back (7/10, sharp / shooting), left shin (5/10)." — shared
+/// by the interactive map and the read-only detail view so both read the same.
+String painSummary(Map<String, int> map, Map<String, String>? sens, bool isFr,
+    {int max = 4}) {
+  if (map.isEmpty) {
+    return isFr ? 'Aucune zone douloureuse.' : 'No sore spots yet.';
+  }
+  final parts = map.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+  final names = parts.take(max).map((e) {
+    final label = regionLabel(e.key, isFr);
+    final sc = sens?[e.key];
+    final sl = (sc != null && sc.isNotEmpty)
+        ? ', ${sensationLabel(sc, isFr).toLowerCase()}'
+        : '';
+    return '$label (${e.value}/10$sl)';
+  }).join(', ');
+  final more = parts.length > max ? ' …' : '';
+  return (isFr ? 'Zones sensibles : ' : 'Sore spots: ') + names + more;
+}
+
 class _Region {
   const _Region(this.id, this.en, this.fr, this.x, this.y, this.w, this.h,
       {this.ellipse = false});
@@ -99,17 +146,30 @@ final _baseOvals = <Rect>[
 ];
 
 class BodyMap extends StatefulWidget {
-  const BodyMap({super.key, required this.onChanged, required this.isFr});
+  const BodyMap({
+    super.key,
+    required this.onChanged,
+    this.onSensChanged,
+    required this.isFr,
+  });
 
   final ValueChanged<Map<String, int>> onChanged;
+  final ValueChanged<Map<String, String>>? onSensChanged;
   final bool isFr;
 
   @override
   State<BodyMap> createState() => _BodyMapState();
 }
 
+class _PickResult {
+  const _PickResult(this.level, this.sens);
+  final int level;
+  final String? sens;
+}
+
 class _BodyMapState extends State<BodyMap> {
   final Map<String, int> _map = {}; // "view:region" -> 1..10
+  final Map<String, String> _sens = {}; // "view:region" -> sensation code
   String _view = 'front';
   static const double _w = 190; // on-screen width; height keeps 100:198 ratio
 
@@ -129,100 +189,175 @@ class _BodyMapState extends State<BodyMap> {
     if (hit == null) return;
     final region = hit;
     final key = '$_view:${region.id}';
-    final level = await _pickLevel(region, _map[key] ?? 0);
-    if (level == null || !mounted) return;
+    final res = await _pickLevel(region, _map[key] ?? 0, _sens[key]);
+    if (res == null || !mounted) return;
     setState(() {
-      if (level <= 0) {
+      if (res.level <= 0) {
         _map.remove(key);
+        _sens.remove(key);
       } else {
-        _map[key] = level;
+        _map[key] = res.level;
+        if (res.sens == null) {
+          _sens.remove(key);
+        } else {
+          _sens[key] = res.sens!;
+        }
       }
     });
     widget.onChanged(Map<String, int>.from(_map));
+    widget.onSensChanged?.call(Map<String, String>.from(_sens));
   }
 
-  Future<int?> _pickLevel(_Region region, int current) {
+  Future<_PickResult?> _pickLevel(
+      _Region region, int current, String? currentSens) {
     final name = widget.isFr ? region.fr : region.en;
-    return showModalBottomSheet<int>(
+    int lvl = current;
+    String? sc = currentSens;
+    return showModalBottomSheet<_PickResult>(
       context: context,
       backgroundColor: BtwColors.cream,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.isFr ? 'Niveau de douleur — $name' : 'Pain level — $name',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.isFr
-                    ? '0 = aucune, 10 = la pire'
-                    : '0 = none, 10 = worst',
-                style: const TextStyle(fontSize: 13, color: BtwColors.inkSoft),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (var i = 0; i <= 10; i++)
-                    GestureDetector(
-                      onTap: () => Navigator.of(ctx).pop(i),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: i == 0 ? Colors.white : _fill[i],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: i == current
-                                ? BtwColors.ink
-                                : BtwColors.line,
-                            width: i == current ? 2.2 : 1,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.isFr
+                      ? 'Niveau de douleur — $name'
+                      : 'Pain level — $name',
+                  style:
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.isFr
+                      ? '0 = aucune, 10 = la pire'
+                      : '0 = none, 10 = worst',
+                  style:
+                      const TextStyle(fontSize: 13, color: BtwColors.inkSoft),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (var i = 0; i <= 10; i++)
+                      GestureDetector(
+                        onTap: () => setSheet(() => lvl = i),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: i == 0 ? Colors.white : _fill[i],
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: i == lvl ? BtwColors.ink : BtwColors.line,
+                              width: i == lvl ? 2.2 : 1,
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          i == 0 ? '0' : '$i',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: i >= 5 ? Colors.white : BtwColors.ink,
+                          child: Text(
+                            i == 0 ? '0' : '$i',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: i >= 5 ? Colors.white : BtwColors.ink,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                  ],
+                ),
+                // Sensation quality: only once a level is set. Optional — the
+                // patient says how it feels, we read muscle/joint/nerve from it.
+                if (lvl > 0) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.isFr
+                        ? 'Comment ça se sent ? (facultatif)'
+                        : 'How does it feel? (optional)',
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final s in btwSensations)
+                        GestureDetector(
+                          onTap: () => setSheet(
+                              () => sc = (sc == s.code) ? null : s.code),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 9),
+                            decoration: BoxDecoration(
+                              color:
+                                  sc == s.code ? BtwColors.moss : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: sc == s.code
+                                      ? BtwColors.moss
+                                      : BtwColors.line),
+                            ),
+                            child: Text(
+                              widget.isFr ? s.fr : s.en,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: sc == s.code
+                                    ? Colors.white
+                                    : BtwColors.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    if (current > 0)
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx)
+                            .pop(const _PickResult(0, null)),
+                        child: Text(
+                          widget.isFr ? 'Retirer' : 'Remove',
+                          style: const TextStyle(
+                              color: BtwColors.clay,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(ctx)
+                          .pop(_PickResult(lvl, lvl > 0 ? sc : null)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: BtwColors.moss,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(widget.isFr ? 'OK' : 'Done'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  String _summary() {
-    if (_map.isEmpty) {
-      return widget.isFr ? 'Aucune zone douloureuse.' : 'No sore spots yet.';
-    }
-    final parts = _map.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final names = parts.take(4).map((e) {
-      final id = e.key.split(':')[1];
-      final r = [..._front, ..._back].firstWhere((x) => x.id == id,
-          orElse: () => _Region(id, id, id, 0, 0, 0, 0));
-      return '${widget.isFr ? r.fr : r.en} (${e.value}/10)';
-    }).join(', ');
-    final more = parts.length > 4 ? ' …' : '';
-    return (widget.isFr ? 'Zones sensibles : ' : 'Sore spots: ') + names + more;
-  }
+  String _summary() => painSummary(_map, _sens, widget.isFr);
 
   Widget _viewBtn(String v, String label) {
     final sel = _view == v;
