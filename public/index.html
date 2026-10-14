@@ -2361,6 +2361,7 @@
         <div class="btw-section-label">See both sides</div>
         <p class="btw-demo-lead">One tool, two views. Your clients check in in seconds and you get the full picture before they arrive.</p>
         <p class="btw-try-sub">Both cards below are live. Move the slider, record a voice memo, or tap a client.</p>
+        <button type="button" class="btw-tour-start" id="btwDemoTourBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>Walk me through it</button>
         <div class="btw-shots-grid">
           <div>
             <div class="btw-shot">
@@ -2437,7 +2438,7 @@
                   <div class="l" id="btwMkSummaryLabel">AI summary · Amy</div>
                   <p id="btwMkSummary">Rough week. Work stress kept her up several nights. One bright spot: she reconnected with an old friend on the weekend. No safety concerns flagged.</p>
                 </div>
-                <svg viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path id="btwMkTrend" d="M8,42 L70,38 L132,32 L194,22 L246,14" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle id="btwMkTrendDot" cx="246" cy="14" r="3.5" fill="#1E4C86"></circle></svg>
+                <svg id="btwMkTrendSvg" viewBox="0 0 260 58" width="100%" height="52" style="margin-top:10px;" aria-hidden="true"><line x1="8" y1="48" x2="252" y2="48" stroke="#E4E3DD"></line><path id="btwMkTrend" d="M8,42 L70,38 L132,32 L194,22 L246,14" fill="none" stroke="#1E4C86" stroke-width="2"></path><circle id="btwMkTrendDot" cx="246" cy="14" r="3.5" fill="#1E4C86"></circle></svg>
                 <div class="btw-mk-insights">
                   <div class="btw-mk-ins"><div class="l" id="btwMkMoodDirLabel">Mood direction</div><div class="v" id="btwMkMoodDir" style="color:var(--moss);">↑ improving</div></div>
                   <div class="btw-mk-ins"><div class="l" id="btwMkTiedToLabel">Tied to lower mood</div><div class="v" id="btwMkTiedTo">Work</div></div>
@@ -3535,6 +3536,7 @@
     "Notes and follow-ups":"Notes et suivis",
     "Has notes":"Contient des notes",
     "Reported tingling or numbness recently":"A signalé des picotements ou un engourdissement récemment",
+    "Walk me through it":"Visite guidée",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -11481,7 +11483,32 @@
       }
     }
     function go(n){ idx = Math.max(0, Math.min(steps.length-1, n)); render(); }
-    function start(){ steps = buildSteps(); idx = 0; active = true; overlay.classList.add('show'); render(); }
+    function startSteps(s){ steps = s; idx = 0; active = true; overlay.classList.add('show'); render(); }
+    function start(){ startSteps(buildSteps()); }
+    // The marketing "Try it live" walkthrough: the same spotlight engine, but
+    // anchored to the two demo cards on the landing page so a visitor gets a
+    // guided read of exactly what each side does. Bilingual inline so it needs
+    // no dictionary entries.
+    function buildDemoSteps(){
+      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+      const L = function(en, f){ return fr ? f : en; };
+      const pm = (typeof painMode === 'function') && painMode();
+      const noun = personNoun();
+      return [
+        { sel:null, title:L('A quick walkthrough','Visite guidée rapide'), body:L('Thirty seconds, both sides: what your ' + noun + ' does, and what you see. Skip anytime.','Trente secondes, les deux côtés : ce que fait votre ' + noun + ' et ce que vous voyez. Passez quand vous voulez.') },
+        { sel:'#btwMkSlider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste — ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste — ou laisse Between l’estimer.') },
+        { sel:'.btw-mk-airead', title:L('Between reads it back','Between le relit'), body:L('From a sentence or a voice note, Between reads the feeling and the themes — no forms to fill.','À partir d’une phrase ou d’un mémo vocal, Between dégage le ressenti et les thèmes — aucun formulaire.') },
+        { sel:'#btwMkChips', title:L('What’s going on','Ce qui se passe'), body:L('They tap what fits, or let Between pick up the themes from their words.','Il choisit ce qui colle, ou laisse Between repérer les thèmes dans ses mots.') },
+        { sel:'#btwMkInput', title:L('In their own words','Dans ses propres mots'), body:L('A few words or a voice memo — the whole check-in takes under a minute, whenever something comes up.','Quelques mots ou un mémo vocal — le suivi complet prend moins d’une minute, dès que quelque chose survient.') },
+        { sel:'#btwMkSend', title:L('They send it','Il l’envoie'), body:L('No appointment, no one waiting. It just lands in your dashboard for the next session.','Sans rendez-vous, sans personne à l’autre bout. Cela arrive dans votre tableau de bord pour la prochaine séance.') },
+        { sel:'.btw-mk-row.flag', title:L('Your caseload','Votre liste'), body:L('Everyone shows here. Anyone flagged or with new check-ins rises to the top, so a big list is one glance.','Tout le monde est ici. Les personnes signalées ou avec de nouveaux suivis remontent en haut : une grande liste se lit d’un coup d’œil.') },
+        { sel:'#btwMkSummary', title:L('The week, in two lines','La semaine, en deux lignes'), body:L('Between turns their check-ins into a short summary — you read it in seconds instead of scrubbing raw notes.','Between transforme ses suivis en un court résumé — vous le lisez en quelques secondes au lieu de parcourir des notes brutes.') },
+        { sel:'.btw-mk-insights', title:L('Direction, and what’s driving it','La tendance, et ce qui l’explique'), body: pm ? L('See whether pain is easing or climbing, and the theme that tracks with the harder days.','Voyez si la douleur baisse ou monte, et le thème qui accompagne les journées plus difficiles.') : L('See whether mood is improving or dipping, and the theme that tracks with the harder days.','Voyez si l’humeur s’améliore ou baisse, et le thème qui accompagne les journées plus difficiles.') },
+        { sel:'#btwMkTrendSvg', title:L('The trend','La tendance'), body:L('Each check-in adds a point, so a rough stretch — or a real recovery — is something you can actually see.','Chaque suivi ajoute un point : une mauvaise passe — ou un vrai rétablissement — devient visible.') },
+        { sel:'.btw-mk-statslink', title:L('Go deeper when you want','Allez plus loin au besoin'), body:L('Open advanced stats for month-by-month mood, streaks and the themes behind the harder weeks.','Ouvrez les stats avancées pour l’humeur mois par mois, les séries et les thèmes des semaines difficiles.') },
+        { sel:null, title:L('That’s the loop','C’est la boucle'), body:L('Your ' + noun + ' checks in in seconds; you walk in already knowing their week. Try the cards yourself — they’re live.','Votre ' + noun + ' fait un suivi en quelques secondes ; vous arrivez en sachant déjà sa semaine. Essayez les cartes — elles sont actives.') }
+      ];
+    }
     function end(){ active = false; overlay.classList.remove('show'); try{ localStorage.setItem('btw_tour_v1','done'); }catch(e){} }
 
     btnNext.addEventListener('click', function(){ if(idx >= steps.length-1) end(); else go(idx+1); });
@@ -11497,6 +11524,9 @@
     });
 
     window.btwStartTour = start;
+    window.btwStartDemoTour = function(){ startSteps(buildDemoSteps()); };
+    const demoTourBtn = document.getElementById('btwDemoTourBtn');
+    if(demoTourBtn) demoTourBtn.addEventListener('click', function(){ window.btwStartDemoTour(); });
     // Auto-start once for a signed-in clinician or patient sitting on the
     // dashboard (a pending, unverified clinician is skipped until they're in).
     window.btwMaybeStartTour = function(){
