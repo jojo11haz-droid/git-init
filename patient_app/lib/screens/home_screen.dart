@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,27 @@ import 'history_screen.dart';
 import 'progress_screen.dart';
 import 'sent_screen.dart';
 import 'settings_screen.dart';
+
+/// Shrink a photo before upload: scale the long edge to 1600px and re-encode as
+/// JPEG, so a multi-MB phone photo becomes a few hundred KB. Keeps the backend
+/// database (which stores photos as bytes) small. Top-level so it can run via
+/// compute() off the UI thread; returns the original bytes on any failure or if
+/// compression wouldn't help.
+Uint8List _compressPhoto(Uint8List bytes) {
+  try {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) return bytes;
+    final img.Image resized = (decoded.width > 1600 || decoded.height > 1600)
+        ? (decoded.width >= decoded.height
+            ? img.copyResize(decoded, width: 1600)
+            : img.copyResize(decoded, height: 1600))
+        : decoded;
+    final out = Uint8List.fromList(img.encodeJpg(resized, quality: 82));
+    return out.length < bytes.length ? out : bytes;
+  } catch (_) {
+    return bytes;
+  }
+}
 
 /// The core loop: one calm screen, one main thing to do. Writing comes first;
 /// mood and tags are a light optional step revealed afterwards — never a form
@@ -269,7 +291,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       String? photoUploadId;
       if (_photoBytes != null) {
-        photoUploadId = await app.uploadPhoto(_photoBytes!, 'image/jpeg');
+        // Shrink before upload so photos don't bloat the backend (it stores
+        // them as bytes). Runs off the UI thread; falls back to the original.
+        final toSend = await compute(_compressPhoto, _photoBytes!);
+        photoUploadId = await app.uploadPhoto(toSend, 'image/jpeg');
       }
       final result = await app.sendCheckIn(
             text: text.isEmpty ? null : text,

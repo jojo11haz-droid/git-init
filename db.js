@@ -1248,6 +1248,48 @@ export async function createHistoricalCheckIn({ patientId, submittedAt, moodScor
   return rows[0];
 }
 
+// --- Storage usage & media retention -------------------------------------
+// Photos and voice memos are stored as BYTEA in Postgres, so they dominate the
+// database size. These let the owner see usage and reclaim space.
+
+export async function storageStats() {
+  const one = async (sql) => (await pool.query(sql)).rows[0];
+  const db = await one("SELECT pg_database_size(current_database())::bigint AS b");
+  const ph = await one("SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b, min(created_at) AS oldest FROM photo_uploads");
+  const au = await one("SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b, min(created_at) AS oldest FROM audio_uploads");
+  return {
+    dbBytes: Number(db.b),
+    photos: { count: ph.n, bytes: Number(ph.b), oldest: ph.oldest },
+    audio: { count: au.n, bytes: Number(au.b), oldest: au.oldest }
+  };
+}
+
+// Delete photos and voice memos older than `months` (the check-in and its text
+// summary are kept). The check-in's reference is nulled first because the FK
+// has no cascade. Runs in one transaction. `months` is clamped to a sane
+// integer range, so it is safe to interpolate into the interval literal.
+export async function purgeOldMedia(months = 12) {
+  const m = Math.max(1, Math.min(120, Math.round(Number(months) || 12)));
+  const cutoff = `now() - interval '${m} months'`;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const ph = (await client.query(`SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b FROM photo_uploads WHERE created_at < ${cutoff}`)).rows[0];
+    const au = (await client.query(`SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b FROM audio_uploads WHERE created_at < ${cutoff}`)).rows[0];
+    await client.query(`UPDATE check_ins SET photo_upload_id = NULL WHERE photo_upload_id IN (SELECT id FROM photo_uploads WHERE created_at < ${cutoff})`);
+    await client.query(`DELETE FROM photo_uploads WHERE created_at < ${cutoff}`);
+    await client.query(`UPDATE check_ins SET audio_upload_id = NULL WHERE audio_upload_id IN (SELECT id FROM audio_uploads WHERE created_at < ${cutoff})`);
+    await client.query(`DELETE FROM audio_uploads WHERE created_at < ${cutoff}`);
+    await client.query('COMMIT');
+    return { months: m, photos: { count: ph.n, bytes: Number(ph.b) }, audio: { count: au.n, bytes: Number(au.b) } };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
 export async function listCheckIns(patientId) {
   const { rows } = await pool.query(
     `SELECT * FROM check_ins WHERE patient_id = $1 AND deleted_at IS NULL ORDER BY submitted_at DESC`,

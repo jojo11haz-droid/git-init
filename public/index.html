@@ -3241,7 +3241,11 @@
         <button type="button" class="btw-aud-btn" id="btwAdminTabNeuropsych" data-admintab="neuropsych">Neuropsychologists</button>
       </div>
       <div class="btw-form-error" id="btwAdminError"></div>
-      <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
+      <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto;"></div>
+      <div id="btwStorageCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+        <div class="btw-modal-eyebrow">Backend · Storage</div>
+        <div id="btwStorageBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
+      </div>
     </div>
   </div>
 
@@ -8873,6 +8877,42 @@
     adminOverlay.style.display = 'flex';
     try{ renderAdminList(await api('GET', '/api/admin/clinicians')); }
     catch(e){ err.textContent = e.message; list.innerHTML = ''; }
+    loadAdminStorage();
+  }
+  function btwFmtBytes(b){ b = Number(b) || 0; if(b < 1024) return b + ' B'; const u = ['KB','MB','GB','TB']; let i = -1; do { b /= 1024; i++; } while(b >= 1024 && i < u.length - 1); return b.toFixed(b < 10 ? 1 : 0) + ' ' + u[i]; }
+  async function loadAdminStorage(){
+    const el = document.getElementById('btwStorageBody'); if(!el) return;
+    el.textContent = 'Loading…';
+    try {
+      const s = await api('GET', '/api/admin/storage');
+      const media = (s.photos.bytes || 0) + (s.audio.bytes || 0);
+      const pct = s.dbBytes ? Math.round(media / s.dbBytes * 100) : 0;
+      el.innerHTML =
+        '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> total database</div>' +
+        '<div style="margin-top:4px;">' + s.photos.count + ' photos · ' + btwFmtBytes(s.photos.bytes) + '</div>' +
+        '<div>' + s.audio.count + ' voice memos · ' + btwFmtBytes(s.audio.bytes) + '</div>' +
+        '<div style="margin-top:6px;">Media is about <strong>' + pct + '%</strong> of the database — it\'s what grows. Upgrade your Render Postgres plan before it reaches ~80% of the plan\'s storage limit.</div>' +
+        '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+          '<span>Free up space — delete media older than</span>' +
+          '<select id="btwPurgeMonths" style="padding:5px 8px;border:1px solid var(--line);border-radius:8px;font-family:var(--font-body);">' +
+            '<option value="6">6 months</option><option value="12" selected>12 months</option><option value="24">24 months</option>' +
+          '</select>' +
+          '<button type="button" id="btwPurgeBtn" style="padding:6px 13px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Free up space</button>' +
+        '</div>' +
+        '<div id="btwPurgeResult" style="margin-top:8px;"></div>';
+      const btn = document.getElementById('btwPurgeBtn');
+      if(btn) btn.addEventListener('click', async function(){
+        const months = parseInt(document.getElementById('btwPurgeMonths').value, 10) || 12;
+        if(!confirm('Permanently delete all photos and voice memos older than ' + months + ' months? The check-ins and their text are kept. This cannot be undone.')) return;
+        btn.disabled = true; btn.textContent = 'Working…';
+        try {
+          const r = await api('POST', '/api/admin/purge-old-media', { months });
+          const freed = (r.photos.bytes || 0) + (r.audio.bytes || 0);
+          document.getElementById('btwPurgeResult').innerHTML = '<span style="color:var(--moss);font-weight:600;">Freed ' + btwFmtBytes(freed) + ' — removed ' + r.photos.count + ' photos and ' + r.audio.count + ' voice memos.</span>';
+          loadAdminStorage();
+        } catch(e){ const pr = document.getElementById('btwPurgeResult'); if(pr) pr.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; btn.disabled = false; btn.textContent = 'Free up space'; }
+      });
+    } catch(e){ el.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
   }
   // Two tabs so therapist and physio reviews don't get mixed up. The review
   // list holds both (therapists and pending physio coaches); we split by type.
@@ -11805,11 +11845,44 @@
     const btn = document.getElementById('btwPhotoBtn'); if(btn) btn.style.display = '';
     const thumb = document.getElementById('btwPhotoThumb'); if(thumb) thumb.removeAttribute('src');
   }
+  // Shrink a photo before upload: scale the long edge down to maxDim and
+  // re-encode as JPEG. A multi-MB phone photo becomes a few hundred KB with no
+  // visible loss, which keeps the database (where photos are stored) small.
+  // Falls back to the original file if anything goes wrong or it's already
+  // smaller.
+  function downscaleImage(file, maxDim, quality){
+    return new Promise(function(resolve){
+      try {
+        if(!file || !/^image\//.test(file.type) || /gif|svg/.test(file.type)){ resolve(file); return; }
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function(){
+          try {
+            const w = img.naturalWidth, h = img.naturalHeight;
+            if(!w || !h){ URL.revokeObjectURL(url); resolve(file); return; }
+            const scale = Math.min(1, maxDim / Math.max(w, h));
+            const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = cw; canvas.height = ch;
+            canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+            canvas.toBlob(function(blob){
+              URL.revokeObjectURL(url);
+              resolve(blob && blob.size < file.size ? blob : file);
+            }, 'image/jpeg', quality);
+          } catch(e){ URL.revokeObjectURL(url); resolve(file); }
+        };
+        img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+      } catch(e){ resolve(file); }
+    });
+  }
   // Upload the chosen photo and return its id, or null when there is none.
   async function uploadComposePhoto(){
     if(!composePhoto || !isPatient()) return null;
+    const toSend = await downscaleImage(composePhoto, 1600, 0.82);
+    const ctype = (toSend && /^image\//.test(toSend.type || '')) ? toSend.type : (composePhoto.type || 'image/jpeg');
     const grant = await pApi('POST', '/api/patient/check-ins/photo-upload-url');
-    const put = await fetch(grant.uploadUrl, { method: 'PUT', headers: { 'Content-Type': composePhoto.type }, body: composePhoto });
+    const put = await fetch(grant.uploadUrl, { method: 'PUT', headers: { 'Content-Type': ctype }, body: toSend });
     if(!put.ok){ let e = null; try { e = await put.json(); } catch(_){ } throw new Error((e && e.error) || 'Photo upload failed'); }
     const data = await put.json();
     return data.photoUploadId || null;

@@ -27,7 +27,8 @@ import {
   createPhotoUploadToken, consumePhotoUploadToken, storePhotoUpload,
   getPhotoUploadOwned, getPhotoForClinician,
   createAlert, listAlerts, markAlertViewed,
-  storeContactMessage, listContactMessages
+  storeContactMessage, listContactMessages,
+  storageStats, purgeOldMedia
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
@@ -968,6 +969,30 @@ app.get('/api/admin/contact-messages', requireDb, requireAuth, requireOwner, asy
   } catch (err) {
     console.error('Error loading contact messages:', err);
     res.status(500).json({ error: 'Could not load contact messages.' });
+  }
+});
+
+// Storage usage: database size and how much of it is photos vs voice memos,
+// so the owner knows when to upgrade the Postgres plan.
+app.get('/api/admin/storage', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await storageStats());
+  } catch (err) {
+    console.error('Error loading storage stats:', err);
+    res.status(500).json({ error: 'Could not load storage stats.' });
+  }
+});
+
+// Reclaim space: delete photos and voice memos older than the given number of
+// months (the check-ins and their text are kept). Owner-initiated only, since
+// it permanently removes patient media.
+app.post('/api/admin/purge-old-media', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    const months = parseInt((req.body || {}).months, 10);
+    res.json(await purgeOldMedia(Number.isFinite(months) ? months : 12));
+  } catch (err) {
+    console.error('Error purging old media:', err);
+    res.status(500).json({ error: 'Could not free up space.' });
   }
 });
 
