@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../discipline.dart';
 import '../theme.dart';
+import 'about_screen.dart';
 import 'future_note_screen.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
@@ -187,6 +188,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: BtwColors.inkSoft),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PlansScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.info_outline_rounded,
+                    color: BtwColors.moss),
+                title: Text(s.aboutTitle,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AboutScreen()),
                 ),
               ),
             ),

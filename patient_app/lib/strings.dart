@@ -84,6 +84,11 @@ class S {
       'Built with Canadian privacy law in mind — PIPEDA and Quebec\'s Law 25.',
       'Conçu dans le respect des lois canadiennes sur la vie privée — LPRPDE et la Loi 25 du Québec.');
 
+  // About / Why Between
+  String get aboutTitle => _('Why Between', 'Pourquoi Between');
+  String get learnMore => _('Learn more about Between', 'En savoir plus sur Between');
+  String get faqHead => _('Common questions', 'Questions fréquentes');
+
   // Plans / Premium (purchased on the website)
   String get seePlans => _('See Premium plans', 'Voir les forfaits Premium');
   String get goPremium => _('Go Premium', 'Passer à Premium');

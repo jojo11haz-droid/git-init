@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api.dart';
 import '../app_state.dart';
 import '../theme.dart';
+import 'about_screen.dart';
 import 'plans_screen.dart';
 
 /// betweenpsych.com, the public site. Used by the welcome footer and Settings.
@@ -220,7 +221,19 @@ class WelcomeScreen extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 14, color: BtwColors.inkSoft)),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AboutScreen()),
+                      ),
+                      child: Text(s.learnMore,
+                          style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: BtwColors.moss)),
+                    ),
+                  ),
                   Center(child: WebsiteLink(label: s.visitWebsite)),
                   const SizedBox(height: 6),
                   Text(s.trustLine,
