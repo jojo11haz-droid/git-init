@@ -1257,8 +1257,13 @@ export async function storageStats() {
   const db = await one("SELECT pg_database_size(current_database())::bigint AS b");
   const ph = await one("SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b, min(created_at) AS oldest FROM photo_uploads");
   const au = await one("SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b, min(created_at) AS oldest FROM audio_uploads");
+  // The Render Postgres plan's storage limit (in MB) so the card can show how
+  // full you actually are. Set DB_STORAGE_LIMIT_MB to your plan's storage.
+  const limitMb = parseInt(process.env.DB_STORAGE_LIMIT_MB, 10);
+  const limitBytes = Number.isFinite(limitMb) && limitMb > 0 ? limitMb * 1024 * 1024 : null;
   return {
     dbBytes: Number(db.b),
+    limitBytes,
     photos: { count: ph.n, bytes: Number(ph.b), oldest: ph.oldest },
     audio: { count: au.n, bytes: Number(au.b), oldest: au.oldest }
   };
@@ -1268,9 +1273,15 @@ export async function storageStats() {
 // summary are kept). The check-in's reference is nulled first because the FK
 // has no cascade. Runs in one transaction. `months` is clamped to a sane
 // integer range, so it is safe to interpolate into the interval literal.
-export async function purgeOldMedia(months = 12) {
+export async function purgeOldMedia(months = 12, { dryRun = false } = {}) {
   const m = Math.max(1, Math.min(120, Math.round(Number(months) || 12)));
   const cutoff = `now() - interval '${m} months'`;
+  // Preview mode: count what WOULD be deleted, delete nothing.
+  if (dryRun) {
+    const ph = (await pool.query(`SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b FROM photo_uploads WHERE created_at < ${cutoff}`)).rows[0];
+    const au = (await pool.query(`SELECT count(*)::int AS n, coalesce(sum(octet_length(data)),0)::bigint AS b FROM audio_uploads WHERE created_at < ${cutoff}`)).rows[0];
+    return { months: m, dryRun: true, photos: { count: ph.n, bytes: Number(ph.b) }, audio: { count: au.n, bytes: Number(au.b) } };
+  }
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

@@ -8886,12 +8886,26 @@
     try {
       const s = await api('GET', '/api/admin/storage');
       const media = (s.photos.bytes || 0) + (s.audio.bytes || 0);
-      const pct = s.dbBytes ? Math.round(media / s.dbBytes * 100) : 0;
+      const mediaPct = s.dbBytes ? Math.round(media / s.dbBytes * 100) : 0;
+      let usageHtml;
+      if(s.limitBytes){
+        const usedPct = Math.min(100, Math.round(s.dbBytes / s.limitBytes * 100));
+        const col = usedPct >= 80 ? 'var(--clay)' : usedPct >= 60 ? '#b45309' : 'var(--moss)';
+        const label = usedPct >= 80 ? 'Upgrade your Render plan soon' : usedPct >= 60 ? 'Getting full — plan an upgrade' : 'Plenty of room';
+        usageHtml =
+          '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> of ' + btwFmtBytes(s.limitBytes) + ' used · <strong style="color:' + col + ';">' + usedPct + '%</strong></div>' +
+          '<div style="height:9px;border-radius:999px;background:var(--line);margin:9px 0 5px;overflow:hidden;"><div style="height:100%;width:' + usedPct + '%;background:' + col + ';border-radius:999px;"></div></div>' +
+          '<div style="font-size:12px;font-weight:600;color:' + col + ';">' + label + '</div>';
+      } else {
+        usageHtml =
+          '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> total database</div>' +
+          '<div style="margin-top:5px;font-size:12px;">To see how full you are here, set <code>DB_STORAGE_LIMIT_MB</code> on Render to your Postgres plan\'s storage (in MB, e.g. 1024 for 1 GB). Until then, compare this number to your plan\'s limit in the Render dashboard and upgrade before ~80%.</div>';
+      }
       el.innerHTML =
-        '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> total database</div>' +
-        '<div style="margin-top:4px;">' + s.photos.count + ' photos · ' + btwFmtBytes(s.photos.bytes) + '</div>' +
+        usageHtml +
+        '<div style="margin-top:12px;">' + s.photos.count + ' photos · ' + btwFmtBytes(s.photos.bytes) + '</div>' +
         '<div>' + s.audio.count + ' voice memos · ' + btwFmtBytes(s.audio.bytes) + '</div>' +
-        '<div style="margin-top:6px;">Media is about <strong>' + pct + '%</strong> of the database — it\'s what grows. Upgrade your Render Postgres plan before it reaches ~80% of the plan\'s storage limit.</div>' +
+        '<div style="margin-top:6px;">Photos &amp; voice memos are about <strong>' + mediaPct + '%</strong> of your data — the part that grows over time. (This is a breakdown of what you\'re using, not how full you are.)</div>' +
         '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
           '<span>Free up space — delete media older than</span>' +
           '<select id="btwPurgeMonths" style="padding:5px 8px;border:1px solid var(--line);border-radius:8px;font-family:var(--font-body);">' +
@@ -8901,16 +8915,25 @@
         '</div>' +
         '<div id="btwPurgeResult" style="margin-top:8px;"></div>';
       const btn = document.getElementById('btwPurgeBtn');
+      const showResult = (html) => { const pr = document.getElementById('btwPurgeResult'); if(pr) pr.innerHTML = html; };
       if(btn) btn.addEventListener('click', async function(){
         const months = parseInt(document.getElementById('btwPurgeMonths').value, 10) || 12;
-        if(!confirm('Permanently delete all photos and voice memos older than ' + months + ' months? The check-ins and their text are kept. This cannot be undone.')) return;
+        // First, preview exactly what would be deleted (deletes nothing).
+        btn.disabled = true; btn.textContent = 'Checking…';
+        let prev;
+        try { prev = await api('POST', '/api/admin/purge-old-media', { months, dryRun: true }); }
+        catch(e){ showResult('<span style="color:var(--clay);">' + esc(e.message) + '</span>'); btn.disabled = false; btn.textContent = 'Free up space'; return; }
+        btn.disabled = false; btn.textContent = 'Free up space';
+        const nP = prev.photos.count, nA = prev.audio.count, freed = (prev.photos.bytes || 0) + (prev.audio.bytes || 0);
+        if(nP === 0 && nA === 0){ showResult('<span style="color:var(--ink-soft);">Nothing older than ' + months + ' months — there\'s nothing to delete.</span>'); return; }
+        if(!confirm('This will permanently delete ' + nP + ' photo(s) and ' + nA + ' voice memo(s) older than ' + months + ' months, freeing about ' + btwFmtBytes(freed) + '.\n\nThe check-ins and their text are kept. This affects all patients and cannot be undone. Continue?')) return;
         btn.disabled = true; btn.textContent = 'Working…';
         try {
           const r = await api('POST', '/api/admin/purge-old-media', { months });
-          const freed = (r.photos.bytes || 0) + (r.audio.bytes || 0);
-          document.getElementById('btwPurgeResult').innerHTML = '<span style="color:var(--moss);font-weight:600;">Freed ' + btwFmtBytes(freed) + ' — removed ' + r.photos.count + ' photos and ' + r.audio.count + ' voice memos.</span>';
+          const freed2 = (r.photos.bytes || 0) + (r.audio.bytes || 0);
+          showResult('<span style="color:var(--moss);font-weight:600;">Freed ' + btwFmtBytes(freed2) + ' — removed ' + r.photos.count + ' photos and ' + r.audio.count + ' voice memos.</span>');
           loadAdminStorage();
-        } catch(e){ const pr = document.getElementById('btwPurgeResult'); if(pr) pr.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; btn.disabled = false; btn.textContent = 'Free up space'; }
+        } catch(e){ showResult('<span style="color:var(--clay);">' + esc(e.message) + '</span>'); btn.disabled = false; btn.textContent = 'Free up space'; }
       });
     } catch(e){ el.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
   }

@@ -989,7 +989,8 @@ app.get('/api/admin/storage', requireDb, requireAuth, requireOwner, async (req, 
 app.post('/api/admin/purge-old-media', requireDb, requireAuth, requireOwner, async (req, res) => {
   try {
     const months = parseInt((req.body || {}).months, 10);
-    res.json(await purgeOldMedia(Number.isFinite(months) ? months : 12));
+    const dryRun = !!(req.body || {}).dryRun;
+    res.json(await purgeOldMedia(Number.isFinite(months) ? months : 12, { dryRun }));
   } catch (err) {
     console.error('Error purging old media:', err);
     res.status(500).json({ error: 'Could not free up space.' });
