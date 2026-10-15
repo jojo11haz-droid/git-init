@@ -58,6 +58,92 @@ class S {
   String get haveInvite =>
       _('I have an invite from my therapist', 'J\'ai une invitation de mon thérapeute');
 
+  // Feature highlights (mirrors betweenpsych.com)
+  String get featuresHead => _('What you get', 'Ce que vous obtenez');
+  String get featCheckTitle => _('Check in in seconds', 'Un suivi en quelques secondes');
+  String get featCheckBody => _(
+      'A few words or a voice memo, the moment something comes up. No forms, no appointment.',
+      'Quelques mots ou un mémo vocal, dès que quelque chose survient. Sans formulaire, sans rendez-vous.');
+  String get featTrendsTitle => _('See your own trends', 'Voyez vos tendances');
+  String get featTrendsBody => _(
+      'Your mood and themes take shape over time, so a rough stretch — or real progress — is something you can see.',
+      'Votre humeur et vos thèmes se dessinent avec le temps : une mauvaise passe — ou un vrai progrès — devient visible.');
+  String get featPrivacyTitle => _('Private by default', 'Privé par défaut');
+  String get featPrivacyBody => _(
+      'Your entries are yours. AI analysis is opt-in, and you can export or delete your data anytime.',
+      'Vos entrées vous appartiennent. L\'analyse par IA est optionnelle, et vous pouvez exporter ou supprimer vos données à tout moment.');
+  String get featRemindersTitle => _('Gentle reminders', 'Rappels discrets');
+  String get featRemindersBody => _(
+      'An optional nudge on your own schedule — nothing nagging, just a quiet prompt to check in.',
+      'Un rappel optionnel selon votre horaire — rien d\'insistant, juste une invitation discrète à faire le point.');
+  String get featCrisisTitle => _('Help is one tap away', 'De l\'aide à un geste');
+  String get featCrisisBody => _(
+      'Crisis resources are always one tap away. Between isn\'t a crisis service, and it never leaves you without one.',
+      'Les ressources de crise sont toujours à portée. Between n\'est pas un service de crise, et ne vous laisse jamais sans ressource.');
+  String get trustLine => _(
+      'Built with Canadian privacy law in mind — PIPEDA and Quebec\'s Law 25.',
+      'Conçu dans le respect des lois canadiennes sur la vie privée — LPRPDE et la Loi 25 du Québec.');
+
+  // Plans / Premium (purchased on the website)
+  String get seePlans => _('See Premium plans', 'Voir les forfaits Premium');
+  String get goPremium => _('Go Premium', 'Passer à Premium');
+  String get plansTitle => _('Plans', 'Forfaits');
+  String get plansHeroTitle => _('Go deeper with Premium', 'Allez plus loin avec Premium');
+  String get plansHeroBody => _(
+      'Start free. Upgrade anytime for unlimited check-ins, guided journaling and the full picture of your patterns.',
+      'Commencez gratuitement. Passez à la version supérieure quand vous voulez pour des suivis illimités, du journal guidé et le portrait complet de vos tendances.');
+  String get planFreeTier => _('Free', 'Gratuit');
+  String get planFreeName => _('Use it on your own', 'Utilisez-le par vous-même');
+  String get planPersonalTier => _('Personal', 'Personnel');
+  String get planPersonalName => _('Check in for yourself', 'Faites vos propres suivis');
+  String get planPremiumTier => _('Premium', 'Premium');
+  String get planPremiumName => _('Journaling with more depth', 'Un journal plus en profondeur');
+  String get perMonthCad => _('CAD / month', 'CAD / mois');
+  String get trial3 => _('3-day free trial', 'Essai gratuit de 3 jours');
+  String get annualNote => _(
+      'Paid yearly, it\'s even less — about \$9.99/mo on Personal and \$19.99/mo on Premium.',
+      'Payé à l\'année, c\'est encore moins — environ 9,99 \$/mois sur Personnel et 19,99 \$/mois sur Premium.');
+  String get subscribeOnWeb => _('Choose a plan on betweenpsych.com', 'Choisir un forfait sur betweenpsych.com');
+  String get managedOnWeb => _(
+      'Plans are set up on the website. You\'ll finish securely in your browser, then sign in here with the same email.',
+      'Les forfaits se configurent sur le site web. Vous terminerez en toute sécurité dans votre navigateur, puis vous vous connecterez ici avec le même courriel.');
+  String get currentPlanFree => _('You\'re on the free plan', 'Vous êtes sur le forfait gratuit');
+  String get currentPlanPremium => _('You\'re on Premium — thank you!', 'Vous êtes sur Premium — merci!');
+  String get planStatusLabel => _('Your plan', 'Votre forfait');
+  // Plan feature bullets
+  List<String> get personalBullets => isFr
+      ? const [
+          'Jusqu\'à 5 suivis par semaine, par voix ou texte',
+          'Vos propres tendances d\'humeur et de thèmes',
+          'Privé par défaut, l\'IA est optionnelle',
+          'Ressources de crise toujours à portée',
+          'Supprimez vos données quand vous voulez',
+        ]
+      : const [
+          'Up to 5 check-ins a week, by voice or text',
+          'Your own mood & theme trends',
+          'Private by default, AI is opt-in',
+          'Crisis resources always one tap away',
+          'Delete your data anytime',
+        ];
+  List<String> get premiumBullets => isFr
+      ? const [
+          'Suivis illimités, sans limite hebdomadaire',
+          'Journal guidé : gratitude, stress, sommeil et réussites',
+          'Une réflexion hebdomadaire sur vos tendances',
+          'Joignez une photo à n\'importe quelle entrée',
+          'La vue des statistiques avancées',
+          'Soutien prioritaire par courriel',
+        ]
+      : const [
+          'Unlimited check-ins, no weekly limit',
+          'Guided journaling packs for gratitude, stress, sleep and wins',
+          'A weekly reflection on your patterns',
+          'Attach a photo to any entry',
+          'The full advanced-stats view',
+          'Priority email support',
+        ];
+
   // Solo (self-serve) signup
   String get soloTitle => _('Create your account', 'Crée ton compte');
   String get soloIntro => _(

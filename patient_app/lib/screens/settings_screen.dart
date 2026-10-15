@@ -7,6 +7,7 @@ import '../theme.dart';
 import 'future_note_screen.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
+import 'plans_screen.dart';
 import 'welcome_screen.dart';
 
 /// My data & settings: the patient's controls over their own information —
@@ -164,6 +165,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: BtwColors.inkSoft),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const GuideScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.workspace_premium_rounded,
+                    color: BtwColors.moss),
+                title: Text(s.plansTitle,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                    (context.watch<AppState>().patient?.isPremium ?? false)
+                        ? s.currentPlanPremium
+                        : s.currentPlanFree,
+                    style: const TextStyle(
+                        fontSize: 12.5, color: BtwColors.inkSoft)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PlansScreen()),
                 ),
               ),
             ),

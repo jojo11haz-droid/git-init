@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api.dart';
 import '../app_state.dart';
 import '../theme.dart';
+import 'plans_screen.dart';
 
 /// betweenpsych.com, the public site. Used by the welcome footer and Settings.
 const String kWebsiteUrl = 'https://betweenpsych.com';
@@ -137,7 +138,65 @@ class WelcomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: 16),
+                  // Premium teaser — mirrors the website's "use it on your own"
+                  // upsell. Plans are shown in-app but purchased on the website.
+                  Container(
+                    decoration: BoxDecoration(
+                      color: BtwColors.mossLight,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.star_rounded,
+                                size: 18, color: BtwColors.moss),
+                            const SizedBox(width: 8),
+                            Text(s.goPremium,
+                                style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: BtwColors.moss)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(s.plansHeroBody,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.45,
+                                color: BtwColors.inkSoft)),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => const PlansScreen()),
+                            ),
+                            style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 0)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(s.seePlans,
+                                    style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: BtwColors.moss)),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_rounded,
+                                    size: 16, color: BtwColors.moss),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                   FilledButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SignUpScreen()),
@@ -163,6 +222,13 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Center(child: WebsiteLink(label: s.visitWebsite)),
+                  const SizedBox(height: 6),
+                  Text(s.trustLine,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 11.5,
+                          height: 1.4,
+                          color: BtwColors.inkSoft)),
                 ],
               ),
             ),
