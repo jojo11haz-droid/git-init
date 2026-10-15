@@ -97,6 +97,11 @@ class AboutScreen extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 15.5, height: 1.5, color: BtwColors.inkSoft)),
             const SizedBox(height: 24),
+            // A static preview of the product — mirrors the website's demo so
+            // the app shows what a check-in and a trend look like, not just
+            // describes them.
+            _PreviewSection(fr: fr),
+            const SizedBox(height: 26),
             Text(s.featuresHead.toUpperCase(),
                 style: const TextStyle(
                     fontSize: 11.5,
@@ -169,6 +174,174 @@ class AboutScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PreviewSection extends StatelessWidget {
+  const _PreviewSection({required this.fr});
+  final bool fr;
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = fr
+        ? 'Un peu plus stable aujourd\'hui — je suis sorti marcher.'
+        : 'Felt steadier today — I got out for a walk.';
+    final moodPill = fr ? 'Correct (6/10)' : 'Okay (6/10)';
+    final themes = fr ? ['Sommeil', 'Réussite'] : ['Sleep', 'Win'];
+    final trendCaption = fr
+        ? 'Humeur en hausse. Le sommeil est revenu le plus souvent.'
+        : 'Mood climbing. Sleep came up most.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text((fr ? 'Voyez-le en action' : 'See it in action').toUpperCase(),
+            style: const TextStyle(
+                fontSize: 11.5,
+                letterSpacing: 0.6,
+                fontWeight: FontWeight.w700,
+                color: BtwColors.moss)),
+        const SizedBox(height: 12),
+        // Check-in card
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: BtwColors.line),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(fr ? 'VOTRE SUIVI' : 'YOUR CHECK-IN',
+                      style: const TextStyle(
+                          fontSize: 10.5,
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w700,
+                          color: BtwColors.inkSoft)),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                        color: BtwColors.mossLight,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: Text(moodPill,
+                        style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: BtwColors.moss)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(entry,
+                  style: const TextStyle(
+                      fontSize: 14.5,
+                      height: 1.4,
+                      color: BtwColors.ink,
+                      fontStyle: FontStyle.italic)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  for (final t in themes)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 11, vertical: 5),
+                        decoration: BoxDecoration(
+                            color: BtwColors.moss,
+                            borderRadius: BorderRadius.circular(100)),
+                        child: Text(t,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white)),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Trend card
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: BtwColors.line),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(fr ? 'VOS TENDANCES · 2 DERNIÈRES SEMAINES' : 'YOUR PATTERNS · LAST 2 WEEKS',
+                  style: const TextStyle(
+                      fontSize: 10.5,
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w700,
+                      color: BtwColors.inkSoft)),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 56,
+                width: double.infinity,
+                child: CustomPaint(painter: _SparkPainter()),
+              ),
+              const SizedBox(height: 10),
+              Text(trendCaption,
+                  style: const TextStyle(
+                      fontSize: 13, height: 1.4, color: BtwColors.inkSoft)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A small upward mood sparkline for the preview (illustrative, not real data).
+class _SparkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pts = <double>[0.62, 0.70, 0.52, 0.58, 0.40, 0.34, 0.22];
+    final dx = size.width / (pts.length - 1);
+    final path = Path();
+    final coords = <Offset>[];
+    for (var i = 0; i < pts.length; i++) {
+      final o = Offset(i * dx, pts[i] * size.height);
+      coords.add(o);
+      if (i == 0) {
+        path.moveTo(o.dx, o.dy);
+      } else {
+        path.lineTo(o.dx, o.dy);
+      }
+    }
+    // baseline
+    final base = Paint()
+      ..color = BtwColors.line
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(0, size.height - 1),
+        Offset(size.width, size.height - 1), base);
+    // line
+    final line = Paint()
+      ..color = BtwColors.moss
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, line);
+    // end dot
+    canvas.drawCircle(coords.last, 3.6, Paint()..color = BtwColors.moss);
+    // start dot (muted)
+    canvas.drawCircle(
+        coords.first, 3.2, Paint()..color = BtwColors.clay.withValues(alpha: 0.7));
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparkPainter oldDelegate) => false;
 }
 
 class _Feature extends StatelessWidget {
