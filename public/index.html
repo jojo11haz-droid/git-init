@@ -8888,10 +8888,18 @@
       const media = (s.photos.bytes || 0) + (s.audio.bytes || 0);
       const mediaPct = s.dbBytes ? Math.round(media / s.dbBytes * 100) : 0;
       let usageHtml;
-      if(s.limitBytes){
+      if(s.costPerGb){
+        // Usage-based plan: show the estimated monthly storage cost, not a cap.
+        const monthly = (s.dbBytes / 1e9) * s.costPerGb;
+        const monthlyStr = monthly < 0.01 ? 'under $0.01' : '$' + monthly.toFixed(2);
+        usageHtml =
+          '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> total database</div>' +
+          '<div style="margin-top:7px;">Storage cost ≈ <strong style="color:var(--moss);">' + monthlyStr + ' / month</strong> <span style="color:var(--ink-soft);">(at $' + s.costPerGb + '/GB-month)</span></div>' +
+          '<div style="margin-top:4px;font-size:12px;">Usage-based — storage auto-scales, so there\'s no limit to hit; the cost just tracks your data.</div>';
+      } else if(s.limitBytes){
         const usedPct = Math.min(100, Math.round(s.dbBytes / s.limitBytes * 100));
         const col = usedPct >= 80 ? 'var(--clay)' : usedPct >= 60 ? '#b45309' : 'var(--moss)';
-        const label = usedPct >= 80 ? 'Upgrade your Render plan soon' : usedPct >= 60 ? 'Getting full — plan an upgrade' : 'Plenty of room';
+        const label = usedPct >= 80 ? 'Upgrade your plan soon' : usedPct >= 60 ? 'Getting full — plan an upgrade' : 'Plenty of room';
         usageHtml =
           '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> of ' + btwFmtBytes(s.limitBytes) + ' used · <strong style="color:' + col + ';">' + usedPct + '%</strong></div>' +
           '<div style="height:9px;border-radius:999px;background:var(--line);margin:9px 0 5px;overflow:hidden;"><div style="height:100%;width:' + usedPct + '%;background:' + col + ';border-radius:999px;"></div></div>' +

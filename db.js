@@ -1261,9 +1261,14 @@ export async function storageStats() {
   // full you actually are. Set DB_STORAGE_LIMIT_MB to your plan's storage.
   const limitMb = parseInt(process.env.DB_STORAGE_LIMIT_MB, 10);
   const limitBytes = Number.isFinite(limitMb) && limitMb > 0 ? limitMb * 1024 * 1024 : null;
+  // On usage-based plans (e.g. Neon Launch) there's no cap — set
+  // DB_STORAGE_COST_PER_GB to the plan's $/GB-month and the card shows the
+  // estimated monthly storage cost instead of a "% full" bar.
+  const costPerGb = parseFloat(process.env.DB_STORAGE_COST_PER_GB);
   return {
     dbBytes: Number(db.b),
     limitBytes,
+    costPerGb: Number.isFinite(costPerGb) && costPerGb > 0 ? costPerGb : null,
     photos: { count: ph.n, bytes: Number(ph.b), oldest: ph.oldest },
     audio: { count: au.n, bytes: Number(au.b), oldest: au.oldest }
   };
