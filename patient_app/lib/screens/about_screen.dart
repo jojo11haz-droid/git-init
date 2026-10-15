@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../body_map.dart';
 import '../theme.dart';
 import 'plans_screen.dart';
 import 'welcome_screen.dart';
@@ -176,137 +177,207 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-class _PreviewSection extends StatelessWidget {
+class _PreviewSection extends StatefulWidget {
   const _PreviewSection({required this.fr});
   final bool fr;
 
   @override
-  Widget build(BuildContext context) {
-    final entry = fr
-        ? 'Un peu plus stable aujourd\'hui — je suis sorti marcher.'
-        : 'Felt steadier today — I got out for a walk.';
-    final moodPill = fr ? 'Correct (6/10)' : 'Okay (6/10)';
-    final themes = fr ? ['Sommeil', 'Réussite'] : ['Sleep', 'Win'];
-    final trendCaption = fr
-        ? 'Humeur en hausse. Le sommeil est revenu le plus souvent.'
-        : 'Mood climbing. Sleep came up most.';
+  State<_PreviewSection> createState() => _PreviewSectionState();
+}
 
+class _PreviewSectionState extends State<_PreviewSection> {
+  // Mirrors the website's individual Mind / Body story: mood on one side,
+  // pain recovery on the other.
+  String _focus = 'mind';
+
+  @override
+  Widget build(BuildContext context) {
+    final fr = widget.fr;
+    final body = _focus == 'body';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text((fr ? 'Voyez-le en action' : 'See it in action').toUpperCase(),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                  (fr ? 'Voyez-le en action' : 'See it in action')
+                      .toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 11.5,
+                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w700,
+                      color: BtwColors.moss)),
+            ),
+            _toggle(fr ? 'Esprit' : 'Mind', 'mind'),
+            const SizedBox(width: 6),
+            _toggle(fr ? 'Corps' : 'Body', 'body'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _checkinCard(fr, body),
+        const SizedBox(height: 12),
+        _trendCard(fr, body),
+      ],
+    );
+  }
+
+  Widget _toggle(String label, String value) {
+    final sel = _focus == value;
+    return GestureDetector(
+      onTap: () => setState(() => _focus = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: sel ? BtwColors.moss : Colors.white,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: sel ? BtwColors.moss : BtwColors.line),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: sel ? Colors.white : BtwColors.inkSoft)),
+      ),
+    );
+  }
+
+  Widget _cardShell({required Widget child}) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: BtwColors.line),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: child,
+      );
+
+  Widget _pill(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+        decoration: BoxDecoration(
+            color: BtwColors.mossLight,
+            borderRadius: BorderRadius.circular(100)),
+        child: Text(text,
             style: const TextStyle(
                 fontSize: 11.5,
-                letterSpacing: 0.6,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: BtwColors.moss)),
-        const SizedBox(height: 12),
-        // Check-in card
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: BtwColors.line),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(fr ? 'VOTRE SUIVI' : 'YOUR CHECK-IN',
-                      style: const TextStyle(
-                          fontSize: 10.5,
-                          letterSpacing: 0.5,
-                          fontWeight: FontWeight.w700,
-                          color: BtwColors.inkSoft)),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    decoration: BoxDecoration(
-                        color: BtwColors.mossLight,
-                        borderRadius: BorderRadius.circular(100)),
-                    child: Text(moodPill,
-                        style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: BtwColors.moss)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(entry,
-                  style: const TextStyle(
-                      fontSize: 14.5,
-                      height: 1.4,
-                      color: BtwColors.ink,
-                      fontStyle: FontStyle.italic)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  for (final t in themes)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 11, vertical: 5),
-                        decoration: BoxDecoration(
-                            color: BtwColors.moss,
-                            borderRadius: BorderRadius.circular(100)),
-                        child: Text(t,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
+      );
+
+  Widget _chip(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        decoration: BoxDecoration(
+            color: BtwColors.moss, borderRadius: BorderRadius.circular(100)),
+        child: Text(text,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+      );
+
+  Widget _checkinCard(bool fr, bool body) {
+    final entry = body
+        ? (fr
+            ? 'Le genou s\'apaise — j\'ai monté les escaliers aujourd\'hui.'
+            : 'Knee\'s easing — I managed the stairs today.')
+        : (fr
+            ? 'Un peu plus stable aujourd\'hui — je suis sorti marcher.'
+            : 'Felt steadier today — I got out for a walk.');
+    final pill = body
+        ? (fr ? 'Genou · 4/10' : 'Knee · 4/10')
+        : (fr ? 'Correct (6/10)' : 'Okay (6/10)');
+    final chips = body
+        ? (fr ? ['Genou', 'Mobilité'] : ['Knee', 'Mobility'])
+        : (fr ? ['Sommeil', 'Réussite'] : ['Sleep', 'Win']);
+
+    final left = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(fr ? 'VOTRE SUIVI' : 'YOUR CHECK-IN',
+                style: const TextStyle(
+                    fontSize: 10.5,
+                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w700,
+                    color: BtwColors.inkSoft)),
+            const Spacer(),
+            _pill(pill),
+          ],
         ),
+        const SizedBox(height: 10),
+        Text(entry,
+            style: const TextStyle(
+                fontSize: 14.5,
+                height: 1.4,
+                color: BtwColors.ink,
+                fontStyle: FontStyle.italic)),
         const SizedBox(height: 12),
-        // Trend card
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: BtwColors.line),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(fr ? 'VOS TENDANCES · 2 DERNIÈRES SEMAINES' : 'YOUR PATTERNS · LAST 2 WEEKS',
-                  style: const TextStyle(
-                      fontSize: 10.5,
-                      letterSpacing: 0.5,
-                      fontWeight: FontWeight.w700,
-                      color: BtwColors.inkSoft)),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 56,
-                width: double.infinity,
-                child: CustomPaint(painter: _SparkPainter()),
-              ),
-              const SizedBox(height: 10),
-              Text(trendCaption,
-                  style: const TextStyle(
-                      fontSize: 13, height: 1.4, color: BtwColors.inkSoft)),
-            ],
-          ),
-        ),
+        Row(children: [for (final c in chips) Padding(padding: const EdgeInsets.only(right: 8), child: _chip(c))]),
       ],
+    );
+
+    if (!body) return _cardShell(child: left);
+    // Body: show a small sore-knee figure beside the words.
+    return _cardShell(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: left),
+          const SizedBox(width: 10),
+          const BodyMapView(map: {'front:r_knee': 4}, width: 46),
+        ],
+      ),
+    );
+  }
+
+  Widget _trendCard(bool fr, bool body) {
+    final label = body
+        ? (fr ? 'DOULEUR · 2 DERNIÈRES SEMAINES' : 'PAIN · LAST 2 WEEKS')
+        : (fr ? 'VOS TENDANCES · 2 DERNIÈRES SEMAINES' : 'YOUR PATTERNS · LAST 2 WEEKS');
+    final caption = body
+        ? (fr
+            ? 'Douleur en baisse. Le genou est revenu le plus souvent.'
+            : 'Pain easing. Knee came up most.')
+        : (fr
+            ? 'Humeur en hausse. Le sommeil est revenu le plus souvent.'
+            : 'Mood climbing. Sleep came up most.');
+    // Mind = improving mood (line rises). Body = easing pain (line falls).
+    final pts = body
+        ? const [0.25, 0.30, 0.40, 0.38, 0.55, 0.62, 0.78]
+        : const [0.62, 0.70, 0.52, 0.58, 0.40, 0.34, 0.22];
+    return _cardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10.5,
+                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w700,
+                  color: BtwColors.inkSoft)),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 56,
+            width: double.infinity,
+            child: CustomPaint(painter: _SparkPainter(pts)),
+          ),
+          const SizedBox(height: 10),
+          Text(caption,
+              style: const TextStyle(
+                  fontSize: 13, height: 1.4, color: BtwColors.inkSoft)),
+        ],
+      ),
     );
   }
 }
 
-/// A small upward mood sparkline for the preview (illustrative, not real data).
+/// A small sparkline for the preview (illustrative, not real data). Starts on a
+/// rough note (clay dot) and ends on a better one (moss dot).
 class _SparkPainter extends CustomPainter {
+  _SparkPainter(this.pts);
+  final List<double> pts;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final pts = <double>[0.62, 0.70, 0.52, 0.58, 0.40, 0.34, 0.22];
     final dx = size.width / (pts.length - 1);
     final path = Path();
     final coords = <Offset>[];
@@ -341,7 +412,8 @@ class _SparkPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SparkPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _SparkPainter oldDelegate) =>
+      oldDelegate.pts != pts;
 }
 
 class _Feature extends StatelessWidget {
