@@ -3258,6 +3258,10 @@
         <div class="btw-modal-eyebrow">Backend · Storage</div>
         <div id="btwStorageBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
       </div>
+      <div id="btwEmailCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+        <div class="btw-modal-eyebrow">Backend · Email</div>
+        <div id="btwEmailBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
+      </div>
     </div>
   </div>
 
@@ -8913,6 +8917,36 @@
     try{ renderAdminList(await api('GET', '/api/admin/clinicians')); }
     catch(e){ err.textContent = e.message; list.innerHTML = ''; }
     loadAdminStorage();
+    loadAdminEmail();
+  }
+  async function loadAdminEmail(){
+    const el = document.getElementById('btwEmailBody'); if(!el) return;
+    el.textContent = 'Loading…';
+    try {
+      const s = await api('GET', '/api/admin/email-status');
+      const statusLine = s.configured
+        ? '<div><strong style="color:var(--moss);">Email is connected.</strong> Messages from the contact form are emailed to you.</div>'
+        : '<div><strong style="color:var(--clay);">Email is not connected yet.</strong> Messages are still saved and listed here, but no email is sent. Set <code>RESEND_API_KEY</code> on Render to turn on delivery.</div>';
+      el.innerHTML =
+        statusLine +
+        '<div style="margin-top:7px;">Contact messages are sent to <strong style="color:var(--ink);">' + esc(s.inbox) + '</strong>.</div>' +
+        '<div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+          '<button type="button" id="btwEmailTestBtn" style="padding:6px 13px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Send me a test email</button>' +
+          '<span id="btwEmailTestResult" style="font-size:12.5px;"></span>' +
+        '</div>';
+      const btn = document.getElementById('btwEmailTestBtn');
+      const result = document.getElementById('btwEmailTestResult');
+      if(btn) btn.addEventListener('click', async function(){
+        btn.disabled = true; btn.textContent = 'Sending…'; result.innerHTML = '';
+        try {
+          const r = await api('POST', '/api/admin/email-test', {});
+          result.innerHTML = r.delivered
+            ? '<span style="color:var(--moss);font-weight:600;">Sent to ' + esc(r.inbox) + ' — check your inbox.</span>'
+            : '<span style="color:var(--clay);">Not delivered — email isn\'t connected. Set RESEND_API_KEY on Render.</span>';
+        } catch(e){ result.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
+        btn.disabled = false; btn.textContent = 'Send me a test email';
+      });
+    } catch(e){ el.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
   }
   function btwFmtBytes(b){ b = Number(b) || 0; if(b < 1024) return b + ' B'; const u = ['KB','MB','GB','TB']; let i = -1; do { b /= 1024; i++; } while(b >= 1024 && i < u.length - 1); return b.toFixed(b < 10 ? 1 : 0) + ' ' + u[i]; }
   async function loadAdminStorage(){
