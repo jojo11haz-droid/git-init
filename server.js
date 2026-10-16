@@ -162,11 +162,11 @@ app.get('/api/public-config', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public'), {
   cacheControl: false,                 // we set Cache-Control ourselves below
   setHeaders: (res, filePath) => {
-    // The marketing site is a single index.html with everything inline. Tell
-    // browsers to always revalidate it (via ETag) so a new deploy shows up
-    // immediately instead of a stale cached copy — a common "it still shows the
-    // old version on my phone" problem. Other assets can be cached for a while.
-    res.setHeader('Cache-Control', filePath.endsWith('.html') ? 'no-cache' : 'public, max-age=3600');
+    // The marketing site is a single index.html with everything inline. Never
+    // cache it (no-store), so a new deploy always shows up immediately instead
+    // of a stale copy — the recurring "it still shows the old version on my
+    // phone" problem. Other assets can be cached for a while.
+    res.setHeader('Cache-Control', filePath.endsWith('.html') ? 'no-store' : 'public, max-age=3600');
   }
 }));
 
@@ -2921,8 +2921,8 @@ function baseIndexHtml() {
   return _indexHtmlCache;
 }
 app.get(FIELD_PATHS, (req, res) => {
-  // Always revalidate the marketing HTML so new deploys aren't served stale.
-  res.setHeader('Cache-Control', 'no-cache');
+  // Never cache the marketing HTML so new deploys aren't served stale.
+  res.setHeader('Cache-Control', 'no-store');
   const meta = FIELD_META[req.path];
   // /therapy is the default and canonical to "/", so it uses the base file.
   // Use send (not sendFile) so our no-cache header isn't overridden.
