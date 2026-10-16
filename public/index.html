@@ -6595,7 +6595,7 @@
   // Declutter Home: the in-depth marketing sections live on the "How it works"
   // tab. Move the DOM nodes over once at load (keeps Home a quick scroll).
   if(viewLearn){
-    ['#btwRecovery', '.btw-savetime', '.btw-features', '.btw-forclinics'].forEach(function(sel){
+    ['#btwRecovery', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
       const el = document.querySelector(sel);
       if(el) viewLearn.appendChild(el);
     });
