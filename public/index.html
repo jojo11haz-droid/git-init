@@ -1398,7 +1398,9 @@
   .btw-chat-send{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--moss);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .btw-chat-send:disabled{opacity:.5;cursor:default;}
   .btw-chat-note{font-size:10.5px;color:var(--ink-soft);text-align:center;padding:0 12px 9px;background:#fff;}
-  @media (max-width:560px){ #btwChat{bottom:22px;} .btw-chat-panel{right:12px;bottom:74px;} }
+  /* On phones the floating chat bubble overlaps the page content, so hide it
+     there; it stays available on tablet and desktop. */
+  @media (max-width:560px){ #btwChat{display:none;} }
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
@@ -6595,7 +6597,7 @@
   // Declutter Home: the in-depth marketing sections live on the "How it works"
   // tab. Move the DOM nodes over once at load (keeps Home a quick scroll).
   if(viewLearn){
-    ['#btwRecovery', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
+    ['#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
       const el = document.querySelector(sel);
       if(el) viewLearn.appendChild(el);
     });
