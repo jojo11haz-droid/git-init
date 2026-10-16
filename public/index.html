@@ -2170,6 +2170,7 @@
       <div class="btw-sub">A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
+        <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
         <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
         <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
@@ -2356,6 +2357,9 @@
         </div>
       </section>
 
+      <div class="btw-learn-cta" style="text-align:center;margin:10px 0 2px;">
+        <button type="button" class="btw-hero-btn primary" id="btwHomeLearnMore">See how it works</button>
+      </div>
       <section class="btw-shots">
         <span class="btw-try-badge"><span class="btw-try-dot"></span>Try it live</span>
         <div class="btw-section-label">See both sides</div>
@@ -2583,6 +2587,14 @@
         </div>
       </section>
 
+    </div>
+  </div>
+
+  <div class="btw-view" id="btwViewLearn">
+    <div style="max-width:1080px;margin:0 auto;padding:4px 0 2px;text-align:center;">
+      <div class="btw-section-label">How it works</div>
+      <h2 style="margin:6px 0 8px;">See Between in action</h2>
+      <p class="btw-demo-lead" style="margin:0 auto 6px;">Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.</p>
     </div>
   </div>
 
@@ -3541,6 +3553,10 @@
     "Has notes":"Contient des notes",
     "Reported tingling or numbness recently":"A signalé des picotements ou un engourdissement récemment",
     "Walk me through it":"Visite guidée",
+    "How it works":"Comment ça marche",
+    "See how it works":"Voir comment ça marche",
+    "See Between in action":"Voyez Between en action",
+    "Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.":"Les deux côtés d'un suivi entre les visites — essayez-le, et voyez les tendances, les fonctionnalités et la vue de rétablissement qui l'accompagnent.",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -6246,6 +6262,12 @@
     // only for themselves, so hide them on the individual page.
     var _soloHide = (curAudience === 'individual');
     document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features, .btw-forclinics').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
+    // The "How it works" tab is clinician-oriented; hide it (and the Home CTA)
+    // for individuals, whose content is the simpler Home + Pricing.
+    var _nl = document.getElementById('btwNavLearn'); if(_nl) _nl.style.display = _soloHide ? 'none' : '';
+    var _lc = document.querySelector('.btw-learn-cta'); if(_lc) _lc.style.display = _soloHide ? 'none' : '';
+    var _vl = document.getElementById('btwViewLearn');
+    if(_soloHide && _vl && _vl.classList.contains('active')){ var _hb = document.getElementById('btwNavHome'); if(_hb) _hb.click(); }
     // The "Your recovery, seen" showcase is a pain-map story — physical fields only.
     var _recEl = document.getElementById('btwRecovery');
     if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
@@ -6589,15 +6611,25 @@
 
   // --- nav tabs ---
   const navHome = document.getElementById('btwNavHome');
+  const navLearn = document.getElementById('btwNavLearn');
   const navProduct = document.getElementById('btwNavProduct');
   const navPricing = document.getElementById('btwNavPricing');
   const navGuide = document.getElementById('btwNavGuide');
   const viewHome = document.getElementById('btwViewHome');
+  const viewLearn = document.getElementById('btwViewLearn');
   const viewProduct = document.getElementById('btwViewProduct');
   const viewPricing = document.getElementById('btwViewPricing');
   const viewGuide = document.getElementById('btwViewGuide');
-  const allNavBtns = [navHome, navProduct, navPricing, navGuide];
-  const allViews = [viewHome, viewProduct, viewPricing, viewGuide];
+  const allNavBtns = [navHome, navLearn, navProduct, navPricing, navGuide];
+  const allViews = [viewHome, viewLearn, viewProduct, viewPricing, viewGuide];
+  // Declutter Home: the in-depth marketing sections live on the "How it works"
+  // tab. Move the DOM nodes over once at load (keeps Home a quick scroll).
+  if(viewLearn){
+    ['#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-features', '.btw-forclinics'].forEach(function(sel){
+      const el = document.querySelector(sel);
+      if(el) viewLearn.appendChild(el);
+    });
+  }
   const btwRoot = document.querySelector('.btw-root');
   function goToView(nav, view){
     allNavBtns.forEach(b=>b.classList.remove('active'));
@@ -6612,6 +6644,9 @@
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
+  if(navLearn) navLearn.addEventListener('click', ()=> goToView(navLearn, viewLearn));
+  const homeLearnMore = document.getElementById('btwHomeLearnMore');
+  if(homeLearnMore) homeLearnMore.addEventListener('click', ()=> goToView(navLearn, viewLearn));
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
