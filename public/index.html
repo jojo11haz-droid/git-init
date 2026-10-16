@@ -933,8 +933,12 @@
     transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .9s cubic-bezier(.16,1,.3,1);
     will-change:opacity,transform,filter;}
   .btw-reveal.in{opacity:1;transform:none;filter:none;}
-  /* Safety: on phones never hide or blur a reveal element (iOS blur glitches). */
-  @media (max-width:760px){ .btw-reveal{opacity:1!important;transform:none!important;filter:none!important;} }
+  /* Phones: keep the fade + rise so the page still feels alive, but drop the
+     blur and scale (iOS Safari glitches on blur) and shorten the ease. */
+  @media (max-width:760px){
+    .btw-reveal{transform:translateY(20px) scale(1);filter:none;
+      transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+  }
   .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(30,76,134,0.16);}
@@ -943,6 +947,76 @@
   @media (prefers-reduced-motion: reduce){
     .btw-reveal{opacity:1;transform:none;transition:none;}
     .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover,.btw-hero-btn:hover{transform:none;box-shadow:none;}
+  }
+  /* ---- Cinematic "one section at a time" Home ---- */
+  /* Each content section fills the viewport, vertically centred, so only one
+     aspect is in focus. The section nearest the middle of the screen is crisp;
+     the rest fade back, so scrolling cross-fades from one section to the next.
+     A gentle proximity snap lets the scroll settle on a section without ever
+     trapping it. The "Who's it for?" chooser stays a normal compact intro. */
+  /* Hard one-section-per-scroll: each panel is a mandatory snap stop you can't
+     skip, so one scroll moves you exactly one section. */
+  html.btw-cine-on{ scroll-snap-type:y mandatory; }
+  #btwViewHome.btw-cine .btw-chooser{ scroll-snap-align:start; scroll-snap-stop:always; }
+  #btwViewHome.btw-cine .btw-panel{
+    min-height:100vh; min-height:100svh;
+    display:flex; flex-direction:column; justify-content:center;
+    scroll-snap-align:center; scroll-snap-stop:always;
+    padding-top:40px; padding-bottom:40px; box-sizing:border-box;
+    opacity:.16; transform:translateY(34px);
+    transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1);
+    will-change:opacity,transform;
+  }
+  #btwViewHome.btw-cine .btw-panel.active{ opacity:1; transform:none; }
+  @media (max-width:760px){
+    #btwViewHome.btw-cine .btw-panel{ opacity:.22; transform:translateY(22px);
+      transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);
+      padding-top:28px; padding-bottom:28px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    html.btw-cine-on{ scroll-snap-type:none; }
+    #btwViewHome.btw-cine .btw-panel{ opacity:1; transform:none; transition:none; }
+  }
+  /* Apple-style chapters: each Home panel is a full-bleed colour field that
+     alternates light / cream / dark, so every section reads as its own
+     distinct moment. The 100vw backgrounds reach the true screen edges; the
+     body's existing overflow-x:hidden keeps them from adding a scrollbar. */
+  #btwViewHome.btw-cine .btw-panel{ position:relative; }
+  #btwViewHome.btw-cine .btw-panel::before{
+    content:''; position:absolute; z-index:-1; top:0; bottom:0;
+    left:50%; width:100vw; margin-left:-50vw; background:var(--pbg,transparent);
+  }
+  #btwViewHome.btw-cine .btw-panel.tone-light{ --pbg:#FFFFFF; }
+  #btwViewHome.btw-cine .btw-panel.tone-cream{ --pbg:#F1EFEA; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark{ --pbg:#14315C; }
+  /* Dark chapters flip text + buttons to light. */
+  #btwViewHome.btw-cine .btw-panel.tone-dark{ color:#D7E2F1; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-section-label{ color:#9FBBDE; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark h1,
+  #btwViewHome.btw-cine .btw-panel.tone-dark h2,
+  #btwViewHome.btw-cine .btw-panel.tone-dark h3{ color:#fff; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark p,
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-demo-lead{ color:#C2D2E8; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary{ background:#fff; color:#14315C; box-shadow:0 10px 26px rgba(0,0,0,.30); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary:hover{ background:#EAF0F8; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.secondary{ background:transparent; color:#fff; border-color:rgba(255,255,255,.55); }
+  /* Keep text inside white cards dark/legible on a dark chapter. */
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step h3{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step p{ color:var(--ink-soft); }
+  /* Trust: drop its built-in dark card and render as a clean, centred light
+     chapter (its own styles assume a dark background, so re-colour here). */
+  #btwViewHome.btw-cine .btw-trust.btw-panel{ background:transparent; border-radius:0; padding:40px 20px; text-align:center; margin-top:0; }
+  #btwViewHome.btw-cine .btw-trust .btw-trust-inner{ max-width:760px; margin:0 auto; }
+  #btwViewHome.btw-cine .btw-trust h3{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-trust p{ color:var(--ink-soft); font-size:clamp(15px,1.5vw,18px); line-height:1.7; }
+  /* Bigger, bolder display type on desktop so each chapter lands. */
+  @media (min-width:761px){
+    #btwViewHome.btw-cine .btw-section-label{ font-size:14px; letter-spacing:.16em; }
+    #btwViewHome.btw-cine .btw-hero h1{ font-size:clamp(38px,4.6vw,62px); }
+    #btwViewHome.btw-cine .btw-cta-banner h2,
+    #btwViewHome.btw-cine .btw-contact h2{ font-size:clamp(30px,3.6vw,48px); line-height:1.08; }
+    #btwViewHome.btw-cine .btw-trust h3{ font-size:clamp(22px,2.3vw,30px); }
   }
   /* ---- animated "see it in action" demo ---- */
   .btw-demo{margin:8px 0 8px;text-align:center;}
@@ -1870,6 +1944,18 @@
     font-size:12px;
     color:var(--ink-soft);
   }
+  /* Read-only indicator of the profession you're viewing (picked on the page,
+     or your account's field when signed in). Not a switcher. */
+  .btw-audnow{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:6px 13px;
+    white-space:nowrap;
+  }
+  .btw-audnow strong{ color:var(--ink); font-weight:600; }
   .btw-auth-user strong{color:var(--ink);}
   .btw-signedout-box{
     background:var(--panel);
@@ -2170,6 +2256,7 @@
       <div class="btw-sub">A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
+        <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
         <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
         <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
@@ -2177,23 +2264,7 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
-      <div class="btw-audsel" id="btwAudSel">
-        <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
-        <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
-          <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapist</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="occupational" role="menuitem">Occupational therapy</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="neuropsych" role="menuitem">Neuropsychology</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="sports" role="menuitem">Sports</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="fitness" role="menuitem">Fitness</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="nutrition" role="menuitem">Nutrition</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="recovery" role="menuitem">Addiction</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="schools" role="menuitem">Schools</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="individual" role="menuitem">For myself</button>
-        </div>
-      </div>
+      <span class="btw-audnow" id="btwAudNow">For: <strong id="btwAudSelLabel">Psychotherapist</strong></span>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
         <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
@@ -2263,7 +2334,7 @@
           <div class="btw-hero-meta">Free for 14 days. Private, secure and consent-first. Not a crisis service.</div>
           <div class="btw-appsoon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg>iPhone &amp; iPad app coming soon</div>
           <div class="btw-hero-reassure" id="btwHeroReassure">You are never on call. Nothing pings you and you are never expected to reply. The summary is just waiting when you next sit down together.</div>
-          <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-aud-btn[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
+          <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-chooser-card[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
         </div>
@@ -2356,6 +2427,9 @@
         </div>
       </section>
 
+      <div class="btw-learn-cta" style="text-align:center;margin:10px 0 2px;">
+        <button type="button" class="btw-hero-btn primary" id="btwHomeLearnMore">See how it works</button>
+      </div>
       <section class="btw-shots">
         <span class="btw-try-badge"><span class="btw-try-dot"></span>Try it live</span>
         <div class="btw-section-label">See both sides</div>
@@ -2583,6 +2657,14 @@
         </div>
       </section>
 
+    </div>
+  </div>
+
+  <div class="btw-view" id="btwViewLearn">
+    <div style="max-width:1080px;margin:0 auto;padding:4px 0 2px;text-align:center;">
+      <div class="btw-section-label">How it works</div>
+      <h2 style="margin:6px 0 8px;">See Between in action</h2>
+      <p class="btw-demo-lead" style="margin:0 auto 6px;">Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.</p>
     </div>
   </div>
 
@@ -3511,6 +3593,10 @@
     "Has notes":"Contient des notes",
     "Reported tingling or numbness recently":"A signalé des picotements ou un engourdissement récemment",
     "Walk me through it":"Visite guidée",
+    "How it works":"Comment ça marche",
+    "See how it works":"Voir comment ça marche",
+    "See Between in action":"Voyez Between en action",
+    "Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.":"Les deux côtés d'un suivi entre les visites — essayez-le, et voyez les tendances, les fonctionnalités et la vue de rétablissement qui l'accompagnent.",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -6216,6 +6302,12 @@
     // only for themselves, so hide them on the individual page.
     var _soloHide = (curAudience === 'individual');
     document.querySelectorAll('.btw-shots, .btw-savetime, .btw-features, .btw-forclinics').forEach(function(s){ s.style.display = _soloHide ? 'none' : ''; });
+    // The "How it works" tab is clinician-oriented; hide it (and the Home CTA)
+    // for individuals, whose content is the simpler Home + Pricing.
+    var _nl = document.getElementById('btwNavLearn'); if(_nl) _nl.style.display = _soloHide ? 'none' : '';
+    var _lc = document.querySelector('.btw-learn-cta'); if(_lc) _lc.style.display = _soloHide ? 'none' : '';
+    var _vl = document.getElementById('btwViewLearn');
+    if(_soloHide && _vl && _vl.classList.contains('active')){ var _hb = document.getElementById('btwNavHome'); if(_hb) _hb.click(); }
     // The "Your recovery, seen" showcase is a pain-map story — physical fields only.
     var _recEl = document.getElementById('btwRecovery');
     if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
@@ -6559,15 +6651,25 @@
 
   // --- nav tabs ---
   const navHome = document.getElementById('btwNavHome');
+  const navLearn = document.getElementById('btwNavLearn');
   const navProduct = document.getElementById('btwNavProduct');
   const navPricing = document.getElementById('btwNavPricing');
   const navGuide = document.getElementById('btwNavGuide');
   const viewHome = document.getElementById('btwViewHome');
+  const viewLearn = document.getElementById('btwViewLearn');
   const viewProduct = document.getElementById('btwViewProduct');
   const viewPricing = document.getElementById('btwViewPricing');
   const viewGuide = document.getElementById('btwViewGuide');
-  const allNavBtns = [navHome, navProduct, navPricing, navGuide];
-  const allViews = [viewHome, viewProduct, viewPricing, viewGuide];
+  const allNavBtns = [navHome, navLearn, navProduct, navPricing, navGuide];
+  const allViews = [viewHome, viewLearn, viewProduct, viewPricing, viewGuide];
+  // Declutter Home: the in-depth marketing sections live on the "How it works"
+  // tab. Move the DOM nodes over once at load (keeps Home a quick scroll).
+  if(viewLearn){
+    ['#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-features', '.btw-forclinics'].forEach(function(sel){
+      const el = document.querySelector(sel);
+      if(el) viewLearn.appendChild(el);
+    });
+  }
   const btwRoot = document.querySelector('.btw-root');
   function goToView(nav, view){
     allNavBtns.forEach(b=>b.classList.remove('active'));
@@ -6577,11 +6679,19 @@
     // Widen the layout on the dashboard; keep marketing pages comfortably narrow.
     if(btwRoot) btwRoot.classList.toggle('btw-dash-wide', view === viewProduct);
     window.scrollTo({top:0, behavior:'instant'});
+    // Re-run the scroll reveal for the tab we just opened: its top sections
+    // should fade in immediately rather than waiting for the first scroll.
+    if(window.btwRevealKick) window.btwRevealKick();
+    // The cinematic one-at-a-time panels (and their scroll snap) are Home only.
+    if(window.btwCineSet) window.btwCineSet(view === viewHome);
     // Landing on the dashboard is the moment to offer the first-run tour (it
     // self-guards: clinician only, once, and only when not pending verification).
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
+  if(navLearn) navLearn.addEventListener('click', ()=> goToView(navLearn, viewLearn));
+  const homeLearnMore = document.getElementById('btwHomeLearnMore');
+  if(homeLearnMore) homeLearnMore.addEventListener('click', ()=> goToView(navLearn, viewLearn));
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
@@ -11987,17 +12097,24 @@
   renderAuthState();
   renderAll();
 
-  // Landing-page scroll reveal: sections fade and rise as they enter view.
-  // Uses getBoundingClientRect on scroll (works everywhere) and only adds the
-  // reveal class from JS, so nothing is ever hidden if this doesn't run. Skips
-  // entirely when the visitor prefers reduced motion.
+  // Landing-page scroll reveal: sections fade and rise as they enter view, like
+  // a luxury-brand site. Uses getBoundingClientRect on scroll (works
+  // everywhere) and only adds the reveal class from JS, so nothing is ever
+  // hidden if this doesn't run. Skips when the visitor prefers reduced motion.
   (function(){
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // Skip the reveal entirely on phones: the blur + fade can render as blank
-    // gaps on iOS Safari and the effect is a desktop nicety anyway. Mobile
-    // just shows everything normally.
-    if((window.innerWidth || document.documentElement.clientWidth) < 760) return;
-    const els = [].slice.call(document.querySelectorAll('#btwViewHome .btw-section-label, #btwViewHome .btw-step, #btwViewHome .btw-demo-stage, #btwViewHome .btw-shot, #btwViewHome .btw-shot-cap, #btwViewHome .btw-feature, #btwViewHome .btw-demo-lead'));
+    // Reveal across every marketing tab (the in-depth sections live on the
+    // "How it works" tab after the Home declutter, and we want Pricing/Guide to
+    // animate too). The dashboard (#btwViewProduct) is left alone.
+    // Home uses the cinematic one-at-a-time panels (below); the in-depth tabs
+    // keep the lighter fade-in-on-scroll.
+    const ROOTS = ['#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
+    const SUFFIX = ['.btw-section-label', '.btw-step', '.btw-demo-stage', '.btw-demo-lead',
+      '.btw-shot', '.btw-shot-cap', '.btw-feature', '.btw-price-card', '.btw-pricing-segment',
+      '.btw-trust-inner', '.btw-forclinics', '.btw-recovery'];
+    const sel = ROOTS.map(function(r){ return SUFFIX.map(function(s){ return r + ' ' + s; }).join(','); }).join(',');
+    const els = [].slice.call(document.querySelectorAll(sel));
+    if(!els.length) return;
     // Stagger reveals within each grid so cards cascade in one after another.
     const seen = new Map();
     els.forEach(function(el){
@@ -12013,7 +12130,9 @@
       for(const el of els){
         if(el.classList.contains('in')) continue;
         const r = el.getBoundingClientRect();
-        if(r.top < h - 40 && r.bottom > 0) el.classList.add('in');
+        // Only reveal elements that are actually laid out (a hidden tab reports
+        // a zero-height rect, so its sections wait until that tab is shown).
+        if(r.height > 0 && r.top < h - 40 && r.bottom > 0) el.classList.add('in');
       }
       // Subtle hero parallax: the visual drifts slower than the page (Apple-ish).
       if(heroVisual){
@@ -12024,8 +12143,71 @@
     function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', onScroll);
+    // Expose a kick so switching tabs re-checks what's now on screen (there's no
+    // scroll event on a tab change, and the new tab's top sections should reveal
+    // right away rather than waiting for the first scroll).
+    window.btwRevealKick = function(){ requestAnimationFrame(frame); setTimeout(frame, 120); };
     frame();                     // reveal whatever's already on screen
     setTimeout(frame, 400);      // and again after layout/fonts settle
+  })();
+
+  // Cinematic "one section at a time" on Home: each content section fills the
+  // viewport, and only the section nearest the middle of the screen is crisp —
+  // the others fade back, so scrolling cross-fades from one section to the
+  // next. Scoped to Home; the snap is enabled only while Home is the open tab.
+  (function(){
+    const homeView = document.getElementById('btwViewHome');
+    const homeInner = homeView && homeView.querySelector('.btw-home');
+    if(!homeInner) return;
+    // Every direct content section becomes a full-viewport panel, except the
+    // "Who's it for?" chooser, which stays a compact intro at the top.
+    const panels = [].slice.call(homeInner.children).filter(function(el){
+      return el.tagName === 'SECTION' && !el.classList.contains('btw-chooser');
+    });
+    if(!panels.length) return;
+    // Alternating light / cream / dark "chapters" so each section is distinct.
+    const TONE = { 'btw-hero':'tone-light', 'btw-recovery':'tone-cream',
+      'btw-howitworks':'tone-dark', 'btw-demo':'tone-cream', 'btw-trust':'tone-light',
+      'btw-cta-banner':'tone-dark', 'btw-contact':'tone-cream' };
+    let alt = 0;
+    panels.forEach(function(p){
+      p.classList.add('btw-panel');
+      const key = Object.keys(TONE).find(function(k){ return p.classList.contains(k); });
+      p.classList.add(key ? TONE[key] : (alt++ % 2 ? 'tone-cream' : 'tone-light'));
+    });
+    homeView.classList.add('btw-cine');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let ticking = false;
+    function pick(){
+      ticking = false;
+      if(!document.documentElement.classList.contains('btw-cine-on')) return;
+      const h = window.innerHeight || document.documentElement.clientHeight;
+      const mid = h / 2;
+      let best = null, bestDist = Infinity;
+      for(const p of panels){
+        if(!p.offsetHeight) continue;                 // skip hidden (e.g. recovery)
+        const r = p.getBoundingClientRect();
+        const d = Math.abs((r.top + r.height / 2) - mid);
+        if(d < bestDist){ bestDist = d; best = p; }
+      }
+      panels.forEach(function(p){ p.classList.toggle('active', p === best); });
+    }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(pick); } }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', onScroll);
+
+    // Enable the snap + focus only while Home is the active tab; leave the
+    // dashboard and other tabs scrolling normally.
+    window.btwCineSet = function(on){
+      document.documentElement.classList.toggle('btw-cine-on', !!on && !reduce);
+      if(on){ requestAnimationFrame(pick); setTimeout(pick, 120); }
+    };
+    // Also re-focus when the audience changes (it can show/hide a section).
+    window.btwCineKick = function(){ requestAnimationFrame(pick); setTimeout(pick, 80); };
+    // Home is the tab shown at load.
+    window.btwCineSet(true);
+    setTimeout(pick, 400);
   })();
 
   loadSession()
