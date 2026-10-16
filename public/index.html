@@ -933,8 +933,12 @@
     transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .9s cubic-bezier(.16,1,.3,1);
     will-change:opacity,transform,filter;}
   .btw-reveal.in{opacity:1;transform:none;filter:none;}
-  /* Safety: on phones never hide or blur a reveal element (iOS blur glitches). */
-  @media (max-width:760px){ .btw-reveal{opacity:1!important;transform:none!important;filter:none!important;} }
+  /* Phones: keep the fade + rise so the page still feels alive, but drop the
+     blur and scale (iOS Safari glitches on blur) and shorten the ease. */
+  @media (max-width:760px){
+    .btw-reveal{transform:translateY(20px) scale(1);filter:none;
+      transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+  }
   .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(30,76,134,0.16);}
@@ -6609,6 +6613,9 @@
     // Widen the layout on the dashboard; keep marketing pages comfortably narrow.
     if(btwRoot) btwRoot.classList.toggle('btw-dash-wide', view === viewProduct);
     window.scrollTo({top:0, behavior:'instant'});
+    // Re-run the scroll reveal for the tab we just opened: its top sections
+    // should fade in immediately rather than waiting for the first scroll.
+    if(window.btwRevealKick) window.btwRevealKick();
     // Landing on the dashboard is the moment to offer the first-run tour (it
     // self-guards: clinician only, once, and only when not pending verification).
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
@@ -12022,17 +12029,22 @@
   renderAuthState();
   renderAll();
 
-  // Landing-page scroll reveal: sections fade and rise as they enter view.
-  // Uses getBoundingClientRect on scroll (works everywhere) and only adds the
-  // reveal class from JS, so nothing is ever hidden if this doesn't run. Skips
-  // entirely when the visitor prefers reduced motion.
+  // Landing-page scroll reveal: sections fade and rise as they enter view, like
+  // a luxury-brand site. Uses getBoundingClientRect on scroll (works
+  // everywhere) and only adds the reveal class from JS, so nothing is ever
+  // hidden if this doesn't run. Skips when the visitor prefers reduced motion.
   (function(){
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // Skip the reveal entirely on phones: the blur + fade can render as blank
-    // gaps on iOS Safari and the effect is a desktop nicety anyway. Mobile
-    // just shows everything normally.
-    if((window.innerWidth || document.documentElement.clientWidth) < 760) return;
-    const els = [].slice.call(document.querySelectorAll('#btwViewHome .btw-section-label, #btwViewHome .btw-step, #btwViewHome .btw-demo-stage, #btwViewHome .btw-shot, #btwViewHome .btw-shot-cap, #btwViewHome .btw-feature, #btwViewHome .btw-demo-lead'));
+    // Reveal across every marketing tab (the in-depth sections live on the
+    // "How it works" tab after the Home declutter, and we want Pricing/Guide to
+    // animate too). The dashboard (#btwViewProduct) is left alone.
+    const ROOTS = ['#btwViewHome', '#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
+    const SUFFIX = ['.btw-section-label', '.btw-step', '.btw-demo-stage', '.btw-demo-lead',
+      '.btw-shot', '.btw-shot-cap', '.btw-feature', '.btw-price-card', '.btw-pricing-segment',
+      '.btw-trust-inner', '.btw-forclinics', '.btw-recovery'];
+    const sel = ROOTS.map(function(r){ return SUFFIX.map(function(s){ return r + ' ' + s; }).join(','); }).join(',');
+    const els = [].slice.call(document.querySelectorAll(sel));
+    if(!els.length) return;
     // Stagger reveals within each grid so cards cascade in one after another.
     const seen = new Map();
     els.forEach(function(el){
@@ -12048,7 +12060,9 @@
       for(const el of els){
         if(el.classList.contains('in')) continue;
         const r = el.getBoundingClientRect();
-        if(r.top < h - 40 && r.bottom > 0) el.classList.add('in');
+        // Only reveal elements that are actually laid out (a hidden tab reports
+        // a zero-height rect, so its sections wait until that tab is shown).
+        if(r.height > 0 && r.top < h - 40 && r.bottom > 0) el.classList.add('in');
       }
       // Subtle hero parallax: the visual drifts slower than the page (Apple-ish).
       if(heroVisual){
@@ -12059,6 +12073,10 @@
     function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', onScroll);
+    // Expose a kick so switching tabs re-checks what's now on screen (there's no
+    // scroll event on a tab change, and the new tab's top sections should reveal
+    // right away rather than waiting for the first scroll).
+    window.btwRevealKick = function(){ requestAnimationFrame(frame); setTimeout(frame, 120); };
     frame();                     // reveal whatever's already on screen
     setTimeout(frame, 400);      // and again after layout/fonts settle
   })();
