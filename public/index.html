@@ -954,11 +954,14 @@
      the rest fade back, so scrolling cross-fades from one section to the next.
      A gentle proximity snap lets the scroll settle on a section without ever
      trapping it. The "Who's it for?" chooser stays a normal compact intro. */
-  html.btw-cine-on{ scroll-snap-type:y proximity; }
+  /* Hard one-section-per-scroll: each panel is a mandatory snap stop you can't
+     skip, so one scroll moves you exactly one section. */
+  html.btw-cine-on{ scroll-snap-type:y mandatory; }
+  #btwViewHome.btw-cine .btw-chooser{ scroll-snap-align:start; scroll-snap-stop:always; }
   #btwViewHome.btw-cine .btw-panel{
     min-height:100vh; min-height:100svh;
     display:flex; flex-direction:column; justify-content:center;
-    scroll-snap-align:center;
+    scroll-snap-align:center; scroll-snap-stop:always;
     padding-top:40px; padding-bottom:40px; box-sizing:border-box;
     opacity:.16; transform:translateY(34px);
     transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1);
@@ -2208,23 +2211,6 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
-      <div class="btw-audsel" id="btwAudSel">
-        <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead">For:</span> <span id="btwAudSelLabel">Therapy</span> <span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
-        <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu">
-          <button type="button" class="btw-audsel-item btw-aud-btn active" data-aud="therapy" role="menuitem">Psychotherapist</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="physio" role="menuitem">Physio</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="kinesiology" role="menuitem">Kinesiology</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="osteo" role="menuitem">Osteopathy</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="occupational" role="menuitem">Occupational therapy</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="neuropsych" role="menuitem">Neuropsychology</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="sports" role="menuitem">Sports</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="fitness" role="menuitem">Fitness</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="nutrition" role="menuitem">Nutrition</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="recovery" role="menuitem">Addiction</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="schools" role="menuitem">Schools</button>
-          <button type="button" class="btw-audsel-item btw-aud-btn" data-aud="individual" role="menuitem">For myself</button>
-        </div>
-      </div>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
         <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
@@ -2294,7 +2280,7 @@
           <div class="btw-hero-meta">Free for 14 days. Private, secure and consent-first. Not a crisis service.</div>
           <div class="btw-appsoon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg>iPhone &amp; iPad app coming soon</div>
           <div class="btw-hero-reassure" id="btwHeroReassure">You are never on call. Nothing pings you and you are never expected to reply. The summary is just waiting when you next sit down together.</div>
-          <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-aud-btn[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
+          <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-chooser-card[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
         </div>
