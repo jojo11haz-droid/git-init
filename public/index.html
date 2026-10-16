@@ -771,7 +771,7 @@
     font-size:12.5px;
     font-weight:600;
     padding:8px 16px;
-    border-radius:100px;
+    border-radius:9px;
     border:1px solid var(--line);
     background:var(--panel);
     color:var(--ink-soft);
@@ -1398,9 +1398,7 @@
   .btw-chat-send{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--moss);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .btw-chat-send:disabled{opacity:.5;cursor:default;}
   .btw-chat-note{font-size:10.5px;color:var(--ink-soft);text-align:center;padding:0 12px 9px;background:#fff;}
-  /* On phones the floating chat bubble overlaps the page content, so hide it
-     there; it stays available on tablet and desktop. */
-  @media (max-width:560px){ #btwChat{display:none;} }
+  @media (max-width:560px){ #btwChat{bottom:22px;} .btw-chat-panel{right:12px;bottom:74px;} }
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
