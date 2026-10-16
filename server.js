@@ -2836,10 +2836,10 @@ app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatient
 // Public disclosure address shown in security.txt — a role address, not a
 // personal inbox.
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'owner@betweenpsych.com';
-// Where "Talk to us" / clinic messages actually land. Defaults to the owner's
-// real inbox so messages reach you out of the box; override with CONTACT_INBOX
-// on Render once you have a branded mailbox (e.g. owner@betweenpsych.com).
-const CONTACT_INBOX = process.env.CONTACT_INBOX || OWNER_EMAIL;
+// Where "Talk to us" / clinic messages actually land — the branded owner
+// mailbox by default. Override with CONTACT_INBOX on Render to point it
+// elsewhere (e.g. a personal inbox) without a code change.
+const CONTACT_INBOX = process.env.CONTACT_INBOX || CONTACT_EMAIL;
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 8,
   message: 'Too many messages — please wait a little while and try again.'
