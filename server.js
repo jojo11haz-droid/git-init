@@ -2832,7 +2832,9 @@ app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatient
 // Public "Talk to us" form. Emails the message to the site owner so any
 // visitor can reach them without needing their own mail app. Reply-To is set
 // to the sender so the owner can just hit reply. Needs RESEND_API_KEY to
-// actually deliver; without it the message is logged (see email.js).
+// actually deliver; without it the message is logged (see email.js). The public
+// site now contacts us with a plain mailto: link; this endpoint stays as a
+// dormant fallback (and for any programmatic use).
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'owner@betweenpsych.com';
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 8,
