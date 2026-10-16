@@ -159,7 +159,16 @@ app.get('/api/public-config', (req, res) => {
   res.json({ stripe: stripeConfigured(), usdBilling: usdConfigured() });
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  cacheControl: false,                 // we set Cache-Control ourselves below
+  setHeaders: (res, filePath) => {
+    // The marketing site is a single index.html with everything inline. Tell
+    // browsers to always revalidate it (via ETag) so a new deploy shows up
+    // immediately instead of a stale cached copy — a common "it still shows the
+    // old version on my phone" problem. Other assets can be cached for a while.
+    res.setHeader('Cache-Control', filePath.endsWith('.html') ? 'no-cache' : 'public, max-age=3600');
+  }
+}));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!ANTHROPIC_API_KEY) {
@@ -2912,9 +2921,12 @@ function baseIndexHtml() {
   return _indexHtmlCache;
 }
 app.get(FIELD_PATHS, (req, res) => {
+  // Always revalidate the marketing HTML so new deploys aren't served stale.
+  res.setHeader('Cache-Control', 'no-cache');
   const meta = FIELD_META[req.path];
   // /therapy is the default and canonical to "/", so it uses the base file.
-  if (!meta) return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Use send (not sendFile) so our no-cache header isn't overridden.
+  if (!meta) return res.type('html').send(baseIndexHtml());
   const title = escapeHtml(meta.title);
   const desc = escapeHtml(meta.description);
   const html = baseIndexHtml()
