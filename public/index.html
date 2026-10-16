@@ -2580,9 +2580,9 @@
       <section class="btw-contact" id="btwContactSection">
         <div class="btw-section-label">Contact</div>
         <h2>Questions, or Between for your clinic?</h2>
-        <p>We're happy to help — send us a message and we'll get back to you.</p>
+        <p>We're happy to help — email us and we'll get back to you.</p>
         <div class="btw-contact-actions">
-          <button class="btw-hero-btn primary" id="btwContactSectionBtn" type="button">Send a message</button>
+          <a class="btw-hero-btn primary" href="mailto:owner@betweenpsych.com?subject=Between%20%E2%80%94%20enquiry">Email us</a>
           <a class="btw-contact-email" href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>
         </div>
       </section>
@@ -3258,10 +3258,6 @@
         <div class="btw-modal-eyebrow">Backend · Storage</div>
         <div id="btwStorageBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
       </div>
-      <div id="btwEmailCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
-        <div class="btw-modal-eyebrow">Backend · Email</div>
-        <div id="btwEmailBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
-      </div>
     </div>
   </div>
 
@@ -3332,36 +3328,6 @@
     </div>
   </div>
 
-  <div class="btw-modal-overlay" id="btwContactOverlay" style="display:none;">
-    <div class="btw-modal" style="max-width:440px;">
-      <button class="btw-modal-close" data-close="btwContactOverlay" type="button" aria-label="Close">✕</button>
-      <div id="btwContactForm">
-        <div class="btw-modal-eyebrow">Talk to us</div>
-        <h2>Clinic enquiry</h2>
-        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:16px;">Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.</div>
-        <div class="btw-form-field">
-          <label>Your name</label>
-          <input type="text" id="btwContactName" placeholder="Dr. Jamie Rivera">
-        </div>
-        <div class="btw-form-field">
-          <label>Email (so we can reply)</label>
-          <input type="email" id="btwContactEmail" placeholder="you@yourpractice.ca">
-        </div>
-        <div class="btw-form-field">
-          <label>Message</label>
-          <textarea id="btwContactMessage" rows="4" placeholder="How many clinicians? Anything you'd like to know?" style="width:100%;font-family:var(--font-body);font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;resize:vertical;box-sizing:border-box;"></textarea>
-        </div>
-        <div class="btw-form-error" id="btwContactError"></div>
-        <button class="btw-modal-continue" id="btwContactSubmit">Send message</button>
-      </div>
-      <div id="btwContactDone" style="display:none;text-align:center;padding:8px 0;">
-        <div class="btw-modal-eyebrow">Sent</div>
-        <h2>Thanks, message sent</h2>
-        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">We got your message and will reply to the email you gave us.</div>
-        <button class="btw-modal-continue" id="btwContactClose">Done</button>
-      </div>
-    </div>
-  </div>
 
   <footer style="max-width:1200px;margin:40px auto 0;padding:20px 24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:12.5px;color:var(--ink-soft);">
     <span>© <span id="btwFooterYear">2026</span> Between</span>
@@ -7859,16 +7825,13 @@
     btn.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
   });
 
-  // "Talk to us" (group practice) opens a contact form that emails the owner,
-  // so any visitor can reach us without needing their own mail app.
-  const contactOverlay = document.getElementById('btwContactOverlay');
+  // Contact is by email: open the visitor's own mail app to owner@betweenpsych.com
+  // with a subject filled in — no in-page form. Messages go straight to our inbox.
+  const CONTACT_EMAIL_ADDR = 'owner@betweenpsych.com';
   const talkBtn = document.getElementById('btwTalkToUs');
   function openContact(){
-    document.getElementById('btwContactError').textContent = '';
-    document.getElementById('btwContactForm').style.display = '';
-    document.getElementById('btwContactDone').style.display = 'none';
-    contactOverlay.style.display = 'flex';
-    document.getElementById('btwContactName').focus();
+    window.location.href = 'mailto:' + CONTACT_EMAIL_ADDR +
+      '?subject=' + encodeURIComponent('Between — enquiry');
   }
   // Change the signed-in pro's plan (e.g. upgrade to Premium). If they already
   // have a live subscription the server swaps the price in place (no second
@@ -7909,11 +7872,9 @@
     if(state.me && state.me.account_type === prem.acct) changePlan(prem.plan);
     else if(window.btwOpenSignup) window.btwOpenSignup(prem.plan);
   });
-  // "For clinics & practices" band CTA → the same clinic enquiry form.
+  // "For clinics & practices" band CTA → open the mail app to our inbox.
   const clinicsCta = document.getElementById('btwClinicsCta');
   if(clinicsCta) clinicsCta.addEventListener('click', openContact);
-  const contactSectionBtn = document.getElementById('btwContactSectionBtn');
-  if(contactSectionBtn) contactSectionBtn.addEventListener('click', openContact);
 
   // "Your recovery, seen": two static body figures (week 1 -> now) showing the
   // pain fading, mirroring the app's My progress view. Physical audiences only
@@ -8032,28 +7993,6 @@
   if(soloPremCta) soloPremCta.addEventListener('click', ()=>{
     if(state.me && state.me.account_type === 'therapist') changePlan('solo_premium');
     else if(window.btwOpenSignup) window.btwOpenSignup('solo_premium');
-  });
-  contactOverlay.addEventListener('click', (e)=>{ if(e.target === contactOverlay) contactOverlay.style.display = 'none'; });
-  document.getElementById('btwContactClose').addEventListener('click', ()=>{ contactOverlay.style.display = 'none'; });
-  document.getElementById('btwContactSubmit').addEventListener('click', async ()=>{
-    const err = document.getElementById('btwContactError');
-    const name = document.getElementById('btwContactName').value.trim();
-    const email = document.getElementById('btwContactEmail').value.trim();
-    const message = document.getElementById('btwContactMessage').value.trim();
-    if(!name || !email || !message){ err.textContent = t('Please fill in all fields.'); return; }
-    if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = t('That email address looks incomplete.'); return; }
-    err.textContent = '';
-    const btn = document.getElementById('btwContactSubmit');
-    btn.disabled = true;
-    try{
-      await api('POST', '/api/contact', { name, email, message });
-      document.getElementById('btwContactForm').style.display = 'none';
-      document.getElementById('btwContactDone').style.display = '';
-      document.getElementById('btwContactName').value = '';
-      document.getElementById('btwContactEmail').value = '';
-      document.getElementById('btwContactMessage').value = '';
-    }catch(e){ err.textContent = e.message; }
-    finally{ btn.disabled = false; }
   });
 
   // --- hero waveform animation ---
@@ -8917,36 +8856,6 @@
     try{ renderAdminList(await api('GET', '/api/admin/clinicians')); }
     catch(e){ err.textContent = e.message; list.innerHTML = ''; }
     loadAdminStorage();
-    loadAdminEmail();
-  }
-  async function loadAdminEmail(){
-    const el = document.getElementById('btwEmailBody'); if(!el) return;
-    el.textContent = 'Loading…';
-    try {
-      const s = await api('GET', '/api/admin/email-status');
-      const statusLine = s.configured
-        ? '<div><strong style="color:var(--moss);">Email is connected.</strong> Messages from the contact form are emailed to you.</div>'
-        : '<div><strong style="color:var(--clay);">Email is not connected yet.</strong> Messages are still saved and listed here, but no email is sent. Set <code>RESEND_API_KEY</code> on Render to turn on delivery.</div>';
-      el.innerHTML =
-        statusLine +
-        '<div style="margin-top:7px;">Contact messages are sent to <strong style="color:var(--ink);">' + esc(s.inbox) + '</strong>.</div>' +
-        '<div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
-          '<button type="button" id="btwEmailTestBtn" style="padding:6px 13px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Send me a test email</button>' +
-          '<span id="btwEmailTestResult" style="font-size:12.5px;"></span>' +
-        '</div>';
-      const btn = document.getElementById('btwEmailTestBtn');
-      const result = document.getElementById('btwEmailTestResult');
-      if(btn) btn.addEventListener('click', async function(){
-        btn.disabled = true; btn.textContent = 'Sending…'; result.innerHTML = '';
-        try {
-          const r = await api('POST', '/api/admin/email-test', {});
-          result.innerHTML = r.delivered
-            ? '<span style="color:var(--moss);font-weight:600;">Sent to ' + esc(r.inbox) + ' — check your inbox.</span>'
-            : '<span style="color:var(--clay);">Not delivered — email isn\'t connected. Set RESEND_API_KEY on Render.</span>';
-        } catch(e){ result.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
-        btn.disabled = false; btn.textContent = 'Send me a test email';
-      });
-    } catch(e){ el.innerHTML = '<span style="color:var(--clay);">' + esc(e.message) + '</span>'; }
   }
   function btwFmtBytes(b){ b = Number(b) || 0; if(b < 1024) return b + ' B'; const u = ['KB','MB','GB','TB']; let i = -1; do { b /= 1024; i++; } while(b >= 1024 && i < u.length - 1); return b.toFixed(b < 10 ? 1 : 0) + ' ' + u[i]; }
   async function loadAdminStorage(){
@@ -9430,7 +9339,7 @@
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwContactOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay','btwEngagementOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay','btwEngagementOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });

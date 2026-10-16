@@ -2832,14 +2832,10 @@ app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatient
 // Public "Talk to us" form. Emails the message to the site owner so any
 // visitor can reach them without needing their own mail app. Reply-To is set
 // to the sender so the owner can just hit reply. Needs RESEND_API_KEY to
-// actually deliver; without it the message is logged (see email.js).
-// Public disclosure address shown in security.txt — a role address, not a
-// personal inbox.
+// actually deliver; without it the message is logged (see email.js). The public
+// site now contacts us with a plain mailto: link; this endpoint stays as a
+// dormant fallback (and for any programmatic use).
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'owner@betweenpsych.com';
-// Where "Talk to us" / clinic messages actually land — the branded owner
-// mailbox by default. Override with CONTACT_INBOX on Render to point it
-// elsewhere (e.g. a personal inbox) without a code change.
-const CONTACT_INBOX = process.env.CONTACT_INBOX || CONTACT_EMAIL;
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 8,
   message: 'Too many messages — please wait a little while and try again.'
@@ -2862,7 +2858,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
       footerHtml: `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Reply directly to this email to respond to ${escapeHtml(name.trim())}.</p>`
     });
     const { delivered } = await sendEmail({
-      to: CONTACT_INBOX,
+      to: CONTACT_EMAIL,
       replyTo: email.trim(),
       subject: `Between — message from ${name.trim()}`,
       text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`,
@@ -2885,36 +2881,6 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
   } catch (err) {
     console.error('Error handling contact form:', err);
     res.status(500).json({ error: 'Could not send your message — please try again.' });
-  }
-});
-
-// Owner-only: check email config and send a test message to the contact inbox,
-// so you can confirm from the live dashboard that clinic messages will reach
-// you. GET reports status without sending; POST sends the test.
-app.get('/api/admin/email-status', requireAuth, requireOwner, (req, res) => {
-  res.json({ configured: emailConfigured(), inbox: CONTACT_INBOX });
-});
-app.post('/api/admin/email-test', requireAuth, requireOwner, async (req, res) => {
-  try {
-    const html = brandedEmailHtml({
-      eyebrow: 'Test',
-      heading: 'Email delivery is working',
-      bodyHtml:
-        `<p style="margin:0;font-size:15px;line-height:1.6;color:#1A1E1C;">` +
-        `This is a test from your Between dashboard. If you're reading it, messages ` +
-        `from the "Talk to us" form will arrive here at ${escapeHtml(CONTACT_INBOX)}.</p>`,
-      footerHtml: `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">You can safely ignore this message.</p>`
-    });
-    const { delivered } = await sendEmail({
-      to: CONTACT_INBOX,
-      subject: 'Between — test email',
-      text: `Email delivery is working. Messages from the contact form will arrive here at ${CONTACT_INBOX}.`,
-      html
-    });
-    res.json({ ok: true, configured: emailConfigured(), delivered, inbox: CONTACT_INBOX });
-  } catch (err) {
-    console.error('Error sending test email:', err);
-    res.status(500).json({ error: 'Could not send the test email — check the server logs.' });
   }
 });
 
