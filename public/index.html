@@ -948,76 +948,6 @@
     .btw-reveal{opacity:1;transform:none;transition:none;}
     .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover,.btw-hero-btn:hover{transform:none;box-shadow:none;}
   }
-  /* ---- Cinematic "one section at a time" Home ---- */
-  /* Each content section fills the viewport, vertically centred, so only one
-     aspect is in focus. The section nearest the middle of the screen is crisp;
-     the rest fade back, so scrolling cross-fades from one section to the next.
-     A gentle proximity snap lets the scroll settle on a section without ever
-     trapping it. The "Who's it for?" chooser stays a normal compact intro. */
-  /* Hard one-section-per-scroll: each panel is a mandatory snap stop you can't
-     skip, so one scroll moves you exactly one section. */
-  html.btw-cine-on{ scroll-snap-type:y mandatory; }
-  #btwViewHome.btw-cine .btw-chooser{ scroll-snap-align:start; scroll-snap-stop:always; }
-  #btwViewHome.btw-cine .btw-panel{
-    min-height:100vh; min-height:100svh;
-    display:flex; flex-direction:column; justify-content:center;
-    scroll-snap-align:center; scroll-snap-stop:always;
-    padding-top:40px; padding-bottom:40px; box-sizing:border-box;
-    opacity:.16; transform:translateY(34px);
-    transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1);
-    will-change:opacity,transform;
-  }
-  #btwViewHome.btw-cine .btw-panel.active{ opacity:1; transform:none; }
-  @media (max-width:760px){
-    #btwViewHome.btw-cine .btw-panel{ opacity:.22; transform:translateY(22px);
-      transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);
-      padding-top:28px; padding-bottom:28px; }
-  }
-  @media (prefers-reduced-motion: reduce){
-    html.btw-cine-on{ scroll-snap-type:none; }
-    #btwViewHome.btw-cine .btw-panel{ opacity:1; transform:none; transition:none; }
-  }
-  /* Apple-style chapters: each Home panel is a full-bleed colour field that
-     alternates light / cream / dark, so every section reads as its own
-     distinct moment. The 100vw backgrounds reach the true screen edges; the
-     body's existing overflow-x:hidden keeps them from adding a scrollbar. */
-  #btwViewHome.btw-cine .btw-panel{ position:relative; }
-  #btwViewHome.btw-cine .btw-panel::before{
-    content:''; position:absolute; z-index:-1; top:0; bottom:0;
-    left:50%; width:100vw; margin-left:-50vw; background:var(--pbg,transparent);
-  }
-  #btwViewHome.btw-cine .btw-panel.tone-light{ --pbg:#FFFFFF; }
-  #btwViewHome.btw-cine .btw-panel.tone-cream{ --pbg:#F1EFEA; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark{ --pbg:#14315C; }
-  /* Dark chapters flip text + buttons to light. */
-  #btwViewHome.btw-cine .btw-panel.tone-dark{ color:#D7E2F1; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-section-label{ color:#9FBBDE; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark h1,
-  #btwViewHome.btw-cine .btw-panel.tone-dark h2,
-  #btwViewHome.btw-cine .btw-panel.tone-dark h3{ color:#fff; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark p,
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-demo-lead{ color:#C2D2E8; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary{ background:#fff; color:#14315C; box-shadow:0 10px 26px rgba(0,0,0,.30); }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary:hover{ background:#EAF0F8; }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.secondary{ background:transparent; color:#fff; border-color:rgba(255,255,255,.55); }
-  /* Keep text inside white cards dark/legible on a dark chapter. */
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step{ color:var(--ink); }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step h3{ color:var(--ink); }
-  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step p{ color:var(--ink-soft); }
-  /* Trust: drop its built-in dark card and render as a clean, centred light
-     chapter (its own styles assume a dark background, so re-colour here). */
-  #btwViewHome.btw-cine .btw-trust.btw-panel{ background:transparent; border-radius:0; padding:40px 20px; text-align:center; margin-top:0; }
-  #btwViewHome.btw-cine .btw-trust .btw-trust-inner{ max-width:760px; margin:0 auto; }
-  #btwViewHome.btw-cine .btw-trust h3{ color:var(--ink); }
-  #btwViewHome.btw-cine .btw-trust p{ color:var(--ink-soft); font-size:clamp(15px,1.5vw,18px); line-height:1.7; }
-  /* Bigger, bolder display type on desktop so each chapter lands. */
-  @media (min-width:761px){
-    #btwViewHome.btw-cine .btw-section-label{ font-size:14px; letter-spacing:.16em; }
-    #btwViewHome.btw-cine .btw-hero h1{ font-size:clamp(38px,4.6vw,62px); }
-    #btwViewHome.btw-cine .btw-cta-banner h2,
-    #btwViewHome.btw-cine .btw-contact h2{ font-size:clamp(30px,3.6vw,48px); line-height:1.08; }
-    #btwViewHome.btw-cine .btw-trust h3{ font-size:clamp(22px,2.3vw,30px); }
-  }
   /* ---- animated "see it in action" demo ---- */
   .btw-demo{margin:8px 0 8px;text-align:center;}
   .btw-demo-lead{max-width:620px;margin:6px auto 20px;color:var(--ink-soft);font-size:15px;line-height:1.6;}
@@ -6682,8 +6612,6 @@
     // Re-run the scroll reveal for the tab we just opened: its top sections
     // should fade in immediately rather than waiting for the first scroll.
     if(window.btwRevealKick) window.btwRevealKick();
-    // The cinematic one-at-a-time panels (and their scroll snap) are Home only.
-    if(window.btwCineSet) window.btwCineSet(view === viewHome);
     // Landing on the dashboard is the moment to offer the first-run tour (it
     // self-guards: clinician only, once, and only when not pending verification).
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
@@ -12106,9 +12034,7 @@
     // Reveal across every marketing tab (the in-depth sections live on the
     // "How it works" tab after the Home declutter, and we want Pricing/Guide to
     // animate too). The dashboard (#btwViewProduct) is left alone.
-    // Home uses the cinematic one-at-a-time panels (below); the in-depth tabs
-    // keep the lighter fade-in-on-scroll.
-    const ROOTS = ['#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
+    const ROOTS = ['#btwViewHome', '#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
     const SUFFIX = ['.btw-section-label', '.btw-step', '.btw-demo-stage', '.btw-demo-lead',
       '.btw-shot', '.btw-shot-cap', '.btw-feature', '.btw-price-card', '.btw-pricing-segment',
       '.btw-trust-inner', '.btw-forclinics', '.btw-recovery'];
@@ -12149,65 +12075,6 @@
     window.btwRevealKick = function(){ requestAnimationFrame(frame); setTimeout(frame, 120); };
     frame();                     // reveal whatever's already on screen
     setTimeout(frame, 400);      // and again after layout/fonts settle
-  })();
-
-  // Cinematic "one section at a time" on Home: each content section fills the
-  // viewport, and only the section nearest the middle of the screen is crisp —
-  // the others fade back, so scrolling cross-fades from one section to the
-  // next. Scoped to Home; the snap is enabled only while Home is the open tab.
-  (function(){
-    const homeView = document.getElementById('btwViewHome');
-    const homeInner = homeView && homeView.querySelector('.btw-home');
-    if(!homeInner) return;
-    // Every direct content section becomes a full-viewport panel, except the
-    // "Who's it for?" chooser, which stays a compact intro at the top.
-    const panels = [].slice.call(homeInner.children).filter(function(el){
-      return el.tagName === 'SECTION' && !el.classList.contains('btw-chooser');
-    });
-    if(!panels.length) return;
-    // Alternating light / cream / dark "chapters" so each section is distinct.
-    const TONE = { 'btw-hero':'tone-light', 'btw-recovery':'tone-cream',
-      'btw-howitworks':'tone-dark', 'btw-demo':'tone-cream', 'btw-trust':'tone-light',
-      'btw-cta-banner':'tone-dark', 'btw-contact':'tone-cream' };
-    let alt = 0;
-    panels.forEach(function(p){
-      p.classList.add('btw-panel');
-      const key = Object.keys(TONE).find(function(k){ return p.classList.contains(k); });
-      p.classList.add(key ? TONE[key] : (alt++ % 2 ? 'tone-cream' : 'tone-light'));
-    });
-    homeView.classList.add('btw-cine');
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    let ticking = false;
-    function pick(){
-      ticking = false;
-      if(!document.documentElement.classList.contains('btw-cine-on')) return;
-      const h = window.innerHeight || document.documentElement.clientHeight;
-      const mid = h / 2;
-      let best = null, bestDist = Infinity;
-      for(const p of panels){
-        if(!p.offsetHeight) continue;                 // skip hidden (e.g. recovery)
-        const r = p.getBoundingClientRect();
-        const d = Math.abs((r.top + r.height / 2) - mid);
-        if(d < bestDist){ bestDist = d; best = p; }
-      }
-      panels.forEach(function(p){ p.classList.toggle('active', p === best); });
-    }
-    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(pick); } }
-    window.addEventListener('scroll', onScroll, { passive:true });
-    window.addEventListener('resize', onScroll);
-
-    // Enable the snap + focus only while Home is the active tab; leave the
-    // dashboard and other tabs scrolling normally.
-    window.btwCineSet = function(on){
-      document.documentElement.classList.toggle('btw-cine-on', !!on && !reduce);
-      if(on){ requestAnimationFrame(pick); setTimeout(pick, 120); }
-    };
-    // Also re-focus when the audience changes (it can show/hide a section).
-    window.btwCineKick = function(){ requestAnimationFrame(pick); setTimeout(pick, 80); };
-    // Home is the tab shown at load.
-    window.btwCineSet(true);
-    setTimeout(pick, 400);
   })();
 
   loadSession()
