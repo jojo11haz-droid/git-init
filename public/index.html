@@ -977,6 +977,47 @@
     html.btw-cine-on{ scroll-snap-type:none; }
     #btwViewHome.btw-cine .btw-panel{ opacity:1; transform:none; transition:none; }
   }
+  /* Apple-style chapters: each Home panel is a full-bleed colour field that
+     alternates light / cream / dark, so every section reads as its own
+     distinct moment. The 100vw backgrounds reach the true screen edges; the
+     body's existing overflow-x:hidden keeps them from adding a scrollbar. */
+  #btwViewHome.btw-cine .btw-panel{ position:relative; }
+  #btwViewHome.btw-cine .btw-panel::before{
+    content:''; position:absolute; z-index:-1; top:0; bottom:0;
+    left:50%; width:100vw; margin-left:-50vw; background:var(--pbg,transparent);
+  }
+  #btwViewHome.btw-cine .btw-panel.tone-light{ --pbg:#FFFFFF; }
+  #btwViewHome.btw-cine .btw-panel.tone-cream{ --pbg:#F1EFEA; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark{ --pbg:#14315C; }
+  /* Dark chapters flip text + buttons to light. */
+  #btwViewHome.btw-cine .btw-panel.tone-dark{ color:#D7E2F1; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-section-label{ color:#9FBBDE; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark h1,
+  #btwViewHome.btw-cine .btw-panel.tone-dark h2,
+  #btwViewHome.btw-cine .btw-panel.tone-dark h3{ color:#fff; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark p,
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-demo-lead{ color:#C2D2E8; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary{ background:#fff; color:#14315C; box-shadow:0 10px 26px rgba(0,0,0,.30); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.primary:hover{ background:#EAF0F8; }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-hero-btn.secondary{ background:transparent; color:#fff; border-color:rgba(255,255,255,.55); }
+  /* Keep text inside white cards dark/legible on a dark chapter. */
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step h3{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-panel.tone-dark .btw-step p{ color:var(--ink-soft); }
+  /* Trust: drop its built-in dark card and render as a clean, centred light
+     chapter (its own styles assume a dark background, so re-colour here). */
+  #btwViewHome.btw-cine .btw-trust.btw-panel{ background:transparent; border-radius:0; padding:40px 20px; text-align:center; margin-top:0; }
+  #btwViewHome.btw-cine .btw-trust .btw-trust-inner{ max-width:760px; margin:0 auto; }
+  #btwViewHome.btw-cine .btw-trust h3{ color:var(--ink); }
+  #btwViewHome.btw-cine .btw-trust p{ color:var(--ink-soft); font-size:clamp(15px,1.5vw,18px); line-height:1.7; }
+  /* Bigger, bolder display type on desktop so each chapter lands. */
+  @media (min-width:761px){
+    #btwViewHome.btw-cine .btw-section-label{ font-size:14px; letter-spacing:.16em; }
+    #btwViewHome.btw-cine .btw-hero h1{ font-size:clamp(38px,4.6vw,62px); }
+    #btwViewHome.btw-cine .btw-cta-banner h2,
+    #btwViewHome.btw-cine .btw-contact h2{ font-size:clamp(30px,3.6vw,48px); line-height:1.08; }
+    #btwViewHome.btw-cine .btw-trust h3{ font-size:clamp(22px,2.3vw,30px); }
+  }
   /* ---- animated "see it in action" demo ---- */
   .btw-demo{margin:8px 0 8px;text-align:center;}
   .btw-demo-lead{max-width:620px;margin:6px auto 20px;color:var(--ink-soft);font-size:15px;line-height:1.6;}
@@ -12111,7 +12152,16 @@
       return el.tagName === 'SECTION' && !el.classList.contains('btw-chooser');
     });
     if(!panels.length) return;
-    panels.forEach(function(p){ p.classList.add('btw-panel'); });
+    // Alternating light / cream / dark "chapters" so each section is distinct.
+    const TONE = { 'btw-hero':'tone-light', 'btw-recovery':'tone-cream',
+      'btw-howitworks':'tone-dark', 'btw-demo':'tone-cream', 'btw-trust':'tone-light',
+      'btw-cta-banner':'tone-dark', 'btw-contact':'tone-cream' };
+    let alt = 0;
+    panels.forEach(function(p){
+      p.classList.add('btw-panel');
+      const key = Object.keys(TONE).find(function(k){ return p.classList.contains(k); });
+      p.classList.add(key ? TONE[key] : (alt++ % 2 ? 'tone-cream' : 'tone-light'));
+    });
     homeView.classList.add('btw-cine');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
