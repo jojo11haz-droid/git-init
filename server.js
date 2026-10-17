@@ -3023,9 +3023,9 @@ async function deliverReminder(p, base) {
     if (p.phone && smsConfigured()) {
       await sendSms({
         to: p.phone,
-        text: `Hi ${name}, your Between check-in reminder — whenever you have a moment, even a short note helps. ${base}/\n` +
-          `Not for emergencies; call 988 or 911 if you need help now.\n` +
-          `Stop reminders: ${unsub}`
+        text: `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on how you're doing helps. ${base}/\n` +
+          `Not for emergencies — if you need help now, call or text 988, or call 911.\n` +
+          `Turn off reminders: ${unsub}`
       });
       channel = 'text';
     } else if (p.email) {
