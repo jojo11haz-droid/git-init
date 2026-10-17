@@ -6641,8 +6641,19 @@
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
   if(navLearn) navLearn.addEventListener('click', ()=> goToView(navLearn, viewLearn));
+  // "See how it works" → the interactive demo. It lives on the How it works
+  // tab (.btw-shots); jump there and scroll straight to it. For the individual
+  // view (that tab is hidden) fall back to the dashboard demo.
+  function goToDemo(){
+    if(navLearn && viewLearn && navLearn.style.display !== 'none'){
+      goToView(navLearn, viewLearn);
+      setTimeout(function(){ const d = document.querySelector('#btwViewLearn .btw-shots'); if(d && d.scrollIntoView) d.scrollIntoView({ block:'start', behavior:'smooth' }); }, 140);
+    } else {
+      goToView(navProduct, viewProduct);
+    }
+  }
   const homeLearnMore = document.getElementById('btwHomeLearnMore');
-  if(homeLearnMore) homeLearnMore.addEventListener('click', ()=> goToView(navLearn, viewLearn));
+  if(homeLearnMore) homeLearnMore.addEventListener('click', goToDemo);
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
@@ -6651,7 +6662,7 @@
   const dashTourBtn = document.getElementById('btwDashTourBtn');
   if(dashTourBtn) dashTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
 
-  document.getElementById('btwHeroDemo').addEventListener('click', ()=> goToView(navProduct, viewProduct));
+  document.getElementById('btwHeroDemo').addEventListener('click', goToDemo);
 
   // Caseload triage filter: needs-attention vs all.
   document.querySelectorAll('#btwCaseloadFilter .btw-role-btn').forEach(b=>{
