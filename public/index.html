@@ -2626,6 +2626,12 @@
       If you need this sooner, reply to your confirmation email or reach us from the contact form and we'll prioritize your review.
     </div>
   </div>
+  <div id="btwDashTour" style="display:none;max-width:1200px;margin:0 auto 10px;text-align:right;">
+    <button type="button" class="btw-tour-start" id="btwDashTourBtn">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      Walk me through it
+    </button>
+  </div>
   <div class="btw-grid" id="btwDashGrid" style="display:none;">
     <!-- PATIENT PANE -->
     <div class="btw-pane">
@@ -6627,6 +6633,8 @@
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
   const guideTourBtn = document.getElementById('btwGuideTour');
   if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
+  const dashTourBtn = document.getElementById('btwDashTourBtn');
+  if(dashTourBtn) dashTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
 
   document.getElementById('btwHeroDemo').addEventListener('click', ()=> goToView(navProduct, viewProduct));
 
@@ -8148,6 +8156,11 @@
     const gated = signedIn && !pendingVerify && isGated();
     signedOutBox.style.display = signedIn ? 'none' : '';
     dashGrid.style.display = (signedIn && !gated && !pendingVerify) ? '' : 'none';
+    // On-demand "Walk me through it" button: shown whenever the real dashboard
+    // is visible, so a subscriber (clinician or patient) can replay the guided
+    // tour of what to do anytime, not just on first login.
+    const dashTour = document.getElementById('btwDashTour');
+    if(dashTour) dashTour.style.display = (signedIn && !gated && !pendingVerify) ? '' : 'none';
     const paywall = document.getElementById('btwPaywall');
     if(paywall){
       paywall.style.display = gated ? '' : 'none';
