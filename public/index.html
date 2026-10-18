@@ -794,6 +794,10 @@
     border-radius:8px; padding:9px 12px; font-weight:500; color:var(--ink);
   }
   .btw-nav-menu .btw-nav-btn:hover{background:color-mix(in srgb, var(--ink) 7%, transparent); color:var(--ink);}
+  /* On phones the header wraps and the account gear sits at the far left, so a
+     right-anchored menu runs off the left edge. Anchor it to the left instead
+     and cap its width to the viewport. */
+  @media (max-width:640px){ .btw-nav-menu{left:0;right:auto;max-width:calc(100vw - 24px);} }
   .btw-nav-btn.active{
     background:var(--ink);
     border-color:var(--ink);
@@ -913,6 +917,14 @@
   .btw-role-btn.active{
     background:var(--moss);
     color:#fff;
+  }
+  /* On phones the caseload status filter ("All / Doing okay / Doing well /
+     Needs attention now") is too wide for one row and the last chip gets
+     clipped off the right edge. Let it take the full width and wrap so every
+     filter stays visible. */
+  @media (max-width:640px){
+    #btwCaseloadControls .btw-role-toggle{flex-wrap:wrap;width:100%;flex:1 1 100%;}
+    #btwCaseloadControls .btw-role-btn{flex:1 1 auto;}
   }
   /* Patient dashboard: hide the therapist-only caseload controls. */
   .btw-role-patient #btwPatientList,
