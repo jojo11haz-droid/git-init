@@ -69,6 +69,7 @@
     font-size:25px;
     letter-spacing:-0.03em;
     color:var(--ink);
+    cursor:pointer;
   }
   .btw-logo-mark{width:30px;height:30px;border-radius:9px;vertical-align:-8px;margin-right:10px;}
   .btw-title em{
@@ -2196,7 +2197,7 @@
 
   <div class="btw-header">
     <div>
-      <div class="btw-title"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
+      <div class="btw-title" id="btwBrandHome" role="button" tabindex="0" aria-label="Between — go to homepage" title="Home"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
       <div class="btw-sub">A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.</div>
       <div class="btw-nav">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
@@ -6652,6 +6653,12 @@
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
+  // The Between wordmark/logo doubles as a "home" link.
+  const brandHome = document.getElementById('btwBrandHome');
+  if(brandHome){
+    brandHome.addEventListener('click', ()=> goToView(navHome, viewHome));
+    brandHome.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); goToView(navHome, viewHome); } });
+  }
   if(navLearn) navLearn.addEventListener('click', ()=> goToView(navLearn, viewLearn));
   // "See how it works" → the interactive demo. It lives on the How it works
   // tab (.btw-shots); jump there and scroll straight to it. For the individual
