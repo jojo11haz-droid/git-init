@@ -998,8 +998,10 @@ export async function disableRemindersByToken(token) {
 // needs.
 export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
   const { rows } = await pool.query(
-    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token
+    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token,
+            cl.account_type AS clinician_account_type, cl.discipline AS clinician_discipline
      FROM patients p
+     LEFT JOIN clinicians cl ON cl.id = p.clinician_id
      LEFT JOIN LATERAL (
        SELECT max(c.submitted_at) AS last_at
        FROM check_ins c
@@ -1026,15 +1028,17 @@ export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
 // were last reminded, so the sweep can decide who's due right now.
 export async function findScheduledReminderCandidates() {
   const { rows } = await pool.query(
-    `SELECT id, email, phone, display_name, reminder_token,
-            reminder_time, reminder_days, reminder_tz, last_reminded_at
-     FROM patients
-     WHERE reminders_enabled = true
-       AND reminder_time IS NOT NULL
-       AND (phone IS NOT NULL OR email IS NOT NULL)
-       AND password_hash IS NOT NULL
-       AND reminder_token IS NOT NULL
-       AND left_at IS NULL
+    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token,
+            p.reminder_time, p.reminder_days, p.reminder_tz, p.last_reminded_at,
+            c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
+     FROM patients p
+     LEFT JOIN clinicians c ON c.id = p.clinician_id
+     WHERE p.reminders_enabled = true
+       AND p.reminder_time IS NOT NULL
+       AND (p.phone IS NOT NULL OR p.email IS NOT NULL)
+       AND p.password_hash IS NOT NULL
+       AND p.reminder_token IS NOT NULL
+       AND p.left_at IS NULL
      LIMIT 2000`
   );
   return rows;

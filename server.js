@@ -3007,6 +3007,19 @@ function tzDateOf(ts, tz) {
   return `${m.year}-${m.month}-${m.day}`;
 }
 
+// What a patient reports on, phrased for their field, so the reminder speaks to
+// what they actually check in about (body/pain for physical fields, eating for
+// nutrition, etc.). Falls back to the general phrasing.
+function reminderCheckinPhrase(p) {
+  const d = p.clinician_discipline;
+  const acct = p.clinician_account_type;
+  if (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational') return "how your body's feeling";
+  if (d === 'nutrition') return 'how eating and energy are going';
+  if (d === 'neuropsych') return 'how your focus and mood are';
+  if (acct === 'coach' || acct === 'trainer') return "how training's going";
+  return "how you're doing"; // therapy, recovery, schools, self-serve
+}
+
 // Send one reminder to a patient over the best available channel (text if they
 // have a number and texting is set up, else email), and record it.
 async function deliverReminder(p, base) {
@@ -3017,13 +3030,14 @@ async function deliverReminder(p, base) {
   try { claimed = await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
   if (!claimed) return false;
   const name = p.display_name || 'there';
+  const phrase = reminderCheckinPhrase(p);
   const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
   let channel = null;
   try {
     if (p.phone && smsConfigured()) {
       await sendSms({
         to: p.phone,
-        text: `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on how you're doing helps. ${base}/\n` +
+        text: `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
           `Not for emergencies — if you need help now, call or text 988, or call 911.\n` +
           `Turn off reminders: ${unsub}`
       });
@@ -3034,7 +3048,7 @@ async function deliverReminder(p, base) {
         subject: 'Your Between check-in reminder',
         text: `Hi ${name},\n\n` +
           `This is your check-in reminder from Between. No pressure at all — whenever you have a ` +
-          `moment, even a short note about how you're doing gives your next appointment something ` +
+          `moment, even a short note about ${phrase} gives your next appointment something ` +
           `to start from.\n\n` +
           `Open Between: ${base}/\n\n` +
           `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
