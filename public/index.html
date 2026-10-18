@@ -11662,6 +11662,7 @@
       document.getElementById('btwSend').disabled = false;
       const un = document.getElementById('btwUrgentNote'); if(un) un.style.display = '';
       syncConsentUi();
+      syncRemindersUi(); // surface the daily-reminder nudge on the dashboard
       renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();
