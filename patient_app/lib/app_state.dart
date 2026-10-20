@@ -78,6 +78,38 @@ class CheckIn {
       DateTime.parse(raw['submitted_at'] as String).toLocal();
 }
 
+/// An intake document the patient shared, plus the AI starting summary that
+/// Between prepared for the clinician (only present once ai_status == 'done').
+class PatientDocument {
+  PatientDocument(this.raw);
+
+  final Map<String, dynamic> raw;
+
+  String get id => raw['id'] as String;
+  String? get filename => raw['filename'] as String?;
+  String get kind => (raw['kind'] as String?) ?? 'image'; // 'pdf' | 'image'
+  String get uploadedBy => (raw['uploaded_by'] as String?) ?? 'patient';
+  String get aiStatus => (raw['ai_status'] as String?) ?? 'pending';
+  String? get aiSummary => raw['ai_summary'] as String?;
+  String? get primaryConcern {
+    final f = raw['ai_fields'];
+    return (f is Map) ? f['primary_concern'] as String? : null;
+  }
+
+  List<MapEntry<String, String>> get highlights {
+    final f = raw['ai_fields'];
+    if (f is Map && f['highlights'] is List) {
+      return (f['highlights'] as List)
+          .whereType<Map>()
+          .where((h) => h['label'] is String && h['value'] is String)
+          .map((h) =>
+              MapEntry(h['label'] as String, h['value'] as String))
+          .toList();
+    }
+    return const [];
+  }
+}
+
 /// Result of sending a check-in: the stored row plus the crisis payload the
 /// server attaches when risk language was detected. Crisis resources come
 /// straight back in this response — they never wait on the therapist.
@@ -283,6 +315,32 @@ class AppState extends ChangeNotifier {
     final uploadUrl = (grant as Map)['uploadUrl'] as String;
     final result = await _api.putBytes(uploadUrl, bytes, mime);
     return (result as Map)['photoUploadId'] as String;
+  }
+
+  // --- Intake documents (AI-reviewed) ---
+  // The patient shares a document (a photo/scan of a referral, intake form, or
+  // note). Between reviews it, when AI is on, and gives the clinician a starting
+  // summary. Same signed-URL dance as photos, plus the filename via a header.
+  Future<PatientDocument> uploadDocument(
+      List<int> bytes, String mime, String filename) async {
+    final grant = await _api.post('/api/patient/documents/upload-url');
+    final uploadUrl = (grant as Map)['uploadUrl'] as String;
+    final result = await _api.putBytes(uploadUrl, bytes, mime,
+        headers: {'X-Filename': Uri.encodeComponent(filename)});
+    return PatientDocument(
+        ((result as Map)['document'] as Map).cast<String, dynamic>());
+  }
+
+  Future<List<PatientDocument>> fetchDocuments() async {
+    final data = await _api.get('/api/patient/documents');
+    final list = ((data as Map)['documents'] as List?) ?? const [];
+    return list
+        .map((d) => PatientDocument((d as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<void> deleteDocument(String id) async {
+    await _api.delete('/api/patient/documents/$id');
   }
 
   // --- Apple Health ---

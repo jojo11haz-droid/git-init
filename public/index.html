@@ -2090,6 +2090,17 @@
 
       <div id="btwInviteInfo" style="background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;margin-bottom:14px;line-height:1.6;"></div>
 
+      <!-- Intake documents: uploaded by the patient or clinician and reviewed by
+           AI so the clinician starts from a summary, not a blank page. -->
+      <div id="btwDocsSection" style="display:none;border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:14px;">
+        <strong style="display:block;font-size:13px;margin-bottom:3px;" id="btwDocsTitle">Documents reviewed by AI</strong>
+        <div id="btwDocsHelp" style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;"></div>
+        <div id="btwDocsList" style="margin-bottom:10px;"></div>
+        <input type="file" id="btwDocsFile" accept="application/pdf,image/jpeg,image/png,image/webp" style="display:none;">
+        <button type="button" id="btwDocsUploadBtn" style="width:100%;background:#fff;color:var(--moss);border:1px solid var(--moss);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Upload a document (PDF or photo)</button>
+        <div id="btwDocsStatus" style="display:none;font-size:12px;margin-top:8px;color:var(--moss);"></div>
+      </div>
+
       <div class="btw-modal-toggle-row">
         <div>
           <strong>AI summaries &amp; trend charts</strong>
@@ -4096,6 +4107,33 @@
       "Enregistré. L'envoi de textos n'est pas encore configuré sur ce serveur; les rappels commenceront dès qu'il le sera.",
     "Saved. We'll text you at your chosen time.":"Enregistré. Nous vous enverrons un texto à l'heure choisie.",
     "Your data & settings":"Vos données et réglages",
+    "Documents reviewed by AI":"Documents examinés par l'IA",
+    "Your documents":"Vos documents",
+    "Intake documents":"Documents d'admission",
+    "Share a document from your clinic or doctor — a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.":"Partagez un document de votre clinique ou de votre médecin — une référence, un formulaire d'admission ou une note. Si les résumés IA sont activés, Between donne à votre clinicien un court résumé pour qu'il ne parte pas de zéro.",
+    "Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page. You or the patient can upload.":"Formulaires, références ou notes pour ce patient. Between examine chacun et vous donne un résumé de départ pour ne pas commencer d'une page blanche. Vous ou le patient pouvez téléverser.",
+    "Upload a document (PDF or photo)":"Téléverser un document (PDF ou photo)",
+    "No documents yet.":"Aucun document pour l'instant.",
+    "Reviewing…":"Analyse en cours…",
+    "Turn on AI summaries to have Between review documents.":"Activez les résumés IA pour que Between examine les documents.",
+    "Between couldn't read this one — you can still open it below.":"Between n'a pas pu lire celui-ci — vous pouvez quand même l'ouvrir ci-dessous.",
+    "Document":"Document",
+    "Image":"Image",
+    "added by your clinician":"ajouté par votre clinicien",
+    "shared by you":"partagé par vous",
+    "added by you":"ajouté par vous",
+    "shared by the patient":"partagé par le patient",
+    "Most pressing:":"Le plus pressant :",
+    "Open original":"Ouvrir l'original",
+    "Delete this document?":"Supprimer ce document ?",
+    "Could not open the document.":"Impossible d'ouvrir le document.",
+    "Loading…":"Chargement…",
+    "Select a patient first.":"Sélectionnez d'abord un patient.",
+    "That file is too large (max 20 MB).":"Ce fichier est trop volumineux (max 20 Mo).",
+    "Uploading…":"Téléversement…",
+    "Reviewing the document…":"Analyse du document…",
+    "Done.":"Terminé.",
+    "Upload failed.":"Échec du téléversement.",
     "This permanently deletes all of your check-in history and trends. Continue?":
       "Cela supprime définitivement tout votre historique de suivis et vos tendances. Continuer?",
     "Say a bit about what happened before sending…":"Dites un mot sur ce qui s'est passé avant d'envoyer…",
@@ -10029,6 +10067,137 @@
     });
   }
 
+  // --- Intake documents (AI-reviewed) ---
+  const docsSection = document.getElementById('btwDocsSection');
+  const docsList = document.getElementById('btwDocsList');
+  const docsHelp = document.getElementById('btwDocsHelp');
+  const docsTitle = document.getElementById('btwDocsTitle');
+  const docsFile = document.getElementById('btwDocsFile');
+  const docsUploadBtn = document.getElementById('btwDocsUploadBtn');
+  const docsStatus = document.getElementById('btwDocsStatus');
+
+  // Who's viewing decides which endpoints to hit: a patient manages their own
+  // documents; a clinician manages the currently selected patient's.
+  function docEndpoints(){
+    if(isPatient()){
+      return { list:'/api/patient/documents', uploadUrl:'/api/patient/documents/upload-url', fileBase:'/api/patient/documents/', delBase:'/api/patient/documents/', call:pApi };
+    }
+    const pid = state.selectedPatientId;
+    if(!pid) return null;
+    const base = '/api/patients/'+pid+'/documents';
+    return { list:base, uploadUrl:base+'/upload-url', fileBase:base+'/', delBase:base+'/', call:api };
+  }
+
+  function docStatusLabel(d){
+    if(d.ai_status === 'pending') return t('Reviewing…');
+    if(d.ai_status === 'skipped') return t('Turn on AI summaries to have Between review documents.');
+    if(d.ai_status === 'error') return t("Between couldn't read this one — you can still open it below.");
+    return '';
+  }
+
+  function renderDocsList(docs){
+    if(!docsList) return;
+    if(!docs.length){ docsList.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);">'+esc(t('No documents yet.'))+'</div>'; return; }
+    const ep = docEndpoints();
+    docsList.innerHTML = docs.map(function(d){
+      const icon = d.kind === 'pdf' ? 'PDF' : 'IMG';
+      const name = esc(d.filename || (d.kind==='pdf'?t('Document'):t('Image')));
+      const whoTxt = isPatient()
+        ? (d.uploaded_by === 'clinician' ? t('added by your clinician') : t('shared by you'))
+        : (d.uploaded_by === 'clinician' ? t('added by you') : t('shared by the patient'));
+      let interp = '';
+      if(d.ai_status === 'done'){
+        const f = d.ai_fields || {};
+        const primary = f.primary_concern ? '<div style="margin:6px 0 4px;"><strong>'+esc(t('Most pressing:'))+'</strong> '+esc(f.primary_concern)+'</div>' : '';
+        const hl = (Array.isArray(f.highlights) && f.highlights.length)
+          ? '<ul style="margin:6px 0 0;padding-left:16px;">'+f.highlights.map(function(h){ return '<li style="margin-bottom:2px;"><strong>'+esc(h.label)+':</strong> '+esc(h.value)+'</li>'; }).join('')+'</ul>' : '';
+        interp = '<div style="margin-top:7px;font-size:12px;line-height:1.5;color:var(--ink);">'+ (d.ai_summary?('<div>'+esc(d.ai_summary)+'</div>'):'') + primary + hl + '</div>';
+      } else {
+        const lbl = docStatusLabel(d);
+        if(lbl) interp = '<div style="margin-top:6px;font-size:11.5px;color:var(--ink-soft);">'+esc(lbl)+'</div>';
+      }
+      return '<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-family:var(--font-mono);font-size:9.5px;background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:2px 5px;">'+icon+'</span>'
+        + '<span style="font-weight:600;font-size:12.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+name+'</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--ink-soft);margin-top:3px;">'+esc(whoTxt)+'</div>'
+        + interp
+        + '<div style="display:flex;gap:14px;margin-top:8px;">'
+        + '<button type="button" data-doc-open="'+esc(d.id)+'" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);cursor:pointer;text-decoration:underline;">'+esc(t('Open original'))+'</button>'
+        + '<button type="button" data-doc-del="'+esc(d.id)+'" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--clay);cursor:pointer;">'+esc(t('Delete'))+'</button>'
+        + '</div></div>';
+    }).join('');
+    docsList.querySelectorAll('[data-doc-open]').forEach(function(b){ b.addEventListener('click', function(){ openDoc(b.dataset.docOpen); }); });
+    docsList.querySelectorAll('[data-doc-del]').forEach(function(b){
+      b.addEventListener('click', async function(){
+        if(!confirm(t('Delete this document?'))) return;
+        try{ const ep2=docEndpoints(); await ep2.call('DELETE', ep2.delBase + b.dataset.docDel); await loadDocs(); }
+        catch(e){ alert(e.message); }
+      });
+    });
+  }
+
+  // Open the original file. A clinician is cookie-authed so a plain link works;
+  // a patient is Bearer-authed, so fetch with the token and open a blob URL.
+  async function openDoc(id){
+    const ep = docEndpoints(); if(!ep) return;
+    if(!isPatient()){ window.open(ep.fileBase + id + '/file', '_blank', 'noopener'); return; }
+    try{
+      const tk = pToken();
+      const resp = await fetch(ep.fileBase + id + '/file', { headers: tk?{'Authorization':'Bearer '+tk}:{} });
+      if(!resp.ok) throw new Error(t('Could not open the document.'));
+      const url = URL.createObjectURL(await resp.blob());
+      window.open(url, '_blank', 'noopener');
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+    }catch(e){ alert(e.message); }
+  }
+
+  async function loadDocs(){
+    const ep = docEndpoints();
+    if(!ep){ if(docsSection) docsSection.style.display='none'; return; }
+    if(docsStatus) docsStatus.style.display='none';
+    if(docsList) docsList.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);">'+esc(t('Loading…'))+'</div>';
+    try{ const r = await ep.call('GET', ep.list); renderDocsList(r.documents || []); }
+    catch(e){ if(docsList) docsList.innerHTML = '<div style="font-size:12px;color:var(--clay);">'+esc(e.message)+'</div>'; }
+  }
+
+  async function uploadDoc(file){
+    const ep = docEndpoints();
+    if(!ep){ alert(t('Select a patient first.')); return; }
+    if(file.size > 20*1024*1024){ alert(t('That file is too large (max 20 MB).')); return; }
+    if(docsStatus){ docsStatus.style.display=''; docsStatus.style.color='var(--ink-soft)'; docsStatus.textContent = t('Uploading…'); }
+    if(docsUploadBtn) docsUploadBtn.disabled = true;
+    try{
+      const prep = await ep.call('POST', ep.uploadUrl);
+      if(docsStatus) docsStatus.textContent = t('Reviewing the document…');
+      const headers = { 'Content-Type': file.type || 'application/octet-stream', 'X-Filename': encodeURIComponent(file.name || '') };
+      const resp = await fetch(prep.uploadUrl, { method:'PUT', headers, body:file });
+      if(!resp.ok){ let msg=''; try{ msg=(await resp.json()).error; }catch(e){} throw new Error(msg || t('Upload failed.')); }
+      if(docsStatus){ docsStatus.style.color='var(--moss)'; docsStatus.textContent = t('Done.'); }
+      await loadDocs();
+      setTimeout(function(){ if(docsStatus) docsStatus.style.display='none'; }, 2500);
+    }catch(e){ if(docsStatus){ docsStatus.style.color='var(--clay)'; docsStatus.textContent = e.message; } }
+    finally{ if(docsUploadBtn) docsUploadBtn.disabled=false; if(docsFile) docsFile.value=''; }
+  }
+  if(docsUploadBtn) docsUploadBtn.addEventListener('click', function(){ if(docsFile) docsFile.click(); });
+  if(docsFile) docsFile.addEventListener('change', function(){ if(docsFile.files && docsFile.files[0]) uploadDoc(docsFile.files[0]); });
+
+  // Set the section's labels for who's viewing, then load the list.
+  function setupDocsSection(){
+    if(!docsSection) return;
+    docsSection.style.display = '';
+    if(isPatient()){
+      if(docsTitle) docsTitle.textContent = t('Your documents');
+      if(docsHelp) docsHelp.textContent = t('Share a document from your clinic or doctor — a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.');
+    } else {
+      if(docsTitle) docsTitle.textContent = t('Intake documents');
+      if(docsHelp) docsHelp.textContent = t('Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page. You or the patient can upload.');
+    }
+    if(docsUploadBtn) docsUploadBtn.textContent = t('Upload a document (PDF or photo)');
+    loadDocs();
+  }
+
   document.getElementById('btwOpenData').addEventListener('click', ()=>{
     if(isPatient()){
       document.getElementById('btwDataTitle').textContent = t('Your data & settings');
@@ -10048,6 +10217,7 @@
       const bfP = document.getElementById('btwBackfillBox'); if(bfP) bfP.style.display = 'none';
       syncConsentUi();
       syncRemindersUi();
+      setupDocsSection();
       renderDataList();
       dataOverlay.style.display = 'flex';
       return;
@@ -10088,6 +10258,7 @@
     if(bfBox){ bfBox.style.display = left ? 'none' : ''; if(!left) resetBackfillRows(); }
     syncConsentUi();
     syncRemindersUi(); // hides the row for clinicians
+    setupDocsSection();
     renderDataList();
     dataOverlay.style.display = 'flex';
   });

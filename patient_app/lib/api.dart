@@ -85,12 +85,14 @@ class ApiClient {
       _send('POST', path, body ?? const {});
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
-  /// PUT raw bytes (used for the signed audio-upload URL, which authenticates
-  /// itself — no Bearer header needed).
-  Future<dynamic> putBytes(String path, List<int> bytes, String mime) async {
+  /// PUT raw bytes (used for the signed audio/photo/document upload URLs, which
+  /// authenticate themselves — no Bearer header needed). Extra headers let a
+  /// document upload pass its filename along via X-Filename.
+  Future<dynamic> putBytes(String path, List<int> bytes, String mime,
+      {Map<String, String>? headers}) async {
     final response = await http
         .put(resolveApiUri(path),
-            headers: {'Content-Type': mime}, body: bytes)
+            headers: {'Content-Type': mime, ...?headers}, body: bytes)
         .timeout(const Duration(seconds: 60));
     dynamic data;
     try {

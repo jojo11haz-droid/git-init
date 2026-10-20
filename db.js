@@ -101,6 +101,32 @@ CREATE TABLE IF NOT EXISTS photo_upload_tokens (
   used_at TIMESTAMPTZ
 );
 
+-- Patient intake documents (referral, intake form, doctor's note, assessment).
+-- Uploaded by the patient or their clinician, reviewed by AI (consent-gated) so
+-- the clinician starts from a summary rather than a blank page. File bytes live
+-- in Postgres for the MVP, same as photos/audio.
+CREATE TABLE IF NOT EXISTS patient_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  uploaded_by TEXT NOT NULL DEFAULT 'patient',
+  filename TEXT,
+  mime TEXT NOT NULL,
+  data BYTEA NOT NULL,
+  ai_summary TEXT,
+  ai_fields JSONB,
+  ai_status TEXT NOT NULL DEFAULT 'pending',
+  model_version TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS document_upload_tokens (
+  token_hash TEXT PRIMARY KEY,
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  uploaded_by TEXT NOT NULL DEFAULT 'patient',
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS check_ins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -1152,6 +1178,125 @@ export async function getPhotoForClinician(uploadId, clinicianId) {
      FROM photo_uploads a JOIN patients p ON p.id = a.patient_id
      WHERE a.id = $1 AND p.clinician_id = $2`,
     [uploadId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// --- Patient intake documents (AI-reviewed) ---
+
+// The context the AI needs to interpret a document for the right profession:
+// the patient's display name and consent, plus the clinician's discipline /
+// account type (null for an individual using Between on their own).
+export async function getPatientDocContext(patientId) {
+  const { rows } = await pool.query(
+    `SELECT p.id, p.display_name, p.account_type, p.ai_consent_enabled,
+            c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
+     FROM patients p LEFT JOIN clinicians c ON c.id = p.clinician_id
+     WHERE p.id = $1`,
+    [patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function createDocumentUploadToken(tokenHash, patientId, uploadedBy, ttlMinutes) {
+  await pool.query(
+    `INSERT INTO document_upload_tokens (token_hash, patient_id, uploaded_by, expires_at)
+     VALUES ($1, $2, $3, now() + ($4 || ' minutes')::interval)`,
+    [tokenHash, patientId, uploadedBy, String(ttlMinutes)]
+  );
+}
+
+export async function consumeDocumentUploadToken(tokenHash) {
+  const { rows } = await pool.query(
+    `UPDATE document_upload_tokens SET used_at = now()
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+     RETURNING patient_id, uploaded_by`,
+    [tokenHash]
+  );
+  return rows[0] || null;
+}
+
+export async function storePatientDocument(patientId, { uploadedBy, filename, mime, data }) {
+  const { rows } = await pool.query(
+    `INSERT INTO patient_documents (patient_id, uploaded_by, filename, mime, data)
+     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+    [patientId, uploadedBy || 'patient', filename || null, mime, data]
+  );
+  return rows[0].id;
+}
+
+export async function setDocumentInterpretation(documentId, { summary, fields, status, modelVersion }) {
+  const { rows } = await pool.query(
+    `UPDATE patient_documents
+     SET ai_summary = $1, ai_fields = $2, ai_status = $3, model_version = $4
+     WHERE id = $5
+     RETURNING id, uploaded_by, filename, mime, ai_summary, ai_fields, ai_status, created_at`,
+    [summary || null, fields ? JSON.stringify(fields) : null, status, modelVersion || null, documentId]
+  );
+  return rows[0] || null;
+}
+
+// Metadata + interpretation for one patient, newest first — never the bytes.
+export async function listPatientDocuments(patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, uploaded_by, filename, mime, ai_summary, ai_fields, ai_status, created_at
+     FROM patient_documents WHERE patient_id = $1 ORDER BY created_at DESC`,
+    [patientId]
+  );
+  return rows;
+}
+
+// Clinician-scoped list: only documents for a patient on this clinician's caseload.
+export async function listPatientDocumentsForClinician(patientId, clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT d.id, d.uploaded_by, d.filename, d.mime, d.ai_summary, d.ai_fields, d.ai_status, d.created_at
+     FROM patient_documents d JOIN patients p ON p.id = d.patient_id
+     WHERE d.patient_id = $1 AND p.clinician_id = $2 ORDER BY d.created_at DESC`,
+    [patientId, clinicianId]
+  );
+  return rows;
+}
+
+export async function getDocumentBytes(documentId) {
+  const { rows } = await pool.query(
+    `SELECT id, patient_id, filename, mime, data FROM patient_documents WHERE id = $1`,
+    [documentId]
+  );
+  return rows[0] || null;
+}
+
+export async function getDocumentForPatient(documentId, patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, filename, mime, data FROM patient_documents WHERE id = $1 AND patient_id = $2`,
+    [documentId, patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function getDocumentForClinician(documentId, clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT d.id, d.filename, d.mime, d.data
+     FROM patient_documents d JOIN patients p ON p.id = d.patient_id
+     WHERE d.id = $1 AND p.clinician_id = $2`,
+    [documentId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteDocumentForPatient(documentId, patientId) {
+  const { rows } = await pool.query(
+    `DELETE FROM patient_documents WHERE id = $1 AND patient_id = $2 RETURNING id`,
+    [documentId, patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteDocumentForClinician(documentId, clinicianId) {
+  const { rows } = await pool.query(
+    `DELETE FROM patient_documents d USING patients p
+     WHERE d.id = $1 AND p.id = d.patient_id AND p.clinician_id = $2
+     RETURNING d.id`,
+    [documentId, clinicianId]
   );
   return rows[0] || null;
 }
