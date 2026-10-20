@@ -37,6 +37,32 @@ class S {
       'Between is not a crisis service. If you\'re in immediate danger or thinking about suicide, call or text 988, or call 911.',
       'Between n\'est pas un service de crise. Si tu es en danger immédiat ou que tu penses au suicide, appelle ou texte le 988, ou compose le 911.');
 
+  // Documents (intake paperwork the patient shares, reviewed by AI)
+  String get documentsTitle => _('Documents', 'Documents');
+  String get documentsTooltip => _('My documents', 'Mes documents');
+  String get documentsIntro => _(
+      'Share a document from your clinic or doctor — a referral, intake form, or note. If your AI summaries are on, Between gives your clinician a short summary so they\'re not starting from scratch.',
+      'Partage un document de ta clinique ou de ton médecin — une référence, un formulaire d\'admission ou une note. Si tes résumés IA sont activés, Between donne à ton clinicien un court résumé pour qu\'il ne parte pas de zéro.');
+  String get documentsEmpty =>
+      _('No documents yet.', 'Aucun document pour l\'instant.');
+  String get addDocument => _('Add a document', 'Ajouter un document');
+  String get documentUploading => _('Uploading…', 'Téléversement…');
+  String get documentReviewing =>
+      _('Reviewing the document…', 'Analyse du document…');
+  String get documentAdded => _('Document shared.', 'Document partagé.');
+  String get documentReviewOff => _(
+      'Turn on AI summaries to have Between review documents.',
+      'Active les résumés IA pour que Between examine les documents.');
+  String get documentReviewError => _(
+      'Between couldn\'t read this one.', 'Between n\'a pas pu lire celui-ci.');
+  String get documentReviewPending => _('Reviewing…', 'Analyse en cours…');
+  String get documentSharedByYou => _('Shared by you', 'Partagé par toi');
+  String get documentAddedByClinician =>
+      _('Added by your clinician', 'Ajouté par ton clinicien');
+  String get deleteDocumentConfirm =>
+      _('Delete this document?', 'Supprimer ce document ?');
+  String get deleteAction => _('Delete', 'Supprimer');
+
   // Welcome
   String get welcomeTagline => _(
       'A quiet place to check in on how you\'re\nreally doing — on your own, or with a pro.',

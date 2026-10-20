@@ -16,6 +16,7 @@ import '../recording_bytes.dart';
 import '../strings.dart';
 import '../theme.dart';
 import 'coach_tour.dart';
+import 'documents_screen.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'progress_screen.dart';
@@ -381,6 +382,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BtwColors.inkSoft),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: s.documentsTooltip,
+                    icon: const Icon(Icons.folder_outlined,
+                        color: BtwColors.inkSoft),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const DocumentsScreen()),
                     ),
                   ),
                   IconButton(
