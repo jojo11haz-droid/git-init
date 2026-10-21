@@ -61,7 +61,7 @@
   /* Ambient background: two soft circles that drift together into the logo as
      you scroll. Sits behind all content (z-index:-1); never changes layout. */
   .btw-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
-  .btw-bg-circle{position:absolute;top:50%;left:50%;width:66vmin;height:66vmin;margin:-33vmin 0 0 -33vmin;border-radius:50%;will-change:transform;filter:blur(2px);}
+  .btw-bg-circle{position:absolute;top:50%;left:50%;width:54vmin;height:54vmin;margin:-27vmin 0 0 -27vmin;border-radius:50%;will-change:transform;filter:blur(2px);}
   .btw-bg-navy{background:radial-gradient(circle, rgba(30,76,134,.34) 0%, rgba(30,76,134,.24) 40%, rgba(30,76,134,.08) 66%, transparent 78%);}
   .btw-bg-clay{background:radial-gradient(circle, rgba(192,57,43,.28) 0%, rgba(192,57,43,.19) 40%, rgba(192,57,43,.06) 66%, transparent 78%);}
   @media (prefers-color-scheme:dark){
@@ -12411,11 +12411,12 @@
     function upd(){
       var denom=(document.documentElement.scrollHeight-window.innerHeight)||1;
       var p=cl((window.scrollY||window.pageYOffset||0)/denom);
-      var ax=-36+27*p, ay=-22+22*p, bx=36-27*p, by=22-22*p, s=1-0.1*p;
+      // Side by side like the logo's two circles; converge to ~half overlap.
+      var ax=-60+36*p, ay=0, bx=60-36*p, by=0, s=1;
       navy.style.transform='translate('+ax+'%,'+ay+'%) scale('+s+')';
       clay.style.transform='translate('+bx+'%,'+by+'%) scale('+s+')';
     }
-    if(reduce){ navy.style.transform='translate(-11%,0) scale(.92)'; clay.style.transform='translate(11%,0) scale(.92)'; return; }
+    if(reduce){ navy.style.transform='translate(-26%,0)'; clay.style.transform='translate(26%,0)'; return; }
     addEventListener('scroll', function(){ requestAnimationFrame(upd); }, {passive:true});
     addEventListener('resize', upd);
     upd();
