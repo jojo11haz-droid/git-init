@@ -6008,10 +6008,13 @@
   (function(){
     const keys = {};
     [SPORTS_EN, FITNESS_EN, RECOVERY_EN, SCHOOLS_EN, PHYSIO_EN, NUTRITION_EN, FR].forEach(function(d){
-      for(const k in d){ if(/[Tt]herapist/.test(k) && !/physiotherapist|psychotherapist/i.test(k)) keys[k] = 1; }
+      for(const k in d){
+        if(/[Tt]herapist/.test(k) && !/physiotherapist|psychotherapist/i.test(k)) keys[k] = 1;
+        if(/[Cc]lient/.test(k)) keys[k] = 1;   // neuropsychologists have patients, not clients
+      }
     });
-    function swapEN(s){ return s.replace(/(psycho)?([Tt])herapist(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Neuropsychologist' : 'neuropsychologist') + pl; }); }
-    function swapFR(s){ return s.replace(/(psycho)?([Tt])hérapeute(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Neuropsychologue' : 'neuropsychologue') + pl; }); }
+    function swapEN(s){ return s.replace(/(psycho)?([Tt])herapist(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Neuropsychologist' : 'neuropsychologist') + pl; }).replace(/([Cc])lient(s?)/g, function(m, c, pl){ return (c === 'C' ? 'Patient' : 'patient') + pl; }); }
+    function swapFR(s){ return s.replace(/(psycho)?([Tt])hérapeute(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Neuropsychologue' : 'neuropsychologue') + pl; }).replace(/([Cc])lient(e?s?)/g, function(m, c, pl){ return (c === 'C' ? 'Patient' : 'patient') + pl; }); }
     Object.keys(keys).forEach(function(k){
       NEURO_EN[k] = swapEN(k);
       const frv = FR[k];
@@ -6080,6 +6083,28 @@
       d[HK] = "Les élèves voient leurs progrès";
       d[FK] = "Between montre à chaque élève ses propres progrès au fil du temps — des semaines plus stables, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
     });
+  })();
+
+  // How-it-works steps: nutrition and neuropsychology were inheriting the
+  // therapy default ("Stressed, anxious… / Mood trends"), which isn't their
+  // field. Give them field-correct step copy, and match the step-1 heading to
+  // the body's "client" for the fields that say client.
+  (function(){
+    var H  = "Patient sends a check-in";
+    var P1 = "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.";
+    var P3 = "Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.";
+    THERAPY_EN[H] = "Client sends a check-in";
+    THERAPY_FR[H] = "Le client envoie un suivi";
+    NUTRITION_EN[H]  = "Client sends a check-in";
+    NUTRITION_EN[P1] = "A tough meal, low energy, or a day that felt on track. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.";
+    NUTRITION_EN[P3] = "Energy, appetite and eating-pattern trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.";
+    NUTRITION_FR[H]  = "Le client envoie un suivi";
+    NUTRITION_FR[P1] = "Un repas difficile, une baisse d'énergie ou une journée qui s'est bien passée. Votre client le capte dans une courte note vocale ou un texto au moment où ça arrive, pas une semaine plus tard de mémoire.";
+    NUTRITION_FR[P3] = "Les tendances d'énergie, d'appétit et d'habitudes alimentaires, les thèmes récurrents et un récapitulatif depuis la dernière séance vous attendent dans votre tableau de bord avant chaque rendez-vous, pour commencer en sachant déjà où en sont les choses.";
+    NEURO_EN[P1] = "A foggy afternoon, a word that wouldn't come, or a sharp day. Your patient captures it in a quick voice note or text the moment it happens, not a week later from memory.";
+    NEURO_EN[P3] = "Focus, memory, mental-fatigue and mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.";
+    NEURO_FR[P1] = "Un après-midi embrumé, un mot qui ne venait pas, ou une journée bien nette. Votre patient le capte dans une courte note vocale ou un texto au moment où ça arrive, pas une semaine plus tard de mémoire.";
+    NEURO_FR[P3] = "Les tendances de concentration, de mémoire, de fatigue mentale et d'humeur, les thèmes récurrents et un récapitulatif depuis la dernière séance vous attendent dans votre tableau de bord avant chaque rendez-vous, pour commencer en sachant déjà où en sont les choses.";
   })();
 
   // "For clinics & practices" band — adapt the wording to each field. Audiences
