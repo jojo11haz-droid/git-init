@@ -75,6 +75,23 @@
   .btw-bg-lens{width:32vmin;height:32vmin;margin:-16vmin 0 0 -16vmin;filter:blur(6px);opacity:0;background:radial-gradient(circle, rgba(192,57,43,.58) 0%, rgba(192,57,43,.28) 46%, transparent 70%);}
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);} }
   :root[data-theme="dark"] .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);}
+  /* Per-page backgrounds. Home keeps the two logo circles; the other pages get
+     their own subtle, on-brand treatment and hide the circles. */
+  :root[data-bg="learn"] .btw-bg-circle,
+  :root[data-bg="pricing"] .btw-bg-circle,
+  :root[data-bg="guide"] .btw-bg-circle,
+  :root[data-bg="product"] .btw-bg-circle{display:none;}
+  :root[data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(30,76,134,.11), transparent 60%);}
+  :root[data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(30,76,134,.055) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(192,57,43,.05) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(30,76,134,.045) 43vmin 43.6vmin, transparent 43.6vmin);}
+  :root[data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(30,76,134,.07) 1.5px, transparent 1.7px);background-size:24px 24px;}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"])[data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(92,146,211,.16), transparent 60%);}
+    :root:not([data-theme="light"])[data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(92,146,211,.09) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(224,110,94,.08) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(92,146,211,.07) 43vmin 43.6vmin, transparent 43.6vmin);}
+    :root:not([data-theme="light"])[data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(122,167,225,.11) 1.5px, transparent 1.7px);background-size:24px 24px;}
+  }
+  :root[data-theme="dark"][data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(92,146,211,.16), transparent 60%);}
+  :root[data-theme="dark"][data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(92,146,211,.09) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(224,110,94,.08) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(92,146,211,.07) 43vmin 43.6vmin, transparent 43.6vmin);}
+  :root[data-theme="dark"][data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(122,167,225,.11) 1.5px, transparent 1.7px);background-size:24px 24px;}
   /* Signature touch: the red eyebrow rule draws out from the left as each
      section reveals (hooks into the existing .btw-reveal scroll system). */
   .btw-section-label::before{transform-origin:left center;}
@@ -12421,19 +12438,29 @@
     var navy=document.getElementById('btwBgNavy'), clay=document.getElementById('btwBgClay'), lens=document.getElementById('btwBgLens');
     if(!navy||!clay) return;
     function cl(v){ return v<0?0:v>1?1:v; }
+    // Mark the active page so each gets its own background treatment (CSS).
+    function page(){
+      var v=document.querySelector('.btw-view.active');
+      return ({btwViewHome:'home',btwViewLearn:'learn',btwViewProduct:'product',btwViewPricing:'pricing',btwViewGuide:'guide'})[v?v.id:'']||'home';
+    }
+    function setBg(){ document.documentElement.setAttribute('data-bg', page()); }
+    try{
+      var mo=new MutationObserver(setBg);
+      document.querySelectorAll('.btw-view').forEach(function(v){ mo.observe(v,{attributes:true,attributeFilter:['class']}); });
+    }catch(e){}
+    setBg();
+    // Home's two logo circles drift together on scroll (hidden on other pages).
     function upd(){
-      var denom=(document.documentElement.scrollHeight-window.innerHeight)||1;
-      var p=cl((window.scrollY||window.pageYOffset||0)/denom);
-      // Side by side like the logo's two circles; converge to ~half overlap.
-      var ax=-60+36*p, ay=0, bx=60-36*p, by=0, s=1;
-      navy.style.transform='translate('+ax+'%,'+ay+'%) scale('+s+')';
-      clay.style.transform='translate('+bx+'%,'+by+'%) scale('+s+')';
-      // Red centre lens fades in as the circles overlap.
+      var p = reduce ? 1 : (function(){ var d=(document.documentElement.scrollHeight-window.innerHeight)||1; return cl((window.scrollY||window.pageYOffset||0)/d); })();
+      var ax=-60+36*p, bx=60-36*p;
+      navy.style.transform='translate('+ax+'%,0)';
+      clay.style.transform='translate('+bx+'%,0)';
       if(lens){ lens.style.opacity=cl((p-0.18)/0.55); lens.style.transform='scale('+(0.6+0.4*p)+')'; }
     }
-    if(reduce){ navy.style.transform='translate(-26%,0)'; clay.style.transform='translate(26%,0)'; if(lens){ lens.style.opacity=0.85; lens.style.transform='scale(.95)'; } return; }
-    addEventListener('scroll', function(){ requestAnimationFrame(upd); }, {passive:true});
-    addEventListener('resize', upd);
+    if(!reduce){
+      addEventListener('scroll', function(){ requestAnimationFrame(upd); }, {passive:true});
+      addEventListener('resize', upd);
+    }
     upd();
   })();
 </script>
