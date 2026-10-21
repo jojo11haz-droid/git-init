@@ -70,6 +70,11 @@
   }
   :root[data-theme="dark"] .btw-bg-navy{background:radial-gradient(circle, rgba(92,146,211,.32) 0%, rgba(92,146,211,.21) 40%, rgba(92,146,211,.07) 66%, transparent 78%);}
   :root[data-theme="dark"] .btw-bg-clay{background:radial-gradient(circle, rgba(224,110,94,.27) 0%, rgba(224,110,94,.18) 40%, rgba(224,110,94,.06) 66%, transparent 78%);}
+  /* The red "lens" where the two circles overlap, like the logo's centre. Sits
+     on top and fades in as they converge (opacity set from scroll in JS). */
+  .btw-bg-lens{width:32vmin;height:32vmin;margin:-16vmin 0 0 -16vmin;filter:blur(6px);opacity:0;background:radial-gradient(circle, rgba(192,57,43,.58) 0%, rgba(192,57,43,.28) 46%, transparent 70%);}
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);} }
+  :root[data-theme="dark"] .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);}
   /* The dark "trust" band keeps a dark background in dark mode (its text is
      light), instead of flipping to a light --ink surface. */
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-trust{background:#10141A;} }
@@ -1999,6 +2004,7 @@
 <div class="btw-bg" aria-hidden="true">
   <div class="btw-bg-circle btw-bg-navy" id="btwBgNavy"></div>
   <div class="btw-bg-circle btw-bg-clay" id="btwBgClay"></div>
+  <div class="btw-bg-circle btw-bg-lens" id="btwBgLens"></div>
 </div>
 
 <div class="btw-root">
@@ -12405,7 +12411,7 @@
   // scrolls. Purely decorative, behind everything, and honours reduced motion.
   (function(){
     var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
-    var navy=document.getElementById('btwBgNavy'), clay=document.getElementById('btwBgClay');
+    var navy=document.getElementById('btwBgNavy'), clay=document.getElementById('btwBgClay'), lens=document.getElementById('btwBgLens');
     if(!navy||!clay) return;
     function cl(v){ return v<0?0:v>1?1:v; }
     function upd(){
@@ -12415,8 +12421,10 @@
       var ax=-60+36*p, ay=0, bx=60-36*p, by=0, s=1;
       navy.style.transform='translate('+ax+'%,'+ay+'%) scale('+s+')';
       clay.style.transform='translate('+bx+'%,'+by+'%) scale('+s+')';
+      // Red centre lens fades in as the circles overlap.
+      if(lens){ lens.style.opacity=cl((p-0.18)/0.55); lens.style.transform='scale('+(0.6+0.4*p)+')'; }
     }
-    if(reduce){ navy.style.transform='translate(-26%,0)'; clay.style.transform='translate(26%,0)'; return; }
+    if(reduce){ navy.style.transform='translate(-26%,0)'; clay.style.transform='translate(26%,0)'; if(lens){ lens.style.opacity=0.85; lens.style.transform='scale(.95)'; } return; }
     addEventListener('scroll', function(){ requestAnimationFrame(upd); }, {passive:true});
     addEventListener('resize', upd);
     upd();
