@@ -44,7 +44,14 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;}
-  body{background:var(--paper);overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;}
+  html{background:var(--paper);}
+  body{background:transparent;overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;}
+  /* Ambient background: two soft circles that drift together into the logo as
+     you scroll. Sits behind all content (z-index:-1); never changes layout. */
+  .btw-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+  .btw-bg-circle{position:absolute;top:50%;left:50%;width:66vmin;height:66vmin;margin:-33vmin 0 0 -33vmin;border-radius:50%;will-change:transform;filter:blur(2px);}
+  .btw-bg-navy{background:radial-gradient(circle, rgba(30,76,134,.30) 0%, rgba(30,76,134,.22) 38%, rgba(30,76,134,.06) 64%, transparent 76%);}
+  .btw-bg-clay{background:radial-gradient(circle, rgba(192,57,43,.25) 0%, rgba(192,57,43,.18) 38%, rgba(192,57,43,.05) 64%, transparent 76%);}
   .btw-root{
     background:var(--paper);
     color:var(--ink);
@@ -1953,6 +1960,11 @@
 </style>
 </head>
 <body>
+
+<div class="btw-bg" aria-hidden="true">
+  <div class="btw-bg-circle btw-bg-navy" id="btwBgNavy"></div>
+  <div class="btw-bg-circle btw-bg-clay" id="btwBgClay"></div>
+</div>
 
 <div class="btw-root">
   <div class="btw-modal-overlay" id="btwConsentOverlay" style="display:none;">
@@ -12329,6 +12341,27 @@
     .catch(err=>console.error('Failed to load session:', err))
     .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
 })();
+</script>
+<script>
+  // Ambient background circles: drift together into the logo as the page
+  // scrolls. Purely decorative, behind everything, and honours reduced motion.
+  (function(){
+    var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    var navy=document.getElementById('btwBgNavy'), clay=document.getElementById('btwBgClay');
+    if(!navy||!clay) return;
+    function cl(v){ return v<0?0:v>1?1:v; }
+    function upd(){
+      var denom=(document.documentElement.scrollHeight-window.innerHeight)||1;
+      var p=cl((window.scrollY||window.pageYOffset||0)/denom);
+      var ax=-36+27*p, ay=-22+22*p, bx=36-27*p, by=22-22*p, s=1-0.1*p;
+      navy.style.transform='translate('+ax+'%,'+ay+'%) scale('+s+')';
+      clay.style.transform='translate('+bx+'%,'+by+'%) scale('+s+')';
+    }
+    if(reduce){ navy.style.transform='translate(-11%,0) scale(.92)'; clay.style.transform='translate(11%,0) scale(.92)'; return; }
+    addEventListener('scroll', function(){ requestAnimationFrame(upd); }, {passive:true});
+    addEventListener('resize', upd);
+    upd();
+  })();
 </script>
 </body>
 </html>
