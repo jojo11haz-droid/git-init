@@ -75,6 +75,12 @@
   .btw-bg-lens{width:32vmin;height:32vmin;margin:-16vmin 0 0 -16vmin;filter:blur(6px);opacity:0;background:radial-gradient(circle, rgba(192,57,43,.58) 0%, rgba(192,57,43,.28) 46%, transparent 70%);}
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);} }
   :root[data-theme="dark"] .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);}
+  /* Signature touch: the red eyebrow rule draws out from the left as each
+     section reveals (hooks into the existing .btw-reveal scroll system). */
+  .btw-section-label::before{transform-origin:left center;}
+  .btw-section-label.btw-reveal.in::before{animation:btwRuleDraw .5s ease-out .05s both;}
+  @keyframes btwRuleDraw{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+  @media (prefers-reduced-motion:reduce){ .btw-section-label.btw-reveal.in::before{animation:none;} }
   /* The dark "trust" band keeps a dark background in dark mode (its text is
      light), instead of flipping to a light --ink surface. */
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-trust{background:#10141A;} }
@@ -12339,7 +12345,8 @@
     const ROOTS = ['#btwViewHome', '#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
     const SUFFIX = ['.btw-section-label', '.btw-step', '.btw-demo-stage', '.btw-demo-lead',
       '.btw-shot', '.btw-shot-cap', '.btw-feature', '.btw-price-card', '.btw-pricing-segment',
-      '.btw-trust-inner', '.btw-forclinics', '.btw-recovery'];
+      '.btw-trust-inner', '.btw-forclinics', '.btw-recovery',
+      '.btw-guide-card', '.btw-chooser-card', '.btw-savetime-card', '.btw-solo', '.btw-cta-banner'];
     const sel = ROOTS.map(function(r){ return SUFFIX.map(function(s){ return r + ' ' + s; }).join(','); }).join(',');
     const els = [].slice.call(document.querySelectorAll(sel));
     if(!els.length) return;
