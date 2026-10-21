@@ -96,6 +96,21 @@
   :root[data-theme="dark"][data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(122,167,225,.11) 1.5px, transparent 1.7px);background-size:24px 24px;}
   :root[data-theme="dark"][data-bg="pricing"] .btw-bg-navy{border-color:rgba(92,146,211,.30);}
   :root[data-theme="dark"][data-bg="pricing"] .btw-bg-clay{border-color:rgba(224,110,94,.26);}
+  /* How it works: a slow drifting aurora — two soft colour blobs float behind
+     the content (shown only on that page; static under reduced motion). */
+  .btw-bg-blob{position:absolute;border-radius:50%;filter:blur(42px);display:none;will-change:transform;}
+  :root[data-bg="learn"] .btw-bg-blob{display:block;}
+  .btw-bg-blob-a{width:52vmin;height:52vmin;left:6%;top:4%;background:radial-gradient(circle, rgba(30,76,134,.22), transparent 66%);animation:btwBlobA 26s ease-in-out infinite;}
+  .btw-bg-blob-b{width:46vmin;height:46vmin;right:4%;bottom:6%;background:radial-gradient(circle, rgba(192,57,43,.18), transparent 66%);animation:btwBlobB 31s ease-in-out infinite;}
+  @keyframes btwBlobA{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(16vmin,10vmin) scale(1.14);}66%{transform:translate(6vmin,20vmin) scale(.94);}}
+  @keyframes btwBlobB{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-14vmin,-12vmin) scale(1.1);}66%{transform:translate(-20vmin,4vmin) scale(1.18);}}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .btw-bg-blob-a{background:radial-gradient(circle, rgba(92,146,211,.26), transparent 66%);}
+    :root:not([data-theme="light"]) .btw-bg-blob-b{background:radial-gradient(circle, rgba(224,110,94,.22), transparent 66%);}
+  }
+  :root[data-theme="dark"] .btw-bg-blob-a{background:radial-gradient(circle, rgba(92,146,211,.26), transparent 66%);}
+  :root[data-theme="dark"] .btw-bg-blob-b{background:radial-gradient(circle, rgba(224,110,94,.22), transparent 66%);}
+  @media (prefers-reduced-motion:reduce){ .btw-bg-blob-a,.btw-bg-blob-b{animation:none;} }
   /* Signature touch: the red eyebrow rule draws out from the left as each
      section reveals (hooks into the existing .btw-reveal scroll system). */
   .btw-section-label::before{transform-origin:left center;}
@@ -2032,6 +2047,8 @@
   <div class="btw-bg-circle btw-bg-navy" id="btwBgNavy"></div>
   <div class="btw-bg-circle btw-bg-clay" id="btwBgClay"></div>
   <div class="btw-bg-circle btw-bg-lens" id="btwBgLens"></div>
+  <div class="btw-bg-blob btw-bg-blob-a"></div>
+  <div class="btw-bg-blob btw-bg-blob-b"></div>
 </div>
 
 <div class="btw-root">
