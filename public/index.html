@@ -2368,7 +2368,7 @@
         </div>
         <div class="btw-chooser-grid">
           <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
-          <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physio</span><span class="h">Pain and a body map between visits</span></button>
+          <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physiotherapy</span><span class="h">Pain and a body map between visits</span></button>
           <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
           <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
           <button type="button" class="btw-chooser-card" data-aud="occupational"><span class="t">Occupational therapy</span><span class="h">Daily function and recovery between visits</span></button>
@@ -3396,7 +3396,7 @@
       <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Confirm each clinician's name and number against their licensing board or professional order's public registry, then approve. Only approved clinicians can add patients or see check-ins. Approving starts their access; it does not charge them (they subscribe on their side).</div>
       <div class="btw-aud" style="margin-bottom:14px;">
         <button type="button" class="btw-aud-btn active" id="btwAdminTabTherapist" data-admintab="therapist">Therapists</button>
-        <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physios</button>
+        <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physiotherapists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabNutrition" data-admintab="nutrition">Nutritionists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabNeuropsych" data-admintab="neuropsych">Neuropsychologists</button>
       </div>
@@ -6047,6 +6047,35 @@
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que votre concentration, votre mémoire ou votre énergie change et observez vos tendances cognitives et d'humeur au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un neuropsychologue ou non."
   });
 
+  // The "Clients see their progress" feature paragraph is physio by default
+  // ("sore spots easing week by week"). Give every non-physical field its own
+  // progress wording so a psychotherapist, nutritionist, neuropsychologist,
+  // addiction or school user never reads physio language. The physical fields
+  // (physio/kinesiology/osteo/occupational/sports/fitness) keep the base copy,
+  // which already fits them.
+  (function(){
+    var FK = "Between shows each client their own recovery over time — sore spots easing week by week, good days adding up. The feedback loop that keeps them checking in.";
+    var HK = "Clients see their progress";
+    THERAPY_EN[FK] = "Between shows each client their own recovery over time — the heavy weeks easing, good days adding up. The feedback loop that keeps them checking in.";
+    THERAPY_FR[FK] = "Between montre à chaque client son propre rétablissement au fil du temps — les semaines difficiles qui s'allègent, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
+    NUTRITION_EN[FK] = "Between shows each client their own progress over time — energy steadier week by week, good days adding up. The feedback loop that keeps them checking in.";
+    NUTRITION_FR[FK] = "Between montre à chaque client ses propres progrès au fil du temps — une énergie plus stable semaine après semaine, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
+    RECOVERY_EN[FK] = "Between shows each client their own recovery over time — steadier weeks, cravings easing, good days adding up. The feedback loop that keeps them checking in.";
+    RECOVERY_FR[FK] = "Between montre à chaque client son propre rétablissement au fil du temps — des semaines plus stables, les envies qui s'apaisent, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
+    NEURO_EN[HK] = "Patients see their progress";
+    NEURO_EN[FK] = "Between shows each patient their own progress over time — clearer weeks, less fog, good days adding up. The feedback loop that keeps them checking in.";
+    NEURO_FR[HK] = "Les patients voient leurs progrès";
+    NEURO_FR[FK] = "Between montre à chaque patient ses propres progrès au fil du temps — des semaines plus claires, moins de brouillard, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
+    [SCHOOLS_EN, SCHOOLS_CLASS_EN].forEach(function(d){
+      d[HK] = "Students see their progress";
+      d[FK] = "Between shows each student their own progress over time — steadier weeks, good days adding up. The feedback loop that keeps them checking in.";
+    });
+    [SCHOOLS_FR, SCHOOLS_CLASS_FR].forEach(function(d){
+      d[HK] = "Les élèves voient leurs progrès";
+      d[FK] = "Between montre à chaque élève ses propres progrès au fil du temps — des semaines plus stables, les bonnes journées qui s'accumulent. La boucle de rétroaction qui les incite à continuer.";
+    });
+  })();
+
   // "For clinics & practices" band — adapt the wording to each field. Audiences
   // not listed here (therapy, physio/kinesiology/osteo/occupational, neuro) keep
   // the default clinic/clinician/caseload copy, which already fits them.
@@ -6534,7 +6563,7 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychologist', nutrition:'Nutrition' };
+  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physiotherapist', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychologist', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
