@@ -50,10 +50,10 @@
      you scroll. Sits behind all content (z-index:-1); never changes layout. */
   .btw-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
   .btw-bg-circle{position:absolute;top:50%;left:50%;width:66vmin;height:66vmin;margin:-33vmin 0 0 -33vmin;border-radius:50%;will-change:transform;filter:blur(2px);}
-  .btw-bg-navy{background:radial-gradient(circle, rgba(30,76,134,.42) 0%, rgba(30,76,134,.30) 40%, rgba(30,76,134,.09) 66%, transparent 78%);}
-  .btw-bg-clay{background:radial-gradient(circle, rgba(192,57,43,.34) 0%, rgba(192,57,43,.24) 40%, rgba(192,57,43,.07) 66%, transparent 78%);}
+  .btw-bg-navy{background:radial-gradient(circle, rgba(30,76,134,.34) 0%, rgba(30,76,134,.24) 40%, rgba(30,76,134,.08) 66%, transparent 78%);}
+  .btw-bg-clay{background:radial-gradient(circle, rgba(192,57,43,.28) 0%, rgba(192,57,43,.19) 40%, rgba(192,57,43,.06) 66%, transparent 78%);}
   .btw-root{
-    background:var(--paper);
+    background:transparent; /* let the ambient background circles show through; html paints --paper */
     color:var(--ink);
     font-family:var(--font-body);
     padding:28px 20px 40px;
