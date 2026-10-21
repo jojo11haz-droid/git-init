@@ -1028,15 +1028,15 @@
      reveal class from JS, so if JS is off nothing is hidden. */
   /* Apple-style reveal: fade + rise + slight scale + a soft blur that clears,
      on a long expo ease. */
-  /* Reveal via a keyframe animation (not a transition) so cards with their own
-     transition, like the chooser and feature tiles, still fade + rise and
-     cascade one at a time. Stagger comes from an inline animation-delay. */
-  .btw-reveal{opacity:0;will-change:opacity,transform,filter;}
-  .btw-reveal.in{animation:btwRevIn .9s cubic-bezier(.16,1,.3,1) both;}
-  @keyframes btwRevIn{from{opacity:0;transform:translateY(34px) scale(.985);filter:blur(6px);}to{opacity:1;transform:none;filter:none;}}
-  @keyframes btwRevInM{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
-  /* Phones: keep the fade + rise, drop the blur/scale (iOS Safari glitches on blur). */
-  @media (max-width:760px){ .btw-reveal.in{animation-name:btwRevInM;animation-duration:.7s;} }
+  /* Section reveal: each section slides up into view, one at a time, as you
+     scroll down to it — a rise (not a soft fade). Driven by a keyframe
+     animation so an element's own transitions can't override it. */
+  .btw-reveal{opacity:0;will-change:opacity,transform;}
+  .btw-reveal.in{animation:btwSectionIn .8s cubic-bezier(.22,.9,.3,1) both;}
+  @keyframes btwSectionIn{0%{opacity:0;transform:translateY(54px);}40%{opacity:1;}100%{opacity:1;transform:translateY(0);}}
+  @keyframes btwSectionInM{0%{opacity:0;transform:translateY(32px);}40%{opacity:1;}100%{opacity:1;transform:none;}}
+  @media (max-width:760px){ .btw-reveal.in{animation-name:btwSectionInM;animation-duration:.6s;} }
+  @media (prefers-reduced-motion:reduce){ .btw-reveal{opacity:1;transform:none;} .btw-reveal.in{animation:none;} }
   .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(30,76,134,0.16);}
@@ -12381,21 +12381,17 @@
     // "How it works" tab after the Home declutter, and we want Pricing/Guide to
     // animate too). The dashboard (#btwViewProduct) is left alone.
     const ROOTS = ['#btwViewHome', '#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
-    const SUFFIX = ['.btw-section-label', '.btw-step', '.btw-demo-stage', '.btw-demo-lead',
-      '.btw-shot', '.btw-shot-cap', '.btw-feature', '.btw-price-card', '.btw-pricing-segment',
-      '.btw-trust-inner', '.btw-forclinics', '.btw-recovery',
-      '.btw-guide-card', '.btw-chooser-card', '.btw-savetime-card', '.btw-solo', '.btw-cta-banner'];
+    // Whole sections (not individual tiles): each reveals as one block as it
+    // scrolls into view, so you see one section, scroll, then the next.
+    const SUFFIX = ['.btw-chooser', '.btw-hero', '.btw-steps', '.btw-demo', '.btw-features',
+      '.btw-savetime', '.btw-forclinics', '.btw-recovery', '.btw-trust', '.btw-cta-banner',
+      '.btw-solo', '.btw-shots', '.btw-howitworks', '.btw-contact',
+      '.btw-pricing-intro', '.btw-pricing-cards', '.btw-pricing-faq', '.btw-guide-wrap'];
     const sel = ROOTS.map(function(r){ return SUFFIX.map(function(s){ return r + ' ' + s; }).join(','); }).join(',');
     const els = [].slice.call(document.querySelectorAll(sel));
     if(!els.length) return;
-    // Stagger reveals within each grid so the tiles come in clearly one at a
-    // time (not all at once) as each grid scrolls into view.
-    const seen = new Map();
-    els.forEach(function(el){
-      el.classList.add('btw-reveal');
-      const p = el.parentElement; const n = seen.get(p) || 0; seen.set(p, n+1);
-      el.style.animationDelay = Math.min(n,11)*95 + 'ms';
-    });
+    // No stagger — each section reveals on its own as you scroll to it.
+    els.forEach(function(el){ el.classList.add('btw-reveal'); });
     const heroVisual = document.querySelector('#btwViewHome .btw-hero-visual');
     let ticking = false;
     function frame(){
