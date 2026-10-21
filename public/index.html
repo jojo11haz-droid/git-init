@@ -78,20 +78,24 @@
   /* Per-page backgrounds. Home keeps the two logo circles; the other pages get
      their own subtle, on-brand treatment and hide the circles. */
   :root[data-bg="learn"] .btw-bg-circle,
-  :root[data-bg="pricing"] .btw-bg-circle,
   :root[data-bg="guide"] .btw-bg-circle,
   :root[data-bg="product"] .btw-bg-circle{display:none;}
   :root[data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(30,76,134,.11), transparent 60%);}
-  :root[data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(30,76,134,.055) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(192,57,43,.05) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(30,76,134,.045) 43vmin 43.6vmin, transparent 43.6vmin);}
   :root[data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(30,76,134,.07) 1.5px, transparent 1.7px);background-size:24px 24px;}
+  /* Pricing: the two circles become ring outlines that join into the logo as
+     you scroll (the shared scroll animation drives their positions). */
+  :root[data-bg="pricing"] .btw-bg-navy{background:none;border:3vmin solid rgba(30,76,134,.22);}
+  :root[data-bg="pricing"] .btw-bg-clay{background:none;border:3vmin solid rgba(192,57,43,.19);}
   @media (prefers-color-scheme:dark){
     :root:not([data-theme="light"])[data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(92,146,211,.16), transparent 60%);}
-    :root:not([data-theme="light"])[data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(92,146,211,.09) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(224,110,94,.08) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(92,146,211,.07) 43vmin 43.6vmin, transparent 43.6vmin);}
     :root:not([data-theme="light"])[data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(122,167,225,.11) 1.5px, transparent 1.7px);background-size:24px 24px;}
+    :root:not([data-theme="light"])[data-bg="pricing"] .btw-bg-navy{border-color:rgba(92,146,211,.30);}
+    :root:not([data-theme="light"])[data-bg="pricing"] .btw-bg-clay{border-color:rgba(224,110,94,.26);}
   }
   :root[data-theme="dark"][data-bg="learn"] .btw-bg{background:radial-gradient(130% 85% at 50% -18%, rgba(92,146,211,.16), transparent 60%);}
-  :root[data-theme="dark"][data-bg="pricing"] .btw-bg{background:radial-gradient(circle at 50% 40%, transparent 0 19vmin, rgba(92,146,211,.09) 19vmin 19.6vmin, transparent 19.6vmin 31vmin, rgba(224,110,94,.08) 31vmin 31.6vmin, transparent 31.6vmin 43vmin, rgba(92,146,211,.07) 43vmin 43.6vmin, transparent 43.6vmin);}
   :root[data-theme="dark"][data-bg="guide"] .btw-bg{background-image:radial-gradient(rgba(122,167,225,.11) 1.5px, transparent 1.7px);background-size:24px 24px;}
+  :root[data-theme="dark"][data-bg="pricing"] .btw-bg-navy{border-color:rgba(92,146,211,.30);}
+  :root[data-theme="dark"][data-bg="pricing"] .btw-bg-clay{border-color:rgba(224,110,94,.26);}
   /* Signature touch: the red eyebrow rule draws out from the left as each
      section reveals (hooks into the existing .btw-reveal scroll system). */
   .btw-section-label::before{transform-origin:left center;}
