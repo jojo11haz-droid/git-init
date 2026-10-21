@@ -61,15 +61,16 @@
   /* Ambient background: two soft circles that drift together into the logo as
      you scroll. Sits behind all content (z-index:-1); never changes layout. */
   .btw-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
-  .btw-bg-circle{position:absolute;top:50%;left:50%;width:66vmin;height:66vmin;margin:-33vmin 0 0 -33vmin;border-radius:50%;will-change:transform;filter:blur(2px);}
-  .btw-bg-navy{background:radial-gradient(circle, rgba(30,76,134,.34) 0%, rgba(30,76,134,.24) 40%, rgba(30,76,134,.08) 66%, transparent 78%);}
-  .btw-bg-clay{background:radial-gradient(circle, rgba(192,57,43,.28) 0%, rgba(192,57,43,.19) 40%, rgba(192,57,43,.06) 66%, transparent 78%);}
+  /* Ring outlines, like the two overlapping circles in the Between mark. */
+  .btw-bg-circle{position:absolute;top:50%;left:50%;width:58vmin;height:58vmin;margin:-29vmin 0 0 -29vmin;border-radius:50%;background:transparent;border:3.6vmin solid;will-change:transform;filter:blur(1px);}
+  .btw-bg-navy{border-color:rgba(30,76,134,.26);}
+  .btw-bg-clay{border-color:rgba(192,57,43,.22);}
   @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]) .btw-bg-navy{background:radial-gradient(circle, rgba(92,146,211,.32) 0%, rgba(92,146,211,.21) 40%, rgba(92,146,211,.07) 66%, transparent 78%);}
-    :root:not([data-theme="light"]) .btw-bg-clay{background:radial-gradient(circle, rgba(224,110,94,.27) 0%, rgba(224,110,94,.18) 40%, rgba(224,110,94,.06) 66%, transparent 78%);}
+    :root:not([data-theme="light"]) .btw-bg-navy{border-color:rgba(92,146,211,.34);}
+    :root:not([data-theme="light"]) .btw-bg-clay{border-color:rgba(224,110,94,.30);}
   }
-  :root[data-theme="dark"] .btw-bg-navy{background:radial-gradient(circle, rgba(92,146,211,.32) 0%, rgba(92,146,211,.21) 40%, rgba(92,146,211,.07) 66%, transparent 78%);}
-  :root[data-theme="dark"] .btw-bg-clay{background:radial-gradient(circle, rgba(224,110,94,.27) 0%, rgba(224,110,94,.18) 40%, rgba(224,110,94,.06) 66%, transparent 78%);}
+  :root[data-theme="dark"] .btw-bg-navy{border-color:rgba(92,146,211,.34);}
+  :root[data-theme="dark"] .btw-bg-clay{border-color:rgba(224,110,94,.30);}
   /* The dark "trust" band keeps a dark background in dark mode (its text is
      light), instead of flipping to a light --ink surface. */
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-trust{background:#10141A;} }
