@@ -1653,7 +1653,7 @@
   @media (prefers-reduced-motion:reduce){ .btw-hero-video{opacity:.6;} }
   .btw-hero-top{display:flex;align-items:center;justify-content:space-between;gap:40px;}
   .btw-hero-copy{max-width:540px;}
-  .btw-hero-aside{flex:0 0 auto;width:404px;display:flex;flex-direction:column;opacity:0;animation:btwHeroFade .8s ease .2s both;}
+  .btw-hero-aside{flex:0 0 auto;width:404px;display:flex;flex-direction:column;}
   .btw-cap{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 24px 20px;box-shadow:0 22px 46px rgba(22,28,38,.12);}
   .btw-cap-top{display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-size:12.5px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:18px;}
   .btw-cap-rec{width:11px;height:11px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 5px rgba(192,57,43,.13);}
@@ -1670,7 +1670,7 @@
   .btw-cap-sumfoot{margin-top:12px;font-family:var(--font-mono);font-size:11px;color:var(--amber);}
   @media (max-width:1000px){.btw-hero-top{display:block;} .btw-hero-aside{display:none;width:auto;}}
   /* ---- hero: session-to-session thread ---- */
-  .btw-hero-thread{margin:36px 0 0;opacity:0;animation:btwHeroFade .8s ease .15s both;}
+  .btw-hero-thread{margin:36px 0 0;}
   .btw-ht-rail{position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:10px;padding:0 8px;}
   .btw-ht-rail::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:2px;background:linear-gradient(90deg,var(--moss) 0 2%,var(--line) 8% 92%,var(--moss) 98% 100%);}
   .btw-ht-blk{position:relative;height:210px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
@@ -1793,6 +1793,39 @@
   .btw-hero-copy{animation:btwHeroRise .6s cubic-bezier(.2,.7,.2,1) both;}
   .btw-hero-visual{animation:btwHeroFade .8s ease .1s both;}
   @media (prefers-reduced-motion:reduce){.btw-hero-copy,.btw-hero-visual{animation:none;}}
+
+  /* --- Interface motions: hero assemble, chart draw, micro-interactions --- */
+  @keyframes btwAsmIn{0%{opacity:0;transform:translateY(16px);}100%{opacity:1;transform:none;}}
+  /* Hero aside: the REC card, the arrow, then the AI summary assemble in turn
+     (replays whenever renderHeroThread rebuilds the aside, e.g. on field swap). */
+  #btwHeroAside .btw-cap{animation:btwAsmIn .6s cubic-bezier(.22,.9,.3,1) both;}
+  #btwHeroAside .btw-cap-arrow{animation:btwAsmIn .55s cubic-bezier(.22,.9,.3,1) .5s both;}
+  #btwHeroAside .btw-cap-sum{animation:btwAsmIn .6s cubic-bezier(.22,.9,.3,1) .78s both;}
+  .btw-cap-spark polyline{stroke-dasharray:92;stroke-dashoffset:92;animation:btwSparkDraw 1s ease 1s both;}
+  @keyframes btwSparkDraw{to{stroke-dashoffset:0;}}
+  .btw-cap-sumtext.btw-typing::after{content:"";display:inline-block;width:2px;height:1em;background:var(--moss);margin-left:1px;vertical-align:-.12em;animation:btwCaret .7s step-end infinite;}
+  @keyframes btwCaret{50%{opacity:0;}}
+  /* Hero thread rail: each check-in card eases in one after another. */
+  .btw-ht-rail > .btw-ht-blk{animation:btwAsmIn .5s cubic-bezier(.22,.9,.3,1) both;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(1){animation-delay:.05s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(2){animation-delay:.16s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(3){animation-delay:.27s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(4){animation-delay:.38s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(5){animation-delay:.49s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(6){animation-delay:.60s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(7){animation-delay:.71s;}
+  .btw-ht-rail > .btw-ht-blk:nth-child(8){animation-delay:.82s;}
+  /* Micro-interactions: press + glow on the interactive cards and buttons. */
+  .btw-chooser-card{transition:border-color .2s ease,box-shadow .25s ease,transform .22s cubic-bezier(.22,.9,.3,1);}
+  .btw-chooser-card:active{transform:translateY(-1px) scale(.994);}
+  .btw-savetime-card,.btw-price-card{transition:transform .24s cubic-bezier(.22,.9,.3,1),box-shadow .25s ease,border-color .2s ease;}
+  .btw-savetime-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(22,28,38,.10);}
+  .btw-hero-btn:active,.btw-price-cta:active,.btw-modal-continue:active{transform:translateY(1px) scale(.985);}
+  @media (prefers-reduced-motion:reduce){
+    #btwHeroAside .btw-cap,#btwHeroAside .btw-cap-arrow,#btwHeroAside .btw-cap-sum,.btw-ht-rail > .btw-ht-blk{animation:none;opacity:1;transform:none;}
+    .btw-cap-spark polyline{stroke-dashoffset:0;animation:none;}
+    .btw-cap-sumtext.btw-typing::after{display:none;}
+  }
   /* Caseload status ping — green: doing well, orange: middle, red: needs attention now. */
   .btw-ping{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block;vertical-align:middle;margin-right:6px;}
   .btw-ping.good{background:#3BA55D;}
@@ -12490,7 +12523,7 @@
     if(!els.length) return;
     // No stagger — each section reveals on its own as you scroll to it.
     els.forEach(function(el){ el.classList.add('btw-reveal'); });
-    const heroVisual = document.querySelector('#btwViewHome .btw-hero-visual');
+    const heroVisual = document.querySelector('#btwViewHome .btw-hero-aside');
     let ticking = false;
     function frame(){
       ticking = false;
@@ -12500,17 +12533,33 @@
         const r = el.getBoundingClientRect();
         // Only reveal elements that are actually laid out (a hidden tab reports
         // a zero-height rect, so its sections wait until that tab is shown).
-        if(r.height > 0 && r.top < h - 40 && r.bottom > 0) el.classList.add('in');
+        if(r.height > 0 && r.top < h - 40 && r.bottom > 0){
+          el.classList.add('in');
+          // Redraw the interactive demo trend the first time it scrolls in.
+          if(el.classList.contains('btw-demo') && window.__btwTherapistRefresh){ try{ window.__btwTherapistRefresh(); }catch(e){} }
+        }
       }
-      // Subtle hero parallax: the visual drifts slower than the page (Apple-ish).
+      // Subtle hero parallax: the aside drifts slower than the page (Apple-ish).
       if(heroVisual){
         const y = window.pageYOffset || document.documentElement.scrollTop || 0;
-        if(y < 1000) heroVisual.style.transform = 'translateY(' + (y * 0.08).toFixed(1) + 'px)';
+        if(y < 1000) heroVisual.style.transform = 'translateY(' + (y * 0.05).toFixed(1) + 'px)';
       }
     }
     function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', onScroll);
+    // Hero AI summary types itself in once — only on screen and when motion is OK.
+    var _heroTyped = false;
+    function typeHeroSummary(){
+      if(_heroTyped) return;
+      try{ if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+      var el = document.querySelector('#btwHeroAside .btw-cap-sumtext');
+      if(!el || !el.offsetParent) return;
+      var r = el.getBoundingClientRect(); if(r.top > (window.innerHeight || 800) || r.bottom < 0) return;
+      var full = el.textContent || ''; if(full.length < 2) return;
+      _heroTyped = true; el.classList.add('btw-typing'); el.textContent = '';
+      var i = 0; (function tick(){ el.textContent = full.slice(0, i); i++; if(i <= full.length){ setTimeout(tick, 16); } else { el.classList.remove('btw-typing'); } })();
+    }
     // Expose a kick so switching tabs re-checks what's now on screen (there's no
     // scroll event on a tab change, and the new tab's top sections should reveal
     // right away rather than waiting for the first scroll).
@@ -12520,6 +12569,7 @@
     // both and the tiles jump in together instead of cascading.
     requestAnimationFrame(function(){ requestAnimationFrame(frame); });
     setTimeout(frame, 500);      // and again after layout/fonts settle
+    setTimeout(typeHeroSummary, 1000);  // type the hero summary once things settle
   })();
 
   loadSession()
