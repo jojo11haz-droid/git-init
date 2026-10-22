@@ -1627,7 +1627,30 @@
   .btw-hero{
     display:block;
     padding:16px 0 40px;
+    position:relative;
   }
+  /* Ambient video backdrop behind the hero. Multiply + edge mask melt it into
+     the paper so only the soft orbs show; content sits above it. Hidden in dark
+     mode (the clip is light paper) — the CSS circles take over there. */
+  .btw-hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:72% 50%;
+    z-index:0;
+    pointer-events:none;
+    opacity:.8;
+    mix-blend-mode:multiply;
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 14%, #000 78%, transparent 100%);
+            mask-image:linear-gradient(to bottom, transparent 0, #000 14%, #000 78%, transparent 100%);
+  }
+  .btw-hero > .btw-hero-top, .btw-hero > .btw-hero-thread{position:relative;z-index:1;}
+  @media (max-width:760px){ .btw-hero-video{opacity:.5;object-position:62% 38%;} }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-hero-video{display:none;} }
+  :root[data-theme="dark"] .btw-hero-video{display:none;}
+  @media (prefers-reduced-motion:reduce){ .btw-hero-video{opacity:.6;} }
   .btw-hero-top{display:flex;align-items:center;justify-content:space-between;gap:40px;}
   .btw-hero-copy{max-width:540px;}
   .btw-hero-aside{flex:0 0 auto;width:404px;display:flex;flex-direction:column;opacity:0;animation:btwHeroFade .8s ease .2s both;}
@@ -2389,6 +2412,9 @@
       </section>
 
       <section class="btw-hero">
+        <video class="btw-hero-video" id="btwHeroVideo" muted loop playsinline preload="metadata" poster="/hero-ambient.jpg" aria-hidden="true">
+          <source src="/hero-ambient.mp4" type="video/mp4">
+        </video>
         <div class="btw-hero-top">
         <div class="btw-hero-copy">
           <div class="btw-hero-eyebrow">For therapists, counsellors &amp; anyone on their own</div>
@@ -12522,6 +12548,20 @@
     });
     try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sync); }catch(e){}
     sync();
+  })();
+
+  // Hero ambient video: play only when motion is allowed and the hero is on
+  // screen (saves battery); otherwise the poster still shows. Muted so play()
+  // is permitted without a gesture; failures fall back to the poster silently.
+  (function(){
+    var v=document.getElementById('btwHeroVideo'); if(!v) return;
+    var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(reduce) return;
+    function play(){ try{ var p=v.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){} }
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) play(); else { try{ v.pause(); }catch(e){} } }); }, {threshold:0.1});
+      io.observe(v);
+    } else { play(); }
   })();
 
   // Ambient background circles: drift together into the logo as the page
