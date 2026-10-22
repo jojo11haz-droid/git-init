@@ -2345,7 +2345,7 @@
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
-      <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light / dark mode"></button>
+      <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"></button>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
@@ -3031,7 +3031,7 @@
           <div class="btw-price-tier">Solo Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
           <div class="btw-price-amount"><span class="num" data-cad="79.99">$79.99</span><span class="unit">CAD per clinician, per month</span></div>
-          <div class="btw-price-note">Billed annually (<span data-cad="959.88">$959.88</span>/year), save ~20%</div>
+          <div class="btw-price-note">Billed annually (<span data-cad="959.88">$959.88</span> per year), save ~20%</div>
           <ul class="btw-price-features">
             <li>Everything in Solo</li>
             <li>Priority email support</li>
@@ -3091,7 +3091,7 @@
           <div class="btw-price-tier">Personal Annual</div>
           <div class="btw-price-name">Same plan, paid yearly</div>
           <div class="btw-price-amount"><span class="num" data-cad="9.99">$9.99</span><span class="unit">CAD per month</span></div>
-          <div class="btw-price-note">Billed annually (<span data-cad="119.88">$119.88</span>/year), save ~33%</div>
+          <div class="btw-price-note">Billed annually (<span data-cad="119.88">$119.88</span> per year), save ~33%</div>
           <ul class="btw-price-features">
             <li>Everything in Personal</li>
             <li>Locked-in rate for 12 months</li>
@@ -4026,6 +4026,7 @@
     "/year), save ~20%":"/an), économisez ~20 %",
     "/year), save ~33%":"/an), économisez ~33 %",
     "per year), save ~20%":"par an), économisez ~20 %",
+    "per year), save ~33%":"par an), économisez ~33 %",
     "Personal":"Personnel","Check in for yourself":"Faites vos propres suivis","CAD per month":"CAD par mois",
     "Unlimited voice & text check-ins":"Suivis voix et texte illimités",
     "Your own mood & theme trends":"Vos propres tendances d'humeur et de thèmes",
@@ -8991,19 +8992,19 @@
   // existing subscription (prorated).
   const PLAN_OPTIONS = {
     therapist: [
-      { plan:'solo_monthly', label:'Solo', price:'$99.99/mo', note:'Up to 30 patients' },
-      { plan:'solo_annual',  label:'Solo Annual', price:'$79.99/mo', note:'Billed yearly' },
-      { plan:'solo_premium', label:'Premium', price:'$149.99/mo', note:'30+ patients' }
+      { plan:'solo_monthly', label:'Solo', price:'$99.99 per month', note:'Up to 30 patients' },
+      { plan:'solo_annual',  label:'Solo Annual', price:'$79.99 per month', note:'Billed yearly' },
+      { plan:'solo_premium', label:'Premium', price:'$149.99 per month', note:'30+ patients' }
     ],
     coach: [
-      { plan:'team_monthly', label:'Team', price:'$99.99/mo' },
-      { plan:'team_annual',  label:'Team Annual', price:'$79.99/mo' },
-      { plan:'team_premium', label:'Premium', price:'$199/mo', note:'30+ players' }
+      { plan:'team_monthly', label:'Team', price:'$99.99 per month' },
+      { plan:'team_annual',  label:'Team Annual', price:'$79.99 per month' },
+      { plan:'team_premium', label:'Premium', price:'$199 per month', note:'30+ players' }
     ],
     school: [
-      { plan:'school_monthly', label:'Staff', price:'$99.99/mo', note:'Up to 30 students' },
-      { plan:'school_annual',  label:'Staff Annual', price:'$79.99/mo' },
-      { plan:'school_premium', label:'Premium', price:'$199/mo', note:'30+ students' }
+      { plan:'school_monthly', label:'Staff', price:'$99.99 per month', note:'Up to 30 students' },
+      { plan:'school_annual',  label:'Staff Annual', price:'$79.99 per month' },
+      { plan:'school_premium', label:'Premium', price:'$199 per month', note:'30+ students' }
     ],
     trainer: [
       { plan:'trainer_monthly', label:'Trainer' },
@@ -9485,7 +9486,7 @@
 
   // --- signup flow ---
   const signupOverlay = document.getElementById('btwSignupOverlay');
-  const planLabels = {solo_monthly:'Solo, $99.99 CAD/month', solo_annual:'Solo Annual, $79.99 CAD/month (billed yearly)'};
+  const planLabels = {solo_monthly:'Solo, $99.99 CAD per month', solo_annual:'Solo Annual, $79.99 CAD per month (billed yearly)'};
   let selectedPlan = 'solo_monthly';
   let proSignup = null; // 'coach' (sports) | 'mentor' (recovery) | 'school' (schools) | null (therapist)
   let proNeedsLicence = false; // physio is a coach account but is licence-verified
