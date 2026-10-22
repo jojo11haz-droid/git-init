@@ -1919,14 +1919,14 @@
   @media (max-width:640px){
     .btw-feature{min-height:auto;padding:26px 0;}
   }
-  /* Key features: the first four get a full-screen, one-at-a-time treatment
-     (the v2 scroll feel); the rest stay as the compact stacked panels. */
-  .btw-feature-grid > .btw-feature:nth-child(-n+4){min-height:88vh;max-width:760px;}
-  .btw-feature-grid > .btw-feature:nth-child(-n+4) h4{font-size:clamp(34px,5.6vw,62px);line-height:1.03;letter-spacing:-.025em;margin-bottom:18px;}
-  .btw-feature-grid > .btw-feature:nth-child(-n+4) p{font-size:clamp(16px,1.9vw,21px);max-width:34ch;}
-  .btw-feature-grid > .btw-feature:nth-child(-n+4) .btw-feature-icon{width:72px;height:72px;border-radius:20px;margin-bottom:28px;}
-  .btw-feature-grid > .btw-feature:nth-child(-n+4) .btw-feature-icon svg{width:34px;height:34px;}
-  @media (max-width:640px){.btw-feature-grid > .btw-feature:nth-child(-n+4){min-height:84vh;}}
+  /* Features: every one gets a full screen to itself, revealed one at a time
+     as you scroll (the v2 "nine things, one at a time" feel). */
+  .btw-feature-grid > .btw-feature{min-height:88vh;max-width:760px;}
+  .btw-feature-grid > .btw-feature h4{font-size:clamp(34px,5.6vw,62px);line-height:1.03;letter-spacing:-.025em;margin-bottom:18px;}
+  .btw-feature-grid > .btw-feature p{font-size:clamp(16px,1.9vw,21px);max-width:34ch;}
+  .btw-feature-grid > .btw-feature .btw-feature-icon{width:72px;height:72px;border-radius:20px;margin-bottom:28px;}
+  .btw-feature-grid > .btw-feature .btw-feature-icon svg{width:34px;height:34px;}
+  @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:84vh;}}
   .btw-trust{
     margin-top:36px;
     background:var(--ink);
