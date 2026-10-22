@@ -1927,12 +1927,9 @@
   .btw-feature-grid > .btw-feature .btw-feature-icon{width:72px;height:72px;border-radius:20px;margin-bottom:28px;}
   .btw-feature-grid > .btw-feature .btw-feature-icon svg{width:34px;height:34px;}
   @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:84vh;}}
-  /* Each full-screen feature settles into view as you scroll — one flows into
-     the next. Scoped to the home page so the app/other tabs scroll freely. */
-  .btw-feature-grid > .btw-feature{scroll-snap-align:center;}
-  @media (min-width:641px) and (prefers-reduced-motion:no-preference){
-    :root[data-bg="home"]{scroll-snap-type:y proximity;}
-  }
+  /* Features cross-dissolve into each other as you scroll (driven in JS below);
+     start visible so they never get stuck hidden if scripting is off. */
+  .btw-feature-grid > .btw-feature{opacity:1;will-change:opacity;}
   /* Side nav: a dot per feature, click to jump, label on hover/active. */
   .btw-featnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:40;display:none;flex-direction:column;gap:13px;align-items:flex-end;}
   .btw-featnav.show{display:flex;}
@@ -12511,7 +12508,7 @@
     // scrolls into view, so you see one section, scroll, then the next.
     const SUFFIX = ['.btw-chooser', '.btw-hero', '.btw-demo',
       '.btw-howitworks .btw-section-label', '.btw-step',
-      '.btw-features .btw-section-label', '.btw-feature',
+      '.btw-features .btw-section-label',
       '.btw-savetime .btw-section-label', '.btw-savetime .btw-demo-lead', '.btw-savetime-card',
       '.btw-forclinics .btw-section-label', '.btw-solo-step',
       '.btw-recovery', '.btw-trust', '.btw-cta-banner',
@@ -12663,6 +12660,25 @@
       },{threshold:0.02});
       if(sec) vis.observe(sec);
     }catch(e){}
+    // Cross-dissolve: each feature fades up to full as it nears the centre of
+    // the screen and fades back out as it leaves, so one flows into the next.
+    var reduceM=false; try{ reduceM=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    if(!reduceM){
+      var fTick=false;
+      function fade(){
+        fTick=false;
+        if(document.documentElement.getAttribute('data-bg')!=='home') return;
+        var vh=window.innerHeight||800, vc=vh/2;
+        for(var i=0;i<feats.length;i++){
+          var r=feats[i].getBoundingClientRect(); if(r.height<=0) continue;
+          var d=Math.abs((r.top+r.height/2)-vc)/vh;
+          feats[i].style.opacity=(1-Math.min(1, Math.max(0,d-0.12)*1.9)).toFixed(3);
+        }
+      }
+      window.addEventListener('scroll', function(){ if(!fTick){ fTick=true; requestAnimationFrame(fade); } }, {passive:true});
+      window.addEventListener('resize', fade);
+      requestAnimationFrame(fade); setTimeout(fade,250); setTimeout(fade,700);
+    }
   })();
 </script>
 </body>
