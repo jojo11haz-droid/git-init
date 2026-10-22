@@ -1927,6 +1927,23 @@
   .btw-feature-grid > .btw-feature .btw-feature-icon{width:72px;height:72px;border-radius:20px;margin-bottom:28px;}
   .btw-feature-grid > .btw-feature .btw-feature-icon svg{width:34px;height:34px;}
   @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:84vh;}}
+  /* Each full-screen feature settles into view as you scroll — one flows into
+     the next. Scoped to the home page so the app/other tabs scroll freely. */
+  .btw-feature-grid > .btw-feature{scroll-snap-align:center;}
+  @media (min-width:641px) and (prefers-reduced-motion:no-preference){
+    :root[data-bg="home"]{scroll-snap-type:y proximity;}
+  }
+  /* Side nav: a dot per feature, click to jump, label on hover/active. */
+  .btw-featnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:40;display:none;flex-direction:column;gap:13px;align-items:flex-end;}
+  .btw-featnav.show{display:flex;}
+  .btw-featnav button{display:flex;align-items:center;gap:10px;background:none;border:none;padding:4px 0;cursor:pointer;color:var(--ink-soft);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;}
+  .btw-featnav .lbl{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transform:translateX(6px);transition:max-width .25s ease,opacity .2s ease,transform .2s ease;}
+  .btw-featnav button:hover .lbl,.btw-featnav button.active .lbl{max-width:230px;opacity:1;transform:none;}
+  .btw-featnav .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-soft);flex:none;transition:background .2s ease,border-color .2s ease,transform .2s ease;}
+  .btw-featnav button.active .dot{background:var(--moss);border-color:var(--moss);transform:scale(1.3);}
+  .btw-featnav button:hover .dot{border-color:var(--moss);}
+  @media (max-width:760px){.btw-featnav{display:none !important;}}
+  @media (prefers-reduced-motion:reduce){.btw-featnav .lbl{transition:none;}}
   .btw-trust{
     margin-top:36px;
     background:var(--ink);
@@ -12616,54 +12633,36 @@
   })();
 </script>
 <script>
-  // Marketing-only smooth wheel scrolling (the v2 glide). Dependency-free and
-  // defensive: it stays off for touch (already smooth), reduced motion, the
-  // dashboard, open modals and any nested scroll area, so the app, forms and
-  // lists all behave exactly as before. Only desktop mouse-wheel is smoothed.
+  // Side navigation for the full-screen features: a dot per feature, click to
+  // jump to it, and the active dot tracks what's on screen. Shown only while
+  // the home features section is in view, so it never covers the app or a modal.
   (function(){
-    var reduce=false, fine=false;
-    try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
-    try{ fine=matchMedia('(pointer: fine)').matches; }catch(e){}
-    if(reduce || !fine) return;
-    var target=window.scrollY||0, current=target, rafId=null, smoothing=false;
-    function docMax(){ return Math.max(0,(document.documentElement.scrollHeight||0)-window.innerHeight); }
-    function enabled(){
-      try{
-        if(document.documentElement.getAttribute('data-bg')==='product') return false;
-        var ov=document.querySelectorAll('.btw-modal-overlay');
-        for(var i=0;i<ov.length;i++){ if(ov[i].offsetParent!==null && getComputedStyle(ov[i]).display!=='none') return false; }
-      }catch(e){ return false; }
-      return true;
-    }
-    function nested(node){
-      var el=node;
-      while(el && el!==document.body && el!==document.documentElement){
-        try{
-          var tn=el.tagName; if(tn==='TEXTAREA'||tn==='SELECT') return true;
-          if(el.scrollHeight>el.clientHeight+2){ var oy=getComputedStyle(el).overflowY; if(oy==='auto'||oy==='scroll') return true; }
-        }catch(e){}
-        el=el.parentElement;
-      }
-      return false;
-    }
-    function loop(){
-      rafId=null;
-      current += (target-current)*0.12;
-      if(Math.abs(target-current)<0.4){ current=target; window.scrollTo(0,current); smoothing=false; return; }
-      window.scrollTo(0,current);
-      rafId=requestAnimationFrame(loop);
-    }
-    window.addEventListener('wheel', function(e){
-      try{
-        if(e.ctrlKey || e.defaultPrevented) return;
-        if(!enabled() || nested(e.target)){ smoothing=false; return; }
-        e.preventDefault();
-        if(!smoothing){ current=window.scrollY||0; target=current; smoothing=true; }
-        target = Math.max(0, Math.min(target + e.deltaY, docMax()));
-        if(!rafId){ rafId=requestAnimationFrame(loop); }
-      }catch(err){ smoothing=false; }
-    }, {passive:false});
-    window.addEventListener('scroll', function(){ if(!smoothing){ target=window.scrollY||0; } }, {passive:true});
+    var feats=[].slice.call(document.querySelectorAll('#btwViewHome .btw-feature-grid > .btw-feature'));
+    if(feats.length<2) return;
+    var nav=document.createElement('nav'); nav.className='btw-featnav'; nav.setAttribute('aria-label','Jump to a feature');
+    feats.forEach(function(f,i){
+      var h=f.querySelector('h4'); var name=(h?h.textContent.trim():('Feature '+(i+1)));
+      var b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label',name);
+      b.innerHTML='<span class="lbl"></span><span class="dot" aria-hidden="true"></span>';
+      b.querySelector('.lbl').textContent=name;
+      b.addEventListener('click', function(){ try{ f.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ f.scrollIntoView(); } });
+      nav.appendChild(b);
+    });
+    document.body.appendChild(nav);
+    var btns=[].slice.call(nav.querySelectorAll('button'));
+    try{
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){ if(e.isIntersecting && e.intersectionRatio>=0.5){ var idx=feats.indexOf(e.target); if(idx>=0){ btns.forEach(function(bb,i){ bb.classList.toggle('active', i===idx); }); } } });
+      },{threshold:[0.5]});
+      feats.forEach(function(f){ io.observe(f); });
+    }catch(e){}
+    try{
+      var sec=feats[0].closest('.btw-features');
+      var vis=new IntersectionObserver(function(es){
+        es.forEach(function(e){ var onHome=document.documentElement.getAttribute('data-bg')==='home'; nav.classList.toggle('show', e.isIntersecting && onHome); });
+      },{threshold:0.02});
+      if(sec) vis.observe(sec);
+    }catch(e){}
   })();
 </script>
 </body>
