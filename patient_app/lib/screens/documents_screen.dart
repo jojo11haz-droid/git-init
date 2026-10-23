@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
 import '../strings.dart';
 import '../theme.dart';
 
-/// Documents the patient shares with their clinician — a referral, intake form,
-/// or note. The patient photographs or picks an image; Between reviews it (when
-/// AI is on) so the clinician starts from a summary, not a blank page. The AI
-/// summary shown here is the same one the clinician sees — transparent by design.
+/// Documents the clinician has shared with the patient — a referral, intake
+/// form, or note. Uploading is clinician-only; here the patient views what was
+/// shared, along with the AI summary the clinician sees (transparent by design),
+/// and can remove only documents they added themselves.
 class DocumentsScreen extends StatefulWidget {
   const DocumentsScreen({super.key});
 
@@ -19,7 +18,6 @@ class DocumentsScreen extends StatefulWidget {
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
   late Future<List<PatientDocument>> _future;
-  bool _busy = false;
 
   @override
   void initState() {
@@ -29,57 +27,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   void _reload() {
     setState(() => _future = context.read<AppState>().fetchDocuments());
-  }
-
-  Future<void> _add() async {
-    final app = context.read<AppState>();
-    final s = app.s;
-    final messenger = ScaffoldMessenger.of(context);
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined,
-                  color: BtwColors.moss),
-              title: Text(s.takePhoto),
-              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined,
-                  color: BtwColors.moss),
-              title: Text(s.chooseFromLibrary),
-              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-    if (source == null) return;
-    try {
-      final file = await ImagePicker()
-          .pickImage(source: source, maxWidth: 2000, imageQuality: 85);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      if (!mounted) return;
-      setState(() => _busy = true);
-      final name = file.name.isNotEmpty
-          ? file.name
-          : 'document-${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await app.uploadDocument(bytes, 'image/jpeg', name);
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(s.documentAdded)));
-      _reload();
-    } catch (e) {
-      if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(e.toString())));
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
   }
 
   Future<void> _delete(PatientDocument doc) async {
@@ -157,12 +104,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              IconButton(
-                tooltip: s.deleteAction,
-                icon: const Icon(Icons.delete_outline,
-                    size: 20, color: BtwColors.clay),
-                onPressed: () => _delete(d),
-              ),
+              if (d.uploadedBy != 'clinician')
+                IconButton(
+                  tooltip: s.deleteAction,
+                  icon: const Icon(Icons.delete_outline,
+                      size: 20, color: BtwColors.clay),
+                  onPressed: () => _delete(d),
+                ),
             ],
           ),
           Text(who,
@@ -248,19 +196,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _busy ? null : _add,
-        backgroundColor: BtwColors.moss,
-        icon: _busy
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white))
-            : const Icon(Icons.add, color: Colors.white),
-        label: Text(_busy ? s.documentUploading : s.addDocument,
-            style: const TextStyle(color: Colors.white)),
       ),
     );
   }
