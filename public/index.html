@@ -2088,6 +2088,15 @@
   .btw-docs-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:7px 13px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;transition:background .15s ease,color .15s ease;}
   .btw-docs-btn:hover{background:var(--moss);color:#fff;}
   .btw-docs-btn svg{width:15px;height:15px;flex:none;}
+  /* Add-patients-from-a-file review list */
+  #btwImportList{max-height:46vh;overflow-y:auto;}
+  .btw-imp-file{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .btw-imp-fname{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-bottom:9px;word-break:break-all;}
+  .btw-imp-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+  .btw-imp-row input[type=checkbox]{width:16px;height:16px;flex:none;accent-color:var(--moss);}
+  .btw-imp-name{flex:1;min-width:0;font-family:var(--font-body);font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);}
+  .btw-imp-keep{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft);margin-top:6px;cursor:pointer;}
+  .btw-imp-keep input{accent-color:var(--moss);}
   .btw-trust{
     margin-top:36px;
     background:var(--ink);
@@ -2279,6 +2288,21 @@
 </div>
 
 <div class="btw-root">
+  <div class="btw-modal-overlay" id="btwImportOverlay" style="display:none;">
+    <div class="btw-modal">
+      <button class="btw-modal-close" data-close="btwImportOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Add patients</div>
+      <h2 id="btwImportTitle">Review the names</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Between read the first names from your file. Only first names are kept. Uncheck anyone you don't want, fix a spelling, then add them.</div>
+      <div id="btwImportList"></div>
+      <div id="btwImportStatus" style="display:none;font-size:12.5px;margin:10px 0;"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <button class="btw-send" id="btwImportCreate" style="flex:1;min-width:140px;">Add patients</button>
+        <button class="btw-nav-btn" data-close="btwImportOverlay" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="btw-modal-overlay" id="btwConsentOverlay" style="display:none;">
     <div class="btw-modal">
       <button class="btw-modal-close" data-close="btwConsentOverlay" type="button" aria-label="Close">✕</button>
@@ -3285,6 +3309,10 @@
       <div class="btw-eyebrow" id="btwTherapistPaneEyebrow">Therapist view</div>
       <h3 id="btwCaseloadTitle">Caseload</h3>
       <div class="btw-pane-desc" id="btwCaseloadDesc">Auto-updating as check-ins come in. Select a patient to see their timeline and trends.</div>
+      <div id="btwImportRow" style="margin:0 0 14px;">
+        <button type="button" id="btwImportBtn" class="btw-docs-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Add patients from a photo or list</button>
+        <input type="file" id="btwImportFile" accept="application/pdf,image/jpeg,image/png,image/webp" multiple style="display:none;">
+      </div>
 
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
         <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
@@ -4730,6 +4758,21 @@
       "Parlez-nous de votre clinique et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "Email (so we can reply)":"Courriel (pour vous répondre)","Message":"Message","Send message":"Envoyer le message",
     "Sent":"Envoyé","Thanks, message sent":"Merci, message envoyé","Done":"Terminé","Check-in sent":"Suivi envoyé",
+    "Add patients from a photo or list":"Ajouter des patients à partir d'une photo ou d'une liste",
+    "Review the names":"Vérifiez les prénoms",
+    "Between read the first names from your file. Only first names are kept. Uncheck anyone you don't want, fix a spelling, then add them.":"Between a lu les prénoms de votre fichier. Seuls les prénoms sont conservés. Décochez ceux que vous ne voulez pas, corrigez une orthographe, puis ajoutez-les.",
+    "Add patients":"Ajouter les patients",
+    "Reading your file…":"Lecture de votre fichier…",
+    "Could not read":"Impossible de lire",
+    "list":"liste",
+    "No names found.":"Aucun prénom trouvé.",
+    "Keep this document on their record":"Conserver ce document dans son dossier",
+    "No names found in those files.":"Aucun prénom trouvé dans ces fichiers.",
+    "Adding…":"Ajout en cours…",
+    "Nothing selected.":"Rien de sélectionné.",
+    "Could not add":"Impossible d'ajouter",
+    "added":"ajouté(s)",
+    "You've reached your plan's patient limit.":"Vous avez atteint la limite de patients de votre forfait.",
     "We got your message and will reply to the email you gave us.":"Nous avons reçu votre message et vous répondrons au courriel indiqué.",
     "Subscribe to keep using Between":"Abonnez-vous pour continuer à utiliser Between",
     "Your trial or subscription isn't active. Start it to keep using your dashboard.":
@@ -9009,6 +9052,8 @@
     set('btwOpenData', patient ? t('View my data & AI settings') : t('View patient data & AI settings'));
     // Document upload is clinician-only: hide the Documents entry for patients.
     const docsBtn0 = document.getElementById('btwOpenDocs'); if(docsBtn0) docsBtn0.style.display = patient ? 'none' : 'inline-flex';
+    // Bulk "add patients from a file" is a clinician tool; hide it for patients.
+    const impRow0 = document.getElementById('btwImportRow'); if(impRow0) impRow0.style.display = patient ? 'none' : '';
     if(typeof applyFutureNoteCopy === 'function') applyFutureNoteCopy();
     const proc = document.querySelector('#btwProcessing .btw-processing-label');
     if(proc) proc.textContent = patient ? t('Saving your check-in…') : t('Summarizing for your therapist…');
@@ -10946,6 +10991,102 @@
           if(ds && ds.scrollIntoView){ try{ ds.scrollIntoView({ block:'start', behavior:'smooth' }); }catch(e){ ds.scrollIntoView(); } }
         }
       }, 70);
+    });
+  })();
+
+  // --- Add patients from a photo or list -------------------------------------
+  // Upload a file/photo; Claude reads the first names; the clinician reviews,
+  // then patients are created in bulk. A single person's document rides along
+  // and is kept on that patient; a multi-name list just creates the names.
+  (function(){
+    const btn = document.getElementById('btwImportBtn');
+    const fileInput = document.getElementById('btwImportFile');
+    const overlay = document.getElementById('btwImportOverlay');
+    const listEl = document.getElementById('btwImportList');
+    const createBtn = document.getElementById('btwImportCreate');
+    const statusEl = document.getElementById('btwImportStatus');
+    if(!btn || !fileInput || !overlay || !listEl || !createBtn) return;
+    let scans = [];
+    function setStatus(msg, kind){ if(!statusEl) return; statusEl.style.display = msg ? '' : 'none'; statusEl.textContent = msg || ''; statusEl.style.color = kind === 'err' ? 'var(--clay)' : 'var(--moss)'; }
+    function safeName(fn){ return ((fn||'document').replace(/[^\x20-\x7E]/g,'').slice(0,80)) || 'document'; }
+
+    btn.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', async ()=>{
+      const files = [].slice.call(fileInput.files || []); fileInput.value = '';
+      if(!files.length) return;
+      scans = []; listEl.innerHTML = ''; overlay.style.display = 'flex'; createBtn.disabled = true;
+      setStatus(t('Reading your file…'), 'ok');
+      for(const f of files){
+        try{
+          const buf = await f.arrayBuffer();
+          const resp = await fetch('/api/patients/scan-file', { method:'POST', headers:{ 'Content-Type': f.type || 'application/octet-stream' }, body: buf });
+          const data = await resp.json().catch(()=>({}));
+          if(!resp.ok) throw new Error(data.error || (t('Could not read')+' '+f.name));
+          scans.push({ filename: f.name, mime: f.type, buf: buf, names: Array.isArray(data.names)?data.names:[], multiple: !!data.multiple });
+        }catch(e){
+          scans.push({ filename: f.name, mime: f.type, buf: null, names: [], multiple: false, error: e.message });
+        }
+      }
+      renderReview();
+    });
+
+    function renderReview(){
+      const total = scans.reduce((n,s)=> n + s.names.length, 0);
+      let html = '';
+      scans.forEach(function(sc, si){
+        html += '<div class="btw-imp-file"><div class="btw-imp-fname">'+esc(sc.filename)+(sc.multiple && sc.names.length?' · '+esc(t('list')):'')+'</div>';
+        if(sc.error){ html += '<div style="color:var(--clay);font-size:12px;">'+esc(sc.error)+'</div></div>'; return; }
+        if(!sc.names.length){ html += '<div style="color:var(--ink-soft);font-size:12px;">'+esc(t('No names found.'))+'</div></div>'; return; }
+        sc.names.forEach(function(nm, ni){
+          html += '<div class="btw-imp-row"><input type="checkbox" class="btw-imp-chk" data-si="'+si+'" data-ni="'+ni+'" checked><input type="text" class="btw-imp-name" data-si="'+si+'" data-ni="'+ni+'" value="'+esc(nm)+'" maxlength="40"></div>';
+        });
+        if(sc.names.length === 1 && !sc.multiple && sc.buf){
+          html += '<label class="btw-imp-keep"><input type="checkbox" class="btw-imp-keepdoc" data-si="'+si+'" checked> '+esc(t('Keep this document on their record'))+'</label>';
+        }
+        html += '</div>';
+      });
+      listEl.innerHTML = html;
+      listEl.querySelectorAll('.btw-imp-name').forEach(function(inp){ inp.addEventListener('input', function(){ scans[+inp.dataset.si].names[+inp.dataset.ni] = inp.value; }); });
+      if(!total){ setStatus(t('No names found in those files.'), 'err'); createBtn.disabled = true; }
+      else { setStatus('', 'ok'); createBtn.disabled = false; }
+    }
+
+    createBtn.addEventListener('click', async ()=>{
+      createBtn.disabled = true; setStatus(t('Adding…'), 'ok');
+      const bulkNames = []; const docJobs = [];
+      scans.forEach(function(sc, si){
+        if(sc.error || !sc.names.length) return;
+        const keepEl = listEl.querySelector('.btw-imp-keepdoc[data-si="'+si+'"]');
+        const keepDoc = keepEl ? keepEl.checked : false;
+        const single = (sc.names.length === 1 && !sc.multiple && sc.buf);
+        sc.names.forEach(function(nm, ni){
+          const chk = listEl.querySelector('.btw-imp-chk[data-si="'+si+'"][data-ni="'+ni+'"]');
+          if(chk && !chk.checked) return;
+          const name = (nm||'').trim(); if(!name) return;
+          if(single && keepDoc) docJobs.push({ si: si, name: name });
+          else bulkNames.push(name);
+        });
+      });
+      if(!docJobs.length && !bulkNames.length){ setStatus(t('Nothing selected.'), 'err'); createBtn.disabled = false; return; }
+      let created = 0, capped = false, errMsg = '';
+      try{
+        for(const job of docJobs){
+          const sc = scans[job.si];
+          const resp = await fetch('/api/patients/import-document?name=' + encodeURIComponent(job.name), { method:'POST', headers:{ 'Content-Type': sc.mime || 'application/octet-stream', 'x-filename': safeName(sc.filename) }, body: sc.buf });
+          const data = await resp.json().catch(()=>({}));
+          if(resp.status === 403 && data.code === 'patient_limit_reached'){ capped = true; break; }
+          if(!resp.ok) throw new Error(data.error || (t('Could not add')+' '+job.name));
+          created++;
+        }
+        if(!capped && bulkNames.length){
+          const data = await api('POST', '/api/patients/import', { names: bulkNames });
+          created += (data.createdCount || 0); if(data.capped) capped = true;
+        }
+        await loadPatients();
+      }catch(e){ errMsg = e.message; }
+      if(errMsg){ setStatus(errMsg + (created ? ' ('+created+' '+t('added')+')' : ''), 'err'); createBtn.disabled = false; return; }
+      if(capped){ setStatus((created? created+' '+t('added')+'. ':'') + t("You've reached your plan's patient limit."), 'err'); createBtn.disabled = false; return; }
+      overlay.style.display = 'none'; createBtn.disabled = false;
     });
   })();
 
