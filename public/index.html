@@ -4606,7 +4606,8 @@
     "Your documents":"Vos documents",
     "Intake documents":"Documents d'admission",
     "Share a document from your clinic or doctor — a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.":"Partagez un document de votre clinique ou de votre médecin — une référence, un formulaire d'admission ou une note. Si les résumés IA sont activés, Between donne à votre clinicien un court résumé pour qu'il ne parte pas de zéro.",
-    "Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page. You or the patient can upload.":"Formulaires, références ou notes pour ce patient. Between examine chacun et vous donne un résumé de départ pour ne pas commencer d'une page blanche. Vous ou le patient pouvez téléverser.",
+    "Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page.":"Formulaires, références ou notes pour ce patient. Between examine chacun et vous donne un résumé de départ pour ne pas commencer d'une page blanche.",
+    "Documents your clinician has shared with you. Only your clinician can add documents.":"Les documents que votre clinicien a partagés avec vous. Seul votre clinicien peut ajouter des documents.",
     "Upload a document (PDF or photo)":"Téléverser un document (PDF ou photo)",
     "No documents yet.":"Aucun document pour l'instant.",
     "Reviewing…":"Analyse en cours…",
@@ -6950,7 +6951,13 @@
       t('btwSetupS1d', SU.s1d);
       t('btwSetupS2t', SU.s2t); t('btwSetupS2d', SU.s2d);
       t('btwSetupS3t', SU.s3t); t('btwSetupS3d', SU.s3d);
-      t('btwSetupBring', SU.bring);
+      // The "bring existing records" line is clinician-only (document upload and
+      // record backfill are professional features); hidden on the individual flow.
+      var bringEl = document.getElementById('btwSetupBring');
+      if(bringEl){
+        if(curAudience === 'individual'){ bringEl.style.display = 'none'; }
+        else { bringEl.style.display = ''; bringEl.textContent = SU.bring; }
+      }
     }
   }
 
@@ -8996,6 +9003,8 @@
       ? t('Your own history and trends, updating each time you check in.')
       : t('Auto-updating as check-ins come in. Select a patient to see their timeline and trends.'));
     set('btwOpenData', patient ? t('View my data & AI settings') : t('View patient data & AI settings'));
+    // Document upload is clinician-only: hide the Documents entry for patients.
+    const docsBtn0 = document.getElementById('btwOpenDocs'); if(docsBtn0) docsBtn0.style.display = patient ? 'none' : 'inline-flex';
     if(typeof applyFutureNoteCopy === 'function') applyFutureNoteCopy();
     const proc = document.querySelector('#btwProcessing .btw-processing-label');
     if(proc) proc.textContent = patient ? t('Saving your check-in…') : t('Summarizing for your therapist…');
@@ -10905,14 +10914,16 @@
   function setupDocsSection(){
     if(!docsSection) return;
     docsSection.style.display = '';
-    if(isPatient()){
-      if(docsTitle) docsTitle.textContent = t('Your documents');
-      if(docsHelp) docsHelp.textContent = t('Share a document from your clinic or doctor — a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.');
+    const pat = isPatient();
+    if(pat){
+      if(docsTitle) docsTitle.textContent = t('Documents');
+      if(docsHelp) docsHelp.textContent = t('Documents your clinician has shared with you. Only your clinician can add documents.');
     } else {
       if(docsTitle) docsTitle.textContent = t('Intake documents');
-      if(docsHelp) docsHelp.textContent = t('Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page. You or the patient can upload.');
+      if(docsHelp) docsHelp.textContent = t('Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page.');
     }
-    if(docsUploadBtn) docsUploadBtn.textContent = t('Upload a document (PDF or photo)');
+    // Only clinicians upload; patients can view what was shared, not add.
+    if(docsUploadBtn){ docsUploadBtn.style.display = pat ? 'none' : ''; docsUploadBtn.textContent = t('Upload a document (PDF or photo)'); }
     loadDocs();
   }
 

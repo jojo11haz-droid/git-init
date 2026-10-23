@@ -41,8 +41,8 @@ class S {
   String get documentsTitle => _('Documents', 'Documents');
   String get documentsTooltip => _('My documents', 'Mes documents');
   String get documentsIntro => _(
-      'Share a document from your clinic or doctor — a referral, intake form, or note. If your AI summaries are on, Between gives your clinician a short summary so they\'re not starting from scratch.',
-      'Partage un document de ta clinique ou de ton médecin — une référence, un formulaire d\'admission ou une note. Si tes résumés IA sont activés, Between donne à ton clinicien un court résumé pour qu\'il ne parte pas de zéro.');
+      'Documents your clinician has shared with you. Only your clinician can add documents.',
+      'Les documents que ton clinicien a partagés avec toi. Seul ton clinicien peut ajouter des documents.');
   String get documentsEmpty =>
       _('No documents yet.', 'Aucun document pour l\'instant.');
   String get addDocument => _('Add a document', 'Ajouter un document');
