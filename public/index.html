@@ -2800,10 +2800,10 @@
               <p>Your clients check in whichever way is easiest in the moment, by voice or a few words.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-voice btw-viz-in">
+              <div class="btw-vc btw-viz-voice btw-viz-in" id="btwVizVoice">
                 <div class="btw-vc-top"><span class="btw-viz-rec"></span> REC · 0:12</div>
                 <div class="btw-viz-wave" aria-hidden="true"></div>
-                <div class="btw-viz-bub"><span class="who">VOICE NOTE · TRANSCRIBED</span>Couldn't switch off after work. Replayed the whole day in bed.</div>
+                <div class="btw-viz-bub"><span class="who">VOICE NOTE · TRANSCRIBED</span><span id="btwVizVoiceText">Couldn't switch off after work. Replayed the whole day in bed.</span></div>
               </div>
             </div>
           </div>
@@ -2814,13 +2814,13 @@
               <p>Real charts from real check-ins plus a deeper stats view: mood month by month, streaks and the themes that track with harder weeks.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-trend btw-viz-in">
+              <div class="btw-vc btw-viz-trend btw-viz-in" id="btwVizTrend">
                 <div class="btw-viz-stats">
                   <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="128">0</span></div><div class="k">check-ins</div></div>
                   <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="6">0</span></div><div class="k">week streak</div></div>
                   <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="92">0</span>%</div><div class="k">on time</div></div>
                 </div>
-                <div class="btw-vc-top" style="margin:2px 0 8px;">MOOD · LAST 8 WEEKS</div>
+                <div class="btw-vc-top" style="margin:2px 0 8px;" id="btwVizTrendLabel">MOOD · LAST 8 WEEKS</div>
                 <svg class="btw-viz-chart" viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true">
                   <path class="ar" d=""></path>
                   <path class="ln" d="M6,92 L50,84 L94,88 L138,66 L182,70 L226,46 L270,36 L314,20"></path>
@@ -2836,12 +2836,12 @@
               <p>Private and secure by default. Patients see and control their own data and AI analysis is opt-in and off.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-priv btw-viz-in">
+              <div class="btw-vc btw-viz-priv btw-viz-in" id="btwVizPriv">
                 <div class="btw-vc-top">YOUR DATA · YOUR CONTROL</div>
                 <div class="btw-viz-prow"><div><div class="lab">AI summaries</div><div class="sub">Off until you turn them on</div></div><div class="btw-viz-tog" data-wiggle="1"></div></div>
                 <div class="btw-viz-prow"><div><div class="lab">Share with clinician</div><div class="sub">A short summary, with consent</div></div><div class="btw-viz-tog on"></div></div>
                 <div class="btw-viz-prow"><div><div class="lab">Export or delete anytime</div><div class="sub">It's your record</div></div><div class="btw-viz-tog on"></div></div>
-                <div class="btw-viz-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Encrypted end to end</div>
+                <div class="btw-viz-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> <span id="btwVizLock">Encrypted end to end</span></div>
               </div>
             </div>
           </div>
@@ -2852,7 +2852,7 @@
               <p>Built with Canadian privacy law in mind from day one, including PIPEDA and Quebec's Law 25, with consent and data controls at the core.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-in">
+              <div class="btw-vc btw-viz-in" id="btwVizPrivD">
                 <div class="btw-viz-shield">
                   <div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
                   <div class="btw-viz-badges">
@@ -2870,8 +2870,8 @@
               <p>Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-in">
-                <div class="btw-vc-top">CASELOAD · NEEDS YOU FIRST</div>
+              <div class="btw-vc btw-viz-in" id="btwVizScan">
+                <div class="btw-vc-top" id="btwVizScanHead">CASELOAD · NEEDS YOU FIRST</div>
                 <div class="btw-viz-rows">
                   <div class="btw-viz-row flag"><span class="av">MR</span><span class="nm">M. Roy<span class="s">Flagged · low mood 3 days</span></span><span class="fdot"></span><span class="ago">2h</span></div>
                   <div class="btw-viz-row flag"><span class="av">JL</span><span class="nm">J. Lam<span class="s">New check-in · pain up</span></span><span class="fdot"></span><span class="ago">4h</span></div>
@@ -2888,9 +2888,9 @@
               <p>Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-in">
+              <div class="btw-vc btw-viz-in" id="btwVizSafety">
                 <div class="btw-viz-crisis">
-                  <div class="ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> SHOWN TO THE CLIENT INSTANTLY</div>
+                  <div class="ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <span id="btwVizSafeHead">SHOWN TO THE CLIENT INSTANTLY</span></div>
                   <div class="btw-viz-cr"><span class="cn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></span><span><b>Talk Suicide Canada</b><span class="s">CALL OR TEXT 988</span></span></div>
                   <div class="btw-viz-cr"><span class="cn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span><span><b>Text a crisis responder</b><span class="s">TEXT 686868</span></span></div>
                 </div>
@@ -2904,7 +2904,7 @@
               <p>Between shows each client their own recovery over time. They watch the sore spots ease week by week and the good days add up. It's the feedback loop that keeps them checking in.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-prog btw-viz-in">
+              <div class="btw-vc btw-viz-prog btw-viz-in" id="btwVizProg">
                 <div class="big">Better than a month ago</div>
                 <div class="cap">Your mood trend · last 6 weeks</div>
                 <svg class="btw-viz-spark" viewBox="0 0 320 84" preserveAspectRatio="none" aria-hidden="true">
@@ -2922,14 +2922,14 @@
               <p>Between does one thing well: the between-visit check-in. It works alongside whatever practice management, notes or scheduling software you already use, so there's nothing to switch and nothing to migrate. It isn't a clinic or practice-management system and it isn't trying to replace one. It just covers the part those tools leave out, the stretch between visits.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-in">
+              <div class="btw-vc btw-viz-in" id="btwVizStack">
                 <div class="btw-viz-stack">
                   <div class="btw-viz-mid"><span class="bi"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><clipPath id="btwVizBl"><circle cx="26" cy="32" r="13"></circle></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#btwVizBl)"></circle><circle cx="26" cy="32" r="13" fill="none" stroke="#fff" stroke-width="5"></circle><circle cx="38" cy="32" r="13" fill="none" stroke="#fff" stroke-width="5"></circle></svg></span><span><b>Between</b><span class="s">The between-visit check-in</span></span></div>
                   <div class="btw-viz-along">RUNS ALONGSIDE</div>
                   <div class="btw-viz-tools">
-                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></div>Practice management</div>
-                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg></div>Session notes</div>
-                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>Scheduling</div>
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></div><span class="lbl">Practice management</span></div>
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg></div><span class="lbl">Session notes</span></div>
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><span class="lbl">Scheduling</span></div>
                   </div>
                 </div>
               </div>
@@ -2942,11 +2942,11 @@
               <p>Patients get an automatic nudge on their own schedule, by text or email. Nothing for you to send, no one left to chase between visits.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-viz-phone btw-viz-in">
+              <div class="btw-viz-phone btw-viz-in" id="btwVizRemind">
                 <div class="notch"></div>
                 <div class="btw-viz-notif">
                   <div class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
-                  <div class="nt"><b>Between</b>Time for a quick check-in. How's today going?<div class="nmeta">NOW · ON YOUR SCHEDULE</div></div>
+                  <div class="nt"><b>Between</b><span id="btwVizNotifBody">Time for a quick check-in. How's today going?</span><div class="nmeta">NOW · ON YOUR SCHEDULE</div></div>
                 </div>
               </div>
             </div>
@@ -6684,6 +6684,107 @@
         '</div>';
     }
   }
+  // Feature mockups speak the visitor's field: the voice note, the trend metric,
+  // the caseload reasons, who a summary is shared with and the crisis-card
+  // wording all follow the selected profession and language. The fixed chrome is
+  // set here too, so French mode never leaves English behind. Metrics are framed
+  // so "up is better" for every field (physio shows Recovery, not Pain, climbing).
+  // Runs at the end of translateStatic, after the generic text pass, so it wins.
+  const FEAT_FIXED = {
+    en:{ voiceWho:'VOICE NOTE · TRANSCRIBED', k:['check-ins','week streak','on time'], weeks8:'LAST 8 WEEKS',
+      privTop:'YOUR DATA · YOUR CONTROL', aiLab:'AI summaries', aiSub:'Off until you turn them on',
+      shareWith:'Share with ', shareSub:'A short summary, with consent',
+      expLab:'Export or delete anytime', expSub:"It's your record", lock:'Encrypted end to end',
+      pipeda:'PIPEDA', pipedaD:'Canadian federal privacy law', law25:'Quebec Law 25', law25D:'Consent and data controls built in',
+      safeCall:'Talk Suicide Canada', safeCallS:'CALL OR TEXT 988', safeText:'Text a crisis responder', safeTextS:'TEXT 686868',
+      progBig:'Better than a month ago',
+      brandSub:'The between-visit check-in', along:'RUNS ALONGSIDE', tools:['Practice management','Session notes','Scheduling'],
+      notif:"Time for a quick check-in. How's today going?", notifMeta:'NOW · ON YOUR SCHEDULE', steady:'Steady this week' },
+    fr:{ voiceWho:'NOTE VOCALE · TRANSCRITE', k:['suivis','semaines de suite','à temps'], weeks8:'8 DERNIÈRES SEMAINES',
+      privTop:'VOS DONNÉES · VOTRE CONTRÔLE', aiLab:'Résumés par IA', aiSub:'Désactivés tant que vous ne les activez pas',
+      shareWith:'Partager avec ', shareSub:'Un court résumé, avec consentement',
+      expLab:'Exporter ou supprimer à tout moment', expSub:"C'est votre dossier", lock:'Chiffré de bout en bout',
+      pipeda:'LPRPDE', pipedaD:'Loi fédérale canadienne sur la vie privée', law25:'Loi 25 (Québec)', law25D:'Consentement et contrôle des données intégrés',
+      safeCall:'Parlons Suicide Canada', safeCallS:'APPELEZ OU TEXTEZ 988', safeText:'Texter un intervenant', safeTextS:'TEXTEZ 686868',
+      progBig:"Mieux qu'il y a un mois",
+      brandSub:'Le suivi entre les visites', along:'FONCTIONNE AVEC', tools:['Gestion de pratique','Notes de séance','Horaire'],
+      notif:"C'est le moment d'un petit suivi. Comment va aujourd'hui ?", notifMeta:'MAINTENANT · SELON VOTRE HORAIRE', steady:'Stable cette semaine' }
+  };
+  const FEAT_AUD = {
+    therapy:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your therapist',r1:'Flagged · low mood 3 days',r2:'New check-in · anxious',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+              fr:{metric:'HUMEUR',trend:"Votre tendance d'humeur · 6 dernières semaines",scan:'SUIVIS · À VOIR EN PREMIER',who:'votre thérapeute',r1:'Signalé · humeur basse 3 j',r2:'Nouveau suivi · anxieux',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
+    nutrition:{ en:{metric:'ENERGY',trend:'Your energy trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your nutritionist',r1:'Flagged · energy crashing',r2:'New check-in · big cravings',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+                fr:{metric:'ÉNERGIE',trend:"Votre tendance d'énergie · 6 dernières semaines",scan:'SUIVIS · À VOIR EN PREMIER',who:'votre nutritionniste',r1:'Signalé · énergie en chute',r2:'Nouveau suivi · fortes envies',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
+    physio:{ en:{metric:'RECOVERY',trend:'Your recovery trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your physiotherapist',r1:'Flagged · pain up 3 days',r2:'New check-in · missed exercises',safe:'SHOWN TO THE PATIENT INSTANTLY'},
+             fr:{metric:'RÉCUPÉRATION',trend:'Votre tendance de récupération · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre physiothérapeute',r1:'Signalé · douleur en hausse 3 j',r2:'Nouveau suivi · exercices manqués',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
+    occupational:{ en:{metric:'FUNCTION',trend:'Your daily-function trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your therapist',r1:'Flagged · daily tasks harder',r2:'New check-in · very fatigued',safe:'SHOWN TO THE PATIENT INSTANTLY'},
+                   fr:{metric:'FONCTION',trend:'Votre tendance de fonction · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre ergothérapeute',r1:'Signalé · tâches plus dures',r2:'Nouveau suivi · très fatigué',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
+    neuropsych:{ en:{metric:'FOCUS',trend:'Your focus trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your neuropsychologist',r1:'Flagged · foggy, losing focus',r2:'New check-in · more forgetful',safe:'SHOWN TO THE PATIENT INSTANTLY'},
+                 fr:{metric:'CONCENTRATION',trend:'Votre tendance de concentration · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre neuropsychologue',r1:'Signalé · brouillard, concentration',r2:'Nouveau suivi · plus distrait',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
+    sports:{ en:{metric:'FORM',trend:'Your form trend · last 6 weeks',scan:'ROSTER · CHECK ON FIRST',who:'your coach',r1:'Flagged · pressure building',r2:'New check-in · legs heavy',safe:'SHOWN TO THE PLAYER INSTANTLY'},
+             fr:{metric:'FORME',trend:'Votre tendance de forme · 6 dernières semaines',scan:'ÉQUIPE · À VOIR EN PREMIER',who:'votre entraîneur',r1:'Signalé · la pression monte',r2:'Nouveau suivi · jambes lourdes',safe:'MONTRÉ AU JOUEUR AUSSITÔT'} },
+    recovery:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'MEMBERS · CHECK ON FIRST',who:'your mentor',r1:'Flagged · strong craving',r2:'New check-in · shaky start',safe:'SHOWN TO THEM INSTANTLY'},
+               fr:{metric:'HUMEUR',trend:"Votre tendance d'humeur · 6 dernières semaines",scan:'MEMBRES · À VOIR EN PREMIER',who:'votre mentor',r1:'Signalé · forte envie',r2:'Nouveau suivi · départ fragile',safe:'MONTRÉ AUSSITÔT'} },
+    schools:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'STUDENTS · CHECK ON FIRST',who:'school staff',r1:'Flagged · exam stress',r2:'New check-in · falling behind',safe:'SHOWN TO THE STUDENT INSTANTLY'},
+              fr:{metric:'HUMEUR',trend:"Votre tendance d'humeur · 6 dernières semaines",scan:'ÉLÈVES · À VOIR EN PREMIER',who:'le personnel scolaire',r1:"Signalé · stress d'examens",r2:'Nouveau suivi · prend du retard',safe:"MONTRÉ À L'ÉLÈVE AUSSITÔT"} },
+    fitness:{ en:{metric:'ENERGY',trend:'Your energy trend · last 6 weeks',scan:'CLIENTS · CHECK ON FIRST',who:'your trainer',r1:'Flagged · sore, run down',r2:'New check-in · missed a workout',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+              fr:{metric:'ÉNERGIE',trend:"Votre tendance d'énergie · 6 dernières semaines",scan:'CLIENTS · À VOIR EN PREMIER',who:'votre entraîneur',r1:'Signalé · courbaturé, épuisé',r2:'Nouveau suivi · séance manquée',safe:'MONTRÉ AU CLIENT AUSSITÔT'} }
+  };
+  function featVizKey(){ var a = curAudience; if(a==='kinesiology'||a==='osteo') return 'physio'; return FEAT_AUD[a] ? a : 'therapy'; }
+  function renderFeatureVisuals(){
+    if(!document.querySelector('#btwViewHome .btw-feature-grid')) return;
+    var L = (curLang==='fr') ? 'fr' : 'en';
+    var F = FEAT_FIXED[L]; var A = (FEAT_AUD[featVizKey()] || FEAT_AUD.therapy)[L];
+    function t(id,s){ var e=document.getElementById(id); if(e) e.textContent = s; }
+    function q(sel){ return document.querySelector(sel); }
+    function qa(sel){ return [].slice.call(document.querySelectorAll(sel)); }
+    // 1 voice — the field's own voice note, straight from HERO_THREAD
+    var hk = (curAudience === 'schools' && curSchoolMode === 'classroom') ? 'schools_classroom'
+      : (curAudience === 'kinesiology' || curAudience === 'osteo') ? 'physio'
+      : (curAudience === 'individual') ? ((typeof curIndividualMode !== 'undefined' && curIndividualMode !== 'mind') ? ('individual_' + curIndividualMode) : 'individual')
+      : curAudience;
+    var hd = (HERO_THREAD[hk] || HERO_THREAD.therapy); hd = hd[L] || hd.en;
+    var vc = hd.checkins.filter(function(c){return c.voice;})[0] || hd.checkins[0];
+    t('btwVizVoiceText', vc.text);
+    var vwho = q('#btwVizVoice .who'); if(vwho) vwho.textContent = F.voiceWho;
+    // 2 trend
+    t('btwVizTrendLabel', A.metric + ' · ' + F.weeks8);
+    qa('#btwVizTrend .btw-viz-tile .k').forEach(function(el,i){ if(F.k[i]) el.textContent = F.k[i]; });
+    // 3 privacy by default
+    var pTop=q('#btwVizPriv .btw-vc-top'); if(pTop) pTop.textContent = F.privTop;
+    var prows = qa('#btwVizPriv .btw-viz-prow');
+    if(prows[0]){ var l0=prows[0].querySelector('.lab'), s0=prows[0].querySelector('.sub'); if(l0)l0.textContent=F.aiLab; if(s0)s0.textContent=F.aiSub; }
+    if(prows[1]){ var l1=prows[1].querySelector('.lab'), s1=prows[1].querySelector('.sub'); if(l1)l1.textContent=F.shareWith+A.who; if(s1)s1.textContent=F.shareSub; }
+    if(prows[2]){ var l2=prows[2].querySelector('.lab'), s2=prows[2].querySelector('.sub'); if(l2)l2.textContent=F.expLab; if(s2)s2.textContent=F.expSub; }
+    t('btwVizLock', F.lock);
+    // 4 privacy by design
+    var badges = qa('#btwVizPrivD .btw-viz-badge');
+    if(badges[0]){ var b0=badges[0].querySelector('b'), d0=badges[0].querySelector('.d'); if(b0)b0.textContent=F.pipeda; if(d0)d0.textContent=F.pipedaD; }
+    if(badges[1]){ var b1=badges[1].querySelector('b'), d1=badges[1].querySelector('.d'); if(b1)b1.textContent=F.law25; if(d1)d1.textContent=F.law25D; }
+    // 5 quick to scan
+    t('btwVizScanHead', A.scan);
+    var reasons = qa('#btwVizScan .btw-viz-row .s');
+    if(reasons[0]) reasons[0].textContent = A.r1;
+    if(reasons[1]) reasons[1].textContent = A.r2;
+    if(reasons[2]) reasons[2].textContent = F.steady;
+    if(reasons[3]) reasons[3].textContent = F.steady;
+    // 6 safety net
+    t('btwVizSafeHead', A.safe);
+    var crs = qa('#btwVizSafety .btw-viz-cr');
+    if(crs[0]){ var cb0=crs[0].querySelector('b'), cs0=crs[0].querySelector('.s'); if(cb0)cb0.textContent=F.safeCall; if(cs0)cs0.textContent=F.safeCallS; }
+    if(crs[1]){ var cb1=crs[1].querySelector('b'), cs1=crs[1].querySelector('.s'); if(cb1)cb1.textContent=F.safeText; if(cs1)cs1.textContent=F.safeTextS; }
+    // 7 progress
+    var pbg=q('#btwVizProg .big'); if(pbg) pbg.textContent=F.progBig;
+    var pcp=q('#btwVizProg .cap'); if(pcp) pcp.textContent=A.trend;
+    // 8 fits your stack
+    var bsub=q('#btwVizStack .btw-viz-mid .s'); if(bsub) bsub.textContent=F.brandSub;
+    var alng=q('#btwVizStack .btw-viz-along'); if(alng) alng.textContent=F.along;
+    qa('#btwVizStack .btw-viz-tool .lbl').forEach(function(el,i){ if(F.tools[i]) el.textContent=F.tools[i]; });
+    // 9 reminders
+    t('btwVizNotifBody', F.notif);
+    var nmeta=q('#btwVizRemind .nmeta'); if(nmeta) nmeta.textContent=F.notifMeta;
+  }
+
   // The demo check-in box is a <textarea>: once its .value is set (its dirty
   // flag), mutating the child text node no longer changes what's shown, so the
   // example would stick on whichever audience rendered first. Track the last
@@ -6762,6 +6863,7 @@
     var _recEl = document.getElementById('btwRecovery');
     if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
     renderHeroThread();
+    try{ renderFeatureVisuals(); }catch(e){}
     applyCurrency();
     updatePriceModeLabels();
     // Reseed the demo check-in box for this audience/language (see _mkSeed).
