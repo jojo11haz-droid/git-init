@@ -1876,6 +1876,22 @@
   @media (max-width:640px){
     .btw-step{min-height:auto;padding:26px 0;}
   }
+  /* How-it-works steps: two columns (copy + a live mockup), like the features. */
+  .btw-steps .btw-step{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:52px;align-items:center;}
+  .btw-step-copy{max-width:460px;}
+  .btw-step-viz{justify-self:center;width:100%;max-width:420px;}
+  .btw-step-inputrow{display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;font-size:12.5px;color:var(--ink-soft);}
+  .btw-step-inputrow svg{width:17px;height:17px;color:var(--moss);flex:none;}
+  .btw-step-sum{font-size:14px;line-height:1.55;color:var(--ink);margin-bottom:14px;}
+  .btw-step-recap{font-size:12.5px;line-height:1.5;color:var(--ink-soft);margin-top:12px;}
+  .btw-step-spark{width:100%;height:92px;display:block;margin:4px 0 2px;}
+  .btw-step-spark .ar{fill:var(--moss);opacity:.1;}
+  .btw-step-spark .ln{fill:none;stroke:var(--moss);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+  .btw-step-spark .dt{fill:var(--clay);}
+  @media (max-width:860px){
+    .btw-steps .btw-step{grid-template-columns:1fr;gap:28px;}
+    .btw-step-viz{justify-self:start;max-width:400px;}
+  }
   /* Features flow: each capability is its own full-width panel you scroll
      through one at a time (not a grid of small tiles). Spacious, left-aligned,
      transparent so the ambient circles show behind — and each slides in on its
@@ -2595,19 +2611,50 @@
         <div class="btw-section-label">How it works</div>
         <div class="btw-steps">
           <div class="btw-step">
-            <div class="btw-step-num">01</div>
-            <h3>Patient sends a check-in</h3>
-            <p>Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.</p>
+            <div class="btw-step-copy">
+              <div class="btw-step-num">01</div>
+              <h3>Patient sends a check-in</h3>
+              <p>Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.</p>
+            </div>
+            <div class="btw-step-viz">
+              <div class="btw-viz-phone">
+                <div class="notch"></div>
+                <div class="btw-viz-bub"><span id="btwStep1Bubble">Couldn't switch off after work.</span></div>
+                <div class="btw-step-inputrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg><span id="btwStep1Hint">Type, or tap to record…</span></div>
+              </div>
+            </div>
           </div>
           <div class="btw-step">
-            <div class="btw-step-num">02</div>
-            <h3>AI summarizes it</h3>
-            <p>A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.</p>
+            <div class="btw-step-copy">
+              <div class="btw-step-num">02</div>
+              <h3>AI summarizes it</h3>
+              <p>A short and neutral summary with theme tags. Never a diagnosis or interpretation. It runs only with the patient's explicit opt-in consent.</p>
+            </div>
+            <div class="btw-step-viz">
+              <div class="btw-vc">
+                <div class="btw-vc-top" id="btwStep2Label">AI SUMMARY</div>
+                <div class="btw-step-sum" id="btwStep2Sum">Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.</div>
+                <div class="btw-demo-tags" id="btwStep2Tags"><span>Work</span><span>Sleep</span></div>
+              </div>
+            </div>
           </div>
           <div class="btw-step">
-            <div class="btw-step-num">03</div>
-            <h3>You see the pattern</h3>
-            <p>Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.</p>
+            <div class="btw-step-copy">
+              <div class="btw-step-num">03</div>
+              <h3>You see the pattern</h3>
+              <p>Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.</p>
+            </div>
+            <div class="btw-step-viz">
+              <div class="btw-vc">
+                <div class="btw-vc-top" id="btwStep3Label">MOOD · SINCE LAST SESSION</div>
+                <svg class="btw-step-spark" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="ar" d="M6,74 L60,78 L114,60 L168,64 L222,44 L276,34 L314,22 L314,96 L6,96 Z"></path>
+                  <polyline class="ln" points="6,74 60,78 114,60 168,64 222,44 276,34 314,22"></polyline>
+                  <circle class="dt" cx="314" cy="22" r="4.5"></circle>
+                </svg>
+                <div class="btw-step-recap" id="btwStep3Recap">Trends and recurring themes, ready before you meet.</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -6699,7 +6746,8 @@
       safeCall:'Talk Suicide Canada', safeCallS:'CALL OR TEXT 988', safeText:'Text a crisis responder', safeTextS:'TEXT 686868',
       progBig:'Better than a month ago',
       brandSub:'The between-visit check-in', along:'RUNS ALONGSIDE', tools:['Practice management','Session notes','Scheduling'],
-      notif:"Time for a quick check-in. How's today going?", notifMeta:'NOW · ON YOUR SCHEDULE', steady:'Steady this week' },
+      notif:"Time for a quick check-in. How's today going?", notifMeta:'NOW · ON YOUR SCHEDULE', steady:'Steady this week',
+      hint:'Type, or tap to record…', aiSummary:'AI SUMMARY', sinceLast:'SINCE LAST SESSION', recap:'Trends and recurring themes, ready before you meet.' },
     fr:{ voiceWho:'NOTE VOCALE · TRANSCRITE', k:['suivis','semaines de suite','à temps'], weeks8:'8 DERNIÈRES SEMAINES',
       privTop:'VOS DONNÉES · VOTRE CONTRÔLE', aiLab:'Résumés par IA', aiSub:'Désactivés tant que vous ne les activez pas',
       shareWith:'Partager avec ', shareSub:'Un court résumé, avec consentement',
@@ -6708,7 +6756,19 @@
       safeCall:'Parlons Suicide Canada', safeCallS:'APPELEZ OU TEXTEZ 988', safeText:'Texter un intervenant', safeTextS:'TEXTEZ 686868',
       progBig:"Mieux qu'il y a un mois",
       brandSub:'Le suivi entre les visites', along:'FONCTIONNE AVEC', tools:['Gestion de pratique','Notes de séance','Horaire'],
-      notif:"C'est le moment d'un petit suivi. Comment va aujourd'hui ?", notifMeta:'MAINTENANT · SELON VOTRE HORAIRE', steady:'Stable cette semaine' }
+      notif:"C'est le moment d'un petit suivi. Comment va aujourd'hui ?", notifMeta:'MAINTENANT · SELON VOTRE HORAIRE', steady:'Stable cette semaine',
+      hint:'Écrivez, ou touchez pour enregistrer…', aiSummary:'RÉSUMÉ IA', sinceLast:'DEPUIS LA DERNIÈRE SÉANCE', recap:'Tendances et thèmes récurrents, prêts avant de vous voir.' }
+  };
+  const FEAT_TAGS = {
+    therapy:{en:['Work','Sleep'],fr:['Travail','Sommeil']},
+    nutrition:{en:['Meals','Energy'],fr:['Repas','Énergie']},
+    physio:{en:['Knee','Pain'],fr:['Genou','Douleur']},
+    occupational:{en:['Daily tasks','Fatigue'],fr:['Tâches quotidiennes','Fatigue']},
+    neuropsych:{en:['Focus','Fatigue'],fr:['Concentration','Fatigue']},
+    sports:{en:['Fatigue','Sleep'],fr:['Fatigue','Sommeil']},
+    recovery:{en:['Craving','Support'],fr:['Envie','Soutien']},
+    schools:{en:['Focus','Stress'],fr:['Concentration','Stress']},
+    fitness:{en:['Energy','Motivation'],fr:['Énergie','Motivation']}
   };
   const FEAT_AUD = {
     therapy:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your therapist',r1:'Flagged · low mood 3 days',r2:'New check-in · anxious',safe:'SHOWN TO THE CLIENT INSTANTLY'},
@@ -6783,6 +6843,19 @@
     // 9 reminders
     t('btwVizNotifBody', F.notif);
     var nmeta=q('#btwVizRemind .nmeta'); if(nmeta) nmeta.textContent=F.notifMeta;
+
+    // How-it-works steps (on the How it works page): check-in, summary, pattern
+    if(document.getElementById('btwStep1Bubble')){
+      t('btwStep1Bubble', vc.text);
+      t('btwStep1Hint', F.hint);
+      t('btwStep2Label', F.aiSummary);
+      t('btwStep2Sum', hd.summary);
+      var tagsEl=document.getElementById('btwStep2Tags');
+      var tg=(FEAT_TAGS[featVizKey()]||FEAT_TAGS.therapy)[L] || FEAT_TAGS.therapy.en;
+      if(tagsEl) tagsEl.innerHTML = tg.map(function(x){ return '<span>'+esc(x)+'</span>'; }).join('');
+      t('btwStep3Label', A.metric + ' · ' + F.sinceLast);
+      t('btwStep3Recap', F.recap);
+    }
   }
 
   // The demo check-in box is a <textarea>: once its .value is set (its dirty
