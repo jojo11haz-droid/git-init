@@ -2281,6 +2281,7 @@
 <div class="btw-root">
   <div class="btw-modal-overlay" id="btwConsentOverlay" style="display:none;">
     <div class="btw-modal">
+      <button class="btw-modal-close" data-close="btwConsentOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Patient consent</div>
       <h2>Enable AI summaries for <span id="btwConsentPatientName"></span>?</h2>
       <ul>
@@ -2486,6 +2487,7 @@
 
   <div class="btw-modal-overlay" id="btwPracticeOverlay" style="display:none;">
     <div class="btw-modal">
+      <button class="btw-modal-close" data-close="btwPracticeOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Clinic</div>
       <h2 id="btwPracticeTitle">Your clinic</h2>
 
@@ -2516,6 +2518,7 @@
 
   <div class="btw-modal-overlay" id="btwJoinOverlay" style="display:none;">
     <div class="btw-modal">
+      <button class="btw-modal-close" data-close="btwJoinOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Join a clinic</div>
       <h2>Create your clinician login</h2>
       <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a clinic</strong> on Between. Create your login below — you'll have your own account and your own private caseload.</div>
@@ -10180,9 +10183,9 @@
       if(el) el.style.display = 'none';
     });
   });
-  ['btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwBillingOverlay','btwPracticeOverlay','btwDataOverlay'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
+  // Click the dimmed backdrop (outside the card) to close any modal.
+  document.querySelectorAll('.btw-modal-overlay').forEach(el=>{
+    el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });
 
   document.getElementById('btwStep1Next').addEventListener('click', async ()=>{
