@@ -2156,6 +2156,19 @@
   .btw-savetime-card.old li::before{content:'\00d7';color:var(--clay);font-weight:700;}
   .btw-savetime-card.new li::before{content:'\2713';color:var(--moss);font-weight:700;}
   .btw-savetime-note{font-size:14px;line-height:1.6;color:var(--ink-soft);max-width:660px;margin:20px auto 0;}
+  /* Quick setup: defuses the "too many moving parts, scared to start" objection
+     right before the final CTA. Nothing to switch, nothing to migrate. */
+  .btw-setup{max-width:1000px;margin:0 auto;text-align:center;}
+  .btw-setup h2{font-family:var(--font-display);font-weight:600;font-size:clamp(25px,3.6vw,38px);letter-spacing:-.02em;line-height:1.08;margin:6px 0 12px;text-wrap:balance;}
+  .btw-setup-lead{font-size:clamp(15px,1.7vw,18px);color:var(--ink-soft);line-height:1.6;max-width:58ch;margin:0 auto 28px;}
+  .btw-setup-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:left;margin-bottom:20px;}
+  @media (max-width:720px){.btw-setup-steps{grid-template-columns:1fr;}}
+  .btw-setup-step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;}
+  .btw-setup-step .n{width:34px;height:34px;border-radius:10px;background:var(--moss-light);color:var(--moss);font-family:var(--font-display);font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+  .btw-setup-step b{font-size:16px;color:var(--ink);display:block;margin-bottom:5px;}
+  .btw-setup-step span{font-size:13.5px;color:var(--ink-soft);line-height:1.55;}
+  .btw-setup-reassure{font-size:13.5px;color:var(--ink-soft);line-height:1.6;max-width:58ch;margin:0 auto;}
+  .btw-setup-reassure strong{color:var(--ink);font-weight:600;}
   .btw-cta-banner{
     text-align:center;
     padding:40px 20px 20px;
@@ -3046,6 +3059,18 @@
             <p>Notifications are delivered on a best-effort basis. Between is never a substitute for emergency services. Patients always see crisis resources directly. That never depends on anyone else's response time.</p>
           </div>
         </div>
+      </section>
+
+      <section class="btw-setup">
+        <div class="btw-section-label">Quick to start</div>
+        <h2>Worried about moving parts? There aren't any.</h2>
+        <p class="btw-setup-lead">Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. Most practices are up and running the same afternoon.</p>
+        <div class="btw-setup-steps">
+          <div class="btw-setup-step"><div class="n">1</div><b>Create your account</b><span>A few minutes. Regulated fields are licence-verified before your dashboard opens.</span></div>
+          <div class="btw-setup-step"><div class="n">2</div><b>Add someone</b><span>A first name is all you need. No records to import, nothing to set up for them.</span></div>
+          <div class="btw-setup-step"><div class="n">3</div><b>Share the invite link</b><span>They check in between visits. A short summary is waiting for you before the next one.</span></div>
+        </div>
+        <p class="btw-setup-reassure"><strong>Nothing to unwind if you stop.</strong> Cancel anytime, and export or delete your data whenever you want.</p>
       </section>
 
       <section class="btw-cta-banner">
@@ -4079,6 +4104,17 @@
     "Notifications are delivered on a best-effort basis. Between is never a substitute for emergency services. Patients always see crisis resources directly. That never depends on anyone else's response time.":
       "Les notifications sont livrées au mieux des efforts. Between ne remplace jamais les services d'urgence. Les patients voient toujours les ressources de crise directement. Cela ne dépend jamais du temps de réponse de qui que ce soit.",
     "See what's happening between sessions.":"Voyez ce qui se passe entre les séances.",
+    "Quick to start":"Rapide à démarrer",
+    "Worried about moving parts? There aren't any.":"Peur d'avoir trop d'éléments à gérer ? Il n'y en a aucun.",
+    "Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. Most practices are up and running the same afternoon.":"Between n'est pas un nouveau système à adopter. Il fonctionne avec ce que vous utilisez déjà : aucune migration, aucun projet informatique et rien à réapprendre pour votre équipe. La plupart des cliniques sont opérationnelles le jour même.",
+    "Create your account":"Créez votre compte",
+    "A few minutes. Regulated fields are licence-verified before your dashboard opens.":"Quelques minutes. Les domaines réglementés sont vérifiés (permis) avant l'ouverture de votre tableau de bord.",
+    "Add someone":"Ajoutez une personne",
+    "A first name is all you need. No records to import, nothing to set up for them.":"Un prénom suffit. Aucun dossier à importer, rien à configurer pour elle.",
+    "Share the invite link":"Partagez le lien d'invitation",
+    "They check in between visits. A short summary is waiting for you before the next one.":"Elle fait ses suivis entre les visites. Un court résumé vous attend avant la prochaine.",
+    "Nothing to unwind if you stop.":"Rien à défaire si vous arrêtez.",
+    "Cancel anytime, and export or delete your data whenever you want.":"Annulez quand vous voulez, et exportez ou supprimez vos données en tout temps.",
     // dashboard signed-out
     "The important part happens between sessions.":"Le plus important se passe entre les séances.",
     "This is where you pick it up, on your own time. Between keeps what matters for each client, so you walk into the next appointment already knowing their week. Log in to your caseload, or start a 14-day free trial. A client's data is only ever visible to you.":
@@ -12937,7 +12973,7 @@
       '.btw-features .btw-section-label',
       '.btw-savetime .btw-section-label', '.btw-savetime .btw-demo-lead', '.btw-savetime-card',
       '.btw-forclinics .btw-section-label', '.btw-solo-step',
-      '.btw-recovery', '.btw-trust', '.btw-cta-banner',
+      '.btw-recovery', '.btw-trust', '.btw-setup', '.btw-cta-banner',
       '.btw-shots', '.btw-contact',
       '.btw-pricing-intro', '.btw-pricing-cards', '.btw-pricing-faq', '.btw-guide-wrap'];
     const sel = ROOTS.map(function(r){ return SUFFIX.map(function(s){ return r + ' ' + s; }).join(','); }).join(',');
