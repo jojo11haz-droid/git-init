@@ -2167,6 +2167,7 @@
   .btw-setup-step .n{width:34px;height:34px;border-radius:10px;background:var(--moss-light);color:var(--moss);font-family:var(--font-display);font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
   .btw-setup-step b{font-size:16px;color:var(--ink);display:block;margin-bottom:5px;}
   .btw-setup-step span{font-size:13.5px;color:var(--ink-soft);line-height:1.55;}
+  .btw-setup-bring{font-size:14px;color:var(--ink);line-height:1.6;background:var(--moss-light);border-radius:14px;padding:14px 18px;max-width:64ch;margin:2px auto 16px;}
   .btw-setup-reassure{font-size:13.5px;color:var(--ink-soft);line-height:1.6;max-width:58ch;margin:0 auto;}
   .btw-setup-reassure strong{color:var(--ink);font-weight:600;}
   .btw-cta-banner{
@@ -3064,12 +3065,13 @@
       <section class="btw-setup">
         <div class="btw-section-label">Quick to start</div>
         <h2>Worried about moving parts? There aren't any.</h2>
-        <p class="btw-setup-lead">Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. Most practices are up and running the same afternoon.</p>
+        <p class="btw-setup-lead" id="btwSetupLead">Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. Most practices are up and running the same afternoon.</p>
         <div class="btw-setup-steps">
-          <div class="btw-setup-step"><div class="n">1</div><b>Create your account</b><span>A few minutes. Regulated fields are licence-verified before your dashboard opens.</span></div>
-          <div class="btw-setup-step"><div class="n">2</div><b>Add someone</b><span>A first name is all you need. No records to import, nothing to set up for them.</span></div>
-          <div class="btw-setup-step"><div class="n">3</div><b>Share the invite link</b><span>They check in between visits. A short summary is waiting for you before the next one.</span></div>
+          <div class="btw-setup-step"><div class="n">1</div><b>Create your account</b><span id="btwSetupS1d">A few minutes. Regulated fields are licence-verified before your dashboard opens.</span></div>
+          <div class="btw-setup-step"><div class="n">2</div><b id="btwSetupS2t">Add someone</b><span id="btwSetupS2d">A first name is all you need to start. Nothing for them to set up.</span></div>
+          <div class="btw-setup-step"><div class="n">3</div><b id="btwSetupS3t">Share the invite link</b><span id="btwSetupS3d">They check in between visits. A short summary is waiting for you before the next one.</span></div>
         </div>
+        <p class="btw-setup-bring" id="btwSetupBring">Already have patients? You can upload their intake documents, referrals and assessments, and import past check-ins, so you keep the history you already have.</p>
         <p class="btw-setup-reassure"><strong>Nothing to unwind if you stop.</strong> Cancel anytime, and export or delete your data whenever you want.</p>
       </section>
 
@@ -6818,6 +6820,36 @@
     schools:{en:['Focus','Stress'],fr:['Concentration','Stress']},
     fitness:{en:['Energy','Motivation'],fr:['Énergie','Motivation']}
   };
+  // Quick-setup band: clinician flow (add patients, invite, import their records)
+  // vs the individual flow (set up nothing, bring your own notes). Import is real:
+  // clinicians upload patient documents and import past check-ins; individuals
+  // upload their own documents.
+  const SETUP = {
+    pro:{
+      en:{lead:"Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. Most practices are up and running the same afternoon.",
+          s1d:"A few minutes. Regulated fields are licence-verified before your dashboard opens.",
+          s2t:"Add someone", s2d:"A first name is all you need to start. Nothing for them to set up.",
+          s3t:"Share the invite link", s3d:"They check in between visits. A short summary is waiting for you before the next one.",
+          bring:"Already have patients? You can upload their intake documents, referrals and assessments, and import past check-ins, so you keep the history you already have."},
+      fr:{lead:"Between n'est pas un nouveau système à adopter. Il fonctionne avec ce que vous utilisez déjà : aucune migration, aucun projet informatique et rien à réapprendre pour votre équipe. La plupart des cliniques sont opérationnelles le jour même.",
+          s1d:"Quelques minutes. Les domaines réglementés sont vérifiés (permis) avant l'ouverture de votre tableau de bord.",
+          s2t:"Ajoutez une personne", s2d:"Un prénom suffit pour commencer. Rien à configurer de son côté.",
+          s3t:"Partagez le lien d'invitation", s3d:"Elle fait ses suivis entre les visites. Un court résumé vous attend avant la prochaine.",
+          bring:"Vous avez déjà des patients ? Vous pouvez téléverser leurs documents d'accueil, références et évaluations, et importer leurs suivis passés, pour garder l'historique que vous avez déjà."}
+    },
+    self:{
+      en:{lead:"There's nothing to set up and nothing to switch. Between runs on its own, on the web or in the app, and you can start your first check-in in under a minute.",
+          s1d:"A few minutes, no licence needed. It's just for you.",
+          s2t:"Start a check-in", s2d:"By voice or a few words, whenever something comes up. It takes under a minute.",
+          s3t:"Watch your pattern build", s3d:"Your mood or pain trend and the themes that keep returning fill in over time, private to you.",
+          bring:"Already keep a journal or notes? You can bring your past notes or records with you, so you're not starting from zero."},
+      fr:{lead:"Il n'y a rien à installer et rien à changer. Between fonctionne seul, sur le web ou dans l'application, et vous pouvez faire votre premier suivi en moins d'une minute.",
+          s1d:"Quelques minutes, aucun permis requis. C'est juste pour vous.",
+          s2t:"Faites un suivi", s2d:"Par la voix ou en quelques mots, dès que quelque chose survient. Ça prend moins d'une minute.",
+          s3t:"Voyez votre tendance se construire", s3d:"Votre tendance d'humeur ou de douleur et les thèmes qui reviennent se remplissent au fil du temps, privés pour vous.",
+          bring:"Vous tenez déjà un journal ou des notes ? Vous pouvez apporter vos notes ou documents passés, pour ne pas repartir de zéro."}
+    }
+  };
   const FEAT_AUD = {
     therapy:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your therapist',r1:'Flagged · low mood 3 days',r2:'New check-in · anxious',safe:'SHOWN TO THE CLIENT INSTANTLY'},
               fr:{metric:'HUMEUR',trend:"Votre tendance d'humeur · 6 dernières semaines",scan:'SUIVIS · À VOIR EN PREMIER',who:'votre thérapeute',r1:'Signalé · humeur basse 3 j',r2:'Nouveau suivi · anxieux',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
@@ -6903,6 +6935,16 @@
       if(tagsEl) tagsEl.innerHTML = tg.map(function(x){ return '<span>'+esc(x)+'</span>'; }).join('');
       t('btwStep3Label', A.metric + ' · ' + F.sinceLast);
       t('btwStep3Recap', F.recap);
+    }
+
+    // Quick-setup band: clinician flow vs individual flow (and the import line).
+    if(document.getElementById('btwSetupLead')){
+      var SU = (SETUP[curAudience==='individual'?'self':'pro'][L]) || SETUP.pro.en;
+      t('btwSetupLead', SU.lead);
+      t('btwSetupS1d', SU.s1d);
+      t('btwSetupS2t', SU.s2t); t('btwSetupS2d', SU.s2d);
+      t('btwSetupS3t', SU.s3t); t('btwSetupS3d', SU.s3d);
+      t('btwSetupBring', SU.bring);
     }
   }
 
