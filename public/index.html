@@ -2078,6 +2078,11 @@
   .btw-featnav button:hover .dot{border-color:var(--moss);}
   @media (max-width:760px){.btw-featnav{display:none !important;}}
   @media (prefers-reduced-motion:reduce){.btw-featnav .lbl{transition:none;}}
+  /* Warm confirmation after a patient sends a check-in. */
+  .btw-sent-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);background:var(--moss);color:#fff;border-radius:999px;padding:12px 20px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;box-shadow:0 12px 34px rgba(30,76,134,.30);opacity:0;pointer-events:none;transition:opacity .35s ease, transform .35s ease;z-index:1400;max-width:calc(100vw - 32px);}
+  .btw-sent-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .btw-sent-toast svg{width:18px;height:18px;flex:none;}
+  @media (prefers-reduced-motion:reduce){.btw-sent-toast{transition:opacity .2s ease;}}
   .btw-trust{
     margin-top:36px;
     background:var(--ink);
@@ -4675,7 +4680,7 @@
     "Tell us about your clinic and we'll get back to you. Everything goes straight to our inbox.":
       "Parlez-nous de votre clinique et nous vous répondrons. Tout arrive directement dans notre boîte de réception.",
     "Email (so we can reply)":"Courriel (pour vous répondre)","Message":"Message","Send message":"Envoyer le message",
-    "Sent":"Envoyé","Thanks, message sent":"Merci, message envoyé","Done":"Terminé",
+    "Sent":"Envoyé","Thanks, message sent":"Merci, message envoyé","Done":"Terminé","Check-in sent":"Suivi envoyé",
     "We got your message and will reply to the email you gave us.":"Nous avons reçu votre message et vous répondrons au courriel indiqué.",
     "Subscribe to keep using Between":"Abonnez-vous pour continuer à utiliser Between",
     "Your trial or subscription isn't active. Start it to keep using your dashboard.":
@@ -12656,6 +12661,18 @@
   const processingEl = document.getElementById('btwProcessing');
   const crisisEl = document.getElementById('btwCrisis');
 
+  // A brief, warm confirmation when a patient sends a check-in, so the daily
+  // habit feels acknowledged. Suppressed on a risk flag (the crisis card leads).
+  function showSentToast(){
+    try{
+      var el = document.getElementById('btwSentToast');
+      if(!el){ el = document.createElement('div'); el.id = 'btwSentToast'; el.className = 'btw-sent-toast'; el.setAttribute('role','status'); el.setAttribute('aria-live','polite'); document.body.appendChild(el); }
+      el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>' + esc(t('Check-in sent')) + '</span>';
+      requestAnimationFrame(function(){ el.classList.add('show'); });
+      clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+    }catch(e){}
+  }
+
   // Body pain map in the composer, shown only for coach/trainer contexts
   // (sports, fitness, physio) on both the clinician and patient sides.
   let composeBodyMap = null;
@@ -12816,6 +12833,7 @@
       }
 
       if(risk) crisisEl.style.display = 'block';
+      else if(isPatient()) showSentToast();
 
       // reset compose form
       textEl.value = '';
