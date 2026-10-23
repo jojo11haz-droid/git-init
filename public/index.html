@@ -389,40 +389,49 @@
     padding-top:12px;
   }
   /* ---- therapist side ---- */
+  /* Caseload as a scannable vertical list: one full-width row per patient
+     (avatar · name+status · meta), grouped by colour, so "who needs me first"
+     reads top to bottom instead of a cramped horizontal scroller. */
   .btw-patient-list{
     display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding-bottom:4px;
+    flex-direction:column;
+    gap:7px;
+    max-height:440px;
+    overflow-y:auto;
+    padding:2px;
     margin-bottom:14px;
   }
   .btw-patient-card{
-    flex-shrink:0;
-    width:104px;
+    display:grid;
+    grid-template-columns:auto 1fr;
+    grid-template-rows:auto auto;
+    column-gap:12px;
+    align-items:center;
     border:1px solid var(--line);
-    border-radius:10px;
-    padding:10px;
+    border-radius:12px;
+    padding:11px 40px 11px 13px;
     cursor:pointer;
     background:var(--paper);
     position:relative;
-    transition:border-color .15s;
+    transition:border-color .15s, box-shadow .15s, background .15s;
   }
+  .btw-patient-card:hover{border-color:var(--moss);box-shadow:0 2px 10px rgba(30,76,134,.07);}
   .btw-patient-card.active{
     border-color:var(--moss);
     background:var(--moss-light);
   }
   .btw-patient-avatar{
-    width:28px;height:28px;
+    width:34px;height:34px;
     border-radius:50%;
     background:var(--moss);
     color:#fff;
     font-family:var(--font-mono);
-    font-size:11px;
+    font-size:12px;
     display:flex;align-items:center;justify-content:center;
-    margin-bottom:6px;
+    grid-row:1 / span 2;align-self:center;margin-bottom:0;
   }
-  .btw-patient-name{font-size:11.5px;font-weight:600;color:var(--ink);}
-  .btw-patient-meta{font-size:10px;color:var(--ink-soft);font-family:var(--font-mono);margin-top:2px;}
+  .btw-patient-name{grid-column:2;grid-row:1;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.2;}
+  .btw-patient-meta{grid-column:2;grid-row:2;font-size:11px;color:var(--ink-soft);font-family:var(--font-mono);margin-top:2px;}
   /* Critical-situation marker next to a patient's name. */
   .btw-risk-ico{color:var(--clay);vertical-align:-2px;flex:none;}
   .btw-risk-tag{
@@ -442,14 +451,14 @@
   }
   /* Marks a patient the clinician has kept private notes on. */
   .btw-patient-note{
-    position:absolute;bottom:8px;right:8px;
+    position:absolute;top:11px;right:34px;
     width:7px;height:7px;
     border-radius:50%;
     background:var(--moss);
   }
   .btw-patient-del{
-    position:absolute;top:3px;right:4px;
-    width:21px;height:21px;padding:0;
+    position:absolute;top:50%;transform:translateY(-50%);right:8px;
+    width:24px;height:24px;padding:0;
     border:none;background:transparent;
     color:var(--ink-soft);font-size:15px;line-height:1;
     border-radius:50%;cursor:pointer;
@@ -1810,8 +1819,8 @@
   .btw-ping.high{background:#D64545;}
   .btw-ping.none{background:var(--line);}
   /* Caseload group marker: a small labelled tag before each colour cluster. */
-  .btw-caseload-group{flex:none;align-self:center;display:flex;align-items:center;gap:6px;white-space:nowrap;padding:4px 0 4px 13px;margin-left:5px;border-left:2px solid var(--line);font-family:var(--font-mono);font-size:10px;letter-spacing:0.03em;text-transform:uppercase;color:var(--ink-soft);}
-  .btw-caseload-group:first-child{border-left:none;padding-left:0;margin-left:0;}
+  .btw-caseload-group{display:flex;align-items:center;gap:7px;white-space:nowrap;padding:12px 2px 4px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-caseload-group:first-child{padding-top:2px;}
   .btw-caseload-group .btw-ping{margin-right:0;}
   .btw-caseload-group .n{background:var(--line);border-radius:8px;padding:1px 7px;color:var(--ink);font-weight:600;}
   .btw-hero-visual{
@@ -2204,21 +2213,19 @@
     margin:0 0 18px;
   }
   .btw-add-patient-card{
-    flex-shrink:0;
-    width:104px;
+    width:auto;
     border:1px dashed var(--line);
-    border-radius:10px;
-    padding:10px;
+    border-radius:12px;
+    padding:12px;
     cursor:pointer;
     background:transparent;
     color:var(--ink-soft);
-    font-size:12px;
+    font-size:13px;
     display:flex;
-    flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:4px;
-    min-height:88px;
+    gap:7px;
+    margin-top:4px;
   }
   .btw-add-patient-card:hover{border-color:var(--moss);color:var(--moss);}
   .btw-entry-delete{
