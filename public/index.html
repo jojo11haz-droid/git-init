@@ -1919,17 +1919,129 @@
   @media (max-width:640px){
     .btw-feature{min-height:auto;padding:26px 0;}
   }
-  /* Features: every one gets a full screen to itself, revealed one at a time
-     as you scroll (the v2 "nine things, one at a time" feel). */
-  .btw-feature-grid > .btw-feature{min-height:88vh;max-width:760px;}
+  /* Features: every one gets a full screen to itself — copy on the left, a live
+     animated mockup on the right — revealing one at a time as you scroll
+     (the v2 "nine things, one at a time" feel). */
+  .btw-feature-grid > .btw-feature{
+    min-height:88vh;max-width:1080px;margin:0 auto;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:52px;align-items:center;
+  }
+  .btw-feat-copy{max-width:460px;}
   .btw-feature-grid > .btw-feature h4{font-size:clamp(34px,5.6vw,62px);line-height:1.03;letter-spacing:-.025em;margin-bottom:18px;}
-  .btw-feature-grid > .btw-feature p{font-size:clamp(16px,1.9vw,21px);max-width:34ch;}
+  .btw-feature-grid > .btw-feature p{font-size:clamp(16px,1.9vw,21px);max-width:38ch;}
   .btw-feature-grid > .btw-feature .btw-feature-icon{width:72px;height:72px;border-radius:20px;margin-bottom:28px;}
   .btw-feature-grid > .btw-feature .btw-feature-icon svg{width:34px;height:34px;}
-  @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:84vh;}}
+  .btw-feature-grid > .btw-feature:hover{transform:none;box-shadow:none;}
+  .btw-feat-viz{justify-self:center;width:100%;max-width:440px;}
+  @media (max-width:860px){
+    .btw-feature-grid > .btw-feature{grid-template-columns:1fr;gap:32px;}
+    .btw-feat-viz{justify-self:start;max-width:420px;}
+  }
+  @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:82vh;}}
   /* Features cross-dissolve into each other as you scroll (driven in JS below);
      start visible so they never get stuck hidden if scripting is off. */
   .btw-feature-grid > .btw-feature{opacity:1;will-change:opacity;}
+
+  /* ---- Feature mockups (coded, animated — the "video" feel without an mp4) ---- */
+  .btw-vc{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(15,23,32,.14);padding:20px;}
+  .btw-vc-top{display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:14px;}
+  .btw-viz-in{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s cubic-bezier(.22,.9,.3,1);}
+  .btw-viz-in.show{opacity:1;transform:none;}
+  /* 1 voice or text */
+  .btw-viz-rec{width:9px;height:9px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 4px rgba(192,57,43,.14);flex:none;}
+  .btw-viz-wave{display:flex;align-items:center;gap:4px;height:56px;margin:2px 0 14px;}
+  .btw-viz-wave i{flex:1;align-self:stretch;border-radius:3px;background:var(--moss);transform:scaleY(.3);transform-origin:center;}
+  .btw-viz-wave.go i{animation:btwWv 1.2s ease-in-out infinite;}
+  @keyframes btwWv{0%,100%{transform:scaleY(.26);}50%{transform:scaleY(1);}}
+  .btw-viz-bub{background:var(--moss-light);border-radius:14px;border-bottom-left-radius:5px;padding:12px 14px;font-size:14.5px;line-height:1.45;color:var(--ink);}
+  .btw-viz-bub .who{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:5px;}
+  /* 2 trends */
+  .btw-viz-stats{display:flex;gap:10px;margin-bottom:14px;}
+  .btw-viz-tile{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 12px;}
+  .btw-viz-tile .n{font-family:var(--font-display);font-weight:600;font-size:23px;line-height:1;font-variant-numeric:tabular-nums;}
+  .btw-viz-tile .k{font-size:10.5px;color:var(--ink-soft);margin-top:4px;}
+  .btw-viz-chart{width:100%;height:112px;display:block;}
+  .btw-viz-chart .ln{fill:none;stroke:var(--moss);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+  .btw-viz-chart .ar{fill:var(--moss);opacity:0;}
+  .btw-viz-chart .dt{fill:var(--clay);opacity:0;}
+  /* 3 privacy by default */
+  .btw-viz-prow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid var(--line);}
+  .btw-viz-prow:first-of-type{border-top:none;}
+  .btw-viz-prow .lab{font-size:14px;color:var(--ink);}
+  .btw-viz-prow .sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .btw-viz-tog{width:44px;height:26px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .4s ease;}
+  .btw-viz-tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:left .4s ease;}
+  .btw-viz-tog.on{background:var(--moss);}
+  .btw-viz-tog.on::after{left:21px;}
+  .btw-viz-lock{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:var(--moss);font-family:var(--font-mono);letter-spacing:.03em;}
+  .btw-viz-lock svg{width:13px;height:13px;flex:none;}
+  /* 4 privacy by design */
+  .btw-viz-shield{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 2px 2px;}
+  .btw-viz-shield .ring{width:74px;height:74px;border-radius:50%;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .btw-viz-shield .ring svg{width:36px;height:36px;}
+  .btw-viz-badges{display:flex;flex-direction:column;gap:9px;width:100%;}
+  .btw-viz-badge{display:flex;align-items:center;gap:11px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px;text-align:left;}
+  .btw-viz-badge .ck{width:22px;height:22px;border-radius:50%;background:var(--moss);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;}
+  .btw-viz-badge .ck svg{width:13px;height:13px;}
+  .btw-viz-badge b{display:block;} .btw-viz-badge .d{font-size:11.5px;color:var(--ink-soft);}
+  /* 5 quick to scan */
+  .btw-viz-rows{display:flex;flex-direction:column;gap:9px;}
+  .btw-viz-row{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 13px;}
+  .btw-viz-row.flag{border-color:var(--amber);box-shadow:0 4px 14px rgba(184,112,31,.14);}
+  .btw-viz-row .av{width:30px;height:30px;border-radius:50%;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11.5px;flex:none;}
+  .btw-viz-row.flag .av{background:var(--amber-bg);color:var(--amber);}
+  .btw-viz-row .nm{font-size:13.5px;flex:1;min-width:0;}
+  .btw-viz-row .nm .s{display:block;font-size:11px;color:var(--ink-soft);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .btw-viz-row .fdot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;}
+  .btw-viz-row .ago{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);flex:none;}
+  /* 6 safety net */
+  .btw-viz-crisis{border:1px solid var(--clay);border-radius:16px;background:rgba(192,57,43,.05);padding:16px;}
+  .btw-viz-crisis .ct{display:flex;align-items:center;gap:9px;color:var(--clay);font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;margin-bottom:12px;}
+  .btw-viz-crisis .ct svg{width:16px;height:16px;}
+  .btw-viz-cr{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-top:8px;}
+  .btw-viz-cr .cn{width:30px;height:30px;border-radius:9px;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;flex:none;}
+  .btw-viz-cr .cn svg{width:15px;height:15px;}
+  .btw-viz-cr b{display:block;font-size:13px;} .btw-viz-cr .s{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  /* 7 clients see their progress */
+  .btw-viz-prog .big{font-family:var(--font-display);font-weight:600;font-size:28px;line-height:1.05;margin-bottom:3px;}
+  .btw-viz-prog .cap{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;}
+  .btw-viz-spark{width:100%;height:84px;display:block;margin-bottom:14px;}
+  .btw-viz-spark .ln{fill:none;stroke:var(--moss);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+  .btw-viz-spark .ar{fill:var(--moss);opacity:0;}
+  .btw-viz-streak{display:flex;gap:6px;}
+  .btw-viz-streak i{flex:1;height:28px;border-radius:7px;background:var(--moss-light);}
+  .btw-viz-streak i.on{background:var(--moss);}
+  /* 8 fits your stack */
+  .btw-viz-stack{display:flex;flex-direction:column;gap:12px;}
+  .btw-viz-mid{display:flex;align-items:center;gap:12px;background:var(--moss);color:#fff;border-radius:13px;padding:14px 15px;}
+  .btw-viz-mid .bi{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex:none;}
+  .btw-viz-mid .bi svg{width:18px;height:18px;}
+  .btw-viz-mid b{font-size:14.5px;} .btw-viz-mid .s{font-size:11.5px;opacity:.85;display:block;margin-top:1px;}
+  .btw-viz-along{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);text-align:center;letter-spacing:.06em;}
+  .btw-viz-tools{display:flex;gap:10px;}
+  .btw-viz-tool{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:12px 8px;text-align:center;font-size:11.5px;color:var(--ink-soft);}
+  .btw-viz-tool .ti{width:30px;height:30px;border-radius:8px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;color:var(--ink-soft);}
+  .btw-viz-tool .ti svg{width:16px;height:16px;}
+  /* 9 gentle reminders */
+  .btw-viz-phone{width:220px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:28px;box-shadow:0 20px 50px rgba(15,23,32,.16);padding:16px 14px 22px;}
+  .btw-viz-phone .notch{width:72px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 18px;}
+  .btw-viz-notif{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 13px;display:flex;gap:10px;align-items:flex-start;}
+  .btw-viz-notif.go{animation:btwNotif 4.2s ease-in-out infinite;}
+  .btw-viz-notif .nic{width:30px;height:30px;border-radius:8px;background:var(--moss);color:#fff;flex:none;display:flex;align-items:center;justify-content:center;}
+  .btw-viz-notif .nic svg{width:16px;height:16px;}
+  .btw-viz-notif .nt{font-size:12px;line-height:1.4;}
+  .btw-viz-notif .nt b{display:block;font-size:12.5px;margin-bottom:2px;}
+  .btw-viz-notif .nmeta{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-soft);margin-top:5px;}
+  @keyframes btwNotif{0%,12%{opacity:0;transform:translateY(-14px) scale(.96);}22%,80%{opacity:1;transform:none;}92%,100%{opacity:0;transform:translateY(-10px) scale(.98);}}
+  @media (prefers-reduced-motion:reduce){
+    .btw-viz-wave.go i,.btw-viz-notif.go{animation:none;}
+    .btw-viz-wave i{transform:scaleY(.6);}
+    .btw-viz-in{opacity:1;transform:none;transition:none;}
+  }
+  /* The How-it-works steps now lead the "How it works" page, which already has
+     its own "How it works" eyebrow — hide the section's duplicate there. */
+  #btwViewLearn .btw-howitworks .btw-section-label{display:none;}
   /* Side nav: a dot per feature, click to jump, label on hover/active. */
   .btw-featnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:40;display:none;flex-direction:column;gap:13px;align-items:flex-end;}
   .btw-featnav.show{display:flex;}
@@ -2682,49 +2794,162 @@
         <div class="btw-section-label">Built for real practice</div>
         <div class="btw-feature-grid">
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></div>
-            <h4>Voice or text</h4>
-            <p>Your clients check in whichever way is easiest in the moment, by voice or a few words.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></div>
+              <h4>Voice or text</h4>
+              <p>Your clients check in whichever way is easiest in the moment, by voice or a few words.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-voice btw-viz-in">
+                <div class="btw-vc-top"><span class="btw-viz-rec"></span> REC · 0:12</div>
+                <div class="btw-viz-wave" aria-hidden="true"></div>
+                <div class="btw-viz-bub"><span class="who">VOICE NOTE · TRANSCRIBED</span>Couldn't switch off after work. Replayed the whole day in bed.</div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline><polyline points="15 6 21 6 21 12"></polyline></svg></div>
-            <h4>Trends &amp; advanced stats</h4>
-            <p>Real charts from real check-ins plus a deeper stats view: mood month by month, streaks and the themes that track with harder weeks.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline><polyline points="15 6 21 6 21 12"></polyline></svg></div>
+              <h4>Trends &amp; advanced stats</h4>
+              <p>Real charts from real check-ins plus a deeper stats view: mood month by month, streaks and the themes that track with harder weeks.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-trend btw-viz-in">
+                <div class="btw-viz-stats">
+                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="128">0</span></div><div class="k">check-ins</div></div>
+                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="6">0</span></div><div class="k">week streak</div></div>
+                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="92">0</span>%</div><div class="k">on time</div></div>
+                </div>
+                <div class="btw-vc-top" style="margin:2px 0 8px;">MOOD · LAST 8 WEEKS</div>
+                <svg class="btw-viz-chart" viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="ar" d=""></path>
+                  <path class="ln" d="M6,92 L50,84 L94,88 L138,66 L182,70 L226,46 L270,36 L314,20"></path>
+                  <circle class="dt" cx="314" cy="20" r="4.5"></circle>
+                </svg>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="6"></rect><circle cx="8" cy="12" r="2.6"></circle></svg></div>
-            <h4>Privacy by default</h4>
-            <p>Private and secure by default. Patients see and control their own data and AI analysis is opt-in and off.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="6"></rect><circle cx="8" cy="12" r="2.6"></circle></svg></div>
+              <h4>Privacy by default</h4>
+              <p>Private and secure by default. Patients see and control their own data and AI analysis is opt-in and off.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-priv btw-viz-in">
+                <div class="btw-vc-top">YOUR DATA · YOUR CONTROL</div>
+                <div class="btw-viz-prow"><div><div class="lab">AI summaries</div><div class="sub">Off until you turn them on</div></div><div class="btw-viz-tog" data-wiggle="1"></div></div>
+                <div class="btw-viz-prow"><div><div class="lab">Share with clinician</div><div class="sub">A short summary, with consent</div></div><div class="btw-viz-tog on"></div></div>
+                <div class="btw-viz-prow"><div><div class="lab">Export or delete anytime</div><div class="sub">It's your record</div></div><div class="btw-viz-tog on"></div></div>
+                <div class="btw-viz-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Encrypted end to end</div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
-            <h4>Privacy by design</h4>
-            <p>Built with Canadian privacy law in mind from day one, including PIPEDA and Quebec's Law 25, with consent and data controls at the core.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+              <h4>Privacy by design</h4>
+              <p>Built with Canadian privacy law in mind from day one, including PIPEDA and Quebec's Law 25, with consent and data controls at the core.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-in">
+                <div class="btw-viz-shield">
+                  <div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                  <div class="btw-viz-badges">
+                    <div class="btw-viz-badge"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span><span><b>PIPEDA</b><span class="d">Canadian federal privacy law</span></span></div>
+                    <div class="btw-viz-badge"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span><span><b>Quebec Law 25</b><span class="d">Consent and data controls built in</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-            <h4>Quick to scan</h4>
-            <p>Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
+              <h4>Quick to scan</h4>
+              <p>Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-in">
+                <div class="btw-vc-top">CASELOAD · NEEDS YOU FIRST</div>
+                <div class="btw-viz-rows">
+                  <div class="btw-viz-row flag"><span class="av">MR</span><span class="nm">M. Roy<span class="s">Flagged · low mood 3 days</span></span><span class="fdot"></span><span class="ago">2h</span></div>
+                  <div class="btw-viz-row flag"><span class="av">JL</span><span class="nm">J. Lam<span class="s">New check-in · pain up</span></span><span class="fdot"></span><span class="ago">4h</span></div>
+                  <div class="btw-viz-row"><span class="av">AP</span><span class="nm">A. Patel<span class="s">Steady this week</span></span><span class="ago">1d</span></div>
+                  <div class="btw-viz-row"><span class="av">DK</span><span class="nm">D. Kaur<span class="s">Steady this week</span></span><span class="ago">2d</span></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"></line><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"></line><line x1="14.8" y1="9.2" x2="19.1" y2="4.9"></line><line x1="4.9" y1="19.1" x2="9.2" y2="14.8"></line></svg></div>
-            <h4>Built-in safety net</h4>
-            <p>Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"></line><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"></line><line x1="14.8" y1="9.2" x2="19.1" y2="4.9"></line><line x1="4.9" y1="19.1" x2="9.2" y2="14.8"></line></svg></div>
+              <h4>Built-in safety net</h4>
+              <p>Crisis resources are shown to patients instantly if risk language is detected. They never wait on anyone.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-in">
+                <div class="btw-viz-crisis">
+                  <div class="ct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> SHOWN TO THE CLIENT INSTANTLY</div>
+                  <div class="btw-viz-cr"><span class="cn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></span><span><b>Talk Suicide Canada</b><span class="s">CALL OR TEXT 988</span></span></div>
+                  <div class="btw-viz-cr"><span class="cn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span><span><b>Text a crisis responder</b><span class="s">TEXT 686868</span></span></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
-            <h4>Clients see their progress</h4>
-            <p>Between shows each client their own recovery over time. They watch the sore spots ease week by week and the good days add up. It's the feedback loop that keeps them checking in.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+              <h4>Clients see their progress</h4>
+              <p>Between shows each client their own recovery over time. They watch the sore spots ease week by week and the good days add up. It's the feedback loop that keeps them checking in.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-prog btw-viz-in">
+                <div class="big">Better than a month ago</div>
+                <div class="cap">Your mood trend · last 6 weeks</div>
+                <svg class="btw-viz-spark" viewBox="0 0 320 84" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="ar" d=""></path>
+                  <path class="ln" d="M6,66 L58,70 L110,54 L162,58 L214,40 L266,32 L314,18"></path>
+                </svg>
+                <div class="btw-viz-streak"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></div>
-            <h4>Fits your stack</h4>
-            <p>Between does one thing well: the between-visit check-in. It works alongside whatever practice management, notes or scheduling software you already use, so there's nothing to switch and nothing to migrate. It isn't a clinic or practice-management system and it isn't trying to replace one. It just covers the part those tools leave out, the stretch between visits.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></div>
+              <h4>Fits your stack</h4>
+              <p>Between does one thing well: the between-visit check-in. It works alongside whatever practice management, notes or scheduling software you already use, so there's nothing to switch and nothing to migrate. It isn't a clinic or practice-management system and it isn't trying to replace one. It just covers the part those tools leave out, the stretch between visits.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-in">
+                <div class="btw-viz-stack">
+                  <div class="btw-viz-mid"><span class="bi"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><clipPath id="btwVizBl"><circle cx="26" cy="32" r="13"></circle></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#btwVizBl)"></circle><circle cx="26" cy="32" r="13" fill="none" stroke="#fff" stroke-width="5"></circle><circle cx="38" cy="32" r="13" fill="none" stroke="#fff" stroke-width="5"></circle></svg></span><span><b>Between</b><span class="s">The between-visit check-in</span></span></div>
+                  <div class="btw-viz-along">RUNS ALONGSIDE</div>
+                  <div class="btw-viz-tools">
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></div>Practice management</div>
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg></div>Session notes</div>
+                    <div class="btw-viz-tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>Scheduling</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="btw-feature">
-            <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
-            <h4>Gentle reminders</h4>
-            <p>Patients get an automatic nudge on their own schedule, by text or email. Nothing for you to send, no one left to chase between visits.</p>
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+              <h4>Gentle reminders</h4>
+              <p>Patients get an automatic nudge on their own schedule, by text or email. Nothing for you to send, no one left to chase between visits.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-viz-phone btw-viz-in">
+                <div class="notch"></div>
+                <div class="btw-viz-notif">
+                  <div class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+                  <div class="nt"><b>Between</b>Time for a quick check-in. How's today going?<div class="nmeta">NOW · ON YOUR SCHEDULE</div></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -6888,9 +7113,10 @@
   const allNavBtns = [navHome, navLearn, navProduct, navPricing, navGuide];
   const allViews = [viewHome, viewLearn, viewProduct, viewPricing, viewGuide];
   // Declutter Home: the in-depth marketing sections live on the "How it works"
-  // tab. Move the DOM nodes over once at load (keeps Home a quick scroll).
+  // tab. Move the DOM nodes over once at load (keeps Home a quick scroll). The
+  // "How it works" 3-step explainer belongs on that page too, so it leads it.
   if(viewLearn){
-    ['#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
+    ['.btw-howitworks', '#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
       const el = document.querySelector(sel);
       if(el) viewLearn.appendChild(el);
     });
@@ -12679,6 +12905,62 @@
       window.addEventListener('resize', fade);
       requestAnimationFrame(fade); setTimeout(fade,250); setTimeout(fade,700);
     }
+  })();
+
+  // Feature mockups: build the voice waveform, then reveal and animate each
+  // visual once as it scrolls toward the centre (count-ups, chart draws, looping
+  // motion). Scoped to the home features; no-ops gracefully under reduced motion.
+  (function(){
+    var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+    [].slice.call(document.querySelectorAll('#btwViewHome .btw-viz-wave')).forEach(function(w){
+      var hs=[5,9,14,8,16,11,20,13,9,17,12,7,15,10,18,12,8,14,11,6,13,9,16,10,7];
+      hs.forEach(function(h,i){ var b=document.createElement('i'); b.style.animationDelay=(i*0.05)+'s'; w.appendChild(b); });
+    });
+    function countUp(el){
+      var to=+el.getAttribute('data-to'); if(!isFinite(to)) return;
+      if(reduce){ el.textContent=to; return; }
+      var t0=null,d=1100;
+      function s(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/d,1), e=1-Math.pow(1-p,3); el.textContent=Math.round(e*to); if(p<1) requestAnimationFrame(s); }
+      requestAnimationFrame(s);
+    }
+    function draw(svg){
+      var ln=svg.querySelector('.ln'), ar=svg.querySelector('.ar'), dt=svg.querySelector('.dt');
+      if(!ln) return;
+      var len=0; try{ len=ln.getTotalLength(); }catch(e){}
+      if(ar){ try{
+        var vb=(svg.getAttribute('viewBox')||'0 0 320 100').split(/\s+/), h=+vb[3];
+        var dd=ln.getAttribute('d')||'';
+        var m0=dd.match(/M\s*([\d.]+)/), mN=dd.match(/([\d.]+)\s*,\s*[\d.]+\s*$/);
+        var x0=m0?m0[1]:'0', xN=mN?mN[1]:vb[2];
+        ar.setAttribute('d', dd+' L'+xN+','+h+' L'+x0+','+h+' Z');
+      }catch(e){} }
+      if(reduce || !len){ ln.style.strokeDashoffset='0'; if(ar) ar.style.opacity='.1'; if(dt) dt.style.opacity='1'; return; }
+      ln.style.strokeDasharray=len; ln.style.strokeDashoffset=len;
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        ln.style.transition='stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)'; ln.style.strokeDashoffset='0';
+        if(ar){ ar.style.transition='opacity 1.1s ease .5s'; ar.style.opacity='.1'; }
+        if(dt){ dt.style.transition='opacity .4s ease 1.3s'; dt.style.opacity='1'; }
+      }); });
+    }
+    function activate(viz){
+      if(viz.__btwOn) return; viz.__btwOn=true;
+      [].slice.call(viz.querySelectorAll('.btw-count')).forEach(countUp);
+      [].slice.call(viz.querySelectorAll('.btw-viz-chart,.btw-viz-spark')).forEach(draw);
+      if(!reduce){
+        var wave=viz.querySelector('.btw-viz-wave'); if(wave) wave.classList.add('go');
+        var notif=viz.querySelector('.btw-viz-notif'); if(notif) notif.classList.add('go');
+        var tog=viz.querySelector('.btw-viz-tog[data-wiggle]'); if(tog){ tog.classList.add('on'); setTimeout(function(){ tog.classList.remove('on'); }, 620); }
+      }
+    }
+    var vizzes=[].slice.call(document.querySelectorAll('#btwViewHome .btw-feat-viz .btw-viz-in'));
+    if(!vizzes.length) return;
+    if(reduce){ vizzes.forEach(function(v){ v.classList.add('show'); activate(v); }); return; }
+    try{
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){ if(e.isIntersecting && e.intersectionRatio>=0.35){ e.target.classList.add('show'); activate(e.target); } });
+      },{threshold:[0.35]});
+      vizzes.forEach(function(v){ io.observe(v); });
+    }catch(e){ vizzes.forEach(function(v){ v.classList.add('show'); activate(v); }); }
   })();
 </script>
 </body>
