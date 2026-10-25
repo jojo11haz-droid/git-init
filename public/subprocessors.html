@@ -43,7 +43,7 @@
   <section id="secEn">
     <div class="eyebrow" style="margin-top:6px;">Between</div>
     <h1>Subprocessors & data location</h1>
-    <div class="meta">Last updated: September 26, 2026</div>
+    <div class="meta">Last updated: October 25, 2026</div>
 
     <div class="note"><strong>Template — not legal advice.</strong> Between handles health-related information, so this page should be reviewed alongside a lawyer and kept current as providers change. It is meant to help clinicians complete their own privacy assessment, including a Quebec Law 25 privacy impact assessment (EFVP).</div>
 
@@ -54,8 +54,8 @@
       <tbody>
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">privacy</a></td>
-          <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in. Runs only when the client has opted in to AI summaries.</td>
-          <td>Check-in text, only when AI summaries are on for that client.</td>
+          <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in (only when the client has opted in to AI summaries). Also reads a document or photo a clinician uploads — to summarize an intake document, or to pull out first names when adding several patients at once.</td>
+          <td>Check-in text (only with the client's AI consent), plus any document, file or photo a clinician uploads for document review or to add patients.</td>
           <td>United States</td>
         </tr>
         <tr>
@@ -71,6 +71,12 @@
           <td>United States</td>
         </tr>
         <tr>
+          <td><strong>Twilio</strong><br><a href="https://www.twilio.com/en-us/legal/privacy">privacy</a></td>
+          <td>Sends SMS reminders to patients who have opted in to text reminders.</td>
+          <td>The patient's mobile number and the reminder message.</td>
+          <td>United States and internationally</td>
+        </tr>
+        <tr>
           <td><strong>Stripe</strong><br><a href="https://stripe.com/privacy">privacy</a></td>
           <td>Handles subscriptions and payment. Card details are entered on Stripe's own page and never reach our server.</td>
           <td>Billing details entered on Stripe's page, plus a subscription status and identifiers.</td>
@@ -78,9 +84,15 @@
         </tr>
         <tr>
           <td><strong>Render</strong><br><a href="https://render.com/privacy">privacy</a></td>
-          <td>Runs the application and the database that stores everything else.</td>
-          <td>All stored data: account details, check-in content, voice memos and photos.</td>
+          <td>Runs the application (the web server and API) that handles requests.</td>
+          <td>Data passes through the app in memory while a request is handled; the database itself is hosted by Neon (below).</td>
           <td>United States (the region selected for the service)</td>
+        </tr>
+        <tr>
+          <td><strong>Neon</strong><br><a href="https://neon.com/privacy-policy">privacy</a></td>
+          <td>Hosts the PostgreSQL database that stores everything the service keeps.</td>
+          <td>All stored data: account details, check-in content, voice memos, photos and uploaded documents.</td>
+          <td>United States (the region selected for the database)</td>
         </tr>
       </tbody>
     </table>
@@ -88,7 +100,7 @@
     <h2>What this means for your data</h2>
     <ul>
       <li>AI analysis is <strong>off by default</strong> and runs only with the client's explicit consent. If a client leaves AI off, their check-ins are never sent to Anthropic.</li>
-      <li>Voice memos and photos are stored in the database on Render and a voice memo reaches Deepgram only if the client records one.</li>
+      <li>Voice memos and photos are stored in the database on Neon and a voice memo reaches Deepgram only if the client records one.</li>
       <li>We do not sell data and we do not use it to train AI models.</li>
       <li>A client can see, correct and delete their own data at any time.</li>
       <li>Because this can involve storing and processing personal information in the United States, outside Quebec and outside Canada, we take applicable cross-border requirements into account under Canadian privacy law, including the federal PIPEDA and Quebec's Law 25.</li>
@@ -102,7 +114,7 @@
   <section id="secFr" hidden>
     <div class="eyebrow" style="margin-top:6px;">Between</div>
     <h1>Sous-traitants et lieu de traitement</h1>
-    <div class="meta">Dernière mise à jour : 26 septembre 2026</div>
+    <div class="meta">Dernière mise à jour : 25 octobre 2026</div>
 
     <div class="note"><strong>Modèle — ne constitue pas un avis juridique.</strong> Between traite des renseignements liés à la santé, alors cette page devrait être revue avec un avocat et tenue à jour à mesure que les fournisseurs changent. Elle vise à aider les cliniciens à réaliser leur propre évaluation, dont une évaluation des facteurs relatifs à la vie privée (EFVP) sous la loi 25 du Québec.</div>
 
@@ -113,8 +125,8 @@
       <tbody>
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">confidentialité</a></td>
-          <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi. Ne s'exécute que si le client a activé les résumés IA.</td>
-          <td>Le texte du suivi, uniquement quand les résumés IA sont activés pour ce client.</td>
+          <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi (uniquement si le client a activé les résumés IA). Lit aussi un document ou une photo qu'un clinicien téléverse — pour résumer un document d'accueil, ou pour en extraire des prénoms lors de l'ajout de plusieurs patients à la fois.</td>
+          <td>Le texte du suivi (uniquement avec le consentement IA du client), ainsi que tout document, fichier ou photo qu'un clinicien téléverse pour l'analyse de document ou pour ajouter des patients.</td>
           <td>États-Unis</td>
         </tr>
         <tr>
@@ -130,6 +142,12 @@
           <td>États-Unis</td>
         </tr>
         <tr>
+          <td><strong>Twilio</strong><br><a href="https://www.twilio.com/en-us/legal/privacy">confidentialité</a></td>
+          <td>Envoie des rappels par SMS aux patients qui ont accepté les rappels texte.</td>
+          <td>Le numéro de mobile du patient et le message de rappel.</td>
+          <td>États-Unis et à l'international</td>
+        </tr>
+        <tr>
           <td><strong>Stripe</strong><br><a href="https://stripe.com/privacy">confidentialité</a></td>
           <td>Gère les abonnements et le paiement. Les détails de carte sont saisis sur la page de Stripe et n'atteignent jamais notre serveur.</td>
           <td>Les détails de facturation saisis sur la page de Stripe, plus un statut d'abonnement et des identifiants.</td>
@@ -137,9 +155,15 @@
         </tr>
         <tr>
           <td><strong>Render</strong><br><a href="https://render.com/privacy">confidentialité</a></td>
-          <td>Héberge l'application et la base de données qui stocke tout le reste.</td>
-          <td>Toutes les données stockées : renseignements de compte, contenu des suivis, notes vocales et photos.</td>
+          <td>Exécute l'application (le serveur web et l'API) qui traite les requêtes.</td>
+          <td>Les données transitent par l'application en mémoire le temps de traiter une requête ; la base de données elle-même est hébergée par Neon (ci-dessous).</td>
           <td>États-Unis (la région choisie pour le service)</td>
+        </tr>
+        <tr>
+          <td><strong>Neon</strong><br><a href="https://neon.com/privacy-policy">confidentialité</a></td>
+          <td>Héberge la base de données PostgreSQL qui stocke tout ce que le service conserve.</td>
+          <td>Toutes les données stockées : renseignements de compte, contenu des suivis, notes vocales, photos et documents téléversés.</td>
+          <td>États-Unis (la région choisie pour la base de données)</td>
         </tr>
       </tbody>
     </table>
@@ -147,7 +171,7 @@
     <h2>Ce que cela signifie pour vos données</h2>
     <ul>
       <li>L'analyse par IA est <strong>désactivée par défaut</strong> et ne s'exécute qu'avec le consentement explicite du client. Si un client laisse l'IA désactivée, ses suivis ne sont jamais envoyés à Anthropic.</li>
-      <li>Les notes vocales et les photos sont stockées dans la base de données sur Render, et une note vocale n'atteint Deepgram que si le client en enregistre une.</li>
+      <li>Les notes vocales et les photos sont stockées dans la base de données sur Neon, et une note vocale n'atteint Deepgram que si le client en enregistre une.</li>
       <li>Nous ne vendons pas les données et nous ne les utilisons pas pour entraîner des modèles d'IA.</li>
       <li>Un client peut consulter, corriger et supprimer ses propres données en tout temps.</li>
       <li>Comme cela peut impliquer le stockage et le traitement de renseignements personnels aux États-Unis, hors du Québec et hors du Canada, nous tenons compte des exigences applicables en matière de transferts sous les lois canadiennes sur la vie privée, dont la LPRPDE fédérale et la loi 25 du Québec.</li>
