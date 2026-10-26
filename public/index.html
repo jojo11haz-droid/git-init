@@ -4267,6 +4267,8 @@
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
     "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.":
       "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local.",
+    "If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away — don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).":
+      "Si vous ressentez une douleur intense, êtes blessé ou vivez une urgence médicale, composez le 911 ou consultez sans tarder — n'attendez pas après cette application. Si vous êtes en détresse ou pensez à vous faire du mal, vous pouvez joindre le 988 (Ligne d'aide en cas de crise suicidaire).",
     "Your therapist has also been notified.":"Votre thérapeute a aussi été avisé.",
     "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
       "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
@@ -7036,6 +7038,43 @@
     }
   }
 
+  // Field-aware emergency copy. Mental-health fields keep the suicide-specific
+  // crisis wording; physical ("muscle") fields lead with a medical-emergency
+  // message (911 / urgent care) and keep a crisis line as a safety net. Sets
+  // the static disclaimers directly (the risk-triggered check-in banner is
+  // built in its own place); called at the end of translateStatic so it wins
+  // over the generic text-node translation.
+  function applyCrisisCopy(){
+    var phys = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+    var fr = (curLang === 'fr');
+    var urgent, modal, paywall;
+    if(phys){
+      if(fr){
+        urgent  = "Between n'est pas pour les problèmes urgents, médicaux ou d'urgence. En cas de douleur intense ou si vous avez besoin d'aide maintenant, composez le 911 ou consultez sans tarder.";
+        modal   = "Between n'est pas un service de crise, médical ou d'urgence. En cas de douleur intense, de blessure ou d'urgence médicale, composez le <strong>911</strong> ou consultez sans tarder. Si vous êtes en détresse ou pensez à vous faire du mal, composez le <strong>988</strong> (Ligne d'aide en cas de crise suicidaire). N'attendez pas après cette application.";
+        paywall = "Ce n'est pas un service de crise ni médical. En cas de douleur intense, de blessure ou d'urgence médicale, composez le <strong>911</strong> ou consultez sans tarder. Si vous êtes en détresse, vous pouvez aussi joindre le <strong>988</strong> (Ligne d'aide en cas de crise suicidaire). Toujours accessible, avec ou sans abonnement.";
+      } else {
+        urgent  = "Between isn't for urgent, medical or emergency issues. If you're in severe pain or need help right now, call 911 or seek urgent care.";
+        modal   = "Between is not a crisis, medical or emergency service. If you're in severe pain, injured, or it's a medical emergency, call <strong>911</strong> or seek urgent care right away. If you're in distress or thinking about harming yourself, contact <strong>988</strong> (Suicide &amp; Crisis Helpline). Don't wait on this app.";
+        paywall = "This isn't a crisis or medical service. If you're in severe pain, injured, or it's a medical emergency, call <strong>911</strong> or seek urgent care. If you're in distress, you can also reach <strong>988</strong> (Suicide &amp; Crisis Lifeline). This is always available, subscription or not.";
+      }
+    } else {
+      if(fr){
+        urgent  = "Between n'est pas pour les situations urgentes ou d'urgence. Si vous avez besoin d'aide maintenant, composez le 988 ou le 911.";
+        modal   = "Between n'est pas un service de crise ou d'urgence. Si vous êtes en danger immédiat ou pensez au suicide, composez le <strong>988</strong> (Ligne d'aide en cas de crise suicidaire du Canada) ou le <strong>911</strong>, n'attendez pas après cette application.";
+        paywall = "Ce n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, composez le <strong>988</strong> (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local. Toujours accessible, avec ou sans abonnement.";
+      } else {
+        urgent  = "Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.";
+        modal   = "Between is not a crisis or emergency service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Canada Suicide Crisis Helpline) or <strong>911</strong>, don't wait on this app.";
+        paywall = "This isn't a crisis service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Suicide &amp; Crisis Lifeline) or your local emergency number. This is always available, subscription or not.";
+      }
+    }
+    var setHtml = function(el, html){ if(el) el.innerHTML = html; };
+    setHtml(document.getElementById('btwUrgentNote'), urgent);
+    setHtml(document.querySelector('.btw-modal-crisis'), modal);
+    setHtml(document.getElementById('btwPaywallCrisis'), paywall);
+  }
+
   // The demo check-in box is a <textarea>: once its .value is set (its dirty
   // flag), mutating the child text node no longer changes what's shown, so the
   // example would stick on whichever audience rendered first. Track the last
@@ -7115,6 +7154,7 @@
     if(_recEl) _recEl.style.display = (['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(curAudience) >= 0) ? '' : 'none';
     renderHeroThread();
     try{ renderFeatureVisuals(); }catch(e){}
+    try{ applyCrisisCopy(); }catch(e){}
     applyCurrency();
     updatePriceModeLabels();
     // Reseed the demo check-in box for this audience/language (see _mkSeed).
@@ -9156,9 +9196,15 @@
     if(proc) proc.textContent = patient ? t('Saving your check-in…') : t('Summarizing for your therapist…');
     const crisisBox = document.getElementById('btwCrisis');
     if(crisisBox){
-      const lead = t("This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.");
+      // Physical / "muscle" fields lead with a medical-emergency message (911 /
+      // urgent care) and keep a crisis line as a safety net; mental-health
+      // fields keep the suicide-specific wording.
+      const _physAud = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+      const lead = _physAud
+        ? t("If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away — don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).")
+        : t("This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.");
       const full = patient ? lead : (lead + ' ' + t('Your therapist has also been notified.'));
-      crisisBox.innerHTML = full.replace('988', '<strong>988</strong>');
+      crisisBox.innerHTML = full.replace('988', '<strong>988</strong>').replace('911', '<strong>911</strong>');
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_state.dart';
+import 'discipline.dart';
 import 'strings.dart';
 
 /// Between's palette — matched to the betweenpsych.com website so the app and
@@ -177,11 +178,20 @@ class CrisisFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = context.watch<AppState>().s;
+    final app = context.watch<AppState>();
+    final s = app.s;
+    // Pick field-appropriate emergency copy: physical ("muscle") disciplines
+    // lead with a medical-emergency message; mental-health ones keep the
+    // suicide-specific wording. Before sign-in (no patient, no preview) we
+    // default to the mental wording. Respects the settings preview override.
+    final profile = app.previewCategory != null
+        ? profileByKey(app.previewCategory!)
+        : (app.patient != null ? profileFor(app.patient!) : null);
+    final physical = profile != null && isPhysicalKind(profile.kind);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Text(
-        s.crisisFooter,
+        physical ? s.crisisFooterPhysical : s.crisisFooter,
         textAlign: TextAlign.center,
         style: const TextStyle(
             fontSize: 12.5, color: BtwColors.inkSoft, height: 1.5),

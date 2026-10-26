@@ -18,6 +18,11 @@ class DisciplineProfile {
   bool get isBody => kind == CheckInKind.body;
 }
 
+/// Physical / "muscle" disciplines (vs. mental-health ones). Used to pick
+/// field-appropriate emergency copy, mirroring the website.
+bool isPhysicalKind(CheckInKind k) =>
+    k == CheckInKind.body || k == CheckInKind.nutrition;
+
 const _mindThemes = [
   'Sleep', 'Work', 'Mood', 'Anxiety', 'Relationships', 'Family', 'Win', 'Social',
 ];
