@@ -1626,6 +1626,9 @@
   @media (max-width:460px){.btw-chooser-card{flex-basis:100%;}}
   .btw-chooser-card:hover{border-color:var(--moss);box-shadow:0 6px 16px rgba(30,76,134,.10);}
   .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);}
+  /* First-visit gate: show only the chooser until the visitor picks a field. */
+  .btw-home.btw-gated > *:not(.btw-chooser){display:none !important;}
+  .btw-audnow.gated .forpfx{display:none;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
@@ -2572,7 +2575,7 @@
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
-      <span class="btw-audnow" id="btwAudNow">For: <strong id="btwAudSelLabel">Psychotherapist</strong></span>
+      <span class="btw-audnow" id="btwAudNow"><span class="forpfx">For: </span><strong id="btwAudSelLabel">Psychotherapist</strong></span>
       <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
         <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
         <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
@@ -4026,7 +4029,7 @@
     "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Occupational therapy":"Ergothérapie","Daily function and recovery between visits":"Fonction au quotidien et récupération entre les visites","Neuropsychology":"Neuropsychologie","Neuropsychologist":"Neuropsychologue","Neuropsychologists":"Neuropsychologues","Focus, memory and mood between sessions":"Concentration, mémoire et humeur entre les séances","Guidance":"Orientation","Classroom":"Classe",
     "Mind":"Esprit","Body":"Corps","Sport":"Sport","Eating":"Alimentation",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
-    "For:":"Pour :",
+    "For:":"Pour :","Choose your field":"Choisissez votre domaine",
     "Who's it for?":"Pour qui ?",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
     "Mood check-ins between sessions":"Des suivis d'humeur entre les séances",
@@ -4694,6 +4697,7 @@
       "Patient ajouté. Ouvrez sa fiche et touchez « Voir les données du patient et les réglages IA » → « Copier le message d'invitation » pour lui envoyer un lien d'inscription.",
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
+    "Update payment method":"Modifier le mode de paiement","Opening…":"Ouverture…",
     "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Current":"Actuel","Switch":"Changer","Switch to this plan?":"Passer à ce forfait ?",
     "Choose":"Choisir","Choose your plan":"Choisissez votre forfait",
@@ -4800,6 +4804,7 @@
 
   let curLang = 'en';
   let curAudience = 'therapy';        // 'therapy' | 'sports' | 'recovery' | 'schools' — marketing copy only
+  let _homeGated = false;             // first visit with no known field: show only the chooser until one is picked
   let curSchoolMode = 'guidance';     // within Schools: 'guidance' (counsellor) | 'classroom' (teacher)
   // Within the individual field: what a solo user tracks. Each maps to the
   // check-in style of an existing discipline, so "Body" gets a pain body map,
@@ -7203,7 +7208,7 @@
   const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physiotherapist', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychologist', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
-    if(lbl) lbl.textContent = t(AUD_LABEL[curAudience] || 'Therapy');
+    if(lbl) lbl.textContent = _homeGated ? t('Choose your field') : t(AUD_LABEL[curAudience] || 'Therapy');
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
   const AUD_TO_PATH = { therapy:'/', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
@@ -7249,6 +7254,21 @@
       const td = document.querySelector('meta[name="twitter:description"]'); if(td) td.setAttribute('content', m.desc);
     } catch(e){}
   }
+  // First-visit gate: with no field known, the home page shows only the chooser
+  // and nothing is pre-selected, so the visitor picks their field first. A
+  // remembered or URL field skips the gate; picking any field clears it.
+  function setHomeGate(on){
+    _homeGated = !!on;
+    const home = document.querySelector('#btwViewHome .btw-home');
+    if(home) home.classList.toggle('btw-gated', _homeGated);
+    const now = document.getElementById('btwAudNow');
+    if(now) now.classList.toggle('gated', _homeGated);
+    if(_homeGated){
+      document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.remove('active'));
+      const lbl = document.getElementById('btwAudSelLabel'); if(lbl) lbl.textContent = t('Choose your field');
+    }
+  }
   function setAudience(a, opts){
     // A signed-in account is locked to its own field: ignore any request to
     // switch away (dropdown, chooser card, or a field URL) and keep it pinned.
@@ -7258,6 +7278,7 @@
     try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
+    if(_homeGated) setHomeGate(false);
     updateSchoolModeUI();
     updateIndividualModeUI();
     translateStatic();
@@ -9674,6 +9695,18 @@
           await changePlan(plan);
           openBilling();
         });
+      });
+    }
+    // Update card / view invoices on Stripe's hosted portal — shown whenever a
+    // subscription (and so a Stripe customer) exists. insertAdjacentHTML keeps
+    // the listeners already bound above.
+    if(st === 'active' || st === 'trialing' || st === 'canceling'){
+      body.insertAdjacentHTML('beforeend', '<button id="btwBillingPortal" style="margin-top:14px;' + LINK_BTN + '">' + esc(t('Update payment method')) + '</button>');
+      const portalBtn = body.querySelector('#btwBillingPortal');
+      if(portalBtn) portalBtn.addEventListener('click', async ()=>{
+        portalBtn.disabled = true; const label = portalBtn.textContent; portalBtn.textContent = t('Opening…');
+        try{ const r = await api('POST', '/api/auth/billing-portal'); if(r && r.url){ window.location.href = r.url; } else { throw new Error('No portal URL'); } }
+        catch(e){ alert(e.message); portalBtn.disabled = false; portalBtn.textContent = label; }
       });
     }
     const cancel = body.querySelector('#btwClinCancel');
@@ -13150,9 +13183,14 @@
   // Default landing field is psychotherapy when the visitor has no explicit
   // field: an explicit /field URL, a ?for= link, a signed-in account and a
   // previously-chosen (remembered) field all still win over this default.
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); _startAud = (s === 'individual' || s === 'sports' || s === 'recovery' || s === 'schools' || s === 'fitness' || s === 'physio' || s === 'kinesiology' || s === 'osteo' || s === 'occupational' || s === 'neuropsych' || s === 'nutrition' || s === 'therapy') ? s : 'therapy'; } } catch(e){}
-  curAudience = (_startAud === 'individual' || _startAud === 'sports' || _startAud === 'recovery' || _startAud === 'schools' || _startAud === 'fitness' || _startAud === 'physio' || _startAud === 'kinesiology' || _startAud === 'osteo' || _startAud === 'occupational' || _startAud === 'neuropsych' || _startAud === 'nutrition') ? _startAud : 'therapy';
-  try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
+  // A remembered field wins (a returning visitor lands back on their field).
+  // Only when NOTHING is known — no field URL, no ?for=, no remembered choice —
+  // do we start gated on the chooser so the visitor picks their field first.
+  var _VALID_AUD = ['individual','sports','recovery','schools','fitness','physio','kinesiology','osteo','occupational','neuropsych','nutrition','therapy'];
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); if (_VALID_AUD.indexOf(s) >= 0) _startAud = s; } } catch(e){}
+  _homeGated = (_startAud === null);
+  curAudience = (_startAud && _VALID_AUD.indexOf(_startAud) >= 0) ? _startAud : 'therapy';
+  if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); } catch(e){} }
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
   // without adding a history entry and set the tab title/meta to match.
   syncUrlForAudience(false);
@@ -13160,6 +13198,7 @@
   document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   syncAudSelLabel();
+  if(_homeGated) setHomeGate(true);
   try {
     const modeParam = (new URLSearchParams(location.search).get('mode') || '').toLowerCase();
     if(['classroom','teacher','class'].includes(modeParam)) curSchoolMode = 'classroom';

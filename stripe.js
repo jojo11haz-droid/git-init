@@ -130,6 +130,15 @@ export async function setSubscriptionCancelAtPeriodEnd(subscriptionId, cancel) {
   });
 }
 
+// A Stripe-hosted page where the customer updates their card, sees invoices and
+// manages their subscription. We never see or store card details ourselves.
+export async function createBillingPortalSession(customerId, returnUrl) {
+  return stripeRequest('POST', '/v1/billing_portal/sessions', {
+    customer: customerId,
+    return_url: returnUrl
+  });
+}
+
 // Verifies a Stripe webhook signature (the Stripe-Signature header) against the
 // raw request body using the webhook signing secret. Returns the parsed event,
 // or throws if the signature is missing/stale/invalid.
