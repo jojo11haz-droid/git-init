@@ -50,7 +50,8 @@ import {
 import { rateLimit } from './rate-limit.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
-  retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice
+  retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
+  createBillingPortalSession
 } from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1415,6 +1416,23 @@ app.post('/api/auth/subscription/cancel', requireDb, requireAuth, async (req, re
   } catch (err) {
     console.error('Error changing clinician subscription:', err);
     res.status(500).json({ error: 'Could not update your subscription.' });
+  }
+});
+
+// Open the Stripe billing portal so the clinician can update their card, see
+// invoices or manage their plan. Returns a one-time URL to redirect to. Card
+// details are only ever handled on Stripe's own page, never on our server.
+app.post('/api/auth/billing-portal', requireDb, requireAuth, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.status(400).json({ error: 'Billing is not enabled on this server.' });
+    const s = await getClinicianStripe(req.clinician.id);
+    if (!s || !s.stripe_customer_id) return res.status(400).json({ error: 'No billing account on file yet. Start a subscription first.' });
+    const origin = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
+    const session = await createBillingPortalSession(s.stripe_customer_id, origin + '/');
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Error opening billing portal:', err);
+    res.status(500).json({ error: 'Could not open the billing portal.' });
   }
 });
 
