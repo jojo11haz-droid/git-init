@@ -1620,11 +1620,11 @@
   .btw-home.btw-gated .btw-chooser{
     margin-top:30px;padding:36px 30px 30px;border-radius:26px;
     background:
-      radial-gradient(130% 80% at 12% -12%, rgba(30,76,134,.07), transparent 58%),
-      radial-gradient(150% 95% at 110% 118%, rgba(30,76,134,.11), transparent 55%),
-      linear-gradient(180deg,#FCFCFB 0%, var(--paper) 100%);
+      radial-gradient(130% 80% at 12% -12%, var(--moss-light), transparent 60%),
+      radial-gradient(150% 95% at 110% 118%, var(--moss-light), transparent 58%),
+      linear-gradient(180deg, var(--panel) 0%, var(--paper) 100%);
     border:1px solid var(--line);
-    box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 30px 72px -42px rgba(30,76,134,.5);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 30px 72px -42px rgba(20,23,26,.45);
   }
   .btw-chooser-head{text-align:center;margin-bottom:14px;}
   .btw-chooser-title{font-family:var(--font-display);font-style:italic;font-size:27px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);margin:0;}
@@ -1632,12 +1632,16 @@
   /* Flex-wrap (not a rigid grid) so an incomplete last row centres instead of
      leaving a card stranded on the left. Three per row, fixed width, no grow. */
   .btw-chooser-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
-  .btw-chooser-card{flex:0 0 calc(33.333% - 8px);min-width:0;display:flex;flex-direction:column;gap:5px;text-align:left;padding:15px 16px 16px;border:1px solid var(--line);border-radius:15px;background:#fff;cursor:pointer;font-family:var(--font-body);position:relative;overflow:hidden;transition:border-color .2s ease,box-shadow .25s ease,background .2s ease,transform .22s cubic-bezier(.22,.9,.3,1);}
+  .btw-chooser-card{flex:0 0 calc(33.333% - 8px);min-width:0;display:flex;flex-direction:column;gap:5px;text-align:left;padding:15px 16px 16px;border:1px solid var(--line);border-radius:15px;background:var(--panel);cursor:pointer;font-family:var(--font-body);position:relative;overflow:hidden;transition:border-color .2s ease,box-shadow .25s ease,background .2s ease,transform .22s cubic-bezier(.22,.9,.3,1);}
   @media (max-width:820px){.btw-chooser-card{flex-basis:calc(50% - 6px);}}
   @media (max-width:460px){.btw-chooser-card{flex-basis:100%;}}
   /* Per-field illustration badge (generated image injected in JS; a line icon
      is the fallback if the image can't load). */
-  .btw-chooser-card .ic{width:70px;height:70px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff,#EEF2F8);color:var(--moss);margin-bottom:6px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(30,76,134,.08);transition:transform .25s cubic-bezier(.22,.9,.3,1),box-shadow .2s ease;}
+  /* The chip stays light in both themes (the cutout illustrations have light
+     subjects + a soft white halo, so they need a light backing). The fallback
+     line icon uses a fixed dark moss so it reads on that light chip in dark
+     mode too (var(--moss) goes light in dark mode and would wash out). */
+  .btw-chooser-card .ic{width:70px;height:70px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#FFFFFF,#E9EEF6);color:#1E4C86;margin-bottom:6px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(30,76,134,.10);transition:transform .25s cubic-bezier(.22,.9,.3,1),box-shadow .2s ease;}
   .btw-chooser-card .ic svg{width:30px;height:30px;display:block;}
   .btw-chooser-card .ic-img{width:100%;height:100%;object-fit:contain;display:block;}
   .btw-chooser-card:hover{border-color:var(--moss);box-shadow:0 12px 28px -14px rgba(30,76,134,.42);transform:translateY(-3px);}
