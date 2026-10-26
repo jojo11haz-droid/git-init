@@ -1020,6 +1020,12 @@
     #btwCaseloadControls .btw-role-toggle{flex-wrap:wrap;width:100%;flex:1 1 100%;}
     #btwCaseloadControls .btw-role-btn{flex:1 1 auto;}
   }
+  /* Caseload search box: filter the patient list by name. */
+  .btw-patient-search{flex:1 1 100%;position:relative;display:flex;align-items:center;}
+  .btw-patient-search-ico{position:absolute;left:11px;width:15px;height:15px;color:var(--ink-soft);pointer-events:none;}
+  #btwPatientSearch{width:100%;box-sizing:border-box;padding:8px 12px 8px 33px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-family:var(--font-body);font-size:13px;transition:border-color .15s ease,box-shadow .15s ease;}
+  #btwPatientSearch::placeholder{color:var(--ink-soft);}
+  #btwPatientSearch:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 3px rgba(30,76,134,.12);}
   /* Patient dashboard: hide the therapist-only caseload controls. */
   .btw-role-patient #btwPatientList,
   .btw-role-patient #btwCaseloadControls,
@@ -3341,6 +3347,10 @@
       </div>
 
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+        <div class="btw-patient-search">
+          <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input id="btwPatientSearch" type="search" autocomplete="off" placeholder="Search patients" aria-label="Search patients">
+        </div>
         <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
         <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
           <button type="button" class="btw-role-btn active" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
@@ -4743,6 +4753,7 @@
     "across":"sur","patient":"patient","patients":"patients","No check-ins yet":"Aucun suivi pour l'instant",
     "Nothing needs attention right now.":"Rien ne requiert votre attention pour l'instant.",
     "No patients in this category right now.":"Aucun patient dans cette catégorie pour l'instant.",
+    "No patients match your search.":"Aucun patient ne correspond à votre recherche.",
     "Gone quiet":"Devenus silencieux","No check-in in the last few days":"Aucun suivi depuis quelques jours",
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
     "AI reads":"L'IA perçoit","Between estimates":"Between estime",
@@ -4855,6 +4866,7 @@
   const heroIndividualFr = 'Ce qui se passe<br><em>entre</em> vos bons<br>et mauvais jours ne<br>devrait pas rester un mystère.';
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
+    btwPatientSearch:'Rechercher un patient',
     btwLoginPassword:'Votre mot de passe',
     btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
@@ -7638,6 +7650,12 @@
       renderPatientList();
     });
   });
+  // Caseload name search: filter the patient list as you type.
+  (function(){
+    const si = document.getElementById('btwPatientSearch');
+    if(!si) return;
+    si.addEventListener('input', ()=>{ caseloadSearch = si.value || ''; renderPatientList(); });
+  })();
   // Interactive patient-view mockup: dragging the mood slider updates the pill
   // and shows Between's read of how you're feeling, so the landing page demos a
   // live check-in instead of a static screenshot. Bilingual via curLang.
@@ -11856,6 +11874,7 @@
   }
 
   let caseloadFilter = 'all'; // 'all' | 'mid' (yellow) | 'good' (green) | 'high' (red)
+  let caseloadSearch = ''; // name filter typed into the caseload search box
   // Needs attention: a safety flag, unreviewed new check-ins, or a persistently
   // low last mood (matches the red status ping so the tab never hides a red dot).
   function needsAttention(p){ return p.has_recent_risk || (p.new_check_in_count||0) > 0 || (p.last_mood != null && p.last_mood <= 3); }
@@ -12007,6 +12026,12 @@
     if(colorFilter){
       list = state.patients.filter(p=> patientColor(p) === colorFilter);
     }
+    // Name search: filter by display name, case-insensitive, on top of the
+    // status filter so the two work together.
+    const _q = caseloadSearch.trim().toLowerCase();
+    if(_q){
+      list = list.filter(p=> (p.display_name||'').toLowerCase().indexOf(_q) >= 0);
+    }
     function cardHtml(p){
       const active = p.id === state.selectedPatientId;
       const left = !!p.left_at;
@@ -12021,7 +12046,7 @@
     }
     let cards;
     if(list.length === 0){
-      cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(t('No patients in this category right now.'))+'</div>';
+      cards = '<div style="padding:14px 2px;font-size:12.5px;color:var(--ink-soft);">'+esc(_q ? t('No patients match your search.') : t('No patients in this category right now.'))+'</div>';
     } else if(colorFilter){
       // A single colour is picked, so the slider already names the category —
       // show the cards without repeating a group header.
