@@ -1023,9 +1023,10 @@
   /* Caseload search box: filter the patient list by name. */
   .btw-patient-search{flex:1 1 100%;position:relative;display:flex;align-items:center;}
   .btw-patient-search-ico{position:absolute;left:11px;width:15px;height:15px;color:var(--ink-soft);pointer-events:none;}
-  #btwPatientSearch{width:100%;box-sizing:border-box;padding:8px 12px 8px 33px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-family:var(--font-body);font-size:13px;transition:border-color .15s ease,box-shadow .15s ease;}
-  #btwPatientSearch::placeholder{color:var(--ink-soft);}
-  #btwPatientSearch:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 3px rgba(30,76,134,.12);}
+  #btwPatientSearch,#btwMkSearch{width:100%;box-sizing:border-box;padding:8px 12px 8px 33px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-family:var(--font-body);font-size:13px;transition:border-color .15s ease,box-shadow .15s ease;}
+  #btwPatientSearch::placeholder,#btwMkSearch::placeholder{color:var(--ink-soft);}
+  #btwPatientSearch:focus,#btwMkSearch:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 3px rgba(30,76,134,.12);}
+  .btw-mk-search{margin:2px 0 9px;}
   /* "Copy summary for EMR" button under the digest (clinician review view). */
   .btw-emr-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:7px 12px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;transition:background .15s ease,color .15s ease;}
   .btw-emr-btn:hover{background:var(--moss-light);}
@@ -2883,6 +2884,10 @@
               <div class="btw-shot-body">
                 <div class="btw-shot-label">Caseload</div>
                 <div class="btw-mk-caption" id="btwMkCaseHint">Tap a client to see their read.</div>
+                <div class="btw-patient-search btw-mk-search">
+                  <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input id="btwMkSearch" type="search" autocomplete="off" placeholder="Search patients" aria-label="Search patients">
+                </div>
                 <div class="btw-mk-row flag active" data-pt="amy"><span class="btw-mk-flagdot"></span><span class="btw-mk-avatar">A</span><span class="btw-mk-name">Amy</span><span class="btw-mk-badge">2 new</span></div>
                 <div class="btw-mk-row" data-pt="ben"><span class="btw-mk-avatar">B</span><span class="btw-mk-name">Ben</span><span class="btw-mk-badge">1 new</span></div>
                 <div class="btw-mk-row" data-pt="cara"><span class="btw-mk-avatar">C</span><span class="btw-mk-name">Cara</span><span style="font-size:11px;color:var(--ink-soft);">quiet</span></div>
@@ -2903,6 +2908,10 @@
                   </div>
                 </div>
                 <div class="btw-mk-statslink">View advanced stats <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+                <button type="button" id="btwMkCopyEmr" class="btw-emr-btn" style="margin-top:12px;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>Copy summary for EMR</span>
+                </button>
               </div>
             </div>
             <div class="btw-shot-cap">What you see: your whole caseload at a glance, with each client's trends ready before the session.</div>
@@ -4891,6 +4900,7 @@
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwPatientSearch:'Rechercher un patient',
+    btwMkSearch:'Rechercher un patient',
     btwLoginPassword:'Votre mot de passe',
     btwLoginMfaCode:"Code à 6 chiffres de votre application d'authentification",
     btwText:'Écrivez, ou touchez le micro pour enregistrer et transcrire...',
@@ -8091,6 +8101,35 @@
       animateTrend(p.ys);
     }
     rows.forEach(r => r.addEventListener('click', ()=>{ cur = r.getAttribute('data-pt'); render(); }));
+    // Caseload search — mirrors the live dashboard: filter the rows by name.
+    const search = document.getElementById('btwMkSearch');
+    if(search){
+      search.addEventListener('input', ()=>{
+        const q = (search.value || '').trim().toLowerCase();
+        rows.forEach(r=>{
+          const nm = ((r.querySelector('.btw-mk-name') || {}).textContent || '').toLowerCase();
+          r.style.display = (!q || nm.indexOf(q) >= 0) ? '' : 'none';
+        });
+      });
+    }
+    // "Copy summary for EMR" — mirrors the live dashboard: copy a paste-ready
+    // note of the selected client's read.
+    const emrBtn = document.getElementById('btwMkCopyEmr');
+    if(emrBtn){
+      emrBtn.addEventListener('click', async ()=>{
+        const name = (sumLabel ? sumLabel.textContent : '').replace(/^AI summary · /, '').replace(/^Résumé IA · /, '');
+        const note = L({en:'Between — between-session check-in summary', fr:'Between — résumé des suivis entre les séances'})
+          + '\n' + (FR() ? 'Patient : ' : 'Patient: ') + name
+          + '\n\n' + (sumText ? sumText.textContent : '')
+          + '\n\n' + L({en:'Generated by Between (betweenpsych.com). Shared with patient consent. Not a clinical or crisis record.', fr:'Généré par Between (betweenpsych.com). Partagé avec le consentement du patient. N\'est pas un dossier clinique ou de crise.'});
+        let ok = false;
+        try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(note); ok = true; } }catch(e){}
+        if(!ok){ try{ const ta=document.createElement('textarea'); ta.value=note; ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e){} }
+        const span = emrBtn.querySelector('span');
+        if(ok && span){ const o = span.textContent; span.textContent = FR() ? 'Copié ✓' : 'Copied ✓'; emrBtn.disabled = true; setTimeout(()=>{ span.textContent = o; emrBtn.disabled = false; }, 1600); }
+        else if(!ok){ window.prompt(FR() ? 'Copiez ce résumé, puis collez-le dans votre DME :' : 'Copy this summary, then paste it into your EMR:', note); }
+      });
+    }
     window.__btwTherapistRefresh = render; // re-localize on language switch
     render();
   })();
