@@ -7275,7 +7275,10 @@
     const _locked = accountAudience();
     if(_locked) a = _locked;
     curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'occupational' || a === 'neuropsych' || a === 'nutrition') ? a : 'therapy';
-    try { localStorage.setItem('btw_audience', curAudience); } catch(e){}
+    // btw_field = "a field was actually chosen" (gate reads this). btw_audience
+    // is the legacy key the pre-gate build wrote on every load (even the
+    // default), so it can't tell a real pick from a default and must NOT gate.
+    try { localStorage.setItem('btw_audience', curAudience); localStorage.setItem('btw_field', curAudience); } catch(e){}
     document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
     if(_homeGated) setHomeGate(false);
@@ -13187,10 +13190,13 @@
   // Only when NOTHING is known — no field URL, no ?for=, no remembered choice —
   // do we start gated on the chooser so the visitor picks their field first.
   var _VALID_AUD = ['individual','sports','recovery','schools','fitness','physio','kinesiology','osteo','occupational','neuropsych','nutrition','therapy'];
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_audience'); if (_VALID_AUD.indexOf(s) >= 0) _startAud = s; } } catch(e){}
+  // Only a genuinely-chosen field (btw_field) counts as "remembered". The
+  // legacy btw_audience key was written on every pre-gate load, so reading it
+  // here would make the gate skip for every returning visitor.
+  try { if (_startAud === null){ const s = localStorage.getItem('btw_field'); if (_VALID_AUD.indexOf(s) >= 0) _startAud = s; } } catch(e){}
   _homeGated = (_startAud === null);
   curAudience = (_startAud && _VALID_AUD.indexOf(_startAud) >= 0) ? _startAud : 'therapy';
-  if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); } catch(e){} }
+  if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); localStorage.setItem('btw_field', curAudience); } catch(e){} }
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
   // without adding a history entry and set the tab title/meta to match.
   syncUrlForAudience(false);
