@@ -1637,7 +1637,7 @@
   @media (max-width:460px){.btw-chooser-card{flex-basis:100%;}}
   /* Per-field illustration badge (generated image injected in JS; a line icon
      is the fallback if the image can't load). */
-  .btw-chooser-card .ic{width:62px;height:62px;border-radius:15px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff,var(--moss-light));color:var(--moss);margin-bottom:5px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(30,76,134,.08);transition:transform .25s cubic-bezier(.22,.9,.3,1),box-shadow .2s ease;}
+  .btw-chooser-card .ic{width:70px;height:70px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#fff,#EEF2F8);color:var(--moss);margin-bottom:6px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(30,76,134,.08);transition:transform .25s cubic-bezier(.22,.9,.3,1),box-shadow .2s ease;}
   .btw-chooser-card .ic svg{width:30px;height:30px;display:block;}
   .btw-chooser-card .ic-img{width:100%;height:100%;object-fit:contain;display:block;}
   .btw-chooser-card:hover{border-color:var(--moss);box-shadow:0 12px 28px -14px rgba(30,76,134,.42);transform:translateY(-3px);}
@@ -7345,20 +7345,21 @@
       individual: w('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>')
     };
   })();
-  var _AUD_IMGBASE = 'https://d8j0ntlcm91z4.cloudfront.net/user_3KyteLuKzr48PuCNyPeSXmo7gOa/';
+  // Local cutout illustrations (black backgrounds removed, hosted in the repo).
+  // recovery is intentionally omitted for now so it falls back to its heart
+  // line icon until its replacement illustration is ready.
   var AUD_IMG = {
-    therapy:      _AUD_IMGBASE + 'hf_20261026_150754_b4f510b7-1ac7-40e0-b2ff-b8109de6014d.png',
-    physio:       _AUD_IMGBASE + 'hf_20261026_150753_c9026f38-c028-4fe5-b975-ff35699b24ab.png',
-    kinesiology:  _AUD_IMGBASE + 'hf_20261026_150754_8c648b52-852c-4311-81ba-02362f303a5a.png',
-    osteo:        _AUD_IMGBASE + 'hf_20261026_150857_bdf698ee-ec53-40d3-a98a-9465794002e9.png',
-    occupational: _AUD_IMGBASE + 'hf_20261026_150859_2bfb700a-5daa-4d01-ac1b-1e010525f019.png',
-    sports:       _AUD_IMGBASE + 'hf_20261026_150858_9ff760e0-e5f7-4481-b50e-5ba9e3e33f4b.png',
-    fitness:      _AUD_IMGBASE + 'hf_20261026_150858_fd035a41-91ea-4150-be13-8ac331ae5eaf.png',
-    nutrition:    _AUD_IMGBASE + 'hf_20261026_150939_fde8de74-9ad8-4c21-bb9f-d4047707fc9d.png',
-    neuropsych:   _AUD_IMGBASE + 'hf_20261026_151012_cab78c2e-137c-476e-a527-93458b31b70c.png',
-    recovery:     _AUD_IMGBASE + 'hf_20261026_150940_d0af8e73-329e-42d9-b3b8-816b26cc785c.png',
-    schools:      _AUD_IMGBASE + 'hf_20261026_150939_b22f80c0-6f3d-44e8-a525-6316961bca25.png',
-    individual:   _AUD_IMGBASE + 'hf_20261026_150939_ad89fbd5-d87d-4948-9782-1d29e5e86017.png'
+    therapy:      'assets/fields/therapy.png',
+    physio:       'assets/fields/physio.png',
+    kinesiology:  'assets/fields/kinesiology.png',
+    osteo:        'assets/fields/osteo.png',
+    occupational: 'assets/fields/occupational.png',
+    sports:       'assets/fields/sports.png',
+    fitness:      'assets/fields/fitness.png',
+    nutrition:    'assets/fields/nutrition.png',
+    neuropsych:   'assets/fields/neuropsych.png',
+    schools:      'assets/fields/schools.png',
+    individual:   'assets/fields/individual.png'
   };
   // Homepage "Who's it for?" cards switch into the chosen field, same as a tab.
   document.querySelectorAll('.btw-chooser-card').forEach(b=>{
