@@ -7489,39 +7489,33 @@
     const aud = audFromPath() || 'therapy';
     if(aud !== curAudience) setAudience(aud, { fromUrl: true });
   });
-  // Compact header field dropdown — the way to change field once one is picked
-  // (the big "Who's it for?" chooser only shows on the first-visit gate).
+  // Header field indicator. Once a field is picked the big "Who's it for?"
+  // chooser is hidden; tapping this pill brings the whole chooser back so you
+  // can pick a different field (then it closes again on pick). We reopen the
+  // full chooser rather than a tiny menu so the way to switch is obvious and
+  // easy to tap — especially on touch.
   (function(){
     const sel = document.getElementById('btwAudNow');
     const btn = document.getElementById('btwAudSelBtn');
     const menu = document.getElementById('btwAudSelMenu');
-    if(!sel || !btn || !menu) return;
-    const ORDER = ['therapy','physio','kinesiology','osteo','occupational','sports','fitness','nutrition','neuropsych','recovery','schools','individual'];
-    menu.innerHTML = ORDER.map(function(a){ return '<button type="button" class="btw-audsel-item" role="menuitem" data-aud="'+a+'"></button>'; }).join('');
-    function renderAudMenu(){
-      menu.querySelectorAll('.btw-audsel-item').forEach(function(it){
-        const a = it.dataset.aud;
-        it.textContent = t(AUD_LABEL[a] || a);
-        it.classList.toggle('active', !_homeGated && a === curAudience);
-      });
+    if(!sel || !btn) return;
+    if(menu) menu.remove();                 // no mini-dropdown — reopen the full chooser instead
+    btn.setAttribute('aria-haspopup', 'false');
+    btn.removeAttribute('aria-expanded');
+    window.__btwRenderAudMenu = function(){}; // syncAudSelLabel() still calls this; now a no-op
+    function reopenChooser(e){
+      if(e){ e.stopPropagation(); e.preventDefault(); }
+      // A signed-in account is pinned to its own field — nothing to switch.
+      if(accountAudience()) return;
+      const navHomeBtn = document.getElementById('btwNavHome');
+      if(navHomeBtn) navHomeBtn.click();    // the chooser lives on the home view
+      setHomeGate(true);
+      const chooser = document.querySelector('#btwViewHome .btw-chooser');
+      if(chooser && chooser.scrollIntoView){
+        try { chooser.scrollIntoView({behavior:'smooth', block:'start'}); } catch(_){ chooser.scrollIntoView(); }
+      } else { window.scrollTo(0,0); }
     }
-    window.__btwRenderAudMenu = renderAudMenu;
-    function close(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      const open = menu.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if(open) renderAudMenu();
-    });
-    menu.addEventListener('click', function(e){
-      const it = e.target.closest('.btw-audsel-item'); if(!it) return;
-      close();
-      const a = it.dataset.aud;
-      if(a && (a !== curAudience || _homeGated)) setAudience(a);
-    });
-    document.addEventListener('click', function(e){ if(!sel.contains(e.target)) close(); });
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
-    renderAudMenu();
+    btn.addEventListener('click', reopenChooser);
   })();
 
   function setSchoolMode(m){
