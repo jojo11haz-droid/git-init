@@ -1673,11 +1673,14 @@
   .btw-home:not(.btw-gated) .btw-chooser{display:none;}
   .btw-audnow.gated .forpfx{display:none;}
   /* The chooser is the whole landing, so clear the header chrome while gated:
-     the page nav (Home / How it works / …) and the redundant field pill. The
-     brand, Log in / Sign up, language and theme controls stay. */
+     the page nav (Home / How it works / …), the redundant field pill, the
+     tagline, and the Log in / Sign up buttons (the chooser carries its own
+     "Already have an account? Log in" link). Brand, language and theme stay. */
   body.btw-gated-landing .btw-nav{display:none !important;}
   body.btw-gated-landing .btw-audnow{display:none !important;}
   body.btw-gated-landing .btw-sub{display:none !important;}
+  body.btw-gated-landing #btwLoginBtn,
+  body.btw-gated-landing #btwSignupBtn{display:none !important;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
