@@ -675,6 +675,28 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
     .catch(err => console.error('Confirmation email failed:', err && err.message));
 }
 
+// When a professional signs up who needs manual licence review, text the owner
+// (ADMIN_ALERT_PHONE, E.164) so they can check the licence against the order's
+// public registry and approve the account. Fire-and-forget: a missing number,
+// SMS being unconfigured, or a send failure never blocks or fails signup.
+const ADMIN_ALERT_PHONE = normalizePhone(process.env.ADMIN_ALERT_PHONE);
+function notifyOwnerOfSignup(clinician) {
+  try {
+    if (!ADMIN_ALERT_PHONE || !smsConfigured()) return;
+    if (!clinician || clinician.licence_verified) return; // only ones needing review
+    if (isFreeAccess(clinician.email)) return;             // the owner's own account
+    const who = clinician.discipline || clinician.account_type || 'professional';
+    const lines = ['Between: new ' + who + ' signup to verify', clinician.name, clinician.email];
+    const lic = [clinician.licence_order, clinician.licence_number].filter(Boolean).join(' ');
+    if (lic) lines.push('Licence: ' + lic);
+    if (clinician.province) lines.push(clinician.province);
+    sendSms({ to: ADMIN_ALERT_PHONE, text: lines.join('\n') })
+      .catch(err => console.error('Owner signup SMS failed:', err && err.message));
+  } catch (err) {
+    console.error('notifyOwnerOfSignup error:', err && err.message);
+  }
+}
+
 app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, licenceNumber, licenceOrder, province, practiceName } = req.body || {};
@@ -705,6 +727,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
     });
     await startSession(res, req, clinician.id);
     sendWelcomeEmail({ to: clinician.email, name: clinician.name, kind: isFreeAccess(clinician.email) ? 'pro' : 'therapist' });
+    notifyOwnerOfSignup(clinician);
 
     // No Stripe checkout yet: an unverified account shouldn't put a card on file
     // or start a trial clock, so billing waits until the licence is approved
@@ -767,6 +790,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     const pending = !coach.licence_verified;
     // A pending physio gets the review email; everyone else gets the ready email.
     sendWelcomeEmail({ to: coach.email, name: coach.name, kind: pending ? 'therapist' : 'pro', discipline });
+    notifyOwnerOfSignup(coach);
 
     // Start the 14-day trial with a card on file — but not for a pending physio:
     // like a therapist, billing waits until the licence is approved.
