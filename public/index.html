@@ -1672,6 +1672,12 @@
      it any time from the "For: <field>" pill at the top right. */
   .btw-home:not(.btw-gated) .btw-chooser{display:none;}
   .btw-audnow.gated .forpfx{display:none;}
+  /* The chooser is the whole landing, so clear the header chrome while gated:
+     the page nav (Home / How it works / …) and the redundant field pill. The
+     brand, Log in / Sign up, language and theme controls stay. */
+  body.btw-gated-landing .btw-nav{display:none !important;}
+  body.btw-gated-landing .btw-audnow{display:none !important;}
+  body.btw-gated-landing .btw-sub{display:none !important;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
@@ -7395,6 +7401,9 @@
     if(home) home.classList.toggle('btw-gated', _homeGated);
     const now = document.getElementById('btwAudNow');
     if(now) now.classList.toggle('gated', _homeGated);
+    // On the chooser landing, strip the header chrome (nav tabs, field pill) so
+    // the page is just "Who's it for?" — it all comes back once a field is picked.
+    try { document.body.classList.toggle('btw-gated-landing', _homeGated); } catch(e){}
     if(_homeGated){
       document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.remove('active'));
@@ -7496,33 +7505,40 @@
     const aud = audFromPath() || 'therapy';
     if(aud !== curAudience) setAudience(aud, { fromUrl: true });
   });
-  // Header field indicator. Once a field is picked the big "Who's it for?"
-  // chooser is hidden; tapping this pill brings the whole chooser back so you
-  // can pick a different field (then it closes again on pick). We reopen the
-  // full chooser rather than a tiny menu so the way to switch is obvious and
-  // easy to tap — especially on touch.
+  // Header field switcher. Once a field is picked, this top-right pill is the
+  // way to change it — a compact dropdown LIST of professions (not the big
+  // chooser cards), so switching is one tap from anywhere.
   (function(){
     const sel = document.getElementById('btwAudNow');
     const btn = document.getElementById('btwAudSelBtn');
     const menu = document.getElementById('btwAudSelMenu');
-    if(!sel || !btn) return;
-    if(menu) menu.remove();                 // no mini-dropdown — reopen the full chooser instead
-    btn.setAttribute('aria-haspopup', 'false');
-    btn.removeAttribute('aria-expanded');
-    window.__btwRenderAudMenu = function(){}; // syncAudSelLabel() still calls this; now a no-op
-    function reopenChooser(e){
-      if(e){ e.stopPropagation(); e.preventDefault(); }
-      // A signed-in account is pinned to its own field — nothing to switch.
-      if(accountAudience()) return;
-      const navHomeBtn = document.getElementById('btwNavHome');
-      if(navHomeBtn) navHomeBtn.click();    // the chooser lives on the home view
-      setHomeGate(true);
-      const chooser = document.querySelector('#btwViewHome .btw-chooser');
-      if(chooser && chooser.scrollIntoView){
-        try { chooser.scrollIntoView({behavior:'smooth', block:'start'}); } catch(_){ chooser.scrollIntoView(); }
-      } else { window.scrollTo(0,0); }
+    if(!sel || !btn || !menu) return;
+    const ORDER = ['therapy','physio','kinesiology','osteo','occupational','sports','fitness','nutrition','neuropsych','recovery','schools','individual'];
+    menu.innerHTML = ORDER.map(function(a){ return '<button type="button" class="btw-audsel-item" role="menuitem" data-aud="'+a+'"></button>'; }).join('');
+    function renderAudMenu(){
+      menu.querySelectorAll('.btw-audsel-item').forEach(function(it){
+        const a = it.dataset.aud;
+        it.textContent = t(AUD_LABEL[a] || a);
+        it.classList.toggle('active', !_homeGated && a === curAudience);
+      });
     }
-    btn.addEventListener('click', reopenChooser);
+    window.__btwRenderAudMenu = renderAudMenu;
+    function close(){ menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      const open = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(open) renderAudMenu();
+    });
+    menu.addEventListener('click', function(e){
+      const it = e.target.closest('.btw-audsel-item'); if(!it) return;
+      close();
+      const a = it.dataset.aud;
+      if(a && (a !== curAudience || _homeGated)) setAudience(a);
+    });
+    document.addEventListener('click', function(e){ if(!sel.contains(e.target)) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+    renderAudMenu();
   })();
 
   function setSchoolMode(m){
