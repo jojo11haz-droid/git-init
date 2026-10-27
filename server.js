@@ -1141,6 +1141,28 @@ app.post('/api/admin/clinicians/:id/verify', requireDb, requireAuth, requireOwne
   }
 });
 
+// Owner-only: fire a single real test SMS so you can confirm Twilio works
+// end to end. Sends to the "to" in the body if given, else ADMIN_ALERT_PHONE.
+// Returns Twilio's own error (unverified trial number, bad From, etc.) so a
+// failure is diagnosable. Owner-gated, so it can't be abused to send spam.
+app.post('/api/admin/test-sms', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    if (!smsConfigured()) {
+      return res.status(400).json({ ok: false, error: 'Twilio is not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM.' });
+    }
+    const to = normalizePhone((req.body && req.body.to)) || ADMIN_ALERT_PHONE;
+    if (!to) {
+      return res.status(400).json({ ok: false, error: 'No destination number. Set ADMIN_ALERT_PHONE (E.164, e.g. +15145551234) or pass "to".' });
+    }
+    const r = await sendSms({ to, text: 'Between test: your Twilio SMS is working.' });
+    if (r.delivered) return res.json({ ok: true, to, delivered: true });
+    return res.status(502).json({ ok: false, to, delivered: false, status: r.status || null, error: r.error || 'Delivery failed.' });
+  } catch (err) {
+    console.error('test-sms error:', err);
+    res.status(500).json({ ok: false, error: 'Could not send test SMS: ' + (err && err.message) });
+  }
+});
+
 // --- Practices (multi-seat) ---
 // A practice owner adds colleagues by email. Each seat logs in as their own
 // clinician, runs their own private caseload, and is covered by the owner's one

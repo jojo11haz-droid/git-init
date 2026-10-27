@@ -15,7 +15,7 @@ export function smsConfigured() {
 export async function sendSms({ to, text }) {
   if (!smsConfigured()) {
     console.log(`📱 [sms not configured — would send]\nTo: ${to}\n${text}\n`);
-    return { delivered: false };
+    return { delivered: false, error: 'SMS not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM).' };
   }
   const body = new URLSearchParams({ From: TWILIO_FROM, To: to, Body: text });
   const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
@@ -31,8 +31,13 @@ export async function sendSms({ to, text }) {
     }
   );
   if (!response.ok) {
-    console.error('SMS delivery failed:', response.status, await response.text());
-    return { delivered: false };
+    const detail = await response.text();
+    console.error('SMS delivery failed:', response.status, detail);
+    // Surface Twilio's own message (e.g. unverified number on a trial account)
+    // so callers like the admin test endpoint can show why it failed.
+    let message = detail;
+    try { const j = JSON.parse(detail); if (j && j.message) message = j.message; } catch (_) {}
+    return { delivered: false, status: response.status, error: message };
   }
   return { delivered: true };
 }
