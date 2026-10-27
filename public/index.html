@@ -1681,6 +1681,10 @@
   body.btw-gated-landing .btw-sub{display:none !important;}
   body.btw-gated-landing #btwLoginBtn,
   body.btw-gated-landing #btwSignupBtn{display:none !important;}
+  /* While a likely session is being confirmed, hold the home view blank so a
+     returning signed-in visitor goes straight to their dashboard with no
+     chooser/marketing flash. Lifted by loadSession() once it resolves. */
+  body.btw-resolving #btwViewHome{visibility:hidden !important;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
@@ -9259,6 +9263,9 @@
     // Signed-in users already have a field (pinned to their account), so they
     // never see the home chooser gate — drop it if a session is present.
     if(signedIn && _homeGated){ try { setHomeGate(false); } catch(e){} }
+    // Remember across reloads that a session exists, so the next visit goes
+    // straight to the dashboard instead of flashing the chooser first.
+    try { if(signedIn) localStorage.setItem('btw_session','1'); else localStorage.removeItem('btw_session'); } catch(e){}
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
@@ -9381,6 +9388,7 @@
         renderAuthState();
         await loadPatientCheckIns();
         goToView(navProduct, viewProduct); // land a signed-in user in their dashboard
+        try { document.body.classList.remove('btw-resolving'); } catch(e){}
         return;
       }catch(err){
         setPToken(null); state.patient = null; state.role = null; // stale/expired token
@@ -9399,6 +9407,17 @@
       // them on the dashboard view, where the pending-verification box shows.
       if(!needsVerification()){ await loadPatients(); }
       goToView(navProduct, viewProduct);
+    }
+    // Session resolved: drop the "resolving" veil. If there's no session after
+    // all (e.g. an expired cookie), show the chooser landing instead.
+    if(state.me || state.patient){
+      try { document.body.classList.remove('btw-resolving'); } catch(e){}
+    } else {
+      try { localStorage.removeItem('btw_session'); } catch(e){}
+      if(document.body.classList.contains('btw-resolving')){
+        document.body.classList.remove('btw-resolving');
+        setHomeGate(true);
+      }
     }
   }
 
@@ -13565,6 +13584,16 @@
   try { const s = localStorage.getItem('btw_field'); if (_VALID_AUD.indexOf(s) >= 0) _rememberedAud = s; } catch(e){}
   _startAud = _urlAud || _rememberedAud; // used for labels / URL / default field only
   _homeGated = (_urlAud === null);       // gate unless the URL explicitly names a field
+  // If a session is likely (saved patient token, or a "signed in last time"
+  // hint), don't show the chooser — hold a brief blank while loadSession()
+  // confirms and sends them straight to their dashboard. If it turns out there
+  // is no valid session, loadSession() lifts the veil and shows the chooser.
+  var _likelySignedIn = false;
+  try { _likelySignedIn = !!pToken() || localStorage.getItem('btw_session') === '1'; } catch(e){}
+  if(_likelySignedIn){
+    _homeGated = false;
+    try { document.body.classList.add('btw-resolving'); } catch(e){}
+  }
   curAudience = (_startAud && _VALID_AUD.indexOf(_startAud) >= 0) ? _startAud : 'therapy';
   if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); localStorage.setItem('btw_field', curAudience); } catch(e){} }
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
