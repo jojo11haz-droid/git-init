@@ -1662,6 +1662,9 @@
   .btw-chooser-card.active .ic{box-shadow:inset 0 0 0 1px var(--moss);}
   /* First-visit gate: show only the chooser until the visitor picks a field. */
   .btw-home.btw-gated > *:not(.btw-chooser){display:none !important;}
+  /* Once a field is picked the "Who's it for?" chooser closes; change field
+     afterwards from the "For: <field>" dropdown at the top right. */
+  .btw-home:not(.btw-gated) .btw-chooser{display:none;}
   .btw-audnow.gated .forpfx{display:none;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
