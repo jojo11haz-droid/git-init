@@ -1641,6 +1641,10 @@
   .btw-chooser-head{text-align:center;margin-bottom:14px;}
   .btw-chooser-title{font-family:var(--font-display);font-style:italic;font-size:27px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);margin:0;}
   .btw-chooser-sub{font-size:13px;color:var(--ink-soft);margin:7px 0 0;line-height:1.5;font-family:var(--font-mono);letter-spacing:0.02em;}
+  /* Returning account-holders don't need to pick a field — they log in. */
+  .btw-chooser-login{font-size:13px;color:var(--ink-soft);margin:11px 0 0;}
+  .btw-chooser-login-link{font:inherit;color:var(--moss);font-weight:600;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .btw-chooser-login-link:hover{color:var(--ink);}
   /* Flex-wrap (not a rigid grid) so an incomplete last row centres instead of
      leaving a card stranded on the left. Three per row, fixed width, no grow. */
   .btw-chooser-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
@@ -1660,10 +1664,12 @@
   .btw-chooser-card:hover .ic{transform:scale(1.08) rotate(-2deg);}
   .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);box-shadow:inset 0 0 0 1px var(--moss),0 12px 26px -16px rgba(30,76,134,.45);}
   .btw-chooser-card.active .ic{box-shadow:inset 0 0 0 1px var(--moss);}
-  /* First-visit gate: show only the chooser until the visitor picks a field. */
+  /* Home gate: the "Who's it for?" chooser is the landing on every plain visit
+     (returning visitors included) — show only the chooser until a field is
+     picked. A field URL (/physio) or a signed-in account skips the gate. */
   .btw-home.btw-gated > *:not(.btw-chooser){display:none !important;}
-  /* Once a field is picked the "Who's it for?" chooser closes; change field
-     afterwards from the "For: <field>" dropdown at the top right. */
+  /* Once a field is picked the chooser gives way to that field's page; reopen
+     it any time from the "For: <field>" pill at the top right. */
   .btw-home:not(.btw-gated) .btw-chooser{display:none;}
   .btw-audnow.gated .forpfx{display:none;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
@@ -2658,6 +2664,7 @@
         <div class="btw-chooser-head">
           <h2 class="btw-chooser-title">Who's it for?</h2>
           <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
+          <p class="btw-chooser-login" id="btwChooserLogin">Already have an account? <button type="button" class="btw-chooser-login-link" id="btwChooserLoginBtn">Log in</button></p>
         </div>
         <div class="btw-chooser-grid">
           <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
@@ -9230,6 +9237,9 @@
     const asTherapist = !!state.me;
     const asPatient = !!state.patient;
     const signedIn = asTherapist || asPatient;
+    // Signed-in users already have a field (pinned to their account), so they
+    // never see the home chooser gate — drop it if a session is present.
+    if(signedIn && _homeGated){ try { setHomeGate(false); } catch(e){} }
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
@@ -9698,6 +9708,9 @@
     b.addEventListener('click', ()=>{ loginError.textContent = ''; setLoginRole(b.dataset.role); });
   });
   loginBtn.addEventListener('click', ()=> openLogin('therapist'));
+  // The chooser's "Already have an account? Log in" link opens the same login.
+  const chooserLoginBtn = document.getElementById('btwChooserLoginBtn');
+  if(chooserLoginBtn) chooserLoginBtn.addEventListener('click', ()=> openLogin('therapist'));
   // Sign up opens the right flow for whoever they are: individuals get the
   // patient signup, every clinician audience gets the clinician/pro signup
   // (btwOpenSignup derives the account type from the current audience).
@@ -13522,11 +13535,17 @@
   // Only when NOTHING is known — no field URL, no ?for=, no remembered choice —
   // do we start gated on the chooser so the visitor picks their field first.
   var _VALID_AUD = ['individual','sports','recovery','schools','fitness','physio','kinesiology','osteo','occupational','neuropsych','nutrition','therapy'];
-  // Only a genuinely-chosen field (btw_field) counts as "remembered". The
-  // legacy btw_audience key was written on every pre-gate load, so reading it
-  // here would make the gate skip for every returning visitor.
-  try { if (_startAud === null){ const s = localStorage.getItem('btw_field'); if (_VALID_AUD.indexOf(s) >= 0) _startAud = s; } } catch(e){}
-  _homeGated = (_startAud === null);
+  // The "Who's it for?" chooser shows on every plain home visit — including
+  // returning visitors who've picked before — so the landing always asks which
+  // field it's for. Account-holders don't need to re-pick; they log in (the
+  // chooser carries an "Already have an account? Log in" link, and Log in/Sign
+  // up sit in the header). Only an explicit field URL (/physio, ?for=physio)
+  // skips the chooser and deep-links straight to that field.
+  var _urlAud = _startAud; // the field a deep-link URL resolved to, or null
+  var _rememberedAud = null;
+  try { const s = localStorage.getItem('btw_field'); if (_VALID_AUD.indexOf(s) >= 0) _rememberedAud = s; } catch(e){}
+  _startAud = _urlAud || _rememberedAud; // used for labels / URL / default field only
+  _homeGated = (_urlAud === null);       // gate unless the URL explicitly names a field
   curAudience = (_startAud && _VALID_AUD.indexOf(_startAud) >= 0) ? _startAud : 'therapy';
   if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); localStorage.setItem('btw_field', curAudience); } catch(e){} }
   // Reflect the resolved field in the address bar (e.g. /?for=physio -> /physio)
