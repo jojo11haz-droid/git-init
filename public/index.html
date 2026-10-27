@@ -3874,6 +3874,15 @@
         <div class="btw-modal-eyebrow">Backend · Storage</div>
         <div id="btwStorageBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
       </div>
+      <div id="btwSmsCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+        <div class="btw-modal-eyebrow">Backend · Notifications (SMS)</div>
+        <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:4px 0 10px;">Send yourself a test text to confirm Twilio is working. Leave the box blank to use your configured alert number.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="btwSmsTestTo" type="tel" inputmode="tel" autocomplete="off" placeholder="+15145551234 (optional)" style="flex:1;min-width:170px;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);font-family:var(--font-body);font-size:13px;">
+          <button type="button" id="btwSmsTestBtn" style="flex:0 0 auto;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:9px;padding:9px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Send test SMS</button>
+        </div>
+        <div id="btwSmsTestResult" style="display:none;font-size:12.5px;line-height:1.55;margin-top:10px;"></div>
+      </div>
     </div>
   </div>
 
@@ -9970,6 +9979,28 @@
     catch(e){ err.textContent = e.message; list.innerHTML = ''; }
     loadAdminStorage();
   }
+  // Owner "Send test SMS" — confirms Twilio works end to end from any device
+  // (no dev console needed, so it works on iPad). Shows Twilio's own error.
+  (function(){
+    const btn = document.getElementById('btwSmsTestBtn');
+    if(!btn) return;
+    const resEl = document.getElementById('btwSmsTestResult');
+    const inp = document.getElementById('btwSmsTestTo');
+    function show(msg, ok){ if(!resEl) return; resEl.style.display=''; resEl.style.color = ok ? 'var(--moss)' : 'var(--clay)'; resEl.textContent = msg; }
+    btn.addEventListener('click', async ()=>{
+      const to = ((inp && inp.value) || '').trim();
+      const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…';
+      if(resEl) resEl.style.display = 'none';
+      try{
+        const data = await api('POST', '/api/admin/test-sms', to ? { to } : {});
+        show('✓ Sent to ' + (data.to || to) + '. You should get the text in a few seconds.', true);
+      }catch(e){
+        show('Could not send: ' + e.message, false);
+      }finally{
+        btn.disabled = false; btn.textContent = orig;
+      }
+    });
+  })();
   function btwFmtBytes(b){ b = Number(b) || 0; if(b < 1024) return b + ' B'; const u = ['KB','MB','GB','TB']; let i = -1; do { b /= 1024; i++; } while(b >= 1024 && i < u.length - 1); return b.toFixed(b < 10 ? 1 : 0) + ' ' + u[i]; }
   async function loadAdminStorage(){
     const el = document.getElementById('btwStorageBody'); if(!el) return;
