@@ -3269,6 +3269,16 @@
       Walk me through it
     </button>
   </div>
+  <div id="btwOwnerPreviewBar" style="display:none;max-width:1200px;margin:0 auto 12px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--moss-light);border:1px solid var(--line);border-radius:12px;padding:9px 14px;">
+      <span style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);font-weight:700;">Owner</span>
+      <span id="btwOwnerPreviewNote" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:150px;">Preview the patient side of the product.</span>
+      <div class="btw-role-toggle" role="group" aria-label="Dashboard view">
+        <button type="button" class="btw-role-btn active" id="btwOwnerViewClin" style="font-size:12px;padding:6px 12px;">Clinician</button>
+        <button type="button" class="btw-role-btn" id="btwOwnerViewPat" style="font-size:12px;padding:6px 12px;">Patient</button>
+      </div>
+    </div>
+  </div>
   <div class="btw-grid" id="btwDashGrid" style="display:none;">
     <!-- PATIENT PANE -->
     <div class="btw-pane">
@@ -4107,6 +4117,58 @@
     const e = (state.me && state.me.email) || (state.patient && state.patient.email) || '';
     return String(e).toLowerCase() === OWNER_EMAIL;
   }
+  // Owner-only "preview the patient side" switch on the dashboard. It swaps in a
+  // synthetic patient so the dashboard renders exactly as a patient sees it;
+  // nothing is sent, and the real clinician session is restored on toggle off.
+  let _ownerPreview = false;
+  let _ownerPreviewSaved = null;
+  function makePreviewPatient(){
+    const me = (_ownerPreviewSaved ? _ownerPreviewSaved.me : state.me) || {};
+    return {
+      id: '__preview__',
+      display_name: (me.name || 'You') + ' (preview)',
+      email: me.email || OWNER_EMAIL,
+      plan: 'patient_monthly', subscription_status: 'active', is_premium: true,
+      ai_consent_enabled: true,
+      clinician_account_type: me.account_type || 'therapist',
+      clinician_discipline: me.discipline || null,
+      check_in_mode_lock: 'any', weekly_checkin_cap: 999,
+      reminders_enabled: false, reminder_time: null, reminder_days: null, phone: null
+    };
+  }
+  function setOwnerPreview(on){
+    if(on && !_ownerPreview){
+      _ownerPreviewSaved = { me: state.me, role: state.role, patient: state.patient, checkIns: state.checkIns };
+      state.patient = makePreviewPatient(); state.role = 'patient'; state.me = null; state.checkIns = [];
+      _ownerPreview = true;
+    } else if(!on && _ownerPreview){
+      if(_ownerPreviewSaved){ state.me = _ownerPreviewSaved.me; state.role = _ownerPreviewSaved.role; state.patient = _ownerPreviewSaved.patient; state.checkIns = _ownerPreviewSaved.checkIns; }
+      _ownerPreviewSaved = null; _ownerPreview = false;
+    } else { return; }
+    try { renderAuthState(); } catch(e){}
+    try { renderAll(); } catch(e){}
+    syncOwnerPreviewUI();
+  }
+  function syncOwnerPreviewUI(){
+    const bar = document.getElementById('btwOwnerPreviewBar');
+    const onProduct = (typeof viewProduct !== 'undefined') && viewProduct && viewProduct.classList.contains('active');
+    if(bar) bar.style.display = (onProduct && isOwnerAccount()) ? '' : 'none';
+    const clin = document.getElementById('btwOwnerViewClin');
+    const pat = document.getElementById('btwOwnerViewPat');
+    if(clin) clin.classList.toggle('active', !_ownerPreview);
+    if(pat) pat.classList.toggle('active', _ownerPreview);
+    const note = document.getElementById('btwOwnerPreviewNote');
+    if(note) note.textContent = _ownerPreview
+      ? t('Previewing the patient view — nothing here is saved or sent.')
+      : t('Preview the patient side of the product.');
+  }
+  window.__btwSyncOwnerPreview = syncOwnerPreviewUI;
+  (function(){
+    const clin = document.getElementById('btwOwnerViewClin');
+    const pat = document.getElementById('btwOwnerViewPat');
+    if(clin) clin.addEventListener('click', function(){ setOwnerPreview(false); });
+    if(pat) pat.addEventListener('click', function(){ setOwnerPreview(true); });
+  })();
   function subActive(s){ return s === 'active' || s === 'trialing' || s === 'canceling'; }
   // Hard paywall: once billing is on, a self-serve patient (has a plan) or any
   // clinician must have a live subscription. Invited patients (no plan) are
@@ -4184,6 +4246,7 @@
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
     "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
+    "Clinician":"Clinicien","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view — nothing here is saved or sent.":"Aperçu de la vue patient — rien ici n'est enregistré ni envoyé.","This is a preview — your check-in was not sent.":"Ceci est un aperçu — votre suivi n'a pas été envoyé.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -7749,6 +7812,11 @@
   }
   const btwRoot = document.querySelector('.btw-root');
   function goToView(nav, view){
+    // Leaving the dashboard drops the owner's patient-preview so the rest of the
+    // app isn't left in the synthetic-patient state.
+    if(typeof _ownerPreview !== 'undefined' && _ownerPreview && view !== viewProduct){
+      try { setOwnerPreview(false); } catch(e){}
+    }
     allNavBtns.forEach(b=>b.classList.remove('active'));
     allViews.forEach(v=>v.classList.remove('active'));
     nav.classList.add('active');
@@ -7762,6 +7830,7 @@
     // Landing on the dashboard is the moment to offer the first-run tour (it
     // self-guards: clinician only, once, and only when not pending verification).
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
+    try { if(window.__btwSyncOwnerPreview) window.__btwSyncOwnerPreview(); } catch(e){}
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
   // The Between wordmark/logo doubles as a "home" link — but once signed in the
@@ -9337,6 +9406,7 @@
       document.body.classList.toggle('btw-signed-in', signedIn);
       document.body.classList.toggle('btw-owner', signedIn && isOwnerAccount());
     } catch(e){}
+    try { if(window.__btwSyncOwnerPreview) window.__btwSyncOwnerPreview(); } catch(e){}
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
@@ -13682,6 +13752,7 @@
   }
 
   sendBtn.addEventListener('click', async ()=>{
+    if(_ownerPreview){ alert(t('This is a preview — your check-in was not sent.')); return; }
     const p = selectedPatient();
     if(!isPatient() && !p) return;
     const text = composeText();
