@@ -1696,9 +1696,9 @@
      field pill) so the header is focused on the dashboard they paid for. The
      brand logo (now a shortcut back to the dashboard), the account menu, and
      the language / theme controls stay. */
-  body.btw-signed-in .btw-nav{display:none !important;}
-  body.btw-signed-in .btw-sub{display:none !important;}
-  body.btw-signed-in .btw-audnow{display:none !important;}
+  body.btw-signed-in:not(.btw-owner) .btw-nav{display:none !important;}
+  body.btw-signed-in:not(.btw-owner) .btw-sub{display:none !important;}
+  body.btw-signed-in:not(.btw-owner) .btw-audnow{display:none !important;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
@@ -4073,6 +4073,15 @@
   function isTherapist(){ return state.role === 'therapist'; }
   let billingEnabled = false; // set from the server: is Stripe configured?
   let ownerFreeAccess = false; // server says this account is on the comp list
+  // The product owner's own account. They get a "god-mode" header that keeps
+  // the full chrome (every nav tab + field switcher) so they can reach both the
+  // professional and the patient-facing side of the product from one login.
+  // (free-access can cover several comp'd emails; this is strictly the owner.)
+  const OWNER_EMAIL = 'jojo11haz@gmail.com';
+  function isOwnerAccount(){
+    const e = (state.me && state.me.email) || (state.patient && state.patient.email) || '';
+    return String(e).toLowerCase() === OWNER_EMAIL;
+  }
   function subActive(s){ return s === 'active' || s === 'trialing' || s === 'canceling'; }
   // Hard paywall: once billing is on, a self-serve patient (has a plan) or any
   // clinician must have a live subscription. Invited patients (no plan) are
@@ -9289,7 +9298,11 @@
     // straight to the dashboard instead of flashing the chooser first.
     try { if(signedIn) localStorage.setItem('btw_session','1'); else localStorage.removeItem('btw_session'); } catch(e){}
     // App mode: drop the marketing header chrome while signed in (see CSS).
-    try { document.body.classList.toggle('btw-signed-in', signedIn); } catch(e){}
+    // The owner is exempt (btw-owner) — they keep the full header, both sides.
+    try {
+      document.body.classList.toggle('btw-signed-in', signedIn);
+      document.body.classList.toggle('btw-owner', signedIn && isOwnerAccount());
+    } catch(e){}
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
