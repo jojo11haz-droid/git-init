@@ -7125,11 +7125,19 @@
     if(reasons[1]) reasons[1].textContent = A.r2;
     if(reasons[2]) reasons[2].textContent = F.steady;
     if(reasons[3]) reasons[3].textContent = F.steady;
-    // 6 safety net
+    // 6 safety net — physical/manual fields (physio, osteo, kin, OT, sports,
+    // fitness, nutrition) lead with a medical emergency and keep a crisis line
+    // second; mental-health fields keep the suicide line first.
     t('btwVizSafeHead', A.safe);
+    var _physSafe = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+    var SAFE = _physSafe
+      ? (L === 'fr'
+          ? { c:'Urgence médicale', cs:'COMPOSEZ LE 911', t:'Parlons Suicide Canada', ts:'APPELEZ OU TEXTEZ 988' }
+          : { c:'Medical emergency', cs:'CALL 911', t:'Talk Suicide Canada', ts:'CALL OR TEXT 988' })
+      : { c:F.safeCall, cs:F.safeCallS, t:F.safeText, ts:F.safeTextS };
     var crs = qa('#btwVizSafety .btw-viz-cr');
-    if(crs[0]){ var cb0=crs[0].querySelector('b'), cs0=crs[0].querySelector('.s'); if(cb0)cb0.textContent=F.safeCall; if(cs0)cs0.textContent=F.safeCallS; }
-    if(crs[1]){ var cb1=crs[1].querySelector('b'), cs1=crs[1].querySelector('.s'); if(cb1)cb1.textContent=F.safeText; if(cs1)cs1.textContent=F.safeTextS; }
+    if(crs[0]){ var cb0=crs[0].querySelector('b'), cs0=crs[0].querySelector('.s'); if(cb0)cb0.textContent=SAFE.c; if(cs0)cs0.textContent=SAFE.cs; }
+    if(crs[1]){ var cb1=crs[1].querySelector('b'), cs1=crs[1].querySelector('.s'); if(cb1)cb1.textContent=SAFE.t; if(cs1)cs1.textContent=SAFE.ts; }
     // 7 progress
     var pbg=q('#btwVizProg .big'); if(pbg) pbg.textContent=F.progBig;
     var pcp=q('#btwVizProg .cap'); if(pcp) pcp.textContent=A.trend;
