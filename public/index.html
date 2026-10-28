@@ -1685,6 +1685,13 @@
      returning signed-in visitor goes straight to their dashboard with no
      chooser/marketing flash. Lifted by loadSession() once it resolves. */
   body.btw-resolving #btwViewHome{visibility:hidden !important;}
+  /* App mode: once signed in, strip the marketing chrome (page nav, tagline,
+     field pill) so the header is focused on the dashboard they paid for. The
+     brand logo (now a shortcut back to the dashboard), the account menu, and
+     the language / theme controls stay. */
+  body.btw-signed-in .btw-nav{display:none !important;}
+  body.btw-signed-in .btw-sub{display:none !important;}
+  body.btw-signed-in .btw-audnow{display:none !important;}
   .btw-chooser-card .t{font-size:15px;font-weight:600;color:var(--ink);}
   .btw-chooser-card .h{font-size:12px;color:var(--ink-soft);line-height:1.4;}
   /* The "for yourself" option spans the full width under the fields, so it
@@ -7704,11 +7711,16 @@
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
   }
   navHome.addEventListener('click', ()=> goToView(navHome, viewHome));
-  // The Between wordmark/logo doubles as a "home" link.
+  // The Between wordmark/logo doubles as a "home" link — but once signed in the
+  // marketing nav is hidden (app mode), so it takes you back to your dashboard.
   const brandHome = document.getElementById('btwBrandHome');
+  function goBrandHome(){
+    if(state.me || state.patient) goToView(navProduct, viewProduct);
+    else goToView(navHome, viewHome);
+  }
   if(brandHome){
-    brandHome.addEventListener('click', ()=> goToView(navHome, viewHome));
-    brandHome.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); goToView(navHome, viewHome); } });
+    brandHome.addEventListener('click', goBrandHome);
+    brandHome.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); goBrandHome(); } });
   }
   if(navLearn) navLearn.addEventListener('click', ()=> goToView(navLearn, viewLearn));
   // "See how it works" → the interactive demo. It lives on the How it works
@@ -9266,6 +9278,8 @@
     // Remember across reloads that a session exists, so the next visit goes
     // straight to the dashboard instead of flashing the chooser first.
     try { if(signedIn) localStorage.setItem('btw_session','1'); else localStorage.removeItem('btw_session'); } catch(e){}
+    // App mode: drop the marketing header chrome while signed in (see CSS).
+    try { document.body.classList.toggle('btw-signed-in', signedIn); } catch(e){}
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
     authUserEl.style.display = signedIn ? '' : 'none';
