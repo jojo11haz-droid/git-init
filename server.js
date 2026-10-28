@@ -6,7 +6,7 @@ import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
   createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
-  getEngagementStats,
+  getEngagementStats, getOwnerOverview,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -1090,6 +1090,17 @@ app.get('/api/admin/engagement', requireDb, requireAuth, requireOwner, async (re
   } catch (err) {
     console.error('Error loading engagement stats:', err);
     res.status(500).json({ error: 'Could not load engagement stats.' });
+  }
+});
+
+// Owner-only account overview — business-side counts (clinicians, patients,
+// verified/subscribed, recent signups, clinicians by discipline).
+app.get('/api/admin/overview', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await getOwnerOverview());
+  } catch (err) {
+    console.error('Error loading owner overview:', err);
+    res.status(500).json({ error: 'Could not load the account overview.' });
   }
 });
 
