@@ -543,6 +543,16 @@ class S {
   String get requestDeletionDesc => _(
       'Removes all your check-ins and summaries. Your right, anytime.',
       'Supprime toutes tes nouvelles et résumés. Ton droit, en tout temps.');
+  String get downloadMyData => _('Download my data', 'Télécharger mes données');
+  String get downloadMyDataDesc => _(
+      'Get a full copy of your data to paste into a note or email.',
+      'Obtiens une copie complète de tes données à coller dans une note ou un courriel.');
+  String get dataCopied => _(
+      'Your data is copied to the clipboard. Paste it somewhere safe to keep it.',
+      'Tes données sont copiées dans le presse-papiers. Colle-les quelque part pour les conserver.');
+  String get dataExportFailed => _(
+      'Could not prepare your data. Please try again.',
+      'Impossible de préparer tes données. Veuillez réessayer.');
   String get deleteHistoryTitle =>
       _('Delete my check-in history?', 'Supprimer mon historique de nouvelles?');
   String get deleteHistoryBody => _(

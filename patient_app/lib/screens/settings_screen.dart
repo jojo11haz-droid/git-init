@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
@@ -119,6 +120,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _downloadData() async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    setState(() => _busy = true);
+    try {
+      final data = await app.buildDataExport();
+      await Clipboard.setData(ClipboardData(text: data));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(s.dataCopied)));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(s.dataExportFailed)));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -303,6 +324,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const HistoryScreen()),
                 ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s.downloadMyData,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                  s.downloadMyDataDesc,
+                  style:
+                      const TextStyle(fontSize: 13, color: BtwColors.inkSoft),
+                ),
+                trailing: const Icon(Icons.download_rounded,
+                    color: BtwColors.inkSoft),
+                onTap: _busy ? null : _downloadData,
               ),
             ),
             const SizedBox(height: 12),

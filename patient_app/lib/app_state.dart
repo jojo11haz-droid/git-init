@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -425,6 +426,27 @@ class AppState extends ChangeNotifier {
 
   /// Law 25 erasure request — soft-deletes the whole history.
   Future<void> requestDeletion() => _api.delete('/api/patient/check-ins');
+
+  /// A portable copy of everything we hold for this patient — the same JSON
+  /// the website's "Download my data" produces (profile + check-ins + future
+  /// notes). Returned as a pretty-printed string the UI can share or copy.
+  Future<String> buildDataExport() async {
+    final results = await Future.wait<dynamic>([
+      _api.get('/api/patient/me').catchError((_) => null),
+      _api.get('/api/patient/check-ins').catchError((_) => const <dynamic>[]),
+      _api.get('/api/patient/future-notes').catchError((_) => const <dynamic>[]),
+    ]);
+    final me = results[0];
+    final profile = (me is Map && me['patient'] is Map) ? me['patient'] : null;
+    final payload = <String, dynamic>{
+      'exported_at': DateTime.now().toUtc().toIso8601String(),
+      'account_type': 'patient',
+      'profile': profile,
+      'check_ins': results[1] is List ? results[1] : const <dynamic>[],
+      'future_notes': results[2] is List ? results[2] : const <dynamic>[],
+    };
+    return const JsonEncoder.withIndent('  ').convert(payload);
+  }
 
   Future<void> flagInaccurate(String id) =>
       _api.post('/api/patient/check-ins/$id/flag-inaccurate');
