@@ -6,7 +6,7 @@ import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
   createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
-  getEngagementStats, getOwnerOverview,
+  getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
   listCliniciansForReview, setClinicianLicenceVerified,
   updateClinicianSubscription, getClinicianByStripeSubscription,
@@ -1101,6 +1101,17 @@ app.get('/api/admin/overview', requireDb, requireAuth, requireOwner, async (req,
   } catch (err) {
     console.error('Error loading owner overview:', err);
     res.status(500).json({ error: 'Could not load the account overview.' });
+  }
+});
+
+// Owner-only activity feed — recent signups (clinicians, patients) and contact
+// messages, newest first, for the notifications panel.
+app.get('/api/admin/notifications', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    res.json(await getOwnerNotifications());
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    res.status(500).json({ error: 'Could not load notifications.' });
   }
 });
 

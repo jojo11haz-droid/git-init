@@ -873,6 +873,16 @@
   .btw-settings-btn{display:inline-flex;align-items:center;gap:7px;}
   .btw-settings-btn svg{width:16px;height:16px;display:block;}
   .btw-settings-caret{font-size:11px;color:var(--ink-soft);}
+  .btw-settings-btn{position:relative;}
+  .btw-notif-dot{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:var(--clay);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--paper);}
+  .btw-notif-row{display:flex;gap:11px;align-items:flex-start;padding:11px 2px;border-bottom:1px solid var(--line);}
+  .btw-notif-ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--moss-light);}
+  .btw-notif-main{flex:1;min-width:0;}
+  .btw-notif-title{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .btw-notif-sub{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
+  .btw-notif-when{flex:0 0 auto;font-size:10.5px;color:var(--ink-soft);opacity:.8;white-space:nowrap;padding-top:2px;}
+  .btw-notif-pending{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;color:var(--clay);}
+  .btw-notif-new{box-shadow:inset 3px 0 0 var(--moss);padding-left:8px;border-radius:2px;}
   .btw-nav-menu-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);padding:6px 12px 4px;}
   .btw-nav-menu-sep{height:1px;background:var(--line);margin:4px 6px;}
   .btw-nav-menu{
@@ -2669,9 +2679,10 @@
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
-        <button class="btw-nav-btn btw-settings-btn" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="btw-settings-label">Settings</span><span class="btw-settings-caret" aria-hidden="true">▾</span></button>
+        <button class="btw-nav-btn btw-settings-btn" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="btw-settings-label">Settings</span><span class="btw-settings-caret" aria-hidden="true">▾</span><span class="btw-notif-dot" id="btwNotifDot" style="display:none;" aria-label="New notifications"></span></button>
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
           <div class="btw-nav-menu-head" id="btwNavMenuHead">Settings</div>
+          <button class="btw-nav-btn" id="btwNotifBtn" style="display:none;">Notifications</button>
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwEngagementBtn" style="display:none;">Engagement</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing &amp; subscription</button>
@@ -3942,6 +3953,17 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwNotifOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:560px;">
+      <button class="btw-modal-close" data-close="btwNotifOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Owner · Notifications</div>
+      <h2>What's new</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:16px;">New professionals, new patients and contact messages, newest first. A dot on Settings means there's something new since you last looked.</div>
+      <div class="btw-form-error" id="btwNotifError"></div>
+      <div id="btwNotifBody" style="max-height:62vh;overflow-y:auto;"></div>
+    </div>
+  </div>
+
   <div class="btw-modal-overlay" id="btwFutureOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:460px;">
       <button class="btw-modal-close" data-close="btwFutureOverlay" type="button" aria-label="Close">✕</button>
@@ -4161,6 +4183,7 @@
     "Students between check-ins":"Les élèves entre les suivis",
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
+    "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -9337,6 +9360,12 @@
     if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const engBtn = document.getElementById('btwEngagementBtn');
     if(engBtn) engBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    const notifBtn = document.getElementById('btwNotifBtn');
+    const isOwnerHere = asTherapist && ownerFreeAccess;
+    if(notifBtn) notifBtn.style.display = isOwnerHere ? '' : 'none';
+    // Refresh the "new since last look" badge for the owner; hide it otherwise.
+    if(isOwnerHere){ if(window.__btwRefreshNotif) window.__btwRefreshNotif(); }
+    else { const nd = document.getElementById('btwNotifDot'); if(nd) nd.style.display = 'none'; }
     logoutBtn.style.display = signedIn ? '' : 'none';
     const gated = signedIn && !pendingVerify && isGated();
     signedOutBox.style.display = signedIn ? 'none' : '';
@@ -10365,6 +10394,70 @@
   const engBtnEl = document.getElementById('btwEngagementBtn');
   if(engBtnEl) engBtnEl.addEventListener('click', openEngagement);
 
+  // --- Owner: notifications feed (new professionals, patients, messages) ---
+  const notifOverlay = document.getElementById('btwNotifOverlay');
+  let _notifRows = null;
+  function notifSeenTime(){ try { const s = localStorage.getItem('btw_notif_seen'); return s ? Date.parse(s) : 0; } catch(e){ return 0; } }
+  function notifNewCount(rows){ const seen = notifSeenTime(); return (rows||[]).filter(function(r){ return Date.parse(r.at) > seen; }).length; }
+  function applyNotifBadge(n){
+    const dot = document.getElementById('btwNotifDot');
+    if(dot){ dot.style.display = n > 0 ? '' : 'none'; dot.textContent = n > 0 ? (n > 9 ? '9+' : String(n)) : ''; }
+  }
+  async function refreshNotifBadge(){
+    try { const rows = await api('GET', '/api/admin/notifications'); _notifRows = rows; applyNotifBadge(notifNewCount(rows)); }
+    catch(e){ /* owner-only; ignore if unavailable */ }
+  }
+  window.__btwRefreshNotif = refreshNotifBadge;
+  const NOTIF_TYPE = { therapist:'Therapist', coach:'Coach', mentor:'Mentor', school:'School', trainer:'Trainer' };
+  function notifIcon(type){ return type === 'clinician' ? '🩺' : type === 'patient' ? '🙂' : '✉️'; }
+  function notifWhen(at){
+    const ms = Date.now() - Date.parse(at);
+    if(ms < 3600e3) return Math.max(1, Math.round(ms/60e3)) + 'm';
+    if(ms < 86400e3) return Math.round(ms/3600e3) + 'h';
+    if(ms < 604800e3) return Math.round(ms/86400e3) + 'd';
+    return new Date(at).toLocaleDateString();
+  }
+  function renderNotifList(rows){
+    const body = document.getElementById('btwNotifBody');
+    if(!rows || !rows.length){ body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">' + esc(t('Nothing yet.')) + '</div>'; return; }
+    const seen = notifSeenTime();
+    body.innerHTML = rows.map(function(r){
+      const isNew = Date.parse(r.at) > seen;
+      let title, sub;
+      if(r.type === 'clinician'){
+        title = t('New professional') + ': ' + esc(r.title || '');
+        sub = esc(NOTIF_TYPE[r.detail] || r.detail || '') + (r.pending ? '<span class="btw-notif-pending">' + esc(t('needs review')) + '</span>' : '');
+      } else if(r.type === 'patient'){
+        title = t('New patient') + ': ' + esc(r.title || '');
+        sub = esc(r.detail === 'active' ? t('active') : t('invited'));
+      } else {
+        title = t('Message') + ': ' + esc(r.title || '');
+        sub = esc(r.detail || '');
+      }
+      return '<div class="btw-notif-row' + (isNew ? ' btw-notif-new' : '') + '">'
+        + '<div class="btw-notif-ic">' + notifIcon(r.type) + '</div>'
+        + '<div class="btw-notif-main"><div class="btw-notif-title">' + title + '</div><div class="btw-notif-sub">' + sub + '</div></div>'
+        + '<div class="btw-notif-when">' + esc(notifWhen(r.at)) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  async function openNotifications(){
+    const err = document.getElementById('btwNotifError');
+    const body = document.getElementById('btwNotifBody');
+    err.textContent = '';
+    body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
+    notifOverlay.style.display = 'flex';
+    try {
+      const rows = await api('GET', '/api/admin/notifications');
+      _notifRows = rows;
+      renderNotifList(rows);                 // highlights what's new (uses the old seen time)
+      try { localStorage.setItem('btw_notif_seen', new Date().toISOString()); } catch(e){}
+      applyNotifBadge(0);                    // everything is now seen
+    } catch(e){ err.textContent = e.message; body.innerHTML = ''; }
+  }
+  const notifBtnEl = document.getElementById('btwNotifBtn');
+  if(notifBtnEl) notifBtnEl.addEventListener('click', openNotifications);
+
   // --- Practice (multi-seat) ---
   const practiceOverlay = document.getElementById('btwPracticeOverlay');
   async function openPractice(){
@@ -10646,7 +10739,7 @@
   // Escape closes any of the dismissable modals.
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay','btwEngagementOverlay'].forEach(id=>{
+    ['btwSignupOverlay','btwPatientSignupOverlay','btwInviteOverlay','btwBillingOverlay','btwLoginOverlay','btwResetOverlay','btwSecurityOverlay','btwDataOverlay','btwConsentOverlay','btwPracticeOverlay','btwEngagementOverlay','btwNotifOverlay'].forEach(id=>{
       const el = document.getElementById(id);
       if(el && el.style.display !== 'none') el.style.display = 'none';
     });

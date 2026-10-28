@@ -1625,6 +1625,29 @@ export async function getOwnerOverview() {
   return { counts, byType };
 }
 
+// Owner-only activity feed — the most recent signups and messages across the
+// platform, newest first: new clinicians (pending = still needs licence
+// review), new patients, and contact-form messages (pending = not delivered).
+// Counts/metadata only; no check-in content.
+export async function getOwnerNotifications() {
+  const { rows } = await pool.query(`
+    SELECT type, id, title, detail, pending, at FROM (
+      (SELECT 'clinician' AS type, id::text AS id, name AS title,
+              account_type AS detail, (NOT licence_verified) AS pending, created_at AS at
+         FROM clinicians ORDER BY created_at DESC LIMIT 40)
+      UNION ALL
+      (SELECT 'patient', id::text, display_name, invite_status,
+              (invite_status = 'pending'), created_at
+         FROM patients ORDER BY created_at DESC LIMIT 40)
+      UNION ALL
+      (SELECT 'contact', id::text, name, email,
+              (NOT delivered), created_at
+         FROM contact_messages ORDER BY created_at DESC LIMIT 40)
+    ) u ORDER BY at DESC LIMIT 50
+  `);
+  return rows;
+}
+
 // --- Future-self notes ---
 // A patient's private encouragement to themselves, surfaced back to them on a
 // hard day. Private to the patient — never exposed on the clinician side.
