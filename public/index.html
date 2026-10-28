@@ -1048,11 +1048,15 @@
   .btw-emr-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:7px 12px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;transition:background .15s ease,color .15s ease;}
   .btw-emr-btn:hover{background:var(--moss-light);}
   .btw-emr-btn svg{flex:0 0 auto;}
-  /* Patient dashboard: hide the therapist-only caseload controls. */
+  /* Patient dashboard: hide the therapist-only caseload controls, the
+     clinician's private notes / check-in-mode card, and the clinician-worded
+     storage disclaimer — none of that belongs on the patient's own view. */
   .btw-role-patient #btwPatientList,
   .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwCopyEmrBar,
   .btw-role-patient #btwAlertBanner,
+  .btw-role-patient #btwClinNote,
+  .btw-role-patient #btwComposeServerNote,
   .btw-role-patient #btwAlertFeed{display:none !important;}
   /* Therapist dashboard: hide the patient check-in composer, a therapist
      reviews, they don't type check-ins. The left pane becomes a compact
@@ -3391,7 +3395,7 @@
         <div id="btwFutureHint" style="font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.5;">Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.</div>
       </div>
 
-      <div class="btw-disclaimer">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
+      <div class="btw-disclaimer" id="btwComposeServerNote">Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.</div>
       </div>
 
       <div id="btwClinNote" style="display:none;">
