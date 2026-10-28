@@ -13585,14 +13585,19 @@
   _startAud = _urlAud || _rememberedAud; // used for labels / URL / default field only
   _homeGated = (_urlAud === null);       // gate unless the URL explicitly names a field
   // If a session is likely (saved patient token, or a "signed in last time"
-  // hint), don't show the chooser — hold a brief blank while loadSession()
-  // confirms and sends them straight to their dashboard. If it turns out there
-  // is no valid session, loadSession() lifts the veil and shows the chooser.
+  // hint), hold the home view behind a brief veil while loadSession() confirms
+  // it and sends them straight to their dashboard. The chooser stays gated
+  // UNDERNEATH the veil — so if there's no valid session after all, lifting the
+  // veil reveals the chooser, and a signed-out visitor can never land on
+  // ungated home content no matter how the session check resolves.
   var _likelySignedIn = false;
   try { _likelySignedIn = !!pToken() || localStorage.getItem('btw_session') === '1'; } catch(e){}
   if(_likelySignedIn){
-    _homeGated = false;
     try { document.body.classList.add('btw-resolving'); } catch(e){}
+    // Safety: never hold the veil for more than a few seconds. If the session
+    // check stalls or errors, lift it anyway — the chooser is gated underneath,
+    // so a signed-out visitor still lands on the chooser rather than a blank.
+    setTimeout(function(){ try { document.body.classList.remove('btw-resolving'); } catch(e){} }, 4000);
   }
   curAudience = (_startAud && _VALID_AUD.indexOf(_startAud) >= 0) ? _startAud : 'therapy';
   if (!_homeGated) { try { localStorage.setItem('btw_audience', curAudience); localStorage.setItem('btw_field', curAudience); } catch(e){} }
