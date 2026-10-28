@@ -10283,6 +10283,7 @@
     try{
       await api('POST', '/api/admin/clinicians/' + id + '/verify', { verified });
       renderAdminList(await api('GET', '/api/admin/clinicians'));
+      if(window.__btwRefreshOwnerViews) window.__btwRefreshOwnerViews();
     }catch(e){ err.textContent = e.message; }
   }
   document.getElementById('btwAdminBtn').addEventListener('click', openAdmin);
@@ -10458,6 +10459,20 @@
   const notifBtnEl = document.getElementById('btwNotifBtn');
   if(notifBtnEl) notifBtnEl.addEventListener('click', openNotifications);
 
+  // Keep the owner's dashboard-level views in sync after an action that changes
+  // who has access (verify/revoke a professional, remove a clinic member or
+  // patient): re-fetch the notification badge + feed and, if the notifications
+  // or overview panel is open, re-render it with fresh data.
+  async function refreshOwnerViews(){
+    if(!(isTherapist() && ownerFreeAccess)) return;
+    try { await refreshNotifBadge(); } catch(e){}
+    const no = document.getElementById('btwNotifOverlay');
+    if(no && no.style.display !== 'none' && _notifRows) renderNotifList(_notifRows);
+    const eo = document.getElementById('btwEngagementOverlay');
+    if(eo && eo.style.display !== 'none'){ try { openEngagement(); } catch(e){} }
+  }
+  window.__btwRefreshOwnerViews = refreshOwnerViews;
+
   // --- Practice (multi-seat) ---
   const practiceOverlay = document.getElementById('btwPracticeOverlay');
   async function openPractice(){
@@ -10521,11 +10536,11 @@
   }
   async function removeSeat(id){
     if(!confirm(t('Remove this clinician from your clinic? Their account and patients stay theirs, but their place is freed and they will need their own subscription.'))) return;
-    try{ renderPractice(await api('POST', '/api/practice/seats/' + id + '/remove').then(()=> api('GET', '/api/practice'))); }
+    try{ renderPractice(await api('POST', '/api/practice/seats/' + id + '/remove').then(()=> api('GET', '/api/practice'))); if(window.__btwRefreshOwnerViews) window.__btwRefreshOwnerViews(); }
     catch(e){ alert(e.message); }
   }
   async function revokeInvite(email){
-    try{ await api('POST', '/api/practice/invites/revoke', { email }); renderPractice(await api('GET', '/api/practice')); }
+    try{ await api('POST', '/api/practice/invites/revoke', { email }); renderPractice(await api('GET', '/api/practice')); if(window.__btwRefreshOwnerViews) window.__btwRefreshOwnerViews(); }
     catch(e){ alert(e.message); }
   }
   document.getElementById('btwInviteSend').addEventListener('click', async ()=>{
@@ -11820,6 +11835,7 @@
       const ov = document.getElementById('btwDataOverlay'); if(ov) ov.style.display = 'none';
       await loadPatients();
       renderAll();
+      if(window.__btwRefreshOwnerViews) window.__btwRefreshOwnerViews();
     }catch(err){ alert(err.message); }
   }
   document.getElementById('btwDeletePatient').addEventListener('click', ()=>{ deletePatientFlow(selectedPatient()); });
