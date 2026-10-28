@@ -2679,6 +2679,9 @@
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">Account, data &amp; billing</button>
           <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
+          <div class="btw-nav-menu-sep" id="btwNavMenuSepInfo" style="display:none;"></div>
+          <button class="btw-nav-btn" id="btwMenuGuide" style="display:none;">Guide</button>
+          <button class="btw-nav-btn" id="btwMenuAbout" style="display:none;">How it works</button>
           <div class="btw-nav-menu-sep" id="btwNavMenuSep"></div>
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
@@ -9318,6 +9321,14 @@
     // Anyone signed in can download a copy of their own data.
     const dlData = document.getElementById('btwDownloadData');
     if(dlData) dlData.style.display = signedIn ? '' : 'none';
+    // Guide + "How it works" in the settings menu, so signed-in practitioners
+    // and individuals can still reach them once the top nav is hidden (app mode).
+    const menuGuide = document.getElementById('btwMenuGuide');
+    if(menuGuide) menuGuide.style.display = signedIn ? '' : 'none';
+    const menuAbout = document.getElementById('btwMenuAbout');
+    if(menuAbout) menuAbout.style.display = signedIn ? '' : 'none';
+    const menuSepInfo = document.getElementById('btwNavMenuSepInfo');
+    if(menuSepInfo) menuSepInfo.style.display = signedIn ? '' : 'none';
     document.getElementById('btwSecurityBtn').style.display = (asTherapist && !pendingVerify) ? '' : 'none';
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
     const practiceBtn = document.getElementById('btwPracticeBtn');
@@ -10060,6 +10071,16 @@
     if(menuSettings) menuSettings.addEventListener('click', function(){
       const open = document.getElementById('btwOpenData');
       if(open) open.click();
+    });
+    // Guide / How it works: route through the existing nav buttons so this works
+    // regardless of app-mode header trimming.
+    const menuGuideItem = document.getElementById('btwMenuGuide');
+    if(menuGuideItem) menuGuideItem.addEventListener('click', function(){
+      const b = document.getElementById('btwNavGuide'); if(b) b.click();
+    });
+    const menuAboutItem = document.getElementById('btwMenuAbout');
+    if(menuAboutItem) menuAboutItem.addEventListener('click', function(){
+      const b = document.getElementById('btwNavLearn'); if(b) b.click();
     });
     accountBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(); });
     navMenu.addEventListener('click', function(){ closeMenu(); }); // an item ran its own handler first, then we close
