@@ -1594,6 +1594,37 @@ export async function getEngagementStats() {
   return { totals, weekly, retention };
 }
 
+// Owner-only account overview — the business-side counts behind the product:
+// how many clinicians and patients, how many verified / subscribed, recent
+// signups, and clinicians by discipline. Counts only, no patient content.
+export async function getOwnerOverview() {
+  const counts = (await pool.query(`
+    SELECT
+      (SELECT count(*)::int FROM clinicians) AS clinicians,
+      (SELECT count(*)::int FROM clinicians WHERE licence_verified = true) AS clinicians_verified,
+      (SELECT count(*)::int FROM clinicians WHERE licence_verified = false) AS clinicians_pending,
+      (SELECT count(*)::int FROM clinicians WHERE subscription_status IN ('active','trialing','canceling')) AS clinicians_subscribed,
+      (SELECT count(*)::int FROM clinicians WHERE created_at >= now() - interval '7 days') AS clinicians_new_7d,
+      (SELECT count(*)::int FROM clinicians WHERE created_at >= now() - interval '30 days') AS clinicians_new_30d,
+      (SELECT count(*)::int FROM patients) AS patients,
+      (SELECT count(*)::int FROM patients WHERE invite_status = 'active') AS patients_active,
+      (SELECT count(*)::int FROM patients WHERE invite_status = 'pending') AS patients_pending,
+      (SELECT count(*)::int FROM patients WHERE subscription_status IN ('active','trialing','canceling')) AS patients_subscribed,
+      (SELECT count(*)::int FROM patients WHERE left_at IS NOT NULL) AS patients_left,
+      (SELECT count(*)::int FROM patients WHERE created_at >= now() - interval '7 days') AS patients_new_7d,
+      (SELECT count(*)::int FROM patients WHERE created_at >= now() - interval '30 days') AS patients_new_30d,
+      (SELECT count(*)::int FROM check_ins WHERE deleted_at IS NULL) AS checkins,
+      (SELECT count(*)::int FROM check_ins WHERE deleted_at IS NULL AND submitted_at >= now() - interval '7 days') AS checkins_7d
+  `)).rows[0];
+
+  const byType = (await pool.query(`
+    SELECT account_type, count(*)::int AS n
+      FROM clinicians GROUP BY account_type ORDER BY n DESC, account_type
+  `)).rows;
+
+  return { counts, byType };
+}
+
 // --- Future-self notes ---
 // A patient's private encouragement to themselves, surfaced back to them on a
 // hard day. Private to the patient — never exposed on the clinician side.

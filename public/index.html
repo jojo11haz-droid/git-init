@@ -10246,7 +10246,13 @@
     err.textContent = '';
     body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
     engOverlay.style.display = 'flex';
-    try{ renderEngagement(await api('GET', '/api/admin/engagement')); }
+    try{
+      const [overview, engagement] = await Promise.all([
+        api('GET', '/api/admin/overview').catch(()=>null),
+        api('GET', '/api/admin/engagement')
+      ]);
+      body.innerHTML = (overview ? buildOverviewHtml(overview) : '') + renderEngagement(engagement);
+    }
     catch(e){ err.textContent = e.message; body.innerHTML = ''; }
   }
   function engKpi(label, value, sub){
@@ -10267,7 +10273,6 @@
       + '</div></div>';
   }
   function renderEngagement(data){
-    const body = document.getElementById('btwEngBody');
     const t0 = data.totals || {};
     const remPct = t0.total_patients ? Math.round(100 * t0.reminders_on / t0.total_patients) : 0;
     let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">'
@@ -10304,7 +10309,37 @@
     html += '</div>';
     html += '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--ink-soft);opacity:.7;margin-top:4px;"><span>' + (wk[0] ? esc(wk[0].week.slice(5)) : '') + '</span><span>' + (wk.length ? esc(wk[wk.length-1].week.slice(5)) : '') + '</span></div>';
 
-    body.innerHTML = html;
+    return html;
+  }
+  // Owner account overview — the business-side counts, shown above the
+  // patient-engagement stats in the same Owner · Engagement panel.
+  function buildOverviewHtml(o){
+    const c = (o && o.counts) || {};
+    const AUD = { therapist:'Therapists', coach:'Coaches', mentor:'Mentors', school:'Schools', trainer:'Trainers' };
+    let html = '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:4px 0 10px;">Account overview</div>';
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'
+      + engKpi('Clinicians', c.clinicians || 0, (c.clinicians_new_30d || 0) + ' new · 30d')
+      + engKpi('Verified', c.clinicians_verified || 0, (c.clinicians_pending || 0) + ' pending')
+      + engKpi('Subscribed', c.clinicians_subscribed || 0, 'clinicians')
+      + '</div>';
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'
+      + engKpi('Patients', c.patients || 0, (c.patients_new_30d || 0) + ' new · 30d')
+      + engKpi('Active', c.patients_active || 0, (c.patients_pending || 0) + ' pending invites')
+      + engKpi('Subscribed', c.patients_subscribed || 0, (c.patients_left || 0) + ' left')
+      + '</div>';
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px;">'
+      + engKpi('Check-ins', c.checkins || 0, (c.checkins_7d || 0) + ' this week')
+      + engKpi('New clinicians', c.clinicians_new_7d || 0, 'last 7 days')
+      + engKpi('New patients', c.patients_new_7d || 0, 'last 7 days')
+      + '</div>';
+    const bt = (o && o.byType) || [];
+    if(bt.length){
+      html += '<div style="font-size:11.5px;color:var(--ink-soft);margin:10px 0 0;line-height:1.7;">Clinicians by type: '
+        + bt.map(function(r){ return '<strong>' + esc(String(r.n)) + '</strong> ' + esc(AUD[r.account_type] || r.account_type); }).join(' · ')
+        + '</div>';
+    }
+    html += '<div style="height:1px;background:var(--line);margin:16px 0;"></div>';
+    return html;
   }
   const engBtnEl = document.getElementById('btwEngagementBtn');
   if(engBtnEl) engBtnEl.addEventListener('click', openEngagement);
