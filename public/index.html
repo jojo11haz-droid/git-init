@@ -868,6 +868,13 @@
   .btw-nav-btn:hover{border-color:var(--ink);color:var(--ink);}
   .btw-nav-btn.icon{padding:0;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;}
   .btw-nav-btn.icon svg{width:17px;height:17px;display:block;}
+  /* Labelled "Settings" button (replaces the bare gear) — the signed-in entry
+     point to billing, security, account data and log out. */
+  .btw-settings-btn{display:inline-flex;align-items:center;gap:7px;}
+  .btw-settings-btn svg{width:16px;height:16px;display:block;}
+  .btw-settings-caret{font-size:11px;color:var(--ink-soft);}
+  .btw-nav-menu-head{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);padding:6px 12px 4px;}
+  .btw-nav-menu-sep{height:1px;background:var(--line);margin:4px 6px;}
   .btw-nav-menu{
     position:absolute; right:0; top:calc(100% + 8px); z-index:60;
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
@@ -2662,15 +2669,17 @@
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
-        <button class="btw-nav-btn icon" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Account menu" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+        <button class="btw-nav-btn btw-settings-btn" id="btwAccountBtn" style="display:none;" aria-haspopup="true" aria-expanded="false" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="btw-settings-label">Settings</span><span class="btw-settings-caret" aria-hidden="true">▾</span></button>
         <div id="btwNavMenu" class="btw-nav-menu" style="display:none;" role="menu">
+          <div class="btw-nav-menu-head" id="btwNavMenuHead">Settings</div>
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwEngagementBtn" style="display:none;">Engagement</button>
-          <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing</button>
+          <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing &amp; subscription</button>
           <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My clinic</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
-          <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">My data &amp; settings</button>
+          <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">Account, data &amp; billing</button>
           <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
+          <div class="btw-nav-menu-sep" id="btwNavMenuSep"></div>
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
       </div>
@@ -4139,6 +4148,7 @@
     "Support between meetings":"Du soutien entre les rencontres",
     "Students between check-ins":"Les élèves entre les suivis",
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
+    "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
