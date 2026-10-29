@@ -1348,7 +1348,11 @@ app.post('/api/practice/join', requireDb, signupLimiter, async (req, res) => {
     const accountType = owner.account_type;
     const discipline = owner.discipline || null;
     const free = isFreeAccess(email);
-    const needsReview = !free && memberNeedsReview(accountType, discipline);
+    // A clinic run by a partner (owner on an active free period, or free-access)
+    // auto-approves its clinicians: the clinic vouches for who it invites, so
+    // members skip the manual licence review and get straight in.
+    const ownerIsPartner = freePeriodActive(owner) || isFreeAccess(owner.email);
+    const needsReview = !free && !ownerIsPartner && memberNeedsReview(accountType, discipline);
     if (needsReview && (!licenceNumber || !licenceNumber.trim())) {
       return res.status(400).json({ error: 'A professional licence/order number is required for this discipline.' });
     }
@@ -2308,12 +2312,15 @@ function freeUntilFromNow(months) {
 }
 // Apply a signup code's free period to a just-created clinician, returning the
 // updated record (or the original if there's no valid code / the update fails).
+// A valid partner/clinic code also AUTO-APPROVES the account (the clinic is a
+// vouched partner), so they skip the manual licence review and get straight in.
 async function applyPromoCode(clinician, code) {
   const months = promoMonths(code);
   if (months <= 0) return { clinician, months: 0 };
   try {
-    const updated = await setClinicianFreeUntil(clinician.id, freeUntilFromNow(months));
-    return { clinician: updated || clinician, months };
+    let acct = (await setClinicianFreeUntil(clinician.id, freeUntilFromNow(months))) || clinician;
+    try { const v = await setClinicianLicenceVerified(clinician.id, true); if (v) acct = v; } catch (_) {}
+    return { clinician: acct, months };
   } catch (e) {
     console.error('Could not apply promo code:', e && e.message);
     return { clinician, months: 0 };
