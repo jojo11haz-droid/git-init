@@ -10972,7 +10972,7 @@
       const _promoEl = document.getElementById('btwSuPromo');
       const _promo = _promoEl ? _promoEl.value.trim() : '';
       if(_promo) body.promoCode = _promo;
-      if(coachLicence){ body.discipline = (curAudience === 'nutrition') ? 'nutrition' : 'physio'; body.teamName = practiceName; }
+      if(coachLicence){ body.discipline = curAudience; body.teamName = practiceName; } // physio | nutrition | neuropsych
       const data = await api('POST', coachLicence ? '/api/auth/coach/signup' : '/api/auth/signup', body);
       // A verified owner account may return a checkout link; honour it.
       if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
