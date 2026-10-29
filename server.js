@@ -2378,6 +2378,9 @@ function effectivePlan(c) {
 // uncapped admin seat.
 function seatCapForClinician(c) {
   if (!c || isFreeAccess(c.email)) return Infinity;
+  // A clinic on a partner free period (a signup-code clinic) can add its whole
+  // team while the free period is active; the plan's seat cap applies after.
+  if (freePeriodActive(c)) return Infinity;
   const plan = effectivePlan(c);
   if (/premium/.test(plan)) return 10;
   if (/^mentor/.test(plan)) return 2;
