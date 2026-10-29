@@ -680,18 +680,42 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
 // public registry and approve the account. Fire-and-forget: a missing number,
 // SMS being unconfigured, or a send failure never blocks or fails signup.
 const ADMIN_ALERT_PHONE = normalizePhone(process.env.ADMIN_ALERT_PHONE);
+// Where owner alerts go. Email is the reliable channel (no Twilio needed) and
+// defaults to the owner's address; SMS is sent too when a number is configured.
+const ADMIN_ALERT_EMAIL = (process.env.ADMIN_ALERT_EMAIL || '').trim();
+// Push an owner alert for a noteworthy event (new signup, new patient, …). Sent
+// by email and, when a number + Twilio are set up, by SMS. Fire-and-forget: a
+// missing channel or a send failure never blocks or fails the request.
+function notifyOwner({ subject, lines }) {
+  try {
+    const text = (Array.isArray(lines) ? lines.filter(Boolean).join('\n') : String(lines || '')).trim();
+    if (!text) return;
+    const toEmail = ADMIN_ALERT_EMAIL || OWNER_EMAIL;
+    if (toEmail && emailConfigured()) {
+      sendEmail({ to: toEmail, subject: subject || 'Between notification', text })
+        .catch(err => console.error('Owner email alert failed:', err && err.message));
+    }
+    if (ADMIN_ALERT_PHONE && smsConfigured()) {
+      sendSms({ to: ADMIN_ALERT_PHONE, text: [subject, text].filter(Boolean).join('\n') })
+        .catch(err => console.error('Owner SMS alert failed:', err && err.message));
+    }
+  } catch (err) {
+    console.error('notifyOwner error:', err && err.message);
+  }
+}
 function notifyOwnerOfSignup(clinician) {
   try {
-    if (!ADMIN_ALERT_PHONE || !smsConfigured()) return;
-    if (!clinician || clinician.licence_verified) return; // only ones needing review
-    if (isFreeAccess(clinician.email)) return;             // the owner's own account
+    if (!clinician) return;
+    if (isFreeAccess(clinician.email)) return;             // the owner's own test accounts
     const who = clinician.discipline || clinician.account_type || 'professional';
-    const lines = ['Between: new ' + who + ' signup to verify', clinician.name, clinician.email];
+    const needsReview = !clinician.licence_verified;
+    const subject = needsReview ? ('Between: new ' + who + ' to verify') : ('Between: new ' + who + ' signed up');
+    const lines = [clinician.name, clinician.email];
     const lic = [clinician.licence_order, clinician.licence_number].filter(Boolean).join(' ');
     if (lic) lines.push('Licence: ' + lic);
     if (clinician.province) lines.push(clinician.province);
-    sendSms({ to: ADMIN_ALERT_PHONE, text: lines.join('\n') })
-      .catch(err => console.error('Owner signup SMS failed:', err && err.message));
+    if (needsReview) lines.push('Needs licence review.');
+    notifyOwner({ subject, lines });
   } catch (err) {
     console.error('notifyOwnerOfSignup error:', err && err.message);
   }
@@ -2502,6 +2526,9 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
     const patient = await createSelfServePatient(name.trim(), email.trim(), await hashPassword(password), plan, true);
     const token = await startPatientSession(patient.id);
     sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
+    if (!isFreeAccess(patient.email)) {
+      notifyOwner({ subject: 'Between: new patient signed up', lines: [patient.display_name, patient.email, plan ? ('Plan: ' + plan) : 'Free plan'] });
+    }
 
     // Hand back a Stripe Checkout URL so the client can send them to pay. If
     // Stripe isn't configured, checkoutUrl is null and the account is simply
