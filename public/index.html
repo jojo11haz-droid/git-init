@@ -3858,6 +3858,10 @@
             <label>Professional licence or order number</label>
             <input type="text" id="btwSuLicence" placeholder="e.g. licence or order number">
           </div>
+          <div class="btw-form-field">
+            <label>Clinic or partner code <span style="font-weight:400;color:var(--ink-soft);">(optional)</span></label>
+            <input type="text" id="btwSuPromo" placeholder="If your clinic gave you a code" autocapitalize="characters" autocomplete="off">
+          </div>
           <div class="btw-form-note">We verify this against your licensing board's public registry before your account is activated. Between is for licensed clinicians using it with their own clients, not general wellness tracking. You won't be charged until your licence is confirmed.</div>
           <div class="btw-form-error" id="btwStep2Error"></div>
           <div class="btw-form-row">
@@ -4177,11 +4181,14 @@
   // Hard paywall: once billing is on, a self-serve patient (has a plan) or any
   // clinician must have a live subscription. Invited patients (no plan) are
   // covered by their therapist and never gated. Owner/comp accounts never gate.
+  // A partner/clinic signup code grants a free period (free_until in the future);
+  // while it's active the account isn't paywalled.
+  function freePeriodActive(o){ return !!(o && o.free_until && new Date(o.free_until).getTime() > Date.now()); }
   function isGated(){
     if(ownerFreeAccess) return false;
     if(!billingEnabled) return false;
-    if(isTherapist()) return !subActive(state.me && state.me.subscription_status);
-    if(isPatient()) return !!(state.patient && state.patient.plan) && !subActive(state.patient.subscription_status);
+    if(isTherapist()) return !freePeriodActive(state.me) && !subActive(state.me && state.me.subscription_status);
+    if(isPatient()) return !freePeriodActive(state.patient) && !!(state.patient && state.patient.plan) && !subActive(state.patient.subscription_status);
     return false;
   }
   // A clinician can't reach the dashboard until the owner has confirmed their
@@ -4251,6 +4258,7 @@
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
     "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
     "Clinician":"Clinicien","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view — nothing here is saved or sent.":"Aperçu de la vue patient — rien ici n'est enregistré ni envoyé.","This is a preview — your check-in was not sent.":"Ceci est un aperçu — votre suivi n'a pas été envoyé.",
+    "Clinic or partner code":"Code de clinique ou de partenaire","(optional)":"(facultatif)","If your clinic gave you a code":"Si votre clinique vous a donné un code","Free until":"Gratuit jusqu'au","Your clinic code covers you until then — no charge. Billing starts only after this date unless you cancel.":"Votre code de clinique vous couvre jusque-là — sans frais. La facturation ne commence qu'après cette date, sauf annulation.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -10097,8 +10105,17 @@
     const body = document.getElementById('btwBillingBody');
     const action = document.getElementById('btwBillingAction');
     action.style.display = 'none';
+    // A clinic/partner free period on file — show when it runs out. Billing stays
+    // available below so they can add a plan early; it just won't charge until then.
+    let freeBanner = '';
+    if(freePeriodActive(state.me)){
+      const until = new Date(state.me.free_until).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { year:'numeric', month:'long', day:'numeric' });
+      freeBanner = '<div style="background:var(--moss-light);border:1px solid #c6d6ec;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:13px;color:var(--ink);">'
+        + '<strong>' + esc(t('Free until')) + ' ' + esc(until) + '.</strong> '
+        + esc(t('Your clinic code covers you until then — no charge. Billing starts only after this date unless you cancel.')) + '</div>';
+    }
     if(st === 'canceling'){
-      body.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '.<br>'
+      body.innerHTML = freeBanner + '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '.<br>'
         + '<button id="btwClinReactivate" style="margin-top:8px;' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
     } else {
       // Show the plan picker whether or not there's an active subscription. With
@@ -10123,7 +10140,7 @@
         ? ('<strong>' + esc(t('Subscription: active')) + '</strong> · ' + esc(planName) + '.<br>'
             + (st === 'trialing' ? esc(t('Your free trial is on; your card is charged when it ends unless you cancel.')) + '<br>' : ''))
         : (esc(t('Choose a plan to start your 14-day free trial. Nothing is charged for 14 days and you can cancel anytime before then.')) + '<br>');
-      body.innerHTML = header
+      body.innerHTML = freeBanner + header
         + '<div style="margin:14px 0 8px;font-weight:600;color:var(--ink);">' + esc(activeSub ? t('Change plan') : t('Choose your plan')) + '</div>'
         + rows
         + (activeSub ? '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + esc(t('Switching takes effect now; your next invoice is adjusted for the difference.')) + '</div>' : '')
@@ -10947,6 +10964,9 @@
         practiceName,
         plan: selectedPlan
       };
+      const _promoEl = document.getElementById('btwSuPromo');
+      const _promo = _promoEl ? _promoEl.value.trim() : '';
+      if(_promo) body.promoCode = _promo;
       if(coachLicence){ body.discipline = (curAudience === 'nutrition') ? 'nutrition' : 'physio'; body.teamName = practiceName; }
       const data = await api('POST', coachLicence ? '/api/auth/coach/signup' : '/api/auth/signup', body);
       // A verified owner account may return a checkout link; honour it.

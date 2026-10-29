@@ -8,7 +8,7 @@ import {
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
-  listCliniciansForReview, setClinicianLicenceVerified,
+  listCliniciansForReview, setClinicianLicenceVerified, setClinicianFreeUntil,
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
   updatePatientSubscription, getPatientById, getPatientByStripeSubscription, getPatientStripe, getClinicianStripe,
@@ -726,17 +726,20 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       plan
     });
     await startSession(res, req, clinician.id);
-    sendWelcomeEmail({ to: clinician.email, name: clinician.name, kind: isFreeAccess(clinician.email) ? 'pro' : 'therapist' });
-    notifyOwnerOfSignup(clinician);
+    // A valid clinic/partner signup code grants a time-limited free period.
+    const { clinician: acct, months: promoMonthsGranted } = await applyPromoCode(clinician, (req.body || {}).promoCode);
+    sendWelcomeEmail({ to: acct.email, name: acct.name, kind: isFreeAccess(acct.email) ? 'pro' : 'therapist' });
+    notifyOwnerOfSignup(acct);
 
     // No Stripe checkout yet: an unverified account shouldn't put a card on file
     // or start a trial clock, so billing waits until the licence is approved
     // (the owner's free-access account skips verification and never pays).
-    const owner = isFreeAccess(clinician.email);
+    const owner = isFreeAccess(acct.email);
     res.status(201).json({
-      clinician,
-      verificationRequired: !owner && !clinician.licence_verified,
+      clinician: acct,
+      verificationRequired: !owner && !acct.licence_verified,
       billingEnabled: stripeConfigured(),
+      promoMonths: promoMonthsGranted,
       freeAccess: owner
     });
   } catch (err) {
@@ -787,25 +790,29 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
       province: needsLicence && typeof province === 'string' ? province.trim() : null
     });
     await startSession(res, req, coach.id);
-    const pending = !coach.licence_verified;
+    // A valid clinic/partner signup code grants a time-limited free period.
+    const { clinician: acct, months: promoMonthsGranted } = await applyPromoCode(coach, (req.body || {}).promoCode);
+    const pending = !acct.licence_verified;
     // A pending physio gets the review email; everyone else gets the ready email.
-    sendWelcomeEmail({ to: coach.email, name: coach.name, kind: pending ? 'therapist' : 'pro', discipline });
-    notifyOwnerOfSignup(coach);
+    sendWelcomeEmail({ to: acct.email, name: acct.name, kind: pending ? 'therapist' : 'pro', discipline });
+    notifyOwnerOfSignup(acct);
 
-    // Start the 14-day trial with a card on file — but not for a pending physio:
-    // like a therapist, billing waits until the licence is approved.
+    // Start the 14-day trial with a card on file — but not for a pending physio
+    // (billing waits until the licence is approved) and not when a signup code
+    // already covers them for a free period.
     let checkoutUrl = null;
-    if (!pending) {
-      try { checkoutUrl = await startClinicianCheckout(coach, plan, siteOrigin(req)); }
+    if (!pending && promoMonthsGranted <= 0) {
+      try { checkoutUrl = await startClinicianCheckout(acct, plan, siteOrigin(req)); }
       catch (e) { console.error('Could not start checkout:', e.message); }
     }
 
     res.status(201).json({
-      clinician: coach,
+      clinician: acct,
       checkoutUrl,
       verificationRequired: pending,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
-      freeAccess: isFreeAccess(coach.email)
+      promoMonths: promoMonthsGranted,
+      freeAccess: isFreeAccess(acct.email)
     });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -2275,14 +2282,57 @@ const FREE_ACCESS_EMAILS = [OWNER_EMAIL]
 function isFreeAccess(email) {
   return !!email && FREE_ACCESS_EMAILS.includes(String(email).toLowerCase());
 }
+// Partner / clinic signup codes: a time-limited free period instead of a
+// permanent comp list. Configured in one env var as CODE:months pairs, e.g.
+//   PROMO_CODES="KINATEX:5,REHAB:3"
+// A clinician who signs up with a valid code gets that many months free; after
+// it lapses, normal billing resumes automatically (nothing to clean up). Codes
+// are matched case-insensitively.
+const PROMO_CODES = (() => {
+  const map = {};
+  (process.env.PROMO_CODES || '').split(',').forEach(pair => {
+    const [code, months] = String(pair).split(':');
+    const m = parseInt(String(months || '').trim(), 10);
+    if (code && code.trim() && Number.isFinite(m) && m > 0) map[code.trim().toUpperCase()] = m;
+  });
+  return map;
+})();
+function promoMonths(code) {
+  if (!code) return 0;
+  return PROMO_CODES[String(code).trim().toUpperCase()] || 0;
+}
+function freeUntilFromNow(months) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+// Apply a signup code's free period to a just-created clinician, returning the
+// updated record (or the original if there's no valid code / the update fails).
+async function applyPromoCode(clinician, code) {
+  const months = promoMonths(code);
+  if (months <= 0) return { clinician, months: 0 };
+  try {
+    const updated = await setClinicianFreeUntil(clinician.id, freeUntilFromNow(months));
+    return { clinician: updated || clinician, months };
+  } catch (e) {
+    console.error('Could not apply promo code:', e && e.message);
+    return { clinician, months: 0 };
+  }
+}
 function patientNeedsSub(p) {
   return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
+}
+function freePeriodActive(x) {
+  return !!(x && x.free_until && new Date(x.free_until).getTime() > Date.now());
 }
 function clinicianNeedsSub(c) {
   // A member seat in a practice is covered by the owner's subscription, so the
   // member never owes one themselves (the owner holds the one plan that pays
   // for every seat).
   if (c && c.practice_owner_id) return false;
+  // An active partner/clinic free period (from a signup code) covers them until
+  // it lapses, then normal billing resumes.
+  if (freePeriodActive(c)) return false;
   // Coaches (team) and mentors (recovery) only owe a subscription once their
   // plans are configured in Stripe; until then they use the product free.
   if (c && (c.account_type === 'coach' || c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer')) {

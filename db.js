@@ -247,6 +247,7 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reviewed_at TIMESTAMPTZ;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS left_at TIMESTAMPTZ;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_order TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS licence_reviewed_at TIMESTAMPTZ;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS free_until TIMESTAMPTZ;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS mood_inferred BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS pain_map JSONB;
 -- How each sore spot feels (aching/stiff/sharp/tingling...), keyed the same
@@ -288,7 +289,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, free_until, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -370,6 +371,19 @@ export async function listCliniciansForReview() {
      ORDER BY licence_verified ASC, licence_reviewed_at IS NOT NULL ASC, created_at DESC`
   );
   return rows;
+}
+
+// Partner/promo free period: a signup code grants N months free, stored as an
+// expiry date. After it passes, normal billing resumes on its own — no comp
+// list to clean up. Only extends the free window (never shortens an existing one).
+export async function setClinicianFreeUntil(clinicianId, date) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians
+       SET free_until = GREATEST(coalesce(free_until, $1), $1)
+     WHERE id = $2 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [date, clinicianId]
+  );
+  return rows[0] || null;
 }
 
 export async function setClinicianLicenceVerified(clinicianId, verified) {
