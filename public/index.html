@@ -1692,6 +1692,17 @@
   /* Once a field is picked the chooser gives way to that field's page; reopen
      it any time from the "For: <field>" pill at the top right. */
   .btw-home:not(.btw-gated) .btw-chooser{display:none;}
+  /* First-paint anti-flash (set by the inline script at the top of <body>,
+     cleared by the main script). Hides the header chrome + home content and
+     forces the chooser visible from the very first frame on a plain landing,
+     and veils the home view when a session is likely — so a phone never flashes
+     the homepage before locking onto the chooser. */
+  html.btw-pre-gated .btw-nav,
+  html.btw-pre-gated .btw-sub,
+  html.btw-pre-gated .btw-audnow{display:none !important;}
+  html.btw-pre-gated #btwViewHome .btw-home > *:not(.btw-chooser){display:none !important;}
+  html.btw-pre-gated #btwViewHome .btw-home .btw-chooser{display:block !important;}
+  html.btw-pre-resolving #btwViewHome{visibility:hidden !important;}
   .btw-audnow.gated .forpfx{display:none;}
   /* The chooser is the whole landing, so clear the header chrome while gated:
      the page nav (Home / How it works / …), the redundant field pill, the
@@ -2366,6 +2377,24 @@
 </script>
 </head>
 <body>
+<script>
+/* First-paint gate: decide, before anything renders, whether this load is the
+   chooser landing (signed-out, no field in the URL), a field deep-link, or a
+   likely-signed-in session, and set a class on <html> so the right content is
+   hidden from the very first frame. Without this, a phone briefly paints the
+   homepage before the main script locks it onto the "Who's it for?" chooser.
+   The main script reconciles the real state and clears these classes. */
+(function(){try{
+  var d=document.documentElement;
+  var p=(location.pathname||'/').replace(/\/+$/,'')||'/';
+  var FP={'/therapy':1,'/individual':1,'/physio':1,'/kinesiology':1,'/osteopathy':1,'/occupational-therapy':1,'/neuropsychology':1,'/sports':1,'/fitness':1,'/addiction':1,'/schools':1,'/nutrition':1};
+  var forP=''; try{forP=new URLSearchParams(location.search).get('for')||'';}catch(e){}
+  var urlField=!!FP[p]||!!forP;
+  var signedIn=false; try{signedIn=!!localStorage.getItem('btw_ptoken')||localStorage.getItem('btw_session')==='1';}catch(e){}
+  if(signedIn) d.classList.add('btw-pre-resolving');
+  else if(!urlField) d.classList.add('btw-pre-gated');
+}catch(e){}})();
+</script>
 
 <div class="btw-bg" aria-hidden="true">
   <div class="btw-bg-circle btw-bg-navy" id="btwBgNavy"></div>
@@ -13899,6 +13928,10 @@
   document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.toggle('active', b.dataset.aud === curAudience));
   syncAudSelLabel();
   if(_homeGated) setHomeGate(true);
+  // The real gate/veil state is now applied, so drop the first-paint pre-classes
+  // (same frame, no repaint in between — the handoff is seamless). Keeping them
+  // would wrongly hide content after the visitor later picks a field.
+  try { document.documentElement.classList.remove('btw-pre-gated','btw-pre-resolving'); } catch(e){}
   try {
     const modeParam = (new URLSearchParams(location.search).get('mode') || '').toLowerCase();
     if(['classroom','teacher','class'].includes(modeParam)) curSchoolMode = 'classroom';
