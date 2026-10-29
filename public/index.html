@@ -10508,7 +10508,12 @@
     catch(e){ /* owner-only; ignore if unavailable */ }
   }
   window.__btwRefreshNotif = refreshNotifBadge;
-  const NOTIF_TYPE = { therapist:'Therapist', coach:'Coach', mentor:'Mentor', school:'School', trainer:'Trainer' };
+  const NOTIF_TYPE = {
+    therapist:'Therapist', coach:'Coach', mentor:'Mentor', school:'School', trainer:'Trainer',
+    physio:'Physiotherapist', kinesiology:'Kinesiologist', osteo:'Osteopath',
+    occupational:'Occupational therapist', neuropsych:'Neuropsychologist',
+    nutrition:'Nutritionist', sports:'Sports coach', fitness:'Personal trainer'
+  };
   function notifIcon(type){ return type === 'clinician' ? '🩺' : type === 'patient' ? '🙂' : '✉️'; }
   function notifWhen(at){
     const ms = Date.now() - Date.parse(at);

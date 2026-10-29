@@ -1647,7 +1647,7 @@ export async function getOwnerNotifications() {
   const { rows } = await pool.query(`
     SELECT type, id, title, detail, pending, at FROM (
       (SELECT 'clinician' AS type, id::text AS id, name AS title,
-              account_type AS detail, (NOT licence_verified) AS pending, created_at AS at
+              COALESCE(NULLIF(discipline, ''), account_type) AS detail, (NOT licence_verified) AS pending, created_at AS at
          FROM clinicians ORDER BY created_at DESC LIMIT 40)
       UNION ALL
       (SELECT 'patient', id::text, display_name, invite_status,
