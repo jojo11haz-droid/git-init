@@ -3568,8 +3568,8 @@
 
       <div class="btw-pricing-cost-note">Every plan includes AI-powered summaries and trend charts. The AI cost per check-in is small enough that we don't meter it, so use it as much as you need.</div>
 
-      <div class="btw-pricing-segment">For therapists &amp; practices</div>
-      <div class="btw-pricing-cards">
+      <div class="btw-pricing-segment" data-price-aud="pro">For therapists &amp; practices</div>
+      <div class="btw-pricing-cards" data-price-aud="pro">
         <div class="btw-price-card">
           <div class="btw-price-tier">Solo</div>
           <div class="btw-price-name">For individual practitioners</div>
@@ -3629,8 +3629,8 @@
         </div>
       </div>
 
-      <div class="btw-pricing-segment">For patients, use Between on your own <span class="btw-seg-mode" data-price-mode hidden></span></div>
-      <div class="btw-pricing-cards">
+      <div class="btw-pricing-segment" data-price-aud="indiv">For patients, use Between on your own <span class="btw-seg-mode" data-price-mode hidden></span></div>
+      <div class="btw-pricing-cards" data-price-aud="indiv">
         <div class="btw-price-card">
           <div class="btw-price-tier">Personal</div>
           <div class="btw-price-name">Check in for yourself</div>
@@ -3694,21 +3694,29 @@
       <div class="btw-pricing-cost-note" id="btwCadNote">Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.</div>
 
       <div class="btw-pricing-faq">
-        <div class="btw-faq-item">
+        <div class="btw-faq-item" data-price-aud="pro">
           <h4>Do my patients pay anything?</h4>
           <p>Not for your caseload. When you invite a patient in as their clinician, Between is covered by your seat and they're never billed. Patients only pay if they choose to buy a Personal plan and use Between on their own, independent of any therapist.</p>
+        </div>
+        <div class="btw-faq-item" data-price-aud="indiv">
+          <h4>Do I need a therapist to use Between?</h4>
+          <p>No. A Personal plan is yours alone, with no clinician involved. You can use Between entirely on your own, and if you ever start seeing someone, it's up to you whether to share a short summary.</p>
         </div>
         <div class="btw-faq-item">
           <h4>What happens after my trial?</h4>
           <p>You add a card to start your free trial, but nothing is charged during it. We'll remind you before it ends and you can cancel anytime before then to avoid being charged.</p>
         </div>
-        <div class="btw-faq-item">
+        <div class="btw-faq-item" data-price-aud="pro">
           <h4>Is this a replacement for my EHR?</h4>
           <p>No, Between focuses specifically on between-session check-ins. It's designed to run alongside whatever practice management or notes software you already use.</p>
         </div>
-        <div class="btw-faq-item">
+        <div class="btw-faq-item" data-price-aud="pro">
           <h4>Where is my patients' data stored?</h4>
           <p>Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. See the Privacy Policy for details.</p>
+        </div>
+        <div class="btw-faq-item" data-price-aud="indiv">
+          <h4>Where is my data stored?</h4>
+          <p>Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. Your data is yours, and you can export or delete it anytime. See the Privacy Policy for details.</p>
         </div>
       </div>
 
@@ -5770,7 +5778,12 @@
     "Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
       "Mood trends, recurring themes and a this-week recap gather over time, so a rough stretch is something you can look back on and see, not something you have to remember.",
     "Effortless on both sides. A check-in takes your client under a minute and your whole caseload comes into focus at a glance.":
-      "Effortless. A check-in takes under a minute and your own patterns come into focus at a glance."
+      "Effortless. A check-in takes under a minute and your own patterns come into focus at a glance.",
+    "Pricing for therapists and patients":"Pricing for keeping track of yourself",
+    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
+      "A small monthly plan for a clearer picture of your own weeks. Check in when something comes up and watch your mood and themes take shape over time.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Pick the plan that fits how much you want to check in. Personal keeps it simple, and Premium opens up unlimited check-ins, guided journaling and deeper trends."
   };
   const INDIVIDUAL_FR = {
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
@@ -5791,7 +5804,18 @@
     "Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.":
       "Les tendances d'humeur, les thèmes récurrents et un récapitulatif de la semaine se rassemblent au fil du temps, pour qu'une période difficile soit quelque chose que vous pouvez revoir, pas quelque chose à retenir.",
     "Effortless on both sides. A check-in takes your client under a minute and your whole caseload comes into focus at a glance.":
-      "Sans effort. Un suivi prend moins d'une minute, et vos propres tendances se dessinent d'un coup d'œil."
+      "Sans effort. Un suivi prend moins d'une minute, et vos propres tendances se dessinent d'un coup d'œil.",
+    "Pricing for therapists and patients":"Tarifs pour vous suivre vous-même",
+    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
+      "Un petit abonnement mensuel pour y voir plus clair dans vos propres semaines. Faites un suivi quand quelque chose survient et voyez votre humeur et vos thèmes prendre forme au fil du temps.",
+    "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
+      "Choisissez le forfait qui correspond à votre rythme de suivi. Personnel reste simple, et Premium ouvre les suivis illimités, le journal guidé et des tendances plus poussées.",
+    "Do I need a therapist to use Between?":"Ai-je besoin d'un thérapeute pour utiliser Between ?",
+    "No. A Personal plan is yours alone, with no clinician involved. You can use Between entirely on your own, and if you ever start seeing someone, it's up to you whether to share a short summary.":
+      "Non. Un forfait Personnel n'appartient qu'à vous, sans aucun clinicien. Vous pouvez utiliser Between entièrement seul, et si un jour vous consultez quelqu'un, c'est à vous de décider si vous partagez un court résumé.",
+    "Where is my data stored?":"Où mes données sont-elles stockées ?",
+    "Between runs on third-party cloud infrastructure (currently Render) and may store data in the United States. Where information is transferred outside Quebec, we handle it with Quebec's Law 25 in mind. Your data is yours, and you can export or delete it anytime. See the Privacy Policy for details.":
+      "Between fonctionne sur une infrastructure infonuagique tierce (actuellement Render) et peut stocker des données aux États-Unis. Lorsque des renseignements sont transférés hors du Québec, nous les traitons en tenant compte de la Loi 25 du Québec. Vos données vous appartiennent, et vous pouvez les exporter ou les supprimer en tout temps. Consultez la politique de confidentialité pour les détails."
   };
 
   function pickCopy(key){
@@ -7368,6 +7392,12 @@
     // audiences already have their own volume/premium tier in the third card.
     const soloPremium = document.getElementById('btwSoloPremiumCard');
     if(soloPremium) soloPremium.style.display = (curAudience === 'therapy') ? '' : 'none';
+    // Pricing is split in two: a professional block and an individual block.
+    // An individual only needs the self-use plans; a professional only needs
+    // their own. Show one block, hide the other, by audience.
+    var _pricingIndiv = (curAudience === 'individual');
+    document.querySelectorAll('[data-price-aud="pro"]').forEach(function(e){ e.style.display = _pricingIndiv ? 'none' : ''; });
+    document.querySelectorAll('[data-price-aud="indiv"]').forEach(function(e){ e.style.display = _pricingIndiv ? '' : 'none'; });
     // The "use it on your own" hero link is redundant on the individual page,
     // where the whole page already speaks to self-use.
     document.querySelectorAll('.btw-hero-solo-link').forEach(function(l){ l.style.display = (curAudience === 'individual') ? 'none' : ''; });
