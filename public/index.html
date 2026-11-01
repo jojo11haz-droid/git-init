@@ -978,8 +978,7 @@
   .btw-audsel-item{text-align:left;font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--ink);background:none;border:none;border-radius:8px;padding:8px 11px;cursor:pointer;transition:background .15s ease;}
   .btw-audsel-item:hover{background:var(--panel);}
   .btw-audsel-item.active{background:var(--moss-light);color:var(--moss);font-weight:600;}
-  .btw-audsel-group{font:600 9.5px/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);padding:9px 11px 4px;}
-  .btw-audsel-group:first-child{padding-top:3px;}
+  .btw-audsel-sep{height:1px;background:var(--line);margin:5px 8px;}
   @media (max-width:520px){ .btw-audsel-menu{right:0;left:auto;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;} }
   /* Sub-mode slider shown only inside the Schools audience */
   .btw-submode{
@@ -7734,13 +7733,14 @@
       ['Wellbeing & support', ['nutrition','schools']],
       ['On your own', ['individual']]
     ];
-    menu.innerHTML = GROUPS.map(function(g){
-      return '<div class="btw-audsel-group" data-grouplabel="'+g[0]+'"></div>' + g[1].map(function(a){
+    // Grouped order, but no text headers in the switcher — a thin divider
+    // between groups keeps it tidy without the clutter.
+    menu.innerHTML = GROUPS.map(function(g, gi){
+      return (gi ? '<div class="btw-audsel-sep" aria-hidden="true"></div>' : '') + g[1].map(function(a){
         return '<button type="button" class="btw-audsel-item" role="menuitem" data-aud="'+a+'"></button>';
       }).join('');
     }).join('');
     function renderAudMenu(){
-      menu.querySelectorAll('.btw-audsel-group').forEach(function(g){ g.textContent = t(g.dataset.grouplabel); });
       menu.querySelectorAll('.btw-audsel-item').forEach(function(it){
         const a = it.dataset.aud;
         it.textContent = t(AUD_LABEL[a] || a);
