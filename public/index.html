@@ -7693,9 +7693,8 @@
     }
     function enable(){
       wrap.classList.add('btw-accordion');
-      var activeIdx = 0;
-      groups.forEach(function(g,i){ if(g.querySelector('.btw-chooser-card.active')) activeIdx = i; });
-      groups.forEach(function(g,i){ setOpen(g, i === activeIdx); });
+      // Start with every category closed; the visitor taps one to open it.
+      groups.forEach(function(g){ setOpen(g, false); });
       labels.forEach(function(l){ l.setAttribute('role','button'); l.setAttribute('tabindex','0'); });
     }
     function disable(){
