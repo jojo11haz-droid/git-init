@@ -1677,6 +1677,18 @@
   .btw-chooser-group .btw-chooser-grid{justify-content:flex-start;}
   .btw-chooser-grouplabel{font:600 11px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--moss);display:flex;align-items:center;gap:10px;margin:0 2px 11px;}
   .btw-chooser-grouplabel::before{content:"";width:18px;height:2px;background:var(--clay);border-radius:1px;flex:none;}
+  .btw-chooser-chevron{display:none;}
+  /* On phones the categories collapse to a tap-to-open accordion, so the whole
+     list isn't open at once. Desktop (above) always shows every card. */
+  @media (max-width:640px){
+    .btw-chooser-groups.btw-accordion .btw-chooser-group{margin-bottom:0;border-top:1px solid var(--line);}
+    .btw-chooser-groups.btw-accordion .btw-chooser-group:first-child{border-top:none;}
+    .btw-chooser-groups.btw-accordion .btw-chooser-grouplabel{cursor:pointer;margin:0;padding:15px 2px;-webkit-tap-highlight-color:transparent;}
+    .btw-chooser-groups.btw-accordion .btw-chooser-chevron{display:flex;align-items:center;margin-left:auto;color:var(--ink-soft);transition:transform .2s ease;}
+    .btw-chooser-groups.btw-accordion .btw-chooser-group.btw-open .btw-chooser-chevron{transform:rotate(180deg);}
+    .btw-chooser-groups.btw-accordion .btw-chooser-group:not(.btw-open) .btw-chooser-grid{display:none;}
+    .btw-chooser-groups.btw-accordion .btw-chooser-group.btw-open .btw-chooser-grid{padding-bottom:14px;}
+  }
   .btw-chooser-card{flex:0 0 calc(33.333% - 8px);min-width:0;display:flex;flex-direction:column;gap:5px;text-align:left;padding:15px 16px 16px;border:1px solid var(--line);border-radius:15px;background:var(--panel);cursor:pointer;font-family:var(--font-body);position:relative;overflow:hidden;transition:border-color .2s ease,box-shadow .25s ease,background .2s ease,transform .22s cubic-bezier(.22,.9,.3,1);}
   @media (max-width:820px){.btw-chooser-card{flex-basis:calc(50% - 6px);}}
   @media (max-width:460px){.btw-chooser-card{flex-basis:100%;}}
@@ -2751,7 +2763,7 @@
         </div>
         <div class="btw-chooser-groups">
           <div class="btw-chooser-group">
-            <div class="btw-chooser-grouplabel">Mind &amp; mood</div>
+            <div class="btw-chooser-grouplabel">Mind &amp; mood<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
               <button type="button" class="btw-chooser-card" data-aud="neuropsych"><span class="t">Neuropsychology</span><span class="h">Focus, memory and mood between sessions</span></button>
@@ -2759,7 +2771,7 @@
             </div>
           </div>
           <div class="btw-chooser-group">
-            <div class="btw-chooser-grouplabel">Body &amp; movement</div>
+            <div class="btw-chooser-grouplabel">Body &amp; movement<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physiotherapy</span><span class="h">Pain and a body map between visits</span></button>
               <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
@@ -2768,21 +2780,21 @@
             </div>
           </div>
           <div class="btw-chooser-group">
-            <div class="btw-chooser-grouplabel">Sport &amp; performance</div>
+            <div class="btw-chooser-grouplabel">Sport &amp; performance<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
               <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
-            <div class="btw-chooser-grouplabel">Wellbeing &amp; support</div>
+            <div class="btw-chooser-grouplabel">Wellbeing &amp; support<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
               <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
-            <div class="btw-chooser-grouplabel">On your own</div>
+            <div class="btw-chooser-grouplabel">On your own<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card btw-chooser-card-solo" data-aud="individual"><span class="t">Or just for yourself</span><span class="h">Your own private check-ins, no clinician needed</span></button>
             </div>
@@ -7658,6 +7670,40 @@
     }
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
+  // Mobile-only accordion for the chooser: on a phone each category collapses so
+  // the whole list isn't open at once, with the current field's group open.
+  // Desktop always shows every card (the accordion class is only added on mobile).
+  (function(){
+    var wrap = document.querySelector('.btw-chooser-groups'); if(!wrap) return;
+    var labels = [].slice.call(wrap.querySelectorAll('.btw-chooser-grouplabel'));
+    if(!labels.length) return;
+    var groups = labels.map(function(l){ return l.parentElement; });
+    var mq = window.matchMedia('(max-width:640px)');
+    function setOpen(g, on){
+      g.classList.toggle('btw-open', on);
+      var l = g.querySelector('.btw-chooser-grouplabel'); if(l) l.setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+    function enable(){
+      wrap.classList.add('btw-accordion');
+      var activeIdx = 0;
+      groups.forEach(function(g,i){ if(g.querySelector('.btw-chooser-card.active')) activeIdx = i; });
+      groups.forEach(function(g,i){ setOpen(g, i === activeIdx); });
+      labels.forEach(function(l){ l.setAttribute('role','button'); l.setAttribute('tabindex','0'); });
+    }
+    function disable(){
+      wrap.classList.remove('btw-accordion');
+      groups.forEach(function(g){ g.classList.remove('btw-open'); });
+      labels.forEach(function(l){ l.removeAttribute('role'); l.removeAttribute('tabindex'); l.removeAttribute('aria-expanded'); });
+    }
+    labels.forEach(function(l){
+      function toggle(){ if(!mq.matches) return; var g = l.parentElement; setOpen(g, !g.classList.contains('btw-open')); }
+      l.addEventListener('click', toggle);
+      l.addEventListener('keydown', function(e){ if(mq.matches && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); toggle(); } });
+    });
+    function sync(){ if(mq.matches) enable(); else disable(); }
+    if(mq.addEventListener) mq.addEventListener('change', sync); else if(mq.addListener) mq.addListener(sync);
+    sync();
+  })();
   // Back/forward between field URLs: follow the address bar, don't re-push it.
   window.addEventListener('popstate', function(){
     const aud = audFromPath() || 'therapy';
