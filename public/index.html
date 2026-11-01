@@ -1569,6 +1569,11 @@
   .btw-guide-contact a{color:var(--moss);}
   /* Floating AI chat widget */
   #btwChat{position:fixed;right:18px;bottom:34px;z-index:45;}
+  /* Back-to-top: bottom-left so it never meets the chat bubble (bottom-right). */
+  .btw-totop{position:fixed;left:18px;bottom:34px;z-index:45;width:44px;height:44px;border-radius:50%;background:var(--panel);color:var(--moss);border:1px solid var(--line);box-shadow:0 4px 14px rgba(22,28,38,0.12);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease,visibility .2s ease,box-shadow .18s ease,border-color .18s ease;}
+  .btw-totop.show{opacity:.85;visibility:visible;transform:translateY(0);}
+  .btw-totop:hover,.btw-totop:focus-visible{opacity:1;box-shadow:0 6px 18px rgba(22,28,38,0.18);border-color:var(--moss-light);transform:translateY(-2px);}
+  @media (max-width:520px){ .btw-totop{width:42px;height:42px;left:14px;bottom:20px;} }
   /* Sits quietly in the corner, lifting to full opacity on hover, focus or open. */
   .btw-chat-launch{position:relative;width:46px;height:46px;border-radius:50%;background:var(--panel);color:var(--moss);border:1px solid var(--line);box-shadow:0 4px 14px rgba(22,28,38,0.10);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.82;transition:transform .18s ease,opacity .18s ease,box-shadow .18s ease,border-color .18s ease;}
   .btw-chat-launch:hover,.btw-chat-launch:focus-visible{opacity:1;transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,28,38,0.16);border-color:var(--moss-light);}
@@ -4182,6 +4187,19 @@
     <svg class="btw-chat-ico close" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
   </button>
 </div>
+
+<button type="button" id="btwToTop" class="btw-totop" aria-label="Back to top" title="Back to top">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+</button>
+<script>
+(function(){
+  var btn = document.getElementById('btwToTop'); if(!btn) return;
+  function onScroll(){ btn.classList.toggle('show', (window.scrollY || document.documentElement.scrollTop || 0) > 500); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  onScroll();
+})();
+</script>
 
 <script>
 (function(){
