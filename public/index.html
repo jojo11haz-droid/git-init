@@ -507,6 +507,14 @@
   .btw-reflection-body p{margin:0 0 7px;}
   .btw-reflection-body p:last-child{margin-bottom:0;}
   .btw-reflection-prompt{color:var(--ink-soft);font-style:italic;}
+  /* AI weekly reflection (Premium): a warm few sentences on the person's week. */
+  .btw-aireflect .btw-reflection-head strong{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--ink);}
+  .btw-aireflect-body{font-size:13.5px;line-height:1.62;color:var(--ink);}
+  .btw-aireflect-body:empty{display:none;}
+  .btw-aireflect-hint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .btw-aireflect-btn{margin-top:11px;font-family:var(--font-body);font-weight:600;font-size:12.5px;color:#fff;background:var(--moss);border:none;border-radius:9px;padding:8px 14px;cursor:pointer;transition:opacity .15s ease,transform .15s ease;}
+  .btw-aireflect-btn:hover{opacity:.92;transform:translateY(-1px);}
+  .btw-aireflect-btn:disabled{opacity:.6;cursor:default;transform:none;}
   .btw-cap-note{font-size:12px;color:var(--ink-soft);margin-top:9px;line-height:1.5;}
   .btw-cap-note.full{color:var(--clay,#C0392B);}
   .btw-cap-note button{background:none;border:none;padding:0;font:inherit;color:var(--moss);text-decoration:underline;cursor:pointer;}
@@ -3509,6 +3517,14 @@
 
       <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
+      <div class="btw-reflection btw-aireflect" id="btwAiReflection" style="display:none;">
+        <div class="btw-reflection-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--moss);flex:none;"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+          <strong id="btwAiReflectTitle">This week, reflected</strong>
+        </div>
+        <div class="btw-aireflect-body" id="btwAiReflectBody"></div>
+        <button type="button" class="btw-aireflect-btn" id="btwAiReflectBtn">Reflect on my week</button>
+      </div>
 
       <div class="btw-digest" id="btwDigest"></div>
 
@@ -4390,6 +4406,16 @@
     "Start free trial":"Commencer l'essai gratuit",
     "See pricing":"Voir les tarifs",
     "Talk to us":"Nous contacter",
+    // patient weekly AI reflection
+    "This week, reflected":"Votre semaine, en quelques mots",
+    "A warm few sentences on how your week went, from your own check-ins.":
+      "Quelques mots bienveillants sur votre semaine, à partir de vos suivis.",
+    "Reflect on my week":"Faire le point sur ma semaine",
+    "Reflect again":"Refaire le point",
+    "Reading your week…":"Lecture de votre semaine…",
+    "Check in a couple of times this week and I can reflect it back.":
+      "Faites quelques suivis cette semaine et je pourrai vous les refléter.",
+    "Could not reflect on your week just now.":"Impossible de faire le point sur votre semaine pour le moment.",
     "Patient sends a check-in":"Le patient envoie un suivi",
     "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
       "Stressé, anxieux ou porté par une réussite. Votre client le saisit en une courte note vocale ou un texto au moment même, pas une semaine plus tard de mémoire.",
@@ -13673,6 +13699,7 @@
       renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();
+      renderAiReflection();
       renderDigestSelf();
       renderInsights();
       renderBodyOverview();
@@ -13874,6 +13901,45 @@
   // synthesized from their entries — no AI and no server call, so it is instant
   // and deterministic. Shown to self-serve individuals on Premium once there
   // are at least two check-ins in the last seven days to reflect on.
+  // AI weekly reflection (Premium): a warm few sentences on the person's own
+  // week, generated on demand. Same gating as the templated reflection below.
+  var _reflectShownFor = null;
+  function renderAiReflection(){
+    var card = document.getElementById('btwAiReflection'); if(!card) return;
+    var premium = soloIndividual() && !!(state.patient && state.patient.is_premium);
+    var now = Date.now();
+    var week = (state.checkIns||[]).filter(function(c){ return c.time && c.time >= now - 7*86400000; });
+    if(!premium || week.length < 2){ card.style.display = 'none'; _reflectShownFor = null; return; }
+    card.style.display = '';
+    var title = document.getElementById('btwAiReflectTitle'); if(title) title.textContent = t('This week, reflected');
+    var btn = document.getElementById('btwAiReflectBtn');
+    if(_reflectShownFor !== week.length){
+      _reflectShownFor = week.length;
+      var body = document.getElementById('btwAiReflectBody');
+      if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('A warm few sentences on how your week went, from your own check-ins.')) + '</div>';
+      if(btn){ btn.disabled = false; btn.textContent = t('Reflect on my week'); }
+    }
+  }
+  (function(){
+    var btn = document.getElementById('btwAiReflectBtn'); if(!btn) return;
+    btn.addEventListener('click', async function(){
+      var body = document.getElementById('btwAiReflectBody');
+      btn.disabled = true; btn.textContent = t('Thinking…');
+      if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Reading your week…')) + '</div>';
+      try{
+        var d = await pApi('GET', '/api/patient/reflection');
+        if(d && d.needsData){
+          if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Check in a couple of times this week and I can reflect it back.')) + '</div>';
+        } else if(body){
+          body.textContent = (d && d.reflection) || '';
+        }
+      }catch(e){
+        if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc((e && e.message) || t('Could not reflect on your week just now.')) + '</div>';
+      }finally{
+        btn.disabled = false; btn.textContent = t('Reflect again');
+      }
+    });
+  })();
   function renderWeeklyReflection(){
     const el = document.getElementById('btwWeeklyReflection'); if(!el) return;
     const premium = soloIndividual() && !!(state.patient && state.patient.is_premium);

@@ -439,6 +439,47 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
   return { note, checkInsUsed: consented.length, needsData: false };
 }
 
+// Weekly reflection for a patient on their OWN check-ins: a warm, personal few
+// sentences on how their week went and the patterns in it. This is the person
+// reflecting on their own data at their own request, so it reads their entries
+// directly. Supportive and honest, never clinical, never a diagnosis, and never
+// toxic positivity — it notices, it does not prescribe.
+async function weeklyReflection({ checkIns }) {
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const week = (checkIns || [])
+    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice(0, 20)
+    .reverse(); // oldest first
+  if (week.length < 2) return { reflection: '', checkInsUsed: week.length, needsData: true };
+  const lines = week.map(c => {
+    const d = new Date(c.submitted_at).toISOString().slice(0, 10);
+    const mood = (c.mood_score != null) ? ` (mood ${c.mood_score}/10)` : '';
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(Array.isArray(c.manual_tags) ? c.manual_tags : []).filter(Boolean).slice(0, 5).join(', ');
+    const text = (c.summary_text && String(c.summary_text).trim()) || (c.raw_text && String(c.raw_text).trim()) || '';
+    return `- ${d}${mood}${tags ? ` [${tags}]` : ''}: ${text.slice(0, 400)}`;
+  }).join('\n');
+
+  const system = `You are writing a short, warm weekly reflection for someone, speaking directly to them ("you") about the check-ins they wrote this week.
+Rules:
+- Use ONLY what is in their check-ins. Never diagnose, never give medical or treatment advice, never tell them what to do. You notice patterns and reflect them back gently.
+- Be supportive and honest — not toxic positivity. If the week was hard, acknowledge that with warmth; if there were bright spots, name them.
+- Write in the SAME language as their check-ins. 2 to 4 sentences, plain and human, no markdown, no lists, no clinical terms.
+- This is a reflection, not a crisis service. Do not assess risk or safety here.
+- Respond with ONLY the reflection text, nothing else.`;
+  const user = `This week's check-ins (oldest first), mood on a 0-10 scale:\n${lines}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (reflection):', response.status); throw new Error('AI reflection failed.'); }
+  const data = await response.json();
+  const reflection = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 1200);
+  return { reflection, checkInsUsed: week.length, needsData: false };
+}
+
 // Grounded facts the website assistant may answer from. Kept here (not in a DB)
 // so answers stay consistent with the marketing copy. Prices are the same ones
 // shown on the pricing section.
@@ -583,6 +624,12 @@ const prepLimiter = rateLimit({
   windowMs: 60 * 1000, max: 8,
   keyFn: req => (req.clinician && req.clinician.id) || req.ip,
   message: 'Give it a moment before generating another brief.'
+});
+// A patient generating their own weekly reflection. Keyed per patient.
+const reflectionLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 6,
+  keyFn: req => (req.patient && req.patient.id) || req.ip,
+  message: 'Give it a moment before reflecting again.'
 });
 
 app.post('/api/summarize', summarizeLimiter, async (req, res) => {
@@ -3432,6 +3479,23 @@ app.get('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, res
   } catch (err) {
     console.error('Error listing patient check-ins:', err);
     res.status(500).json({ error: 'Could not load your history.' });
+  }
+});
+
+// A warm AI reflection on the patient's own week, from their own check-ins.
+// Premium feature; the patient initiates it on their own data.
+app.get('/api/patient/reflection', requireDb, requirePatientAuth, reflectionLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'Reflections are unavailable right now.' });
+    if (!patientIsPremium(req.patient) && !isFreeAccess(req.patient.email)) {
+      return res.status(403).json({ error: 'Weekly reflections are a Premium feature.', needsPremium: true });
+    }
+    const checkIns = await listCheckIns(req.patient.id);
+    const result = await weeklyReflection({ checkIns });
+    res.json(result);
+  } catch (err) {
+    console.error('Reflection error:', err.message);
+    res.status(502).json({ error: 'Could not reflect on your week just now. Please try again.' });
   }
 });
 

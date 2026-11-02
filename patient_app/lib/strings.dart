@@ -353,6 +353,17 @@ class S {
   String get progressLede => _(
       'A picture of how you\'ve been — the part a checklist can\'t show you.',
       'Un portrait de comment vous allez — ce qu\'une simple liste ne peut pas montrer.');
+  // Weekly AI reflection (Premium)
+  String get weeklyReflectionTitle =>
+      _('This week, reflected', 'Votre semaine, en quelques mots');
+  String get reflectHint => _(
+      'A warm few sentences on how your week went, from your own check-ins.',
+      'Quelques mots bienveillants sur votre semaine, à partir de vos suivis.');
+  String get reflectCta => _('Reflect on my week', 'Faire le point sur ma semaine');
+  String get reflectAgain => _('Reflect again', 'Refaire le point');
+  String get reflectNeedsData => _(
+      'Check in a couple of times this week and I can reflect it back.',
+      'Faites quelques suivis cette semaine et je pourrai vous les refléter.');
   String get yourRecovery => _('Your recovery', 'Votre rétablissement');
   String get recoverySub => _(
       'Where it hurt, and how each spot has changed since you started.',
