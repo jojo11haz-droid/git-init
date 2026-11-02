@@ -502,6 +502,23 @@
   .btw-case-row:hover{border-color:var(--moss);transform:translateY(-1px);}
   .btw-case-row .nm{font-size:13.5px;font-weight:600;color:var(--ink);flex:none;}
   .btw-case-row .rs{font-size:12.5px;color:var(--ink-soft);line-height:1.4;}
+  /* Dashboard zone dividers: split the pane into labelled sections. */
+  .btw-zone{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink-soft);margin:24px 0 14px;}
+  .btw-zone::after{content:"";flex:1;height:1px;background:var(--line);}
+  .btw-zone .btw-zone-pin{color:var(--moss);font-weight:700;font-size:11px;}
+  .btw-zone .btw-zone-sel{color:var(--moss);}
+  /* Collapsible detail sections: slide open only what you need. */
+  .btw-acc{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:0 0 10px;overflow:hidden;}
+  .btw-acc-head{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:13px 15px;cursor:pointer;text-align:left;font-family:var(--font-body);}
+  .btw-acc-head:hover{background:var(--paper);}
+  .btw-acc-head .btw-acc-t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--ink);}
+  .btw-acc-head .btw-acc-t svg{width:15px;height:15px;stroke:var(--moss);flex:none;}
+  .btw-acc-head .btw-acc-prev{flex:1;font-size:11.5px;color:var(--ink-soft);text-align:right;margin-right:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .btw-acc-head .btw-acc-chev{width:16px;height:16px;stroke:var(--ink-soft);flex:none;transition:transform .2s ease;}
+  .btw-acc.btw-open .btw-acc-chev{transform:rotate(180deg);}
+  .btw-acc-body{padding:2px 15px 15px;}
+  .btw-acc:not(.btw-open) .btw-acc-body{display:none;}
+  .btw-acc.btw-open .btw-acc-head .btw-acc-prev{display:none;}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -3505,6 +3522,58 @@
       </div>
       <div id="btwScheduleStatus" style="display:none;font-size:12.5px;line-height:1.5;margin:-6px 0 14px;"></div>
 
+      <!-- ============ ZONE: caseload overview ============ -->
+      <div class="btw-zone" id="btwZoneOverview"><span class="btw-zone-pin">◆</span><span id="btwZoneOverviewLabel">Caseload overview</span></div>
+
+      <div class="btw-today" id="btwTodayRoster" style="display:none;">
+        <div class="btw-today-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <strong id="btwTodayTitle">In clinic today</strong>
+          <span class="btw-today-count" id="btwTodayCount"></span>
+        </div>
+        <div class="btw-today-list" id="btwTodayList"></div>
+      </div>
+
+      <div class="btw-prep" id="btwCaseDigest" style="display:none;">
+        <div class="btw-prep-head">
+          <div class="btw-prep-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+            <span id="btwCaseDigestTitle">Caseload this week</span>
+          </div>
+          <button type="button" class="btw-prep-gen" id="btwCaseDigestGen">Summarize</button>
+        </div>
+        <div class="btw-prep-body" id="btwCaseDigestBody"></div>
+      </div>
+
+      <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
+        <div class="btw-patient-search">
+          <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input id="btwPatientSearch" type="search" autocomplete="off" placeholder="Search patients" aria-label="Search patients">
+        </div>
+        <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
+        <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
+          <button type="button" class="btw-role-btn active" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
+          <button type="button" class="btw-role-btn" data-filter="mid" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping mid"></span>Doing okay</button>
+          <button type="button" class="btw-role-btn" data-filter="good" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping good"></span>Doing well</button>
+          <button type="button" class="btw-role-btn" data-filter="high" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping high"></span>Needs attention now</button>
+        </div>
+      </div>
+
+      <div class="btw-patient-list" id="btwPatientList"></div>
+
+      <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
+
+      <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
+
+      <!-- ============ ZONE: selected patient / your progress ============ -->
+      <div class="btw-zone" id="btwZoneDetail"><span class="btw-zone-pin">◆</span><span id="btwZoneDetailLabel">Selected patient</span><span id="btwZoneDetailName" class="btw-zone-sel"></span></div>
+
+      <div id="btwNextSessionBar" class="btw-nextsess" style="display:none;">
+        <label class="btw-nextsess-label" for="btwNextSessionInput" id="btwNextSessionLabel">Next session</label>
+        <input type="date" id="btwNextSessionInput" class="btw-nextsess-input">
+        <button type="button" id="btwNextSessionClear" class="btw-nextsess-clear" title="Clear" aria-label="Clear next session">✕</button>
+      </div>
+
       <div id="btwCopyEmrBar" style="display:none;margin:0 0 14px;">
         <button type="button" id="btwCopyEmrTimeline" class="btw-emr-btn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -3524,65 +3593,7 @@
         </div>
       </div>
 
-      <div id="btwNextSessionBar" class="btw-nextsess" style="display:none;">
-        <label class="btw-nextsess-label" for="btwNextSessionInput" id="btwNextSessionLabel">Next session</label>
-        <input type="date" id="btwNextSessionInput" class="btw-nextsess-input">
-        <button type="button" id="btwNextSessionClear" class="btw-nextsess-clear" title="Clear" aria-label="Clear next session">✕</button>
-      </div>
-
-      <div class="btw-prep" id="btwCaseDigest" style="display:none;">
-        <div class="btw-prep-head">
-          <div class="btw-prep-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
-            <span id="btwCaseDigestTitle">Caseload this week</span>
-          </div>
-          <button type="button" class="btw-prep-gen" id="btwCaseDigestGen">Summarize</button>
-        </div>
-        <div class="btw-prep-body" id="btwCaseDigestBody"></div>
-      </div>
-
-      <div class="btw-today" id="btwTodayRoster" style="display:none;">
-        <div class="btw-today-head">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <strong id="btwTodayTitle">In clinic today</strong>
-          <span class="btw-today-count" id="btwTodayCount"></span>
-        </div>
-        <div class="btw-today-list" id="btwTodayList"></div>
-      </div>
-
-      <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
-        <div class="btw-patient-search">
-          <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input id="btwPatientSearch" type="search" autocomplete="off" placeholder="Search patients" aria-label="Search patients">
-        </div>
-        <div id="btwCaseloadSummary" style="font-size:12.5px;color:var(--ink-soft);flex:1;min-width:180px;"></div>
-        <div class="btw-role-toggle" id="btwCaseloadFilter" style="margin:0;flex:0 0 auto;">
-          <button type="button" class="btw-role-btn active" data-filter="all" style="font-size:11.5px;padding:5px 9px;">All</button>
-          <button type="button" class="btw-role-btn" data-filter="mid" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping mid"></span>Doing okay</button>
-          <button type="button" class="btw-role-btn" data-filter="good" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping good"></span>Doing well</button>
-          <button type="button" class="btw-role-btn" data-filter="high" style="font-size:11.5px;padding:5px 9px;"><span class="btw-ping high"></span>Needs attention now</button>
-        </div>
-      </div>
-
-      <div class="btw-patient-list" id="btwPatientList"></div>
-
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
-
-      <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
-
-      <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
-      <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
-      <div class="btw-reflection btw-aireflect" id="btwAiReflection" style="display:none;">
-        <div class="btw-reflection-head">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--moss);flex:none;"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
-          <strong id="btwAiReflectTitle">This week, reflected</strong>
-        </div>
-        <div class="btw-aireflect-body" id="btwAiReflectBody"></div>
-        <button type="button" class="btw-aireflect-btn" id="btwAiReflectBtn">Reflect on my week</button>
-      </div>
-
-      <div class="btw-digest" id="btwDigest"></div>
-
       <div class="btw-prep" id="btwPrep" style="display:none;">
         <div class="btw-prep-head">
           <div class="btw-prep-title">
@@ -3594,33 +3605,74 @@
         <div class="btw-prep-body" id="btwPrepBody"></div>
       </div>
 
+      <div class="btw-digest" id="btwDigest"></div>
+
+      <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
+      <div class="btw-reflection btw-aireflect" id="btwAiReflection" style="display:none;">
+        <div class="btw-reflection-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--moss);flex:none;"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+          <strong id="btwAiReflectTitle">This week, reflected</strong>
+        </div>
+        <div class="btw-aireflect-body" id="btwAiReflectBody"></div>
+        <button type="button" class="btw-aireflect-btn" id="btwAiReflectBtn">Reflect on my week</button>
+      </div>
+
       <div class="btw-insights" id="btwInsights" style="display:none;"></div>
 
-      <div class="btw-bodyov" id="btwBodyOverview" style="display:none;"></div>
+      <!-- collapsible: Trends (mood + themes) -->
+      <div class="btw-acc" id="btwAccTrends" style="display:none;">
+        <button type="button" class="btw-acc-head" aria-expanded="false">
+          <span class="btw-acc-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span id="btwAccTrendsLabel">Trends</span></span>
+          <span class="btw-acc-prev" id="btwAccTrendsPrev"></span>
+          <svg class="btw-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="btw-acc-body">
+          <div class="btw-charts">
+            <div class="btw-chart-box">
+              <div class="btw-chart-title" id="btwMoodChartTitle">Mood trend</div>
+              <svg id="btwMoodChart" viewBox="0 0 260 90" width="100%" height="90"></svg>
+            </div>
+            <div class="btw-chart-box">
+              <div class="btw-chart-title">Theme frequency</div>
+              <div class="btw-pie" id="btwPie"></div>
+              <div class="btw-legend" id="btwLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div class="btw-health" id="btwHealth" style="display:none;"></div>
+      <!-- collapsible: Timeline -->
+      <div class="btw-acc" id="btwAccTimeline" style="display:none;">
+        <button type="button" class="btw-acc-head" aria-expanded="false">
+          <span class="btw-acc-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg><span id="btwAccTimelineLabel">Timeline</span></span>
+          <span class="btw-acc-prev" id="btwAccTimelinePrev"></span>
+          <svg class="btw-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="btw-acc-body">
+          <div class="btw-timeline">
+            <div class="btw-timeline-title" id="btwTimelineTitle">Timeline</div>
+            <div id="btwTimeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- collapsible: Health & body -->
+      <div class="btw-acc" id="btwAccHealth" style="display:none;">
+        <button type="button" class="btw-acc-head" aria-expanded="false">
+          <span class="btw-acc-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path></svg><span id="btwAccHealthLabel">Health &amp; body</span></span>
+          <span class="btw-acc-prev" id="btwAccHealthPrev"></span>
+          <svg class="btw-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="btw-acc-body">
+          <div class="btw-bodyov" id="btwBodyOverview" style="display:none;"></div>
+          <div class="btw-health" id="btwHealth" style="display:none;"></div>
+        </div>
+      </div>
 
       <button type="button" class="btw-stats-btn" id="btwStatsBtn" style="display:none;">
         <span>View advanced stats</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
       </button>
-
-      <div class="btw-charts">
-        <div class="btw-chart-box">
-          <div class="btw-chart-title" id="btwMoodChartTitle">Mood trend</div>
-          <svg id="btwMoodChart" viewBox="0 0 260 90" width="100%" height="90"></svg>
-        </div>
-        <div class="btw-chart-box">
-          <div class="btw-chart-title">Theme frequency</div>
-          <div class="btw-pie" id="btwPie"></div>
-          <div class="btw-legend" id="btwLegend"></div>
-        </div>
-      </div>
-
-      <div class="btw-timeline">
-        <div class="btw-timeline-title" id="btwTimelineTitle">Timeline</div>
-        <div id="btwTimeline"></div>
-      </div>
     </div>
   </div>
   </div>
@@ -4465,6 +4517,12 @@
     "in clinic today":"en clinique aujourd'hui",
     "scheduled later":"prévus plus tard",
     "not matched to a patient":"sans patient correspondant",
+    // dashboard zones + collapsible sections
+    "Caseload overview":"Vue d'ensemble de la clientèle",
+    "Your progress":"Votre progression",
+    "Trends":"Tendances",
+    "Health & body":"Santé et corps",
+    "mood & themes":"humeur et thèmes",
     // caseload "this week" AI digest
     "Summarize":"Résumer",
     "Refresh":"Actualiser",
@@ -12968,6 +13026,50 @@
       finally{ gen.disabled = false; gen.textContent = t('Refresh'); }
     });
   })();
+
+  // --- Dashboard zones + collapsible detail sections ---
+  // One delegated handler drives every collapsible section (slide open/closed).
+  document.addEventListener('click', function(e){
+    var head = e.target && e.target.closest ? e.target.closest('.btw-acc-head') : null;
+    if(!head) return;
+    var acc = head.closest('.btw-acc'); if(!acc) return;
+    var open = acc.classList.toggle('btw-open');
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Label the two zones for whoever's signed in, show the detail zone only when
+  // there's something to show, and keep the heavy sections to one-line rows
+  // until expanded.
+  function renderZones(){
+    var patient = isPatient();
+    var therapist = isTherapist();
+    var showDetail = patient || (therapist && !!state.selectedPatientId);
+    var setTxt = function(id, txt){ var el = document.getElementById(id); if(el) el.textContent = txt; };
+    var setDisp = function(id, show){ var el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; };
+    // Overview zone is the caseload view — therapist only.
+    setDisp('btwZoneOverview', therapist);
+    setTxt('btwZoneOverviewLabel', t('Caseload overview'));
+    // Detail zone: "Your progress" for a patient, "Selected patient · Name" for a therapist.
+    setDisp('btwZoneDetail', showDetail);
+    setTxt('btwZoneDetailLabel', patient ? t('Your progress') : t('Selected patient'));
+    var sp = therapist ? selectedPatient() : null;
+    setTxt('btwZoneDetailName', sp ? (' · ' + (sp.display_name || '')) : '');
+    // Collapsible sections only appear once there is data to fill them.
+    var n = (state.checkIns || []).length;
+    setDisp('btwAccTrends', showDetail && n > 0);
+    setDisp('btwAccTimeline', showDetail && n > 0);
+    var bodyEl = document.getElementById('btwBodyOverview');
+    var healthEl = document.getElementById('btwHealth');
+    var bodyVis = !!(bodyEl && bodyEl.style.display !== 'none' && bodyEl.innerHTML);
+    var healthVis = !!(healthEl && healthEl.style.display !== 'none' && healthEl.innerHTML);
+    setDisp('btwAccHealth', showDetail && (bodyVis || healthVis));
+    // One-line previews on the collapsed rows.
+    setTxt('btwAccTrendsLabel', t('Trends'));
+    setTxt('btwAccTimelineLabel', t('Timeline'));
+    setTxt('btwAccHealthLabel', t('Health & body'));
+    setTxt('btwAccTrendsPrev', n ? t('mood & themes') : '');
+    setTxt('btwAccTimelinePrev', n ? (n + ' ' + (n === 1 ? t('check-in') : t('check-ins'))) : '');
+  }
+
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     renderCaseloadSummary();
@@ -13895,6 +13997,7 @@
       renderTimeline();
       renderMoodChart();
       renderPie();
+      renderZones();
       return;
     }
     renderPatientList();
@@ -13912,6 +14015,7 @@
     renderMoodChart();
     renderPie();
     renderAlertBanner();
+    renderZones();
   }
 
   // --- Session-prep brief: an AI synthesis of how the selected patient has been
