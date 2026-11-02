@@ -32,6 +32,34 @@ class _ProgressScreenState extends State<ProgressScreen> {
   String? _error;
   List<CheckIn> _history = [];
 
+  // Weekly AI reflection (Premium), generated on demand.
+  String? _reflection;
+  String? _reflectError;
+  bool _reflecting = false;
+  bool _reflectDone = false;
+
+  Future<void> _reflect() async {
+    setState(() {
+      _reflecting = true;
+      _reflectError = null;
+    });
+    try {
+      final r = await context.read<AppState>().fetchWeeklyReflection();
+      if (!mounted) return;
+      setState(() {
+        _reflection = r;
+        _reflectDone = true;
+        _reflecting = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _reflectError = e.toString();
+        _reflecting = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -193,6 +221,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
             style: const TextStyle(
                 fontSize: 15.5, height: 1.5, color: BtwColors.inkSoft)),
         const SizedBox(height: 20),
+        if (context.read<AppState>().patient?.isPremium == true) ...[
+          _reflectionCard(s),
+          const SizedBox(height: 16),
+        ],
         if (isBody && hasPainHistory) ...[
           _recoveryCard(s),
           const SizedBox(height: 16),
@@ -203,6 +235,70 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ],
         _lastTwoWeeksCard(s),
       ],
+    );
+  }
+
+  Widget _reflectionCard(S s) {
+    Widget body;
+    if (_reflecting) {
+      body = const Padding(
+        padding: EdgeInsets.symmetric(vertical: 6),
+        child: SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: BtwColors.moss)),
+      );
+    } else if (_reflectError != null) {
+      body = Text(_reflectError!,
+          style: const TextStyle(
+              fontSize: 13, height: 1.5, color: BtwColors.inkSoft));
+    } else if (_reflection != null) {
+      body = Text(_reflection!,
+          style: const TextStyle(fontSize: 14, height: 1.6));
+    } else if (_reflectDone) {
+      body = Text(s.reflectNeedsData,
+          style: const TextStyle(
+              fontSize: 13, height: 1.5, color: BtwColors.inkSoft));
+    } else {
+      body = Text(s.reflectHint,
+          style: const TextStyle(
+              fontSize: 13, height: 1.5, color: BtwColors.inkSoft));
+    }
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded,
+                  size: 16, color: BtwColors.moss),
+              const SizedBox(width: 8),
+              Text(s.weeklyReflectionTitle,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 11),
+          body,
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _reflecting ? null : _reflect,
+              style: TextButton.styleFrom(
+                backgroundColor: BtwColors.moss,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9)),
+              ),
+              child: Text(_reflectDone ? s.reflectAgain : s.reflectCta),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

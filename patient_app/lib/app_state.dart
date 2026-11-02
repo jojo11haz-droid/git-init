@@ -416,6 +416,18 @@ class AppState extends ChangeNotifier {
         .toList();
   }
 
+  /// A warm AI reflection on the patient's own week (Premium). Returns the
+  /// reflection text, or null when there aren't enough check-ins this week yet.
+  Future<String?> fetchWeeklyReflection() async {
+    final data = await _api.get('/api/patient/reflection');
+    if (data is Map) {
+      if (data['needsData'] == true) return null;
+      final r = data['reflection'];
+      if (r is String && r.trim().isNotEmpty) return r.trim();
+    }
+    return null;
+  }
+
   /// The patient's own sore-area photo for a check-in (authed bytes).
   Future<Uint8List> fetchCheckInPhoto(String id) =>
       _api.getBytes('/api/patient/check-ins/$id/photo');
