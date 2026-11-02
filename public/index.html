@@ -1070,12 +1070,21 @@
   .btw-emr-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);color:var(--moss);border:1px solid var(--moss);border-radius:9px;padding:7px 12px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;transition:background .15s ease,color .15s ease;}
   .btw-emr-btn:hover{background:var(--moss-light);}
   .btw-emr-btn svg{flex:0 0 auto;}
+  #btwCopyEmrBar{display:flex;gap:8px;flex-wrap:wrap;}
+  /* AI-drafted progress note the clinician edits before copying into the EMR. */
+  .btw-ainote{border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin:0 0 16px;background:var(--panel);}
+  .btw-ainote-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:8px;}
+  .btw-ainote-text{width:100%;box-sizing:border-box;font-family:var(--font-body);font-size:13px;line-height:1.55;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;resize:vertical;min-height:120px;}
+  .btw-ainote-text:focus{outline:none;border-color:var(--moss);}
+  .btw-ainote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;}
+  .btw-ainote-foot #btwAiNoteMeta{font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.4;}
   /* Patient dashboard: hide the therapist-only caseload controls, the
      clinician's private notes / check-in-mode card, and the clinician-worded
      storage disclaimer — none of that belongs on the patient's own view. */
   .btw-role-patient #btwPatientList,
   .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwCopyEmrBar,
+  .btw-role-patient #btwAiNotePanel,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
@@ -3456,6 +3465,18 @@
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           <span>Copy summary for EMR</span>
         </button>
+        <button type="button" id="btwAiNoteBtn" class="btw-emr-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path></svg>
+          <span>AI draft note</span>
+        </button>
+      </div>
+      <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
+        <div class="btw-ainote-label" id="btwAiNoteLabel">Draft note — review and edit before using</div>
+        <textarea id="btwAiNoteText" class="btw-ainote-text" rows="7" spellcheck="true"></textarea>
+        <div class="btw-ainote-foot">
+          <span id="btwAiNoteMeta"></span>
+          <button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button>
+        </div>
       </div>
 
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
@@ -4328,6 +4349,14 @@
     "Built from":"Basé sur",
     "where AI is turned on. Indicative, not a clinical judgment.":
       "où l'IA est activée. Indicatif, pas un jugement clinique.",
+    // AI draft progress note
+    "AI draft note":"Note rédigée par IA",
+    "Refresh note":"Actualiser la note",
+    "Draft note — review and edit before using":"Brouillon de note — à relire et modifier avant usage",
+    "Not enough check-ins with AI turned on yet to draft a note.":
+      "Pas encore assez de suivis avec l'IA activée pour rédiger une note.",
+    "Could not draft a note just now.":"Impossible de rédiger une note pour le moment.",
+    "Indicative, not a clinical record.":"Indicatif, pas un dossier clinique.",
     "Patient sends a check-in":"Le patient envoie un suivi",
     "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.":
       "Stressé, anxieux ou porté par une réussite. Votre client le saisit en une courte note vocale ou un texto au moment même, pas une semaine plus tard de mémoire.",
@@ -13613,10 +13642,14 @@
   // across the weeks between visits. On-demand (a button) so it only runs — and
   // only costs — when the clinician asks. Resets when the patient changes.
   var _prepFor = null;
+  function hideAiNote(){
+    var panel = document.getElementById('btwAiNotePanel'); if(panel) panel.style.display = 'none';
+    var nb = document.getElementById('btwAiNoteBtn'); if(nb){ nb.disabled = false; var s = nb.querySelector('span'); if(s) s.textContent = t('AI draft note'); }
+  }
   function renderPrep(){
     var card = document.getElementById('btwPrep'); if(!card) return;
     var p = selectedPatient();
-    if(!p){ card.style.display = 'none'; _prepFor = null; return; }
+    if(!p){ card.style.display = 'none'; _prepFor = null; hideAiNote(); return; }
     card.style.display = '';
     var titleEl = document.getElementById('btwPrepTitle'); if(titleEl) titleEl.textContent = t('Session prep');
     var gen = document.getElementById('btwPrepGen');
@@ -13625,6 +13658,7 @@
       var body = document.getElementById('btwPrepBody');
       if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('A short read on how they have been since the last session, and what to open with.')) + '</div>';
       if(gen){ gen.disabled = false; gen.textContent = t('Generate brief'); }
+      hideAiNote(); // a different patient — drop the last draft note
     }
   }
   function renderPrepResult(body, d){
@@ -13661,6 +13695,45 @@
       }finally{
         gen.disabled = false; gen.textContent = t('Refresh brief');
       }
+    });
+  })();
+  // AI draft progress note: fetch a paste-ready note the clinician edits, then copies.
+  (function(){
+    var btn = document.getElementById('btwAiNoteBtn'); if(!btn) return;
+    var span = btn.querySelector('span');
+    btn.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var panel = document.getElementById('btwAiNotePanel');
+      var ta = document.getElementById('btwAiNoteText');
+      var meta = document.getElementById('btwAiNoteMeta');
+      var label = document.getElementById('btwAiNoteLabel');
+      if(label) label.textContent = t('Draft note — review and edit before using');
+      btn.disabled = true; if(span) span.textContent = t('Thinking…');
+      try{
+        var d = await api('GET', '/api/patients/' + p.id + '/note');
+        if(d && d.needsData){
+          if(ta) ta.value = t('Not enough check-ins with AI turned on yet to draft a note.');
+          if(meta) meta.textContent = '';
+        } else {
+          if(ta) ta.value = (d && d.note) || '';
+          var n = (d && d.checkInsUsed) || 0;
+          if(meta) meta.textContent = t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' · ' + t('Indicative, not a clinical record.');
+        }
+        if(panel) panel.style.display = '';
+      }catch(e){
+        if(ta) ta.value = (e && e.message) || t('Could not draft a note just now.');
+        if(meta) meta.textContent = '';
+        if(panel) panel.style.display = '';
+      }finally{
+        btn.disabled = false; if(span) span.textContent = t('Refresh note');
+      }
+    });
+    var copyBtn = document.getElementById('btwAiNoteCopy');
+    if(copyBtn) copyBtn.addEventListener('click', async function(){
+      var ta = document.getElementById('btwAiNoteText'); if(!ta) return;
+      var ok = await copyTextToClipboard(ta.value);
+      var cs = copyBtn.querySelector('span') || copyBtn;
+      if(ok){ var o = cs.textContent; cs.textContent = t('Copied ✓'); copyBtn.disabled = true; setTimeout(function(){ cs.textContent = o; copyBtn.disabled = false; }, 1600); }
     });
   })();
 
