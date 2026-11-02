@@ -269,6 +269,9 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAU
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS discipline TEXT;
 ALTER TABLE clinicians ALTER COLUMN licence_number DROP NOT NULL;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'patient';
+-- The patient's next in-clinic appointment, so the dashboard can show today's
+-- roster. Set by the clinician for now; the EMR integration will populate it.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS next_session_at DATE;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE future_notes ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'note';
@@ -707,7 +710,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -752,6 +755,16 @@ export async function updatePatientNote(clinicianId, patientId, note) {
   const { rows } = await pool.query(
     `UPDATE patients SET clinician_note = $1 WHERE id = $2 AND clinician_id = $3 RETURNING id`,
     [note, patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// Set (or clear, with null) a patient's next in-clinic appointment date, so the
+// dashboard can show today's roster. Clinician-owned; ownership is in the WHERE.
+export async function setPatientNextSession(clinicianId, patientId, dateOrNull) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET next_session_at = $1 WHERE id = $2 AND clinician_id = $3 RETURNING ${PATIENT_ROW_COLS}`,
+    [dateOrNull, patientId, clinicianId]
   );
   return rows[0] || null;
 }
