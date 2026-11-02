@@ -3490,10 +3490,13 @@
       <div class="btw-eyebrow" id="btwTherapistPaneEyebrow">Therapist view</div>
       <h3 id="btwCaseloadTitle">Caseload</h3>
       <div class="btw-pane-desc" id="btwCaseloadDesc">Auto-updating as check-ins come in. Select a patient to see their timeline and trends.</div>
-      <div id="btwImportRow" style="margin:0 0 14px;">
+      <div id="btwImportRow" style="margin:0 0 14px;display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" id="btwImportBtn" class="btw-docs-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Add patients from a photo or list</button>
         <input type="file" id="btwImportFile" accept="application/pdf,image/jpeg,image/png,image/webp" multiple style="display:none;">
+        <button type="button" id="btwScheduleBtn" class="btw-docs-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span id="btwScheduleBtnLabel">Fill today from a schedule</span></button>
+        <input type="file" id="btwScheduleFile" accept="application/pdf,image/jpeg,image/png,image/webp" style="display:none;">
       </div>
+      <div id="btwScheduleStatus" style="display:none;font-size:12.5px;line-height:1.5;margin:-6px 0 14px;"></div>
 
       <div id="btwCopyEmrBar" style="display:none;margin:0 0 14px;">
         <button type="button" id="btwCopyEmrTimeline" class="btw-emr-btn">
@@ -4444,6 +4447,14 @@
     "In clinic today":"En clinique aujourd'hui",
     "Next session":"Prochaine séance",
     "person":"personne","people":"personnes",
+    // schedule import
+    "Fill today from a schedule":"Remplir la journée depuis un horaire",
+    "Reading…":"Lecture…",
+    "Reading your schedule…":"Lecture de votre horaire…",
+    "Could not read the schedule.":"Impossible de lire l'horaire.",
+    "in clinic today":"en clinique aujourd'hui",
+    "scheduled later":"prévus plus tard",
+    "not matched to a patient":"sans patient correspondant",
     // patient weekly AI reflection
     "This week, reflected":"Votre semaine, en quelques mots",
     "A warm few sentences on how your week went, from your own check-ins.":
@@ -12865,6 +12876,39 @@
     }
     if(input) input.addEventListener('change', function(){ save(input.value || null); });
     if(clr) clr.addEventListener('click', function(){ if(input) input.value = ''; save(null); });
+  })();
+  // Fill the "In clinic today" roster from an uploaded schedule file.
+  (function(){
+    var btn = document.getElementById('btwScheduleBtn');
+    var input = document.getElementById('btwScheduleFile');
+    var statusEl = document.getElementById('btwScheduleStatus');
+    var lbl = document.getElementById('btwScheduleBtnLabel');
+    if(!btn || !input) return;
+    function showStatus(msg, kind){ if(!statusEl) return; statusEl.style.display = msg ? '' : 'none'; statusEl.innerHTML = msg || ''; statusEl.style.color = kind === 'err' ? 'var(--clay)' : 'var(--ink-soft)'; }
+    btn.addEventListener('click', function(){ input.click(); });
+    input.addEventListener('change', async function(){
+      var f = (input.files || [])[0]; input.value = '';
+      if(!f) return;
+      btn.disabled = true; var orig = lbl ? lbl.textContent : ''; if(lbl) lbl.textContent = t('Reading…');
+      showStatus(esc(t('Reading your schedule…')), 'ok');
+      try{
+        var buf = await f.arrayBuffer();
+        var r = await fetch('/api/schedule/import', { method:'POST', headers:{ 'Content-Type': f.type || 'application/octet-stream' }, body: buf });
+        var data = await r.json().catch(function(){ return {}; });
+        if(!r.ok) throw new Error(data.error || t('Could not read the schedule.'));
+        try{ state.patients = await api('GET', '/api/patients'); }catch(e){}
+        renderAll();
+        var setN = (data.set || []).length, today = data.todayCount || 0, un = (data.unmatched || []).length;
+        var msg = '<strong style="color:var(--moss);">' + today + ' ' + esc(today === 1 ? t('person') : t('people')) + '</strong> ' + esc(t('in clinic today'));
+        if(setN > today) msg += ' · ' + esc((setN - today) + ' ' + t('scheduled later'));
+        if(un > 0) msg += ' · ' + esc(un + ' ' + t('not matched to a patient'));
+        showStatus(msg, 'ok');
+      }catch(e){
+        showStatus(esc((e && e.message) || t('Could not read the schedule.')), 'err');
+      }finally{
+        btn.disabled = false; if(lbl) lbl.textContent = orig || t('Fill today from a schedule');
+      }
+    });
   })();
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
