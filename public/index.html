@@ -476,6 +476,26 @@
     margin-bottom:22px;
   }
   .btw-digest strong{color:var(--moss);}
+  /* Session-prep brief: an AI synthesis of the weeks between visits. */
+  .btw-prep{border:1px solid var(--line);border-radius:14px;padding:14px 16px 15px;margin-bottom:20px;background:linear-gradient(180deg,var(--moss-light),transparent 85%);}
+  .btw-prep-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .btw-prep-title{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:16px;color:var(--ink);}
+  .btw-prep-title svg{color:var(--moss);flex:none;}
+  .btw-prep-gen{font-family:var(--font-body);font-size:12.5px;font-weight:600;color:#fff;background:var(--moss);border:none;border-radius:9px;padding:7px 13px;cursor:pointer;transition:opacity .15s ease,transform .15s ease;white-space:nowrap;}
+  .btw-prep-gen:hover{opacity:.92;transform:translateY(-1px);}
+  .btw-prep-gen:disabled{opacity:.6;cursor:default;transform:none;}
+  .btw-prep-body{margin-top:11px;}
+  .btw-prep-body:empty{display:none;}
+  .btw-prep-hint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .btw-prep-brief{font-size:14px;line-height:1.6;color:var(--ink);margin:0 0 12px;}
+  .btw-prep-sec{margin-top:11px;}
+  .btw-prep-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--moss);margin-bottom:6px;}
+  .btw-prep-label.watch{color:var(--clay);}
+  .btw-prep-list{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;}
+  .btw-prep-list li{position:relative;padding-left:16px;font-size:13px;line-height:1.5;color:var(--ink);}
+  .btw-prep-list li::before{content:"";position:absolute;left:3px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--moss);}
+  .btw-prep-list.watch li::before{background:var(--clay);}
+  .btw-prep-foot{margin-top:13px;font-size:11px;color:var(--ink-soft);line-height:1.45;font-style:italic;}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -3467,6 +3487,17 @@
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
 
       <div class="btw-digest" id="btwDigest"></div>
+
+      <div class="btw-prep" id="btwPrep" style="display:none;">
+        <div class="btw-prep-head">
+          <div class="btw-prep-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+            <span id="btwPrepTitle">Session prep</span>
+          </div>
+          <button type="button" class="btw-prep-gen" id="btwPrepGen">Generate brief</button>
+        </div>
+        <div class="btw-prep-body" id="btwPrepBody"></div>
+      </div>
 
       <div class="btw-insights" id="btwInsights" style="display:none;"></div>
 
@@ -9353,7 +9384,7 @@
       busy = true; if(sendBtn) sendBtn.disabled = true;
       const typing = addMsg('bot', t('Thinking…')); typing.classList.add('typing');
       try{
-        const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: question }) });
+        const r = await fetch('/api/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question: question, field: curAudience }) });
         const data = await r.json().catch(function(){ return {}; });
         typing.classList.remove('typing');
         typing.textContent = (r.ok && data.answer) ? data.answer : (data.error || t('Could not answer that just now. Please try again.'));
@@ -13590,6 +13621,7 @@
     renderPatientPane();
     renderWeekSummary();
     renderDigest();
+    renderPrep();
     renderInsights();
     renderBodyOverview();
     renderHealth();
@@ -13598,6 +13630,61 @@
     renderPie();
     renderAlertBanner();
   }
+
+  // --- Session-prep brief: an AI synthesis of how the selected patient has been
+  // across the weeks between visits. On-demand (a button) so it only runs — and
+  // only costs — when the clinician asks. Resets when the patient changes.
+  var _prepFor = null;
+  function renderPrep(){
+    var card = document.getElementById('btwPrep'); if(!card) return;
+    var p = selectedPatient();
+    if(!p){ card.style.display = 'none'; _prepFor = null; return; }
+    card.style.display = '';
+    var titleEl = document.getElementById('btwPrepTitle'); if(titleEl) titleEl.textContent = t('Session prep');
+    var gen = document.getElementById('btwPrepGen');
+    if(_prepFor !== p.id){
+      _prepFor = p.id;
+      var body = document.getElementById('btwPrepBody');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('A short read on how they have been since the last session, and what to open with.')) + '</div>';
+      if(gen){ gen.disabled = false; gen.textContent = t('Generate brief'); }
+    }
+  }
+  function renderPrepResult(body, d){
+    var html = '';
+    if(d.brief) html += '<p class="btw-prep-brief">' + esc(d.brief) + '</p>';
+    if(d.talking_points && d.talking_points.length){
+      html += '<div class="btw-prep-sec"><div class="btw-prep-label">' + esc(t('Open with')) + '</div><ul class="btw-prep-list">' +
+        d.talking_points.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    }
+    if(d.watch && d.watch.length){
+      html += '<div class="btw-prep-sec"><div class="btw-prep-label watch">' + esc(t('Worth a closer look')) + '</div><ul class="btw-prep-list watch">' +
+        d.watch.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    }
+    var n = d.checkInsUsed || 0;
+    html += '<div class="btw-prep-foot">' + esc(t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' ' + t('where AI is turned on. Indicative, not a clinical judgment.')) + '</div>';
+    body.innerHTML = html;
+  }
+  (function(){
+    var gen = document.getElementById('btwPrepGen'); if(!gen) return;
+    gen.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var body = document.getElementById('btwPrepBody');
+      gen.disabled = true; gen.textContent = t('Thinking…');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Reading the check-ins…')) + '</div>';
+      try{
+        var d = await api('GET', '/api/patients/' + p.id + '/prep');
+        if(d && d.needsData){
+          if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Not enough check-ins with AI turned on yet to build a brief.')) + '</div>';
+        } else if(body){
+          renderPrepResult(body, d || {});
+        }
+      }catch(e){
+        if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc((e && e.message) || t('Could not generate a brief just now.')) + '</div>';
+      }finally{
+        gen.disabled = false; gen.textContent = t('Refresh brief');
+      }
+    });
+  })();
 
   // The patient's own since-you-started digest (no caseload, no therapist).
   function renderDigestSelf(){
