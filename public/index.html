@@ -1086,6 +1086,23 @@
   .btw-ainote-text:focus{outline:none;border-color:var(--moss);}
   .btw-ainote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;}
   .btw-ainote-foot #btwAiNoteMeta{font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.4;}
+  /* "In clinic today" roster + the per-patient next-session date setter. */
+  .btw-nextsess{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:12.5px;color:var(--ink-soft);}
+  .btw-nextsess-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);}
+  .btw-nextsess-input{font-family:var(--font-body);font-size:12.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;}
+  .btw-nextsess-clear{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:13px;line-height:1;padding:3px 5px;border-radius:6px;}
+  .btw-nextsess-clear:hover{color:var(--clay);background:var(--moss-light);}
+  .btw-today{border:1px solid var(--moss);border-radius:14px;padding:13px 15px 14px;margin:0 0 16px;background:linear-gradient(180deg,var(--moss-light),transparent 90%);}
+  .btw-today-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;}
+  .btw-today-head svg{color:var(--moss);flex:none;}
+  .btw-today-head strong{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--ink);}
+  .btw-today-count{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-left:auto;}
+  .btw-today-list{display:flex;flex-direction:column;gap:6px;}
+  .btw-today-row{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;font-family:var(--font-body);transition:border-color .15s ease,transform .12s ease;}
+  .btw-today-row:hover{border-color:var(--moss);transform:translateY(-1px);}
+  .btw-today-row .nm{font-size:13.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;}
+  .btw-today-row .meta{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
+  .btw-today-row .btw-ping{flex:none;}
   /* Patient dashboard: hide the therapist-only caseload controls, the
      clinician's private notes / check-in-mode card, and the clinician-worded
      storage disclaimer — none of that belongs on the patient's own view. */
@@ -1093,6 +1110,8 @@
   .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwCopyEmrBar,
   .btw-role-patient #btwAiNotePanel,
+  .btw-role-patient #btwNextSessionBar,
+  .btw-role-patient #btwTodayRoster,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
@@ -3490,6 +3509,21 @@
         </div>
       </div>
 
+      <div id="btwNextSessionBar" class="btw-nextsess" style="display:none;">
+        <label class="btw-nextsess-label" for="btwNextSessionInput" id="btwNextSessionLabel">Next session</label>
+        <input type="date" id="btwNextSessionInput" class="btw-nextsess-input">
+        <button type="button" id="btwNextSessionClear" class="btw-nextsess-clear" title="Clear" aria-label="Clear next session">✕</button>
+      </div>
+
+      <div class="btw-today" id="btwTodayRoster" style="display:none;">
+        <div class="btw-today-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <strong id="btwTodayTitle">In clinic today</strong>
+          <span class="btw-today-count" id="btwTodayCount"></span>
+        </div>
+        <div class="btw-today-list" id="btwTodayList"></div>
+      </div>
+
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
         <div class="btw-patient-search">
           <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -4380,6 +4414,10 @@
     "Start free trial":"Commencer l'essai gratuit",
     "See pricing":"Voir les tarifs",
     "Talk to us":"Nous contacter",
+    // in-clinic-today roster
+    "In clinic today":"En clinique aujourd'hui",
+    "Next session":"Prochaine séance",
+    "person":"personne","people":"personnes",
     // patient weekly AI reflection
     "This week, reflected":"Votre semaine, en quelques mots",
     "A warm few sentences on how your week went, from your own check-ins.":
@@ -12743,6 +12781,53 @@
     }
     el.innerHTML = bits.join(' · ');
   }
+  // --- "In clinic today" roster + the per-patient next-session date setter ---
+  function _btwToday(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function _btwSessDate(p){ var v = p && p.next_session_at; return v ? String(v).slice(0,10) : null; }
+  function renderTodayRoster(){
+    var card = document.getElementById('btwTodayRoster'); if(!card) return;
+    var today = _btwToday();
+    var todays = (state.patients||[]).filter(function(p){ return !p.left_at && _btwSessDate(p) === today; });
+    if(!todays.length){ card.style.display = 'none'; return; }
+    var rank = { high:0, mid:1, good:2, none:3 };
+    todays.sort(function(a,b){ var r = (rank[patientColor(a)]||3) - (rank[patientColor(b)]||3); return r !== 0 ? r : String(a.display_name||'').localeCompare(String(b.display_name||'')); });
+    card.style.display = '';
+    var t1 = document.getElementById('btwTodayTitle'); if(t1) t1.textContent = t('In clinic today');
+    var cnt = document.getElementById('btwTodayCount'); if(cnt) cnt.textContent = todays.length + ' ' + (todays.length === 1 ? t('person') : t('people'));
+    var list = document.getElementById('btwTodayList'); list.innerHTML = '';
+    todays.forEach(function(p){
+      var row = document.createElement('button'); row.type = 'button'; row.className = 'btw-today-row';
+      var meta = p.has_recent_risk ? t('Flagged for review')
+        : ((p.new_check_in_count||0) > 0 ? (p.new_check_in_count + ' ' + t('new'))
+        : (p.last_check_in_at ? agoLabel(p.last_check_in_at) : t('No check-ins yet')));
+      row.innerHTML = statusPing(p) + '<span class="nm">' + esc(p.display_name||'') + '</span><span class="meta">' + esc(meta) + '</span>';
+      row.addEventListener('click', function(){ state.selectedPatientId = p.id; renderAll(); var d = document.getElementById('btwDigest'); if(d) d.scrollIntoView({ behavior:'smooth', block:'start' }); });
+      list.appendChild(row);
+    });
+  }
+  function renderNextSessionBar(){
+    var bar = document.getElementById('btwNextSessionBar'); if(!bar) return;
+    var p = selectedPatient();
+    if(!p){ bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    var lbl = document.getElementById('btwNextSessionLabel'); if(lbl) lbl.textContent = t('Next session');
+    var input = document.getElementById('btwNextSessionInput'); if(input) input.value = _btwSessDate(p) || '';
+    var clr = document.getElementById('btwNextSessionClear'); if(clr) clr.style.display = _btwSessDate(p) ? '' : 'none';
+  }
+  (function(){
+    var input = document.getElementById('btwNextSessionInput');
+    var clr = document.getElementById('btwNextSessionClear');
+    async function save(date){
+      var p = selectedPatient(); if(!p) return;
+      try{
+        await api('POST', '/api/patients/' + p.id + '/next-session', { date: date || null });
+        p.next_session_at = date || null;
+        renderTodayRoster(); renderNextSessionBar();
+      }catch(e){ /* leave the field; the server rejected or the network failed */ }
+    }
+    if(input) input.addEventListener('change', function(){ save(input.value || null); });
+    if(clr) clr.addEventListener('click', function(){ if(input) input.value = ''; save(null); });
+  })();
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     renderCaseloadSummary();
@@ -13674,6 +13759,8 @@
     }
     renderPatientList();
     renderPatientPane();
+    renderTodayRoster();
+    renderNextSessionBar();
     renderWeekSummary();
     renderDigest();
     renderPrep();

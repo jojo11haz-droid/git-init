@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
-  dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode,
+  dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
   createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
@@ -1917,6 +1917,29 @@ app.put('/api/patients/:id/check-in-mode', requireDb, requireAuth, requireVerifi
   } catch (err) {
     console.error('Error setting check-in mode:', err);
     res.status(500).json({ error: 'Could not update the check-in mode.' });
+  }
+});
+
+// Set (or clear) a patient's next in-clinic appointment date, for the "In clinic
+// today" roster. Expects {date:"YYYY-MM-DD"} or {date:null} to clear.
+app.post('/api/patients/:id/next-session', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const raw = (req.body || {}).date;
+    let date = null;
+    if (raw != null && raw !== '') {
+      if (typeof raw !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return res.status(400).json({ error: 'Use a date in YYYY-MM-DD form.' });
+      }
+      const d = new Date(raw + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return res.status(400).json({ error: 'That is not a valid date.' });
+      date = raw;
+    }
+    const patient = await setPatientNextSession(req.clinician.id, req.params.id, date);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ ok: true, next_session_at: patient.next_session_at });
+  } catch (err) {
+    console.error('Error setting next session:', err);
+    res.status(500).json({ error: 'Could not update the next session.' });
   }
 });
 
