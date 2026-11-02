@@ -394,6 +394,51 @@ Rules:
   return { brief, talking_points: clampArr(parsed.talking_points), watch: clampArr(parsed.watch), checkInsUsed: consented.length, needsData: false };
 }
 
+// AI-drafted progress note: a clean, paste-ready narrative a clinician can drop
+// into their EMR and then edit, synthesized from the between-session check-ins.
+// Consent-safe (only check-ins the patient let AI process), plain text, neutral,
+// never diagnostic — it documents what the patient reported, nothing more.
+async function draftProgressNote({ name, discipline, accountType, checkIns }) {
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  const focus = documentFocusForProfession({ discipline, accountType });
+  const who = name || 'the patient';
+  const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000;
+  const recent = (checkIns || [])
+    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice(0, 14).reverse();
+  const consented = recent.filter(c => c.summary_text && String(c.summary_text).trim());
+  const lines = consented.map(c => {
+    const d = new Date(c.submitted_at).toISOString().slice(0, 10);
+    const mood = (c.mood_score != null) ? ` (mood ${c.mood_score}/10)` : '';
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(Array.isArray(c.manual_tags) ? c.manual_tags : []).filter(Boolean).slice(0, 5).join(', ');
+    return `- ${d}${mood}${tags ? ` [${tags}]` : ''}: ${String(c.summary_text).trim().slice(0, 400)}`;
+  }).join('\n');
+  if (!lines) return { note: '', checkInsUsed: 0, needsData: true };
+  const first = consented[0] ? new Date(consented[0].submitted_at).toISOString().slice(0, 10) : '';
+  const last = consented[consented.length - 1] ? new Date(consented[consented.length - 1].submitted_at).toISOString().slice(0, 10) : '';
+
+  const system = `You help a ${focus.role} write a short, neutral between-session progress note for ${who} that they can paste into their EMR and then edit.
+Rules:
+- Use ONLY what is in the check-ins. Never diagnose, never give treatment advice, never invent anything — you document what ${who} reported between visits.
+- Write in the SAME language as the check-ins. Plain professional prose, no markdown fences, no headings beyond the short labels below.
+- This is a draft for the clinician to review and edit, not a final clinical record.
+- Structure it exactly as these lines:
+Between-session summary (${first} to ${last}): 3 to 5 sentences on how ${who} has been.
+Themes: a short comma-separated line of the recurring themes.
+Trend: one line on the mood or symptom trend if there is data, otherwise omit this line.
+- Keep the whole note under about 160 words.`;
+  const user = `Check-ins (oldest first):\n${lines}`;
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 600, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (note):', response.status); throw new Error('AI note failed.'); }
+  const data = await response.json();
+  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 2500);
+  return { note, checkInsUsed: consented.length, needsData: false };
+}
+
 // Grounded facts the website assistant may answer from. Kept here (not in a DB)
 // so answers stay consistent with the marketing copy. Prices are the same ones
 // shown on the pricing section.
@@ -2158,6 +2203,27 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
   } catch (err) {
     console.error('Prep brief error:', err.message);
     res.status(502).json({ error: 'Could not generate a brief just now. Please try again.' });
+  }
+});
+
+// AI-drafted between-session progress note for the EMR: a clean narrative the
+// clinician can copy and edit. Same consent model and scoping as the prep brief.
+app.get('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIns = await listCheckIns(patient.id);
+    const result = await draftProgressNote({
+      name: patient.display_name,
+      discipline: req.clinician.discipline,
+      accountType: req.clinician.account_type,
+      checkIns
+    });
+    res.json(result);
+  } catch (err) {
+    console.error('Draft note error:', err.message);
+    res.status(502).json({ error: 'Could not draft a note just now. Please try again.' });
   }
 });
 
