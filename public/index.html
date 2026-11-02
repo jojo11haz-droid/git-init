@@ -1139,6 +1139,7 @@
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
+  .btw-role-patient #btwPrep,
   .btw-role-patient #btwAlertFeed{display:none !important;}
   /* Therapist dashboard: hide the patient check-in composer, a therapist
      reviews, they don't type check-ins. The left pane becomes a compact
@@ -13042,9 +13043,21 @@
   function renderZones(){
     var patient = isPatient();
     var therapist = isTherapist();
-    var showDetail = patient || (therapist && !!state.selectedPatientId);
     var setTxt = function(id, txt){ var el = document.getElementById(id); if(el) el.textContent = txt; };
     var setDisp = function(id, show){ var el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; };
+    var isVisible = function(id){ var el = document.getElementById(id); return !!(el && getComputedStyle(el).display !== 'none'); };
+    var n = (state.checkIns || []).length;
+    // The detail zone only earns its heading when it has something under it: a
+    // selected patient for a therapist, or real progress content for a patient
+    // (so "Your progress" never shows above an empty space).
+    var showDetail;
+    if(therapist){
+      showDetail = !!state.selectedPatientId;
+    } else {
+      var dig = document.getElementById('btwDigest');
+      var digHas = !!(dig && dig.innerHTML && dig.innerHTML.trim());
+      showDetail = (n > 0) || isVisible('btwAiReflection') || digHas;
+    }
     // Overview zone is the caseload view — therapist only.
     setDisp('btwZoneOverview', therapist);
     setTxt('btwZoneOverviewLabel', t('Caseload overview'));
@@ -13054,7 +13067,6 @@
     var sp = therapist ? selectedPatient() : null;
     setTxt('btwZoneDetailName', sp ? (' · ' + (sp.display_name || '')) : '');
     // Collapsible sections only appear once there is data to fill them.
-    var n = (state.checkIns || []).length;
     setDisp('btwAccTrends', showDetail && n > 0);
     setDisp('btwAccTimeline', showDetail && n > 0);
     var bodyEl = document.getElementById('btwBodyOverview');
