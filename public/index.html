@@ -8224,9 +8224,29 @@
   // The Between wordmark/logo doubles as a "home" link — but once signed in the
   // marketing nav is hidden (app mode), so it takes you back to your dashboard.
   const brandHome = document.getElementById('btwBrandHome');
+  // Clicking the wordmark goes to the main (home) page. The exception: when
+  // you're signed in with live dashboard access (subscribed / trialing / comped
+  // / invited and verified), it stays on the dashboard and pulls fresh data
+  // instead of leaving — a quick "refresh" affordance from the top-left.
+  async function refreshDashboard(){
+    try {
+      if(_ownerPreview){ renderAll(); return; }
+      if(isTherapist()){ await loadPatients(); renderAll(); }
+      else if(isPatient()){ await loadPatientCheckIns(); }
+      else { renderAll(); }
+    } catch(e){ try { renderAll(); } catch(_){} }
+  }
   function goBrandHome(){
-    if(state.me || state.patient) goToView(navProduct, viewProduct);
-    else goToView(navHome, viewHome);
+    const signedIn = !!(state.me || state.patient);
+    const dashActive = signedIn && !needsVerification() && !isGated();
+    if(dashActive){
+      goToView(navProduct, viewProduct);
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e){ try { window.scrollTo(0, 0); } catch(_){} }
+      refreshDashboard();
+    } else {
+      goToView(navHome, viewHome);
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e){ try { window.scrollTo(0, 0); } catch(_){} }
+    }
   }
   if(brandHome){
     brandHome.addEventListener('click', goBrandHome);
