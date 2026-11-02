@@ -480,6 +480,64 @@ Rules:
   return { reflection, checkInsUsed: week.length, needsData: false };
 }
 
+// Caseload digest: a short triage read across the whole caseload — the state of
+// the week and who to see first — from the signals the caseload already tracks
+// (status, recent activity, flags, mood/pain trend). No raw check-in text is
+// sent, so there's no consent question; it's a synthesis of the dashboard's own
+// numbers. Never diagnostic.
+async function caseloadDigest({ discipline, accountType, patients, lang }) {
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  const focus = documentFocusForProfession({ discipline, accountType });
+  const pain = ['physio', 'kinesiology', 'osteo', 'occupational'].includes(discipline || '');
+  const metric = pain ? 'pain' : 'mood';
+  const now = Date.now();
+  const active = (patients || []).filter(p => !p.left_at).slice(0, 60);
+  if (!active.length) return { digest: '', priorities: [], needsData: true };
+  const lines = active.map(p => {
+    const bits = [];
+    if (p.has_recent_risk) bits.push('FLAGGED for a possible safety concern');
+    if (p.last_mood != null) bits.push(`${metric} ${p.last_mood}/10`);
+    if ((p.new_check_in_count || 0) > 0) bits.push(`${p.new_check_in_count} new check-in(s)`);
+    if (p.last_check_in_at) {
+      const days = Math.floor((now - new Date(p.last_check_in_at).getTime()) / 86400000);
+      bits.push(`last check-in ${days}d ago`);
+    } else {
+      bits.push('no check-ins yet');
+    }
+    return `- ${p.display_name}: ${bits.join('; ')}`;
+  }).join('\n');
+
+  const langName = lang === 'fr' ? 'French' : 'English';
+  const system = `You help a ${focus.role} triage their caseload. You are given one line of signals per patient. Write a short digest of the week and who to see first.
+Rules:
+- Use ONLY these signals. Never diagnose, never give treatment advice, never invent anything. For ${metric}, note that ${pain ? 'a HIGHER number is worse' : 'a LOWER number is worse'}.
+- This is indicative triage support for the clinician's own judgment, not a clinical assessment.
+- Write in ${langName}.
+- Respond with ONLY a JSON object, no preamble and no markdown fences, in exactly this shape:
+{"digest": "2 to 3 plain sentences on the state of the caseload this week", "priorities": [{"name": "the patient's name exactly as given", "reason": "one short line on why they are near the top"}]}
+- priorities: up to 5, most urgent first (flags and worsening ${metric} before quiet weeks). If nothing stands out, return an empty array.`;
+  const user = `Patients (${active.length}):\n${lines}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 800, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (caseload):', response.status); throw new Error('AI caseload digest failed.'); }
+  const data = await response.json();
+  const raw = (data.content || []).map(b => b.text || '').join('');
+  let parsed; try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch { parsed = {}; }
+  const digest = typeof parsed.digest === 'string' ? parsed.digest.slice(0, 1200) : '';
+  let priorities = [];
+  if (Array.isArray(parsed.priorities)) {
+    priorities = parsed.priorities
+      .filter(x => x && typeof x.name === 'string' && typeof x.reason === 'string')
+      .slice(0, 5)
+      .map(x => ({ name: x.name.slice(0, 80), reason: x.reason.slice(0, 200) }));
+  }
+  return { digest, priorities, needsData: false };
+}
+
 // Grounded facts the website assistant may answer from. Kept here (not in a DB)
 // so answers stay consistent with the marketing copy. Prices are the same ones
 // shown on the pricing section.
@@ -2282,6 +2340,26 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
   } catch (err) {
     console.error('Prep brief error:', err.message);
     res.status(502).json({ error: 'Could not generate a brief just now. Please try again.' });
+  }
+});
+
+// Caseload digest: a short triage read across the whole caseload (state of the
+// week + who to see first), from the caseload signals only.
+app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The caseload digest is unavailable right now.' });
+    const patients = await listPatients(req.clinician.id);
+    const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
+    const result = await caseloadDigest({
+      discipline: req.clinician.discipline,
+      accountType: req.clinician.account_type,
+      patients,
+      lang
+    });
+    res.json(result);
+  } catch (err) {
+    console.error('Caseload digest error:', err.message);
+    res.status(502).json({ error: 'Could not summarize the caseload just now. Please try again.' });
   }
 });
 
