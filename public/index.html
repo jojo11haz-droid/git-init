@@ -496,6 +496,12 @@
   .btw-prep-list li::before{content:"";position:absolute;left:3px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--moss);}
   .btw-prep-list.watch li::before{background:var(--clay);}
   .btw-prep-foot{margin-top:13px;font-size:11px;color:var(--ink-soft);line-height:1.45;font-style:italic;}
+  /* Caseload digest priorities: clickable "see first" rows. */
+  .btw-case-prio{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+  .btw-case-row{display:flex;align-items:baseline;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;font-family:var(--font-body);transition:border-color .15s ease,transform .12s ease;width:100%;}
+  .btw-case-row:hover{border-color:var(--moss);transform:translateY(-1px);}
+  .btw-case-row .nm{font-size:13.5px;font-weight:600;color:var(--ink);flex:none;}
+  .btw-case-row .rs{font-size:12.5px;color:var(--ink-soft);line-height:1.4;}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -1112,6 +1118,7 @@
   .btw-role-patient #btwAiNotePanel,
   .btw-role-patient #btwNextSessionBar,
   .btw-role-patient #btwTodayRoster,
+  .btw-role-patient #btwCaseDigest,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
@@ -3523,6 +3530,17 @@
         <button type="button" id="btwNextSessionClear" class="btw-nextsess-clear" title="Clear" aria-label="Clear next session">✕</button>
       </div>
 
+      <div class="btw-prep" id="btwCaseDigest" style="display:none;">
+        <div class="btw-prep-head">
+          <div class="btw-prep-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+            <span id="btwCaseDigestTitle">Caseload this week</span>
+          </div>
+          <button type="button" class="btw-prep-gen" id="btwCaseDigestGen">Summarize</button>
+        </div>
+        <div class="btw-prep-body" id="btwCaseDigestBody"></div>
+      </div>
+
       <div class="btw-today" id="btwTodayRoster" style="display:none;">
         <div class="btw-today-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -4447,6 +4465,16 @@
     "in clinic today":"en clinique aujourd'hui",
     "scheduled later":"prévus plus tard",
     "not matched to a patient":"sans patient correspondant",
+    // caseload "this week" AI digest
+    "Summarize":"Résumer",
+    "Refresh":"Actualiser",
+    "Caseload this week":"Votre clientèle cette semaine",
+    "A quick read on your whole caseload and who to see first.":"Un aperçu de l'ensemble de votre clientèle et des personnes à voir en premier.",
+    "See first":"À voir en premier",
+    "Indicative triage from your caseload signals, not a clinical judgment.":"Tri indicatif à partir des signaux de votre clientèle, et non un jugement clinique.",
+    "Reading your caseload…":"Lecture de votre clientèle…",
+    "Add patients to see a caseload digest.":"Ajoutez des patients pour voir un résumé de la clientèle.",
+    "Could not summarize the caseload just now.":"Impossible de résumer la clientèle pour le moment.",
     // patient weekly AI reflection
     "This week, reflected":"Votre semaine, en quelques mots",
     "A warm few sentences on how your week went, from your own check-ins.":
@@ -12890,6 +12918,56 @@
       }
     });
   })();
+  // --- Caseload "this week" digest: a triage read across the whole caseload ---
+  var _caseDigestFor = null;
+  function renderCaseDigest(){
+    var card = document.getElementById('btwCaseDigest'); if(!card) return;
+    var patients = state.patients || [];
+    if(!patients.length){ card.style.display = 'none'; _caseDigestFor = null; return; }
+    card.style.display = '';
+    var title = document.getElementById('btwCaseDigestTitle'); if(title) title.textContent = t('Caseload this week');
+    var gen = document.getElementById('btwCaseDigestGen');
+    var key = patients.length + ':' + patients.reduce(function(s,p){ return s + (p.new_check_in_count||0) + (p.has_recent_risk?1000:0); }, 0);
+    if(_caseDigestFor !== key){
+      _caseDigestFor = key;
+      var body = document.getElementById('btwCaseDigestBody');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('A quick read on your whole caseload and who to see first.')) + '</div>';
+      if(gen){ gen.disabled = false; gen.textContent = t('Summarize'); }
+    }
+  }
+  function renderCaseDigestResult(body, d){
+    var html = '';
+    if(d.digest) html += '<p class="btw-prep-brief">' + esc(d.digest) + '</p>';
+    if(d.priorities && d.priorities.length){
+      html += '<div class="btw-prep-label">' + esc(t('See first')) + '</div><div class="btw-case-prio">' +
+        d.priorities.map(function(x,i){ return '<button type="button" class="btw-case-row" data-i="'+i+'"><span class="nm">' + esc(x.name) + '</span><span class="rs">' + esc(x.reason) + '</span></button>'; }).join('') + '</div>';
+    }
+    html += '<div class="btw-prep-foot">' + esc(t('Indicative triage from your caseload signals, not a clinical judgment.')) + '</div>';
+    body.innerHTML = html;
+    body.querySelectorAll('.btw-case-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        var pr = (d.priorities || [])[+row.dataset.i]; if(!pr) return;
+        var nm = String(pr.name||'').trim().toLowerCase();
+        var p = (state.patients||[]).find(function(x){ return String(x.display_name||'').trim().toLowerCase() === nm; })
+          || (state.patients||[]).find(function(x){ return String(x.display_name||'').trim().split(/\s+/)[0].toLowerCase() === nm.split(/\s+/)[0]; });
+        if(p){ state.selectedPatientId = p.id; renderAll(); var dg = document.getElementById('btwDigest'); if(dg) dg.scrollIntoView({ behavior:'smooth', block:'start' }); }
+      });
+    });
+  }
+  (function(){
+    var gen = document.getElementById('btwCaseDigestGen'); if(!gen) return;
+    gen.addEventListener('click', async function(){
+      var body = document.getElementById('btwCaseDigestBody');
+      gen.disabled = true; gen.textContent = t('Thinking…');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Reading your caseload…')) + '</div>';
+      try{
+        var d = await api('GET', '/api/caseload/digest?lang=' + (curLang || 'en'));
+        if(d && d.needsData){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Add patients to see a caseload digest.')) + '</div>'; }
+        else if(body){ renderCaseDigestResult(body, d || {}); }
+      }catch(e){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc((e && e.message) || t('Could not summarize the caseload just now.')) + '</div>'; }
+      finally{ gen.disabled = false; gen.textContent = t('Refresh'); }
+    });
+  })();
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     renderCaseloadSummary();
@@ -13821,6 +13899,7 @@
     }
     renderPatientList();
     renderPatientPane();
+    renderCaseDigest();
     renderTodayRoster();
     renderNextSessionBar();
     renderWeekSummary();
