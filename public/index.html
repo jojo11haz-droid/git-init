@@ -3369,6 +3369,7 @@
       <div class="btw-role-toggle" role="group" aria-label="Dashboard view">
         <button type="button" class="btw-role-btn active" id="btwOwnerViewClin" style="font-size:12px;padding:6px 12px;">Clinician</button>
         <button type="button" class="btw-role-btn" id="btwOwnerViewPat" style="font-size:12px;padding:6px 12px;">Patient</button>
+        <button type="button" class="btw-role-btn" id="btwOwnerViewInd" style="font-size:12px;padding:6px 12px;">Individual</button>
       </div>
     </div>
   </div>
@@ -4329,54 +4330,84 @@
   // Owner-only "preview the patient side" switch on the dashboard. It swaps in a
   // synthetic patient so the dashboard renders exactly as a patient sees it;
   // nothing is sent, and the real clinician session is restored on toggle off.
+  // Three preview modes: 'clinician' (the real session), 'patient' (an invited
+  // patient — has a clinician), and 'individual' (a self-serve individual with
+  // no clinician, so billing/stats/copy render the solo side). _ownerPreview
+  // stays as a derived boolean for the rest of the code.
   let _ownerPreview = false;
+  let _ownerPreviewMode = 'clinician';
   let _ownerPreviewSaved = null;
-  function makePreviewPatient(){
+  let _ownerPrevAud = null;
+  function makePreviewPatient(mode){
     const me = (_ownerPreviewSaved ? _ownerPreviewSaved.me : state.me) || {};
+    const individual = (mode === 'individual');
     return {
       id: '__preview__',
       display_name: (me.name || 'You') + ' (preview)',
       email: me.email || OWNER_EMAIL,
       plan: 'patient_monthly', subscription_status: 'active', is_premium: true,
       ai_consent_enabled: true,
-      clinician_account_type: me.account_type || 'therapist',
-      clinician_discipline: me.discipline || null,
+      // A self-serve individual has no clinician attached — that's what flips
+      // soloIndividual() and the individual-side copy/billing on.
+      clinician_account_type: individual ? null : (me.account_type || 'therapist'),
+      clinician_discipline: individual ? null : (me.discipline || null),
       check_in_mode_lock: 'any', weekly_checkin_cap: 999,
       reminders_enabled: false, reminder_time: null, reminder_days: null, phone: null
     };
   }
-  function setOwnerPreview(on){
-    if(on && !_ownerPreview){
-      _ownerPreviewSaved = { me: state.me, role: state.role, patient: state.patient, checkIns: state.checkIns };
-      state.patient = makePreviewPatient(); state.role = 'patient'; state.me = null; state.checkIns = [];
-      _ownerPreview = true;
-    } else if(!on && _ownerPreview){
+  function setOwnerPreviewMode(mode){
+    mode = (mode === 'patient' || mode === 'individual') ? mode : 'clinician';
+    if(mode === _ownerPreviewMode) return;
+    if(mode !== 'clinician'){
+      if(!_ownerPreview){
+        _ownerPreviewSaved = { me: state.me, role: state.role, patient: state.patient, checkIns: state.checkIns };
+        _ownerPrevAud = curAudience;
+      }
+      state.patient = makePreviewPatient(mode); state.role = 'patient'; state.me = null; state.checkIns = [];
+      _ownerPreview = true; _ownerPreviewMode = mode;
+      // The individual side carries its own field copy; the patient side keeps
+      // the owner's current field.
+      try {
+        if(mode === 'individual'){ if(curAudience !== 'individual') setAudience('individual'); }
+        else if(_ownerPrevAud && curAudience !== _ownerPrevAud){ setAudience(_ownerPrevAud); }
+      } catch(e){}
+    } else {
       if(_ownerPreviewSaved){ state.me = _ownerPreviewSaved.me; state.role = _ownerPreviewSaved.role; state.patient = _ownerPreviewSaved.patient; state.checkIns = _ownerPreviewSaved.checkIns; }
-      _ownerPreviewSaved = null; _ownerPreview = false;
-    } else { return; }
+      _ownerPreviewSaved = null; _ownerPreview = false; _ownerPreviewMode = 'clinician';
+      try { if(_ownerPrevAud && curAudience !== _ownerPrevAud) setAudience(_ownerPrevAud); } catch(e){}
+      _ownerPrevAud = null;
+    }
     try { renderAuthState(); } catch(e){}
     try { renderAll(); } catch(e){}
     syncOwnerPreviewUI();
   }
+  // Back-compat shim for the two existing boolean callers.
+  function setOwnerPreview(on){ setOwnerPreviewMode(on ? 'patient' : 'clinician'); }
   function syncOwnerPreviewUI(){
     const bar = document.getElementById('btwOwnerPreviewBar');
     const onProduct = (typeof viewProduct !== 'undefined') && viewProduct && viewProduct.classList.contains('active');
     if(bar) bar.style.display = (onProduct && isOwnerAccount()) ? '' : 'none';
     const clin = document.getElementById('btwOwnerViewClin');
     const pat = document.getElementById('btwOwnerViewPat');
-    if(clin) clin.classList.toggle('active', !_ownerPreview);
-    if(pat) pat.classList.toggle('active', _ownerPreview);
+    const ind = document.getElementById('btwOwnerViewInd');
+    if(clin) clin.classList.toggle('active', _ownerPreviewMode === 'clinician');
+    if(pat) pat.classList.toggle('active', _ownerPreviewMode === 'patient');
+    if(ind) ind.classList.toggle('active', _ownerPreviewMode === 'individual');
     const note = document.getElementById('btwOwnerPreviewNote');
-    if(note) note.textContent = _ownerPreview
-      ? t('Previewing the patient view — nothing here is saved or sent.')
-      : t('Preview the patient side of the product.');
+    if(note) note.textContent = _ownerPreviewMode === 'individual'
+      ? t('Previewing the individual view — nothing here is saved or sent.')
+      : _ownerPreviewMode === 'patient'
+        ? t('Previewing the patient view — nothing here is saved or sent.')
+        : t('Preview the patient side of the product.');
   }
   window.__btwSyncOwnerPreview = syncOwnerPreviewUI;
   (function(){
     const clin = document.getElementById('btwOwnerViewClin');
     const pat = document.getElementById('btwOwnerViewPat');
-    if(clin) clin.addEventListener('click', function(){ setOwnerPreview(false); });
-    if(pat) pat.addEventListener('click', function(){ setOwnerPreview(true); });
+    const ind = document.getElementById('btwOwnerViewInd');
+    if(clin) clin.addEventListener('click', function(){ setOwnerPreviewMode('clinician'); });
+    if(pat) pat.addEventListener('click', function(){ setOwnerPreviewMode('patient'); });
+    if(ind) ind.addEventListener('click', function(){ setOwnerPreviewMode('individual'); });
   })();
   function subActive(s){ return s === 'active' || s === 'trialing' || s === 'canceling'; }
   // Hard paywall: once billing is on, a self-serve patient (has a plan) or any
@@ -4455,7 +4486,7 @@
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
     "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
-    "Clinician":"Clinicien","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view — nothing here is saved or sent.":"Aperçu de la vue patient — rien ici n'est enregistré ni envoyé.","This is a preview — your check-in was not sent.":"Ceci est un aperçu — votre suivi n'a pas été envoyé.",
+    "Clinician":"Clinicien","Individual":"Particulier","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view — nothing here is saved or sent.":"Aperçu de la vue patient — rien ici n'est enregistré ni envoyé.","Previewing the individual view — nothing here is saved or sent.":"Aperçu de la vue particulier — rien ici n'est enregistré ni envoyé.","This is a preview — your check-in was not sent.":"Ceci est un aperçu — votre suivi n'a pas été envoyé.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
