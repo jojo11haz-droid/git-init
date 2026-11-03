@@ -23,6 +23,9 @@ class Patient {
   String? get clinicianDiscipline => raw['clinician_discipline'] as String?;
   bool get isPremium => raw['is_premium'] == true;
   bool get hasClinician => clinicianAccountType != null;
+  // A self-serve individual's own intentions (up to two short lines).
+  List<String> get goals =>
+      ((raw['goals'] as List?) ?? const []).map((e) => e.toString()).toList();
   // Writing a future-self note is covered for clinician patients and Premium
   // individuals (mirrors the server's subscription gate). Reading is always on.
   bool get canWriteFutureNote => hasClinician || isPremium;
@@ -288,6 +291,14 @@ class AppState extends ChangeNotifier {
     }
     await _clearToken();
     patient = null;
+    notifyListeners();
+  }
+
+  // Save the individual's own intentions/goals (up to two short lines).
+  Future<void> saveGoals(List<String> goals) async {
+    final data = await _api.put('/api/patient/goals', {'goals': goals});
+    patient = Patient(
+        ((data as Map)['patient'] as Map).cast<String, dynamic>());
     notifyListeners();
   }
 

@@ -271,6 +271,7 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT
 -- The patient's next in-clinic appointment, so the dashboard can show today's
 -- roster. Set by the clinician for now; the EMR integration will populate it.
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS next_session_at DATE;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS goals JSONB;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE future_notes ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'note';
@@ -696,7 +697,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -1014,6 +1015,16 @@ export async function setPatientReminders(patientId, enabled, token, { phone, ti
        reminder_tz = COALESCE($7, reminder_tz)
      WHERE id = $3 RETURNING ${PATIENT_ROW_COLS}`,
     [!!enabled, token || null, patientId, phone || null, time || null, days == null ? null : days, tz || null]
+  );
+  return rows[0] || null;
+}
+
+// A self-serve individual's own intentions/goals (a small JSON array of short
+// strings). Set by the patient for themselves; read back on their profile.
+export async function setPatientGoals(patientId, goals) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET goals = $2 WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,
+    [patientId, JSON.stringify(Array.isArray(goals) ? goals : [])]
   );
   return rows[0] || null;
 }
