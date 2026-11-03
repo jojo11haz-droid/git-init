@@ -84,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _kHistory = GlobalKey();
   final _kHelp = GlobalKey();
   bool _tourActive = false;
+  int _streak = 0;
 
   @override
   void initState() {
@@ -94,12 +95,82 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _detailsOpen = true);
       }
     });
+    // Check-in streak for the habit chip — best-effort, never blocks the screen.
+    _loadStreak();
     // First run (after the intro): show the spotlight tour once.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final st = context.read<AppState>();
       if (!st.tourSeen && !st.showOnboarding) _startTour();
     });
+  }
+
+  Future<void> _loadStreak() async {
+    final app = context.read<AppState>();
+    try {
+      final items = await app.fetchHistory();
+      if (!mounted) return;
+      setState(() => _streak = _computeStreak(items));
+    } catch (_) {
+      // The streak is a nicety; a failed history fetch just hides the chip.
+    }
+  }
+
+  // Consecutive calendar days with at least one check-in, with a one-day grace
+  // so it doesn't reset the moment today's check-in isn't in yet.
+  int _computeStreak(List<CheckIn> items) {
+    if (items.isEmpty) return 0;
+    final days = <String>{};
+    for (final c in items) {
+      final d = c.submittedAt;
+      days.add('${d.year}-${d.month}-${d.day}');
+    }
+    String key(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
+    final now = DateTime.now();
+    var cur = DateTime(now.year, now.month, now.day);
+    if (!days.contains(key(cur))) {
+      cur = cur.subtract(const Duration(days: 1));
+      if (!days.contains(key(cur))) return 0;
+    }
+    var streak = 0;
+    while (days.contains(key(cur))) {
+      streak++;
+      cur = cur.subtract(const Duration(days: 1));
+    }
+    return streak;
+  }
+
+  Widget _streakChip(S s) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 7, 15, 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFBEEDD),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFEAD9BE)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.local_fire_department,
+                size: 18, color: Color(0xFFB8701F)),
+            const SizedBox(width: 8),
+            Text('$_streak',
+                style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFB8701F))),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text('${s.streakUnit(_streak)} · ${s.streakNote(_streak)}',
+                  style: const TextStyle(
+                      fontSize: 13, color: BtwColors.inkSoft)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<CoachStep> _buildSteps(S s) => [
@@ -430,6 +501,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BtwColors.inkSoft,
                         height: 1.5),
                   ),
+                  if (_streak >= 1) ...[
+                    const SizedBox(height: 14),
+                    _streakChip(s),
+                  ],
                   const SizedBox(height: 18),
                   // Write/speak vs. answer a few guided questions — the same
                   // choice the website offers, flavoured per discipline.
