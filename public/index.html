@@ -549,6 +549,17 @@
   .btw-goals-save:disabled{opacity:.6;cursor:default;}
   .btw-goals-cancel{background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
   .btw-goals-status{font-size:11.5px;color:var(--ink-soft);}
+  /* Bring-to-a-pro: a shareable plain-language summary. */
+  .btw-sharepro{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 14px;margin:0 0 16px;font-family:var(--font-body);font-size:12.5px;font-weight:600;color:var(--moss);cursor:pointer;transition:border-color .15s ease,transform .12s ease;}
+  .btw-sharepro:hover{border-color:var(--moss);transform:translateY(-1px);}
+  .btw-sharepro svg{stroke:var(--moss);flex:none;}
+  .btw-pro-sub{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:4px 0 12px;}
+  .btw-pro-body{white-space:pre-wrap;font-family:var(--font-mono);font-size:12px;line-height:1.55;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 15px;max-height:46vh;overflow:auto;margin:0 0 14px;}
+  .btw-pro-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btw-pro-btn{font-family:var(--font-body);font-size:12.5px;font-weight:600;border-radius:9px;padding:8px 15px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);}
+  .btw-pro-btn.primary{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-pro-btn:hover{opacity:.92;}
+  .btw-pro-status{font-size:11.5px;color:var(--ink-soft);}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -3644,6 +3655,10 @@
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
       <div class="btw-goals" id="btwGoals" style="display:none;"></div>
       <div class="btw-patterns" id="btwPatterns" style="display:none;"></div>
+      <button type="button" class="btw-sharepro" id="btwSharePro" style="display:none;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+        <span id="btwShareProLabel">Share a summary with a professional</span>
+      </button>
       <div class="btw-reflection btw-aireflect" id="btwAiReflection" style="display:none;">
         <div class="btw-reflection-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--moss);flex:none;"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
@@ -3719,6 +3734,21 @@
       <div class="btw-modal-eyebrow">Advanced stats</div>
       <h2 id="btwStatsTitle">The full picture</h2>
       <div class="btw-stats-body" id="btwStatsBody"></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwProOverlay" style="display:none;">
+    <div class="btw-modal">
+      <button class="btw-modal-close" id="btwProClose" aria-label="Close">&times;</button>
+      <div class="btw-modal-eyebrow" id="btwProEyebrow">To share with a professional</div>
+      <h2 id="btwProTitle">Your check-in summary</h2>
+      <div class="btw-pro-sub" id="btwProSub">A plain-language summary from your own check-ins. Copy it into an email, or download it to bring along.</div>
+      <pre class="btw-pro-body" id="btwProBody"></pre>
+      <div class="btw-pro-actions">
+        <button type="button" class="btw-pro-btn primary" id="btwProCopy">Copy</button>
+        <button type="button" class="btw-pro-btn" id="btwProDownload">Download</button>
+        <span class="btw-pro-status" id="btwProStatus"></span>
+      </div>
     </div>
   </div>
 
@@ -4598,6 +4628,12 @@
     "e.g. Wind down by 11pm":"p. ex. Décrocher avant 23 h",
     "e.g. Notice the small wins":"p. ex. Remarquer les petites victoires",
     "Could not save your intentions.":"Impossible d'enregistrer vos intentions.",
+    // bring-to-a-pro summary
+    "Share a summary with a professional":"Partager un résumé avec un professionnel",
+    "To share with a professional":"À partager avec un professionnel",
+    "Your check-in summary":"Votre résumé de suivis",
+    "A plain-language summary from your own check-ins. Copy it into an email, or download it to bring along.":"Un résumé en langage clair tiré de vos propres suivis. Copiez-le dans un courriel, ou téléchargez-le pour l'apporter.",
+    "Copy":"Copier","Download":"Télécharger","Copied.":"Copié.","Select the text and press Ctrl/Cmd+C.":"Sélectionnez le texte et appuyez sur Ctrl/Cmd+C.",
     // patterns (automatic insight callouts)
     "Patterns worth noticing":"Tendances à remarquer",
     "Noticed from your own check-ins — something to reflect on, not a diagnosis.":"Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.",
@@ -13570,6 +13606,92 @@
       + '<div class="btw-pat-foot">' + esc(t('Noticed from your own check-ins — something to reflect on, not a diagnosis.')) + '</div>';
   }
 
+  // --- Bring-to-a-pro: a plain-language summary the individual can hand to a
+  // therapist or GP. Built client-side from their own data; nothing leaves the
+  // page except what they choose to copy or download.
+  function _proFmtDate(ms){
+    try{ return new Date(ms).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { year:'numeric', month:'short', day:'numeric' }); }
+    catch(e){ return new Date(ms).toISOString().slice(0,10); }
+  }
+  function buildProSummary(){
+    var L = function(en, fr){ return (typeof curLang !== 'undefined' && curLang === 'fr') ? fr : en; };
+    var name = (state.patient && state.patient.display_name) || L('This person', 'Cette personne');
+    var ci = (state.checkIns || []).filter(function(c){ return c && c.time; }).slice().sort(function(a,b){ return a.time - b.time; });
+    var moods = ci.filter(function(c){ return typeof c.mood === 'number'; });
+    var out = [];
+    out.push(L('BETWEEN — CHECK-IN SUMMARY', 'BETWEEN — RÉSUMÉ DES SUIVIS'));
+    out.push('');
+    if(ci.length) out.push(L('Period: ', 'Période : ') + _proFmtDate(ci[0].time) + ' → ' + _proFmtDate(ci[ci.length - 1].time));
+    out.push(L('Check-ins: ', 'Suivis : ') + ci.length);
+    if(moods.length){
+      var avg = moods.reduce(function(s,c){ return s + c.mood; }, 0) / moods.length;
+      out.push(L('Average self-rated mood: ', 'Humeur moyenne autoévaluée : ') + avg.toFixed(1) + '/10');
+      var now = Date.now();
+      var tw = moods.filter(function(c){ return c.time >= now - 7*864e5; });
+      var lw = moods.filter(function(c){ return c.time < now - 7*864e5 && c.time >= now - 14*864e5; });
+      if(tw.length >= 2 && lw.length >= 2){
+        var ta = tw.reduce(function(s,c){ return s + c.mood; }, 0) / tw.length;
+        var la = lw.reduce(function(s,c){ return s + c.mood; }, 0) / lw.length;
+        var dir = (ta - la >= 1) ? L('up', 'en hausse') : (la - ta >= 1) ? L('down', 'en baisse') : L('about the same', 'stable');
+        out.push(L('This week vs last: ', 'Cette semaine vs la précédente : ') + dir);
+      }
+    }
+    var goals = (state.patient && Array.isArray(state.patient.goals)) ? state.patient.goals : [];
+    if(goals.length){ out.push(''); out.push(L('Stated intentions:', 'Intentions :')); goals.forEach(function(g){ out.push('  • ' + g); }); }
+    var tc = {}; moods.forEach(function(c){ (c.tags || []).forEach(function(tg){ tc[tg] = (tc[tg] || 0) + 1; }); });
+    var top = Object.keys(tc).sort(function(a,b){ return tc[b] - tc[a]; }).slice(0, 5);
+    if(top.length){ out.push(''); out.push(L('Most common themes: ', 'Thèmes les plus fréquents : ') + top.join(', ')); }
+    var pats = computePatterns(ci);
+    if(pats.length){ out.push(''); out.push(L('Patterns noticed:', 'Tendances remarquées :')); pats.forEach(function(p){ out.push('  • ' + p); }); }
+    out.push('');
+    out.push(L('Generated from ' + name + '’s own check-ins to share with a professional. Self-reported; not a clinical assessment.',
+               'Généré à partir des propres suivis de ' + name + ' pour partage avec un professionnel. Autodéclaré; n’est pas une évaluation clinique.'));
+    return out.join('\n');
+  }
+  function renderSharePro(){
+    var btn = document.getElementById('btwSharePro'); if(!btn) return;
+    var ok = isPatient() && soloIndividual() && (state.checkIns || []).length >= 1;
+    btn.style.display = ok ? 'inline-flex' : 'none';
+    var lbl = document.getElementById('btwShareProLabel'); if(lbl) lbl.textContent = t('Share a summary with a professional');
+  }
+  (function(){
+    var open = document.getElementById('btwSharePro');
+    var overlay = document.getElementById('btwProOverlay');
+    var closeBtn = document.getElementById('btwProClose');
+    var copyBtn = document.getElementById('btwProCopy');
+    var dlBtn = document.getElementById('btwProDownload');
+    function show(){
+      var body = document.getElementById('btwProBody'); if(body) body.textContent = buildProSummary();
+      var e1 = document.getElementById('btwProEyebrow'); if(e1) e1.textContent = t('To share with a professional');
+      var e2 = document.getElementById('btwProTitle'); if(e2) e2.textContent = t('Your check-in summary');
+      var e3 = document.getElementById('btwProSub'); if(e3) e3.textContent = t('A plain-language summary from your own check-ins. Copy it into an email, or download it to bring along.');
+      if(copyBtn) copyBtn.textContent = t('Copy');
+      if(dlBtn) dlBtn.textContent = t('Download');
+      var st = document.getElementById('btwProStatus'); if(st) st.textContent = '';
+      if(overlay) overlay.style.display = '';
+    }
+    function hide(){ if(overlay) overlay.style.display = 'none'; }
+    if(open) open.addEventListener('click', show);
+    if(closeBtn) closeBtn.addEventListener('click', hide);
+    if(overlay) overlay.addEventListener('click', function(e){ if(e.target === overlay) hide(); });
+    if(copyBtn) copyBtn.addEventListener('click', async function(){
+      var txt = (document.getElementById('btwProBody') || {}).textContent || '';
+      var st = document.getElementById('btwProStatus');
+      try{ await navigator.clipboard.writeText(txt); if(st) st.textContent = t('Copied.'); }
+      catch(e){ if(st) st.textContent = t('Select the text and press Ctrl/Cmd+C.'); }
+    });
+    if(dlBtn) dlBtn.addEventListener('click', function(){
+      var txt = (document.getElementById('btwProBody') || {}).textContent || '';
+      try{
+        var blob = new Blob([txt], { type:'text/plain' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'between-summary.txt';
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 100);
+      }catch(e){}
+    });
+  })();
+
   // Show how many check-ins are left this week for a capped free individual,
   // with a nudge to Premium. Disables Send when the week's cap is used up.
   function renderCapNote(){
@@ -14253,6 +14375,7 @@
       renderWeeklyReflection();
       renderGoals();
       renderPatterns();
+      renderSharePro();
       renderAiReflection();
       renderDigestSelf();
       renderInsights();

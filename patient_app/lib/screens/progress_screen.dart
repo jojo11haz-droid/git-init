@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
@@ -275,6 +276,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _patternsCard(s, pats),
           const SizedBox(height: 16),
         ],
+        if (soloIndividual) ...[
+          _shareProButton(s),
+          const SizedBox(height: 16),
+        ],
         if (isBody && hasPainHistory) ...[
           _recoveryCard(s),
           const SizedBox(height: 16),
@@ -397,6 +402,118 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   color: BtwColors.inkSoft,
                   height: 1.45)),
         ],
+      ),
+    );
+  }
+
+  String _fmtDate(DateTime d) {
+    const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${m[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  // A plain-language summary the individual can hand to a professional. Built
+  // from their own data; copied to the clipboard, nothing is sent anywhere.
+  String _buildProSummary(S s) {
+    final f = s.isFr;
+    final patient = context.read<AppState>().patient;
+    final name = (patient?.displayName.trim().isNotEmpty == true)
+        ? patient!.displayName
+        : (f ? 'Cette personne' : 'This person');
+    final ci = _history.toList()
+      ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
+    final moods = ci.where((c) => c.mood != null).toList();
+    final b = StringBuffer();
+    b.writeln(f ? 'BETWEEN — RÉSUMÉ DES SUIVIS' : 'BETWEEN — CHECK-IN SUMMARY');
+    b.writeln();
+    if (ci.isNotEmpty) {
+      b.writeln((f ? 'Période : ' : 'Period: ') +
+          _fmtDate(ci.first.submittedAt) +
+          ' → ' +
+          _fmtDate(ci.last.submittedAt));
+    }
+    b.writeln((f ? 'Suivis : ' : 'Check-ins: ') + ci.length.toString());
+    if (moods.isNotEmpty) {
+      final avg =
+          moods.map((c) => c.mood!).reduce((a, b2) => a + b2) / moods.length;
+      b.writeln((f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ') +
+          '${avg.toStringAsFixed(1)}/10');
+      final now = DateTime.now();
+      final tw = moods
+          .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 7))))
+          .toList();
+      final lw = moods.where((c) {
+        final t = c.submittedAt;
+        return t.isBefore(now.subtract(const Duration(days: 7))) &&
+            t.isAfter(now.subtract(const Duration(days: 14)));
+      }).toList();
+      if (tw.length >= 2 && lw.length >= 2) {
+        final ta = tw.map((c) => c.mood!).reduce((a, b2) => a + b2) / tw.length;
+        final la = lw.map((c) => c.mood!).reduce((a, b2) => a + b2) / lw.length;
+        final dir = (ta - la >= 1)
+            ? (f ? 'en hausse' : 'up')
+            : (la - ta >= 1)
+                ? (f ? 'en baisse' : 'down')
+                : (f ? 'stable' : 'about the same');
+        b.writeln((f ? 'Cette semaine vs la précédente : ' : 'This week vs last: ') + dir);
+      }
+    }
+    final goals = patient?.goals ?? const [];
+    if (goals.isNotEmpty) {
+      b.writeln();
+      b.writeln(f ? 'Intentions :' : 'Stated intentions:');
+      for (final g in goals) {
+        b.writeln('  • $g');
+      }
+    }
+    final tc = <String, int>{};
+    for (final c in moods) {
+      for (final tg in c.tags) {
+        tc[tg] = (tc[tg] ?? 0) + 1;
+      }
+    }
+    final top = tc.keys.toList()..sort((a, b2) => tc[b2]! - tc[a]!);
+    final topN = top.take(5).toList();
+    if (topN.isNotEmpty) {
+      b.writeln();
+      b.writeln((f ? 'Thèmes les plus fréquents : ' : 'Most common themes: ') +
+          topN.join(', '));
+    }
+    final pats = _computePatterns(s);
+    if (pats.isNotEmpty) {
+      b.writeln();
+      b.writeln(f ? 'Tendances remarquées :' : 'Patterns noticed:');
+      for (final p in pats) {
+        b.writeln('  • $p');
+      }
+    }
+    b.writeln();
+    b.writeln(f
+        ? 'Généré à partir des propres suivis de $name pour partage avec un professionnel. Autodéclaré; n\'est pas une évaluation clinique.'
+        : "Generated from $name's own check-ins to share with a professional. Self-reported; not a clinical assessment.");
+    return b.toString();
+  }
+
+  Widget _shareProButton(S s) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          final txt = _buildProSummary(s);
+          await Clipboard.setData(ClipboardData(text: txt));
+          if (!mounted) return;
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(s.proCopied)));
+        },
+        style: OutlinedButton.styleFrom(
+          foregroundColor: BtwColors.moss,
+          side: const BorderSide(color: BtwColors.line),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        ),
+        icon: const Icon(Icons.ios_share, size: 16),
+        label: Text(s.shareWithPro,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
       ),
     );
   }
