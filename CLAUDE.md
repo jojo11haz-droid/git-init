@@ -45,13 +45,12 @@ dev — dev carries undeployed work. Before pushing to main: `git diff --stat
 origin/main HEAD`, confirm the promo grep below adds 0, `node --check`, and
 `npm test`.
 
-## Held feature — do NOT deploy the promo code path
-There's a signup promo feature (markers: `PROMO_CODES`, `applyPromoCode`,
-`free_until`, `btwSuPromo`) built for a Kinatex partner deal and **held off
-`main`**. It lives on the dev branch only. It is env-gated — a clean no-op
-unless `PROMO_CODES` is set — but a valid code also AUTO-APPROVES a clinician
-(skips the manual licence review), so it stays off production until deliberately
-enabled. Because it sits on dev, cherry-picks of nearby lines sometimes conflict
-in the FR-dictionary / signup areas; resolve by keeping your change and dropping
-the promo lines. Always verify before every push to main:
-`git diff origin/main HEAD | grep -E '^\+' | grep -c 'PROMO_CODES\|btwSuPromo\|free_until\|applyPromoCode'` → must be `0`.
+## Held feature — the promo code path (removed from dev, in history only)
+A signup promo feature (markers: `PROMO_CODES`, `applyPromoCode`, `free_until`,
+`btwSuPromo`) was built for a Kinatex partner deal — free-for-N-months clinic
+codes that also AUTO-APPROVE the account (skipping manual licence review). It
+was **removed from the dev branch** (commit `b3b4ee1`) and now lives only in git
+history (feature commits `a06bc14`, `848ca1a`, `5b9ba8a`). Do not re-introduce or
+deploy it without deliberate intent — the auto-approve bypass is why it stays
+off production. As lingering hygiene, before any push to main confirm it adds
+nothing: `git diff origin/main HEAD | grep -E '^\+' | grep -c 'PROMO_CODES\|btwSuPromo\|free_until\|applyPromoCode'` → `0`.
