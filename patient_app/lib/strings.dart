@@ -267,6 +267,22 @@ class S {
     if (s >= 3) return _('building a habit', "une habitude qui s'installe");
     return _('keep it going', 'continuez comme ça');
   }
+  // Patterns (automatic insight callouts)
+  String get patternsTitle => _('Patterns worth noticing', 'Tendances à remarquer');
+  String get patternsFoot => _(
+      'Noticed from your own check-ins — something to reflect on, not a diagnosis.',
+      'Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.');
+  String patternWeekday(String day) => _(
+      '${day}s tend to be lower-mood days for you.',
+      "Le $day est souvent une journée d'humeur plus basse.");
+  String patternTheme(String tag) => _(
+      'Check-ins about $tag tend to land on lower days.',
+      'Les suivis au sujet de $tag arrivent souvent lors de journées plus difficiles.');
+  String get patternUp => _('Your mood is up from last week.',
+      'Votre humeur est en hausse par rapport à la semaine dernière.');
+  String get patternDown => _(
+      'Your mood is down from last week — be gentle with yourself.',
+      'Votre humeur est en baisse par rapport à la semaine dernière — soyez indulgent envers vous-même.');
   String get howAreThings =>
       _('How are things right now? Take your time.', 'Comment ça va, là, maintenant? Prends ton temps.');
   String get tellItHint => _('Tell it like it happened…', 'Raconte comme ça s\'est passé…');
