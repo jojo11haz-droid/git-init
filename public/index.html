@@ -528,6 +528,19 @@
   .btw-streak .msg{font-size:12px;color:var(--ink-soft);}
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);} }
   :root[data-theme="dark"] .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);}
+  /* Standing support card: always-available crisis resources for solo users. */
+  .btw-support{border:1px solid #c6d6ec;border-radius:13px;background:var(--moss-light);padding:14px 16px;margin:0 0 16px;}
+  .btw-support-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .btw-support-head svg{width:17px;height:17px;stroke:var(--moss);flex:none;}
+  .btw-support-head strong{font-size:14px;font-weight:700;color:var(--moss);}
+  .btw-support-body{font-size:12.5px;color:var(--ink);line-height:1.5;margin:0 0 11px;}
+  .btw-support-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+  .btw-support-btn{display:inline-flex;align-items:center;gap:6px;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:9px;padding:8px 14px;font-family:var(--font-body);font-size:12.5px;font-weight:600;text-decoration:none;cursor:pointer;}
+  .btw-support-btn:hover{opacity:.93;}
+  .btw-support-btn.urgent{background:var(--panel);color:var(--clay);border-color:var(--clay);}
+  .btw-support-foot{font-size:11px;color:var(--ink-soft);line-height:1.45;}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btw-support{background:rgba(30,76,134,0.18);border-color:rgba(30,76,134,0.5);} }
+  :root[data-theme="dark"] .btw-support{background:rgba(30,76,134,0.18);border-color:rgba(30,76,134,0.5);}
   /* Patterns: automatic, computed insight callouts from the person's own check-ins. */
   .btw-patterns{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:15px 17px;margin:0 0 16px;}
   .btw-pat-head{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--ink);margin:0 0 10px;}
@@ -3447,6 +3460,20 @@
 
       <div id="btwStreak" class="btw-streak" style="display:none;" aria-live="polite"></div>
 
+      <div id="btwSupport" class="btw-support" style="display:none;">
+        <div class="btw-support-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <strong id="btwSupportTitle">You're not on your own</strong>
+        </div>
+        <div class="btw-support-body" id="btwSupportBody">If things feel like too much, support is here any time — you don't have to be in crisis to reach out.</div>
+        <div class="btw-support-actions">
+          <a class="btw-support-btn" id="btwSupportText" href="sms:988">Text 988</a>
+          <a class="btw-support-btn" id="btwSupportCall" href="tel:988">Call 988</a>
+          <a class="btw-support-btn urgent" id="btwSupportEmerg" href="tel:911">Emergency 911</a>
+        </div>
+        <div class="btw-support-foot" id="btwSupportFoot">988 is the Suicide &amp; Crisis Lifeline. Between isn't a crisis service, and never leaves you without one.</div>
+      </div>
+
       <div id="btwReminderNudge" style="display:none;background:var(--moss-light);border:1px solid #c6d6ec;border-radius:12px;padding:13px 15px;margin:0 0 16px;">
         <div style="display:flex;gap:11px;align-items:flex-start;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--moss)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -4673,6 +4700,11 @@
     // patterns (automatic insight callouts)
     "Patterns worth noticing":"Tendances à remarquer",
     "Noticed from your own check-ins — something to reflect on, not a diagnosis.":"Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.",
+    // standing support card (solo individuals)
+    "You're not on your own":"Vous n'êtes pas seul",
+    "If things feel like too much, support is here any time — you don't have to be in crisis to reach out.":"Si c'est trop lourd, de l'aide est là à tout moment — pas besoin d'être en crise pour tendre la main.",
+    "Text 988":"Texter 988","Call 988":"Appeler 988","Emergency 911":"Urgence 911",
+    "988 is the Suicide & Crisis Lifeline. Between isn't a crisis service, and never leaves you without one.":"988 est la ligne d'aide en cas de crise suicidaire. Between n'est pas un service de crise, et ne vous laisse jamais sans ressource.",
     // check-in streak (habit chip)
     "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
     "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week — well done":"une semaine complète — bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
@@ -13747,6 +13779,22 @@
     }
   }
 
+  // --- Standing support card: a self-serve individual has no clinician who
+  // gets notified on a hard check-in, so keep crisis resources always one tap
+  // away, framed calmly — they don't have to be in crisis to reach out.
+  function renderSupport(){
+    var el = document.getElementById('btwSupport'); if(!el) return;
+    if(!(isPatient() && soloIndividual())){ el.style.display = 'none'; return; }
+    el.style.display = '';
+    var set = function(id, txt){ var e = document.getElementById(id); if(e) e.textContent = txt; };
+    set('btwSupportTitle', t("You're not on your own"));
+    set('btwSupportBody', t("If things feel like too much, support is here any time — you don't have to be in crisis to reach out."));
+    set('btwSupportText', t('Text 988'));
+    set('btwSupportCall', t('Call 988'));
+    set('btwSupportEmerg', t('Emergency 911'));
+    set('btwSupportFoot', t("988 is the Suicide & Crisis Lifeline. Between isn't a crisis service, and never leaves you without one."));
+  }
+
   // --- Patterns: cheap, automatic insight the person gets without asking.
   // Computed from their own check-ins (no AI, no server) — weekday rhythm,
   // a theme that tracks with lower days, and a week-over-week trend. Framed
@@ -14562,6 +14610,7 @@
       syncConsentUi();
       syncRemindersUi(); // surface the daily-reminder nudge on the dashboard
       renderStreak();
+      renderSupport();
       renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app_state.dart';
 import '../body_map.dart';
@@ -169,6 +170,86 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _launch(String uri) async {
+    try {
+      await launchUrl(Uri.parse(uri), mode: LaunchMode.externalApplication);
+    } catch (_) {/* dialer/SMS not available on this device; ignore */}
+  }
+
+  // Standing support card for a self-serve individual (no clinician to notify):
+  // crisis resources always one tap away, framed calmly.
+  Widget _supportCard(S s) {
+    Widget btn(String label, String uri, {bool urgent = false}) {
+      return urgent
+          ? OutlinedButton(
+              onPressed: () => _launch(uri),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: BtwColors.clay,
+                side: const BorderSide(color: BtwColors.clay),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9)),
+              ),
+              child: Text(label,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)))
+          : ElevatedButton(
+              onPressed: () => _launch(uri),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: BtwColors.moss,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9)),
+              ),
+              child: Text(label,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)));
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: BtwColors.mossLight,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: const Color(0xFFC6D6EC)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.favorite_border, size: 17, color: BtwColors.moss),
+              const SizedBox(width: 8),
+              Text(s.supportTitle,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: BtwColors.moss)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(s.supportBody,
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.5, color: BtwColors.ink)),
+          const SizedBox(height: 11),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              btn(s.supportText988, 'sms:988'),
+              btn(s.supportCall988, 'tel:988'),
+              btn(s.supportEmergency, 'tel:911', urgent: true),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(s.supportFoot,
+              style: const TextStyle(
+                  fontSize: 11, height: 1.45, color: BtwColors.inkSoft)),
+        ],
       ),
     );
   }
@@ -504,6 +585,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_streak >= 1) ...[
                     const SizedBox(height: 14),
                     _streakChip(s),
+                  ],
+                  if (!patient.hasClinician) ...[
+                    const SizedBox(height: 16),
+                    _supportCard(s),
                   ],
                   const SizedBox(height: 18),
                   // Write/speak vs. answer a few guided questions — the same
