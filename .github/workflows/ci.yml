@@ -1,14 +1,17 @@
 name: CI
 
-# Runs on every push to main and every pull request, so a broken change is
-# caught automatically instead of by hand. See scripts/ci-check.mjs.
+# Runs on every push to main, every push to a working branch, and every pull
+# request, so a broken change is caught automatically instead of by hand.
+# - backend: syntax + boot + HTTP smoke tests + unit tests (scripts/*.mjs)
+# - app: `flutter analyze` on the patient app, so the Flutter code can't drift
+#   into a broken state between (toolchain-less) editing sessions.
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
   pull_request:
 
 jobs:
-  check:
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,3 +20,17 @@ jobs:
           node-version: '20'
       - run: npm install --no-audit --no-fund
       - run: npm test
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: patient_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
