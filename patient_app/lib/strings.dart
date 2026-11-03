@@ -250,6 +250,17 @@ class S {
   String get myHistory => _('My history', 'Mon historique');
   String get myDataSettings => _('My data & settings', 'Mes données et réglages');
   String hi(String name) => _('Hi $name.', 'Salut $name.');
+  // Check-in streak (habit chip)
+  String streakUnit(int s) => s == 1
+      ? _('day in a row', "jour d'affilée")
+      : _('days in a row', "jours d'affilée");
+  String streakNote(int s) {
+    if (s >= 30) return _('a month of showing up', 'un mois de présence');
+    if (s >= 14) return _('two weeks strong', 'deux semaines de suite');
+    if (s >= 7) return _('a full week — well done', 'une semaine complète — bravo');
+    if (s >= 3) return _('building a habit', "une habitude qui s'installe");
+    return _('keep it going', 'continuez comme ça');
+  }
   String get howAreThings =>
       _('How are things right now? Take your time.', 'Comment ça va, là, maintenant? Prends ton temps.');
   String get tellItHint => _('Tell it like it happened…', 'Raconte comme ça s\'est passé…');

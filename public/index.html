@@ -519,6 +519,15 @@
   .btw-acc-body{padding:2px 15px 15px;}
   .btw-acc:not(.btw-open) .btw-acc-body{display:none;}
   .btw-acc.btw-open .btw-acc-head .btw-acc-prev{display:none;}
+  /* Check-in streak: a warm, gentle habit chip on the composer. */
+  .btw-streak{display:inline-flex;align-items:center;gap:9px;background:var(--amber-bg);border:1px solid #EAD9BE;border-radius:999px;padding:7px 15px 7px 12px;margin:0 0 15px;}
+  .btw-streak .fl{display:inline-flex;align-items:center;color:var(--amber);flex:none;}
+  .btw-streak .fl svg{width:17px;height:17px;}
+  .btw-streak .n{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--amber);line-height:1;}
+  .btw-streak .lab{font-size:12.5px;color:var(--ink);font-weight:600;}
+  .btw-streak .msg{font-size:12px;color:var(--ink-soft);}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);} }
+  :root[data-theme="dark"] .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -3385,6 +3394,8 @@
         <button id="btwOpenData" style="background:none;border:none;padding:0;font-family:var(--font-body);font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">View patient data &amp; AI settings</button>
       </div>
 
+      <div id="btwStreak" class="btw-streak" style="display:none;" aria-live="polite"></div>
+
       <div id="btwReminderNudge" style="display:none;background:var(--moss-light);border:1px solid #c6d6ec;border-radius:12px;padding:13px 15px;margin:0 0 16px;">
         <div style="display:flex;gap:11px;align-items:flex-start;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--moss)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -4549,6 +4560,9 @@
     "in clinic today":"en clinique aujourd'hui",
     "scheduled later":"prévus plus tard",
     "not matched to a patient":"sans patient correspondant",
+    // check-in streak (habit chip)
+    "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
+    "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week — well done":"une semaine complète — bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
     // dashboard zones + collapsible sections
     "Caseload overview":"Vue d'ensemble de la clientèle",
     "Your progress":"Votre progression",
@@ -13371,6 +13385,40 @@
     }catch(e){ alert(e.message); }
   }
   window.__btwStartPremiumUpgrade = startPremiumUpgrade;
+
+  // --- Check-in streak: a gentle habit nudge for the person checking in.
+  // Counts consecutive calendar days with at least one check-in, with a
+  // one-day grace so it doesn't reset the instant today's isn't in yet.
+  function computeStreak(checkIns){
+    if(!checkIns || !checkIns.length) return 0;
+    var days = {};
+    checkIns.forEach(function(c){ if(c && c.time){ var d = new Date(c.time); days[d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()] = true; } });
+    var key = function(dt){ return dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate(); };
+    var cur = new Date(); cur.setHours(0,0,0,0);
+    if(!days[key(cur)]){ cur.setDate(cur.getDate() - 1); if(!days[key(cur)]) return 0; }
+    var streak = 0;
+    while(days[key(cur)]){ streak++; cur.setDate(cur.getDate() - 1); }
+    return streak;
+  }
+  var _STREAK_FLAME = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2s4.5 4.2 4.5 8.5a4.5 4.5 0 0 1-1.6 3.4c.2-.7.1-1.6-.4-2.4-.6-1-1.5-1.6-1.5-1.6s.3 1.5-.6 2.8c-.8 1.1-1.9 1.6-1.9 3.1A2.5 2.5 0 0 0 12 20a5.5 5.5 0 0 0 5.5-5.5C17.5 8 12 2 12 2z"/><path d="M9.3 13.7c-.9 1-1.3 2-1.3 3A4 4 0 0 0 12 20a3.5 3.5 0 0 1-3.5-3.5c0-1 .3-1.9.8-2.8z" opacity=".55"/></svg>';
+  function renderStreak(){
+    var el = document.getElementById('btwStreak'); if(!el) return;
+    if(!isPatient()){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    var s = computeStreak(state.checkIns);
+    if(s < 1){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    var msg;
+    if(s >= 30) msg = t('a month of showing up');
+    else if(s >= 14) msg = t('two weeks strong');
+    else if(s >= 7) msg = t('a full week — well done');
+    else if(s >= 3) msg = t('building a habit');
+    else msg = t('keep it going');
+    el.style.display = '';
+    el.innerHTML = '<span class="fl">' + _STREAK_FLAME + '</span>'
+      + '<span class="n">' + s + '</span>'
+      + '<span class="lab">' + esc(s === 1 ? t('day in a row') : t('days in a row')) + '</span>'
+      + '<span class="msg">· ' + esc(msg) + '</span>';
+  }
+
   // Show how many check-ins are left this week for a capped free individual,
   // with a nudge to Premium. Disables Send when the week's cap is used up.
   function renderCapNote(){
@@ -14048,6 +14096,7 @@
       const un = document.getElementById('btwUrgentNote'); if(un) un.style.display = '';
       syncConsentUi();
       syncRemindersUi(); // surface the daily-reminder nudge on the dashboard
+      renderStreak();
       renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();
