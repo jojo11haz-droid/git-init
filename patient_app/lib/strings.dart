@@ -274,6 +274,12 @@ class S {
   String get goalsSave => _('Save', 'Enregistrer');
   String get goalsError => _(
       'Could not save your intentions.', "Impossible d'enregistrer vos intentions.");
+  // Bring-to-a-pro summary
+  String get shareWithPro =>
+      _('Share a summary with a professional', 'Partager un résumé avec un professionnel');
+  String get proCopied => _(
+      'Summary copied — paste it into an email or notes for your professional.',
+      'Résumé copié — collez-le dans un courriel ou des notes pour votre professionnel.');
   // Patterns (automatic insight callouts)
   String get patternsTitle => _('Patterns worth noticing', 'Tendances à remarquer');
   String get patternsFoot => _(
