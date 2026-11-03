@@ -29,8 +29,29 @@ check-in endpoints (`/api/patients/:id/check-ins` and `/api/patient/check-ins`)
   `pg_ctl -D /home/pgtest/pg2 -o "-k /home/pgtest/pg2 -p 5434" start`.
   Run app code against it with `DATABASE_SSL=disable`.
 - **Mobile has no Dart/Flutter toolchain in this environment**, so app code is
-  not compile-verified here. Hand-check it (bracket balance, theme tokens, call
-  sites) and tell the user to run `flutter analyze` before shipping.
+  not compile-verified locally. Hand-check it (bracket balance, theme tokens,
+  call sites) — then push: CI (`.github/workflows/ci.yml`, `app` job) runs
+  `flutter analyze` on every push to a `claude/**` branch, so it's the real
+  compile-check. Watch that run (GitHub Actions tools) and fix what it flags.
+  Note `flutter analyze` fails on **any** issue, including info-level lints.
 
 ## Branch
 Develop on `claude/between-clinician-auth-vvl9zb`. Don't open a PR unless asked.
+
+## Deploying to production
+Production serves from `main` (Render). Deploy by cherry-picking the SPECIFIC
+feature commit(s) onto a throwaway branch off `origin/main`, never by merging
+dev — dev carries undeployed work. Before pushing to main: `git diff --stat
+origin/main HEAD`, confirm the promo grep below adds 0, `node --check`, and
+`npm test`.
+
+## Held feature — do NOT deploy the promo code path
+There's a signup promo feature (markers: `PROMO_CODES`, `applyPromoCode`,
+`free_until`, `btwSuPromo`) built for a Kinatex partner deal and **held off
+`main`**. It lives on the dev branch only. It is env-gated — a clean no-op
+unless `PROMO_CODES` is set — but a valid code also AUTO-APPROVES a clinician
+(skips the manual licence review), so it stays off production until deliberately
+enabled. Because it sits on dev, cherry-picks of nearby lines sometimes conflict
+in the FR-dictionary / signup areas; resolve by keeping your change and dropping
+the promo lines. Always verify before every push to main:
+`git diff origin/main HEAD | grep -E '^\+' | grep -c 'PROMO_CODES\|btwSuPromo\|free_until\|applyPromoCode'` → must be `0`.
