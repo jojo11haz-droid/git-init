@@ -214,6 +214,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
 
     final hasPainHistory = _firstPain.isNotEmpty;
+    final pats = _computePatterns(s);
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       children: [
@@ -223,6 +224,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
         const SizedBox(height: 20),
         if (context.read<AppState>().patient?.isPremium == true) ...[
           _reflectionCard(s),
+          const SizedBox(height: 16),
+        ],
+        if (pats.isNotEmpty) ...[
+          _patternsCard(s, pats),
           const SizedBox(height: 16),
         ],
         if (isBody && hasPainHistory) ...[
@@ -235,6 +240,119 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ],
         _lastTwoWeeksCard(s),
       ],
+    );
+  }
+
+  // Cheap, automatic insight from the person's own check-ins (mirrors the web):
+  // a lower-mood weekday, a theme that tracks with lower days, and the
+  // week-over-week trend. No AI, no server call.
+  List<String> _computePatterns(S s) {
+    final moods = _history.where((c) => c.mood != null).toList();
+    if (moods.length < 5) return [];
+    final out = <String>[];
+    final wd = s.isFr
+        ? ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
+        : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    final sum = List<double>.filled(7, 0);
+    final cnt = List<int>.filled(7, 0);
+    for (final c in moods) {
+      final d = c.submittedAt.weekday % 7; // Dart: Mon=1..Sun=7 -> 0=Sun..6=Sat
+      sum[d] += c.mood!.toDouble();
+      cnt[d]++;
+    }
+    double? loA, hiA;
+    int loD = -1;
+    for (var i = 0; i < 7; i++) {
+      if (cnt[i] >= 2) {
+        final a = sum[i] / cnt[i];
+        if (loA == null || a < loA) { loA = a; loD = i; }
+        if (hiA == null || a > hiA) { hiA = a; }
+      }
+    }
+    if (loA != null && hiA != null && loD >= 0 && (hiA - loA) >= 1.5) {
+      out.add(s.patternWeekday(wd[loD]));
+    }
+    final overall =
+        moods.map((c) => c.mood!).reduce((a, b) => a + b) / moods.length;
+    final tagSum = <String, int>{};
+    final tagCnt = <String, int>{};
+    for (final c in moods) {
+      for (final tg in c.tags) {
+        tagSum[tg] = (tagSum[tg] ?? 0) + c.mood!;
+        tagCnt[tg] = (tagCnt[tg] ?? 0) + 1;
+      }
+    }
+    String? worst;
+    double worstA = 999;
+    tagCnt.forEach((tg, n) {
+      if (n >= 3) {
+        final a = tagSum[tg]! / n;
+        if (a <= overall - 1 && a < worstA) { worstA = a; worst = tg; }
+      }
+    });
+    if (worst != null) out.add(s.patternTheme(worst!));
+    final now = DateTime.now();
+    final thisW = moods
+        .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 7))))
+        .toList();
+    final lastW = moods.where((c) {
+      final t = c.submittedAt;
+      return t.isBefore(now.subtract(const Duration(days: 7))) &&
+          t.isAfter(now.subtract(const Duration(days: 14)));
+    }).toList();
+    if (thisW.length >= 2 && lastW.length >= 2) {
+      final ta = thisW.map((c) => c.mood!).reduce((a, b) => a + b) / thisW.length;
+      final la = lastW.map((c) => c.mood!).reduce((a, b) => a + b) / lastW.length;
+      if (ta - la >= 1) {
+        out.add(s.patternUp);
+      } else if (la - ta >= 1) {
+        out.add(s.patternDown);
+      }
+    }
+    return out.take(3).toList();
+  }
+
+  Widget _patternsCard(S s, List<String> items) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(17, 15, 17, 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: BtwColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(s.patternsTitle,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          ...items.map((x) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      margin: const EdgeInsets.only(top: 6, right: 10),
+                      decoration: const BoxDecoration(
+                          color: BtwColors.moss, shape: BoxShape.circle),
+                    ),
+                    Expanded(
+                      child: Text(x,
+                          style: const TextStyle(fontSize: 13.5, height: 1.5)),
+                    ),
+                  ],
+                ),
+              )),
+          Text(s.patternsFoot,
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: BtwColors.inkSoft,
+                  height: 1.45)),
+        ],
+      ),
     );
   }
 

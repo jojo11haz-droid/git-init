@@ -528,6 +528,12 @@
   .btw-streak .msg{font-size:12px;color:var(--ink-soft);}
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);} }
   :root[data-theme="dark"] .btw-streak{background:rgba(184,112,31,0.16);border-color:rgba(184,112,31,0.4);}
+  /* Patterns: automatic, computed insight callouts from the person's own check-ins. */
+  .btw-patterns{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:15px 17px;margin:0 0 16px;}
+  .btw-pat-head{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--ink);margin:0 0 10px;}
+  .btw-pat-row{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.5;color:var(--ink);margin:0 0 8px;}
+  .btw-pat-dot{width:7px;height:7px;border-radius:50%;background:var(--moss);flex:none;margin-top:6px;}
+  .btw-pat-foot{margin-top:4px;font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.45;}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -3621,6 +3627,7 @@
       <div class="btw-digest" id="btwDigest"></div>
 
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
+      <div class="btw-patterns" id="btwPatterns" style="display:none;"></div>
       <div class="btw-reflection btw-aireflect" id="btwAiReflection" style="display:none;">
         <div class="btw-reflection-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--moss);flex:none;"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
@@ -4560,6 +4567,9 @@
     "in clinic today":"en clinique aujourd'hui",
     "scheduled later":"prévus plus tard",
     "not matched to a patient":"sans patient correspondant",
+    // patterns (automatic insight callouts)
+    "Patterns worth noticing":"Tendances à remarquer",
+    "Noticed from your own check-ins — something to reflect on, not a diagnosis.":"Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.",
     // check-in streak (habit chip)
     "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
     "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week — well done":"une semaine complète — bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
@@ -13419,6 +13429,57 @@
       + '<span class="msg">· ' + esc(msg) + '</span>';
   }
 
+  // --- Patterns: cheap, automatic insight the person gets without asking.
+  // Computed from their own check-ins (no AI, no server) — weekday rhythm,
+  // a theme that tracks with lower days, and a week-over-week trend. Framed
+  // as a gentle nudge to reflect on, never a diagnosis.
+  function computePatterns(checkIns){
+    var L = function(en, fr){ return (typeof curLang !== 'undefined' && curLang === 'fr') ? fr : en; };
+    var moods = (checkIns || []).filter(function(c){ return c && typeof c.mood === 'number' && c.time; });
+    if(moods.length < 5) return [];
+    var out = [];
+    var WD_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var WD_FR = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+    // Weekday rhythm: a weekday that runs clearly lower than the best one.
+    var sum = [0,0,0,0,0,0,0], cnt = [0,0,0,0,0,0,0];
+    moods.forEach(function(c){ var d = new Date(c.time).getDay(); sum[d] += c.mood; cnt[d]++; });
+    var lo = null, hi = null;
+    for(var i = 0; i < 7; i++){ if(cnt[i] >= 2){ var a = sum[i] / cnt[i]; if(lo === null || a < lo.a) lo = { d:i, a:a }; if(hi === null || a > hi.a) hi = { d:i, a:a }; } }
+    if(lo && hi && lo.d !== hi.d && (hi.a - lo.a) >= 1.5){
+      out.push(L(WD_EN[lo.d] + 's tend to be lower-mood days for you.', 'Le ' + WD_FR[lo.d] + ' est souvent une journée d’humeur plus basse.'));
+    }
+    // A theme that shows up more on lower days.
+    var overall = moods.reduce(function(s,c){ return s + c.mood; }, 0) / moods.length;
+    var tagMood = {}, tagCnt = {};
+    moods.forEach(function(c){ (c.tags || []).forEach(function(tg){ tagMood[tg] = (tagMood[tg] || 0) + c.mood; tagCnt[tg] = (tagCnt[tg] || 0) + 1; }); });
+    var worst = null;
+    Object.keys(tagCnt).forEach(function(tg){ if(tagCnt[tg] >= 3){ var a = tagMood[tg] / tagCnt[tg]; if(a <= overall - 1 && (worst === null || a < worst.a)) worst = { tg:tg, a:a }; } });
+    if(worst){
+      out.push(L('Check-ins about ' + worst.tg + ' tend to land on lower days.', 'Les suivis au sujet de ' + worst.tg + ' arrivent souvent lors de journées plus difficiles.'));
+    }
+    // Week-over-week trend.
+    var now = Date.now();
+    var thisW = moods.filter(function(c){ return c.time >= now - 7*864e5; });
+    var lastW = moods.filter(function(c){ return c.time < now - 7*864e5 && c.time >= now - 14*864e5; });
+    if(thisW.length >= 2 && lastW.length >= 2){
+      var ta = thisW.reduce(function(s,c){ return s + c.mood; }, 0) / thisW.length;
+      var la = lastW.reduce(function(s,c){ return s + c.mood; }, 0) / lastW.length;
+      if(ta - la >= 1) out.push(L('Your mood is up from last week.', 'Votre humeur est en hausse par rapport à la semaine dernière.'));
+      else if(la - ta >= 1) out.push(L('Your mood is down from last week — be gentle with yourself.', 'Votre humeur est en baisse par rapport à la semaine dernière — soyez indulgent envers vous-même.'));
+    }
+    return out.slice(0, 3);
+  }
+  function renderPatterns(){
+    var el = document.getElementById('btwPatterns'); if(!el) return;
+    if(!isPatient()){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    var ins = computePatterns(state.checkIns || []);
+    if(!ins.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    el.innerHTML = '<div class="btw-pat-head">' + esc(t('Patterns worth noticing')) + '</div>'
+      + ins.map(function(x){ return '<div class="btw-pat-row"><span class="btw-pat-dot"></span><span>' + esc(x) + '</span></div>'; }).join('')
+      + '<div class="btw-pat-foot">' + esc(t('Noticed from your own check-ins — something to reflect on, not a diagnosis.')) + '</div>';
+  }
+
   // Show how many check-ins are left this week for a capped free individual,
   // with a nudge to Premium. Disables Send when the week's cap is used up.
   function renderCapNote(){
@@ -14100,6 +14161,7 @@
       renderCapNote();
       renderWeekSummary();
       renderWeeklyReflection();
+      renderPatterns();
       renderAiReflection();
       renderDigestSelf();
       renderInsights();
@@ -14325,26 +14387,53 @@
       if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('A warm few sentences on how your week went, from your own check-ins.')) + '</div>';
       if(btn){ btn.disabled = false; btn.textContent = t('Reflect on my week'); }
     }
+    // Run it on its own the first time they land here each week.
+    maybeAutoReflect();
+  }
+  // ISO-week key, used to run the weekly reflection on its own at most once a
+  // week per device (so it's ready without a tap, but never spends on every load).
+  function _isoWeekKey(ms){
+    var d = new Date(ms); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    var ys = new Date(d.getFullYear(), 0, 1);
+    var wk = Math.ceil((((d - ys) / 86400000) + 1) / 7);
+    return d.getFullYear() + '-W' + wk;
+  }
+  var _reflectBusy = false;
+  async function doReflect(){
+    if(_reflectBusy) return;
+    var btn = document.getElementById('btwAiReflectBtn');
+    var body = document.getElementById('btwAiReflectBody');
+    _reflectBusy = true;
+    try { localStorage.setItem('btw_reflect_auto', _isoWeekKey(Date.now())); } catch(e){}
+    if(btn){ btn.disabled = true; btn.textContent = t('Thinking…'); }
+    if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Reading your week…')) + '</div>';
+    try{
+      var d = await pApi('GET', '/api/patient/reflection');
+      if(d && d.needsData){
+        if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Check in a couple of times this week and I can reflect it back.')) + '</div>';
+      } else if(body){
+        body.textContent = (d && d.reflection) || '';
+      }
+    }catch(e){
+      if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc((e && e.message) || t('Could not reflect on your week just now.')) + '</div>';
+    }finally{
+      _reflectBusy = false;
+      if(btn){ btn.disabled = false; btn.textContent = t('Reflect again'); }
+    }
+  }
+  // Proactive: once per ISO week, run the reflection by itself so it's waiting
+  // for them. Guarded by localStorage so it fires at most once a week per device.
+  function maybeAutoReflect(){
+    try{
+      if(_reflectBusy) return;
+      if(localStorage.getItem('btw_reflect_auto') === _isoWeekKey(Date.now())) return;
+      doReflect();
+    }catch(e){}
   }
   (function(){
     var btn = document.getElementById('btwAiReflectBtn'); if(!btn) return;
-    btn.addEventListener('click', async function(){
-      var body = document.getElementById('btwAiReflectBody');
-      btn.disabled = true; btn.textContent = t('Thinking…');
-      if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Reading your week…')) + '</div>';
-      try{
-        var d = await pApi('GET', '/api/patient/reflection');
-        if(d && d.needsData){
-          if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc(t('Check in a couple of times this week and I can reflect it back.')) + '</div>';
-        } else if(body){
-          body.textContent = (d && d.reflection) || '';
-        }
-      }catch(e){
-        if(body) body.innerHTML = '<div class="btw-aireflect-hint">' + esc((e && e.message) || t('Could not reflect on your week just now.')) + '</div>';
-      }finally{
-        btn.disabled = false; btn.textContent = t('Reflect again');
-      }
-    });
+    btn.addEventListener('click', function(){ doReflect(); });
   })();
   function renderWeeklyReflection(){
     const el = document.getElementById('btwWeeklyReflection'); if(!el) return;
