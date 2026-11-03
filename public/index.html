@@ -549,6 +549,24 @@
   .btw-goals-save:disabled{opacity:.6;cursor:default;}
   .btw-goals-cancel{background:none;border:none;padding:0;font-family:var(--font-body);font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
   .btw-goals-status{font-size:11.5px;color:var(--ink-soft);}
+  /* Caseload outcomes: is the practice actually improving? */
+  .btw-outcomes{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:15px 17px;margin:0 0 16px;}
+  .btw-oc-head{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--ink);margin:0 0 12px;}
+  .btw-oc-head svg{width:16px;height:16px;stroke:var(--moss);flex:none;}
+  .btw-oc-stats{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 12px;}
+  .btw-oc-tile{flex:1;min-width:84px;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--paper);}
+  .btw-oc-tile .num{font-family:var(--font-display);font-size:22px;font-weight:600;line-height:1;}
+  .btw-oc-tile .lab{font-size:11px;color:var(--ink-soft);margin-top:4px;display:flex;align-items:center;gap:5px;}
+  .btw-oc-tile.up .num{color:#2E7D4F;} .btw-oc-tile.flat .num{color:var(--amber);} .btw-oc-tile.down .num{color:var(--clay);}
+  .btw-oc-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none;}
+  .btw-oc-dot.up{background:#2E7D4F;} .btw-oc-dot.flat{background:var(--amber);} .btw-oc-dot.down{background:var(--clay);}
+  .btw-oc-spark{margin:0 0 12px;}
+  .btw-oc-spark .cap{font-size:11px;color:var(--ink-soft);margin-bottom:5px;}
+  .btw-oc-movers{display:flex;flex-direction:column;gap:7px;}
+  .btw-oc-mrow{font-size:12.5px;line-height:1.45;}
+  .btw-oc-mrow .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-right:6px;}
+  .btw-oc-name{background:none;border:none;padding:0 1px;font-family:var(--font-body);font-size:12.5px;color:var(--moss);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .btw-oc-foot{margin-top:11px;font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.45;}
   /* Bring-to-a-pro: a shareable plain-language summary. */
   .btw-sharepro{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 14px;margin:0 0 16px;font-family:var(--font-body);font-size:12.5px;font-weight:600;color:var(--moss);cursor:pointer;transition:border-color .15s ease,transform .12s ease;}
   .btw-sharepro:hover{border-color:var(--moss);transform:translateY(-1px);}
@@ -3590,6 +3608,8 @@
         <div class="btw-prep-body" id="btwCaseDigestBody"></div>
       </div>
 
+      <div class="btw-outcomes" id="btwOutcomes" style="display:none;"></div>
+
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
         <div class="btw-patient-search">
           <svg class="btw-patient-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -4649,6 +4669,13 @@
     "Trends":"Tendances",
     "Health & body":"Santé et corps",
     "mood & themes":"humeur et thèmes",
+    // caseload outcomes
+    "How your caseload is trending":"L'évolution de votre clientèle",
+    "improving":"en progrès","steady":"stable","need a look":"à surveiller",
+    "Caseload mood, 8-week trend":"Humeur de la clientèle, tendance sur 8 semaines",
+    "Caseload pain, 8-week trend":"Douleur de la clientèle, tendance sur 8 semaines",
+    "Improving":"En progrès","Needs a look":"À surveiller",
+    "From self-rated check-ins over 8 weeks. Needs 3+ check-ins to place someone.":"À partir des suivis autoévalués sur 8 semaines. Au moins 3 suivis pour situer une personne.",
     // signature read (per-discipline AI insight)
     "Signature read":"Lecture signature",
     "Generate read":"Générer la lecture",
@@ -13179,6 +13206,76 @@
     });
   })();
 
+  // --- Caseload outcomes: is the practice actually improving? Computed on the
+  // server from early-vs-late averages; refetched when the caseload changes.
+  var OC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="15 7 21 7 21 13"></polyline></svg>';
+  var _ocFor = null, _ocData = null, _ocLoading = false;
+  function ocSignature(){
+    var ps = state.patients || [];
+    return ps.length + ':' + ps.reduce(function(s, p){ return s + (p.new_check_in_count || 0); }, 0);
+  }
+  async function fetchOutcomes(){
+    if(_ocLoading) return;
+    _ocLoading = true;
+    try{ _ocData = await api('GET', '/api/caseload/outcomes'); }
+    catch(e){ _ocData = null; }
+    finally{ _ocLoading = false; renderOutcomesCard(); }
+  }
+  function renderOutcomes(){
+    var el = document.getElementById('btwOutcomes'); if(!el) return;
+    if(!isTherapist() || !(state.patients || []).length){ el.style.display = 'none'; _ocFor = null; _ocData = null; return; }
+    var sig = ocSignature();
+    if(_ocFor !== sig){ _ocFor = sig; fetchOutcomes(); }
+    renderOutcomesCard();
+  }
+  function ocSpark(weekly){
+    var pts = (weekly || []).filter(function(w){ return typeof w.avg === 'number'; });
+    if(pts.length < 2) return '';
+    var w = 260, h = 48, pad = 4;
+    var vals = pts.map(function(p){ return p.avg; });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals), rng = (max - min) || 1;
+    var path = pts.map(function(p, i){
+      var x = pad + (w - 2 * pad) * (i / (pts.length - 1));
+      var y = h - pad - (h - 2 * pad) * ((p.avg - min) / rng);
+      return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="48" preserveAspectRatio="none"><path d="' + path + '" fill="none" stroke="#1E4C86" stroke-width="2"/></svg>';
+  }
+  function renderOutcomesCard(){
+    var el = document.getElementById('btwOutcomes'); if(!el) return;
+    if(!isTherapist() || !(state.patients || []).length){ el.style.display = 'none'; return; }
+    el.style.display = '';
+    if(!_ocData){
+      el.innerHTML = '<div class="btw-oc-head">' + OC_ICON + '<span>' + esc(t('How your caseload is trending')) + '</span></div><div class="btw-prep-hint">' + esc(t('Reading your caseload…')) + '</div>';
+      return;
+    }
+    var d = _ocData, s = d.summary || {}, pain = d.metric === 'pain';
+    var html = '<div class="btw-oc-head">' + OC_ICON + '<span>' + esc(t('How your caseload is trending')) + '</span></div>';
+    html += '<div class="btw-oc-stats">'
+      + '<div class="btw-oc-tile up"><div class="num">' + (s.improving || 0) + '</div><div class="lab"><span class="btw-oc-dot up"></span>' + esc(t('improving')) + '</div></div>'
+      + '<div class="btw-oc-tile flat"><div class="num">' + (s.steady || 0) + '</div><div class="lab"><span class="btw-oc-dot flat"></span>' + esc(t('steady')) + '</div></div>'
+      + '<div class="btw-oc-tile down"><div class="num">' + (s.declining || 0) + '</div><div class="lab"><span class="btw-oc-dot down"></span>' + esc(t('need a look')) + '</div></div>'
+      + '</div>';
+    var spark = ocSpark(d.weekly);
+    if(spark) html += '<div class="btw-oc-spark"><div class="cap">' + esc(pain ? t('Caseload pain, 8-week trend') : t('Caseload mood, 8-week trend')) + '</div>' + spark + '</div>';
+    var moverRow = function(label, arr){
+      if(!arr || !arr.length) return '';
+      return '<div class="btw-oc-mrow"><span class="k">' + esc(label) + '</span>'
+        + arr.map(function(m){ return '<button type="button" class="btw-oc-name" data-pid="' + esc(String(m.id)) + '">' + esc(m.name || '') + '</button>'; }).join('<span style="color:var(--ink-soft)">, </span>')
+        + '</div>';
+    };
+    var movers = moverRow(t('Improving'), d.up) + moverRow(t('Needs a look'), d.down);
+    if(movers) html += '<div class="btw-oc-movers">' + movers + '</div>';
+    html += '<div class="btw-oc-foot">' + esc(t('From self-rated check-ins over 8 weeks. Needs 3+ check-ins to place someone.')) + '</div>';
+    el.innerHTML = html;
+    el.querySelectorAll('.btw-oc-name').forEach(function(b){
+      b.addEventListener('click', function(){
+        var p = (state.patients || []).find(function(x){ return String(x.id) === String(b.dataset.pid); });
+        if(p){ state.selectedPatientId = p.id; renderAll(); var dg = document.getElementById('btwDigest'); if(dg) dg.scrollIntoView({ behavior:'smooth', block:'start' }); }
+      });
+    });
+  }
+
   // --- Signature read: one AI insight tuned to the clinician's discipline.
   // The lens (and its title/hint) follows the field; the server does the read.
   function signatureLensClient(){
@@ -14466,6 +14563,7 @@
     renderPatientList();
     renderPatientPane();
     renderCaseDigest();
+    renderOutcomes();
     renderTodayRoster();
     renderNextSessionBar();
     renderWeekSummary();

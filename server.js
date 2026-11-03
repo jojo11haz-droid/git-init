@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
-  createCheckIn, createHistoricalCheckIn, listCheckIns, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
@@ -2438,6 +2438,36 @@ app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician
   } catch (err) {
     console.error('Caseload digest error:', err.message);
     res.status(502).json({ error: 'Could not summarize the caseload just now. Please try again.' });
+  }
+});
+
+// Caseload outcomes: are people actually improving? Computed (no AI) from the
+// early-vs-late average of each patient's self-rated score, classified by
+// direction (flipped for pain disciplines, where higher = worse), plus a
+// caseload-wide weekly average series for a trend line.
+app.get('/api/caseload/outcomes', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const pain = ['physio', 'kinesiology', 'osteo', 'occupational'].includes(req.clinician.discipline || '');
+    const data = await caseloadOutcomes(req.clinician.id);
+    const MIN = 1.0; // points of movement that counts as a real change
+    const summary = { improving: 0, steady: 0, declining: 0, tracking: 0, total: data.patients.length };
+    const movers = [];
+    for (const p of data.patients) {
+      if (p.early == null || p.late == null || p.n < 3) { summary.tracking++; continue; }
+      const raw = p.late - p.early;              // positive = score went up
+      const delta = pain ? -raw : raw;           // positive = got better, either metric
+      if (delta >= MIN) summary.improving++;
+      else if (delta <= -MIN) summary.declining++;
+      else summary.steady++;
+      movers.push({ id: p.id, name: p.name, delta: Math.round(delta * 10) / 10 });
+    }
+    movers.sort((a, b) => b.delta - a.delta);
+    const up = movers.filter(m => m.delta >= MIN).slice(0, 3);
+    const down = movers.filter(m => m.delta <= -MIN).sort((a, b) => a.delta - b.delta).slice(0, 3);
+    res.json({ metric: pain ? 'pain' : 'mood', summary, up, down, weekly: data.weekly });
+  } catch (err) {
+    console.error('Caseload outcomes error:', err.message);
+    res.status(502).json({ error: 'Could not load outcomes just now.' });
   }
 });
 
