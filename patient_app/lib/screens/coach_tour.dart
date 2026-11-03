@@ -135,7 +135,7 @@ class _CoachTourOverlayState extends State<_CoachTourOverlay> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.22),
+                color: Colors.black.withValues(alpha: 0.22),
                 blurRadius: 30,
                 offset: const Offset(0, 12)),
           ],

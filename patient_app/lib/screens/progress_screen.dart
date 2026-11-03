@@ -426,17 +426,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
     b.writeln(f ? 'BETWEEN — RÉSUMÉ DES SUIVIS' : 'BETWEEN — CHECK-IN SUMMARY');
     b.writeln();
     if (ci.isNotEmpty) {
-      b.writeln((f ? 'Période : ' : 'Period: ') +
-          _fmtDate(ci.first.submittedAt) +
-          ' → ' +
-          _fmtDate(ci.last.submittedAt));
+      final label = f ? 'Période : ' : 'Period: ';
+      b.writeln('$label${_fmtDate(ci.first.submittedAt)} → ${_fmtDate(ci.last.submittedAt)}');
     }
-    b.writeln((f ? 'Suivis : ' : 'Check-ins: ') + ci.length.toString());
+    b.writeln('${f ? 'Suivis : ' : 'Check-ins: '}${ci.length}');
     if (moods.isNotEmpty) {
       final avg =
           moods.map((c) => c.mood!).reduce((a, b2) => a + b2) / moods.length;
-      b.writeln((f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ') +
-          '${avg.toStringAsFixed(1)}/10');
+      final label = f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ';
+      b.writeln('$label${avg.toStringAsFixed(1)}/10');
       final now = DateTime.now();
       final tw = moods
           .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 7))))
