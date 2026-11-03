@@ -83,6 +83,8 @@ class ApiClient {
   }
   Future<dynamic> post(String path, [Object? body]) =>
       _send('POST', path, body ?? const {});
+  Future<dynamic> put(String path, [Object? body]) =>
+      _send('PUT', path, body ?? const {});
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
   /// PUT raw bytes (used for the signed audio/photo/document upload URLs, which

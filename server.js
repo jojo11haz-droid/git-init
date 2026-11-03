@@ -18,7 +18,7 @@ import {
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
   createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
-  setPatientReminders, disableRemindersByToken, findPatientsNeedingReminder, findScheduledReminderCandidates, markPatientReminded,
+  setPatientReminders, setPatientGoals, disableRemindersByToken, findPatientsNeedingReminder, findScheduledReminderCandidates, markPatientReminded,
   createPracticeMember, createPracticeInvite, getValidPracticeInvite, markPracticeInviteAccepted,
   hasPendingPracticeInvite, revokePracticeInvite, listPendingPracticeInvites,
   listPracticeSeats, countPracticeSeats, removePracticeSeat,
@@ -2547,7 +2547,8 @@ function publicPatient(p) {
     reminder_days: p.reminder_days || null,
     reminder_tz: p.reminder_tz || null,
     is_premium: patientIsPremium(p),
-    weekly_checkin_cap: patientWeeklyCap(p)
+    weekly_checkin_cap: patientWeeklyCap(p),
+    goals: Array.isArray(p.goals) ? p.goals : []
   };
 }
 
@@ -2980,6 +2981,24 @@ app.post('/api/patient/logout', requireDb, async (req, res) => {
 
 app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
   res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.patient.email) });
+});
+
+// A self-serve individual's own intentions/goals. Up to two short lines they
+// set for themselves — a private anchor on their dashboard, never shared.
+app.put('/api/patient/goals', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const raw = (req.body && Array.isArray(req.body.goals)) ? req.body.goals : [];
+    const goals = raw
+      .map(g => (typeof g === 'string' ? g.trim().slice(0, 80) : ''))
+      .filter(Boolean)
+      .slice(0, 2);
+    const updated = await setPatientGoals(req.patient.id, goals);
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.json({ patient: publicPatient(updated) });
+  } catch (e) {
+    console.error('set goals failed', e);
+    res.status(500).json({ error: 'Could not save your intentions.' });
+  }
 });
 
 app.get('/api/patient/consent', requireDb, requirePatientAuth, (req, res) => {

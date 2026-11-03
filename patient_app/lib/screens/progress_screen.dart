@@ -38,6 +38,45 @@ class _ProgressScreenState extends State<ProgressScreen> {
   bool _reflecting = false;
   bool _reflectDone = false;
 
+  // Intentions / goals (self-serve individuals).
+  bool _goalsEditing = false;
+  bool _goalsSaving = false;
+  String? _goalsError;
+  final _goal0 = TextEditingController();
+  final _goal1 = TextEditingController();
+
+  @override
+  void dispose() {
+    _goal0.dispose();
+    _goal1.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveGoals() async {
+    final goals = [_goal0.text.trim(), _goal1.text.trim()]
+        .where((g) => g.isNotEmpty)
+        .take(2)
+        .toList();
+    setState(() {
+      _goalsSaving = true;
+      _goalsError = null;
+    });
+    try {
+      await context.read<AppState>().saveGoals(goals);
+      if (!mounted) return;
+      setState(() {
+        _goalsEditing = false;
+        _goalsSaving = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _goalsError = e.toString();
+        _goalsSaving = false;
+      });
+    }
+  }
+
   Future<void> _reflect() async {
     setState(() {
       _reflecting = true;
@@ -215,6 +254,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     final hasPainHistory = _firstPain.isNotEmpty;
     final pats = _computePatterns(s);
+    final patient = context.read<AppState>().patient;
+    final soloIndividual = patient != null && !patient.hasClinician;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       children: [
@@ -222,8 +263,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
             style: const TextStyle(
                 fontSize: 15.5, height: 1.5, color: BtwColors.inkSoft)),
         const SizedBox(height: 20),
-        if (context.read<AppState>().patient?.isPremium == true) ...[
+        if (patient?.isPremium == true) ...[
           _reflectionCard(s),
+          const SizedBox(height: 16),
+        ],
+        if (soloIndividual) ...[
+          _goalsCard(s),
           const SizedBox(height: 16),
         ],
         if (pats.isNotEmpty) ...[
@@ -351,6 +396,130 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   fontStyle: FontStyle.italic,
                   color: BtwColors.inkSoft,
                   height: 1.45)),
+        ],
+      ),
+    );
+  }
+
+  Widget _goalField(TextEditingController c, String hint) {
+    return TextField(
+      controller: c,
+      maxLength: 80,
+      style: const TextStyle(fontSize: 14.5),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: BtwColors.inkSoft),
+        counterText: '',
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        filled: true,
+        fillColor: BtwColors.cream,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(color: BtwColors.line)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(color: BtwColors.line)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(9),
+            borderSide: const BorderSide(color: BtwColors.moss)),
+      ),
+    );
+  }
+
+  Widget _goalsCard(S s) {
+    final goals = context.read<AppState>().patient?.goals ?? const [];
+    final editing = _goalsEditing || goals.isEmpty;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(17, 15, 17, 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: BtwColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(s.goalsTitle,
+                  style:
+                      const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              if (!editing)
+                GestureDetector(
+                  onTap: () {
+                    _goal0.text = goals.isNotEmpty ? goals[0] : '';
+                    _goal1.text = goals.length > 1 ? goals[1] : '';
+                    setState(() => _goalsEditing = true);
+                  },
+                  child: Text(s.goalsEdit,
+                      style: const TextStyle(
+                          fontSize: 12.5,
+                          color: BtwColors.moss,
+                          decoration: TextDecoration.underline)),
+                ),
+            ],
+          ),
+          if (editing) ...[
+            const SizedBox(height: 4),
+            Text(s.goalsSub,
+                style: const TextStyle(
+                    fontSize: 12.5, color: BtwColors.inkSoft, height: 1.5)),
+            const SizedBox(height: 12),
+            _goalField(_goal0, s.goalHint1),
+            const SizedBox(height: 8),
+            _goalField(_goal1, s.goalHint2),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _goalsSaving ? null : _saveGoals,
+                  child: Text(_goalsSaving ? s.saving : s.goalsSave),
+                ),
+                if (goals.isNotEmpty) ...[
+                  const SizedBox(width: 14),
+                  GestureDetector(
+                    onTap: () => setState(() => _goalsEditing = false),
+                    child: Text(s.cancel,
+                        style: const TextStyle(
+                            fontSize: 12.5, color: BtwColors.inkSoft)),
+                  ),
+                ],
+              ],
+            ),
+            if (_goalsError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(_goalsError!,
+                    style:
+                        const TextStyle(fontSize: 12, color: BtwColors.clay)),
+              ),
+          ] else ...[
+            const SizedBox(height: 8),
+            ...goals.map((g) => Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        margin: const EdgeInsets.only(top: 4, right: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: BtwColors.moss, width: 2),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(g,
+                            style:
+                                const TextStyle(fontSize: 14, height: 1.5)),
+                      ),
+                    ],
+                  ),
+                )),
+          ],
         ],
       ),
     );

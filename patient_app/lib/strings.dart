@@ -267,6 +267,19 @@ class S {
     if (s >= 3) return _('building a habit', "une habitude qui s'installe");
     return _('keep it going', 'continuez comme ça');
   }
+  // Intentions / goals (self-serve individuals)
+  String get goalsTitle => _('Your intentions', 'Vos intentions');
+  String get goalsSub => _(
+      'One or two things you want to keep in focus. Private to you.',
+      'Une ou deux choses que vous voulez garder en tête. Privé, pour vous seul.');
+  String get goalHint1 =>
+      _('e.g. Wind down by 11pm', 'p. ex. Décrocher avant 23 h');
+  String get goalHint2 =>
+      _('e.g. Notice the small wins', 'p. ex. Remarquer les petites victoires');
+  String get goalsEdit => _('Edit', 'Modifier');
+  String get goalsSave => _('Save', 'Enregistrer');
+  String get goalsError => _(
+      'Could not save your intentions.', "Impossible d'enregistrer vos intentions.");
   // Patterns (automatic insight callouts)
   String get patternsTitle => _('Patterns worth noticing', 'Tendances à remarquer');
   String get patternsFoot => _(
