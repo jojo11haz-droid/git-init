@@ -394,6 +394,112 @@ Rules:
   return { brief, talking_points: clampArr(parsed.talking_points), watch: clampArr(parsed.watch), checkInsUsed: consented.length, needsData: false };
 }
 
+// --- Signature read: one AI insight tuned to the clinician's own discipline.
+// Each profession captures a different signal, so each gets a different lens:
+// the recurring thread (therapy), the recovery trajectory (physio/body), the
+// trigger map (nutrition), the early-warning radar (recovery), readiness
+// (sports) or engagement drift (fitness). Same consent model as the prep brief
+// (AI-summarised check-ins only), indicative not diagnostic.
+function signatureLens(discipline, accountType) {
+  const d = discipline || '', a = accountType || '';
+  if (['physio', 'kinesiology', 'osteo', 'occupational'].includes(d)) return 'trajectory';
+  if (d === 'nutrition') return 'triggers';
+  if (d === 'recovery' || a === 'mentor') return 'radar';
+  if (d === 'sports') return 'readiness';
+  if (d === 'fitness' || a === 'trainer') return 'drift';
+  if (d === 'neuropsych') return 'cognitive';
+  return 'thread';
+}
+const SIGNATURE_LENS = {
+  thread: { role: 'psychotherapist or counsellor',
+    task: "Trace the one recurring thread that runs through $who's weeks — the theme they keep circling back to — and note any shift in how they relate to it.",
+    read_hint: 'name the recurring thread and how it has moved over the weeks',
+    points_hint: 'the thread, any paired triggers (e.g. sleep, conflict), and a shift worth opening with' },
+  cognitive: { role: 'neuropsychology clinician',
+    task: "Identify what precedes $who's hardest cognitive days (fatigue, fog, focus) and how mood and cognitive load move together.",
+    read_hint: 'describe the conditions around their worst cognitive days',
+    points_hint: 'load/fatigue patterns and anything trending the wrong way' },
+  trajectory: { role: 'physical-rehabilitation clinician (e.g. physiotherapy)',
+    task: "Read whether the most-affected body area is improving, plateauing or worsening, whether pain seems to be migrating to new areas, and what days or themes the flares cluster around. Note gently if anything looks worth a closer in-person look — never diagnose.",
+    read_hint: 'the arc of the main area and any flare pattern',
+    points_hint: 'most-affected area + direction, any migration, flare triggers, and a review nudge only if warranted' },
+  triggers: { role: 'nutrition professional',
+    task: "Surface, without any judgment, the patterns around $who's harder days — the moods, stress, sleep or themes that cravings or struggles cluster with. This is about the relationship with food, never calories or weight.",
+    read_hint: 'the conditions cravings or struggles cluster with, non-judgmentally',
+    points_hint: 'trigger patterns and a steadying bright spot if there is one' },
+  radar: { role: 'recovery mentor or counsellor',
+    task: "Watch for rising-risk stretches in $who's weeks — cravings, triggers, and HALT states (hungry, angry, lonely, tired) — and name steady stretches or milestones. Supportive, never alarmist.",
+    read_hint: 'where risk rose or steadied over the weeks',
+    points_hint: 'triggers, any HALT pattern, and a milestone or win to name' },
+  readiness: { role: 'sports coach or clinician',
+    task: "Combine $who's soreness/energy and mood into a simple read of whether they look ready, worth monitoring, or in need of a lighter load, and flag any drift toward burnout or overtraining.",
+    read_hint: 'a ready / monitor / back-off read and why',
+    points_hint: 'load-vs-readiness signals and any burnout drift' },
+  drift: { role: 'personal trainer or coach',
+    task: "Notice whether $who is staying engaged or quietly drifting (check-ins thinning, energy or motivation dropping), and what seems to help them stay on track.",
+    read_hint: 'whether they are engaged or drifting, and why',
+    points_hint: 'drift signals and what helps them re-engage' }
+};
+async function signatureRead({ name, discipline, accountType, checkIns, lang }) {
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  const who = name || 'the patient';
+  const lens = signatureLens(discipline, accountType);
+  const spec = SIGNATURE_LENS[lens] || SIGNATURE_LENS.thread;
+  const bodyLens = (lens === 'trajectory');
+  const metricWord = bodyLens ? 'pain' : 'mood';
+  const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000; // last 8 weeks
+  const recent = (checkIns || [])
+    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice(0, 14).reverse();
+  const consented = recent.filter(c => c.summary_text && String(c.summary_text).trim());
+  if (consented.length < 3) return { read: '', points: [], lens, checkInsUsed: consented.length, needsData: true };
+  const lines = consented.map(c => {
+    const dt = new Date(c.submitted_at).toISOString().slice(0, 10);
+    const score = (c.mood_score != null) ? `${metricWord} ${c.mood_score}/10` : `${metricWord} n/a`;
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], Array.isArray(c.manual_tags) ? c.manual_tags : [])
+      .filter(Boolean).slice(0, 6).join(', ');
+    let areas = '';
+    if (bodyLens && c.pain_map && typeof c.pain_map === 'object') {
+      const parts = Object.entries(c.pain_map).map(([k, v]) => `${k}:${v}`).slice(0, 6).join(', ');
+      if (parts) areas = `, areas: ${parts}`;
+    }
+    return `- ${dt} (${score}${tags ? ', themes: ' + tags : ''}${areas}): ${String(c.summary_text).trim().slice(0, 350)}`;
+  }).join('\n');
+  const scores = recent.filter(c => c.mood_score != null).map(c => c.mood_score);
+  const tf = {};
+  consented.forEach(c => [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], Array.isArray(c.manual_tags) ? c.manual_tags : [])
+    .forEach(t => { if (t) tf[t] = (tf[t] || 0) + 1; }));
+  const topThemes = Object.keys(tf).sort((a, b) => tf[b] - tf[a]).slice(0, 5).map(t => `${t} (${tf[t]})`).join(', ');
+  const langName = (lang === 'fr') ? 'French' : 'English';
+  const scaleNote = bodyLens
+    ? 'Higher numbers mean MORE pain (10 = worst).'
+    : 'Higher numbers mean better mood (10 = best).';
+  const system = `You help a ${spec.role} with ${who} by reading the between-visit check-ins ${who} sent and producing one focused read.
+Your job: ${spec.task.replace(/\$who/g, who)}
+Rules:
+- Use ONLY what is in the check-ins below. Never diagnose, never give treatment or medical advice, never invent anything — synthesize only what ${who} reported.
+- This is indicative support for the clinician's own judgment, not a clinical assessment.
+- Write it in ${langName}.
+- Respond with ONLY a JSON object, no preamble and no markdown fences, in exactly this shape:
+{"read": "2 to 4 plain sentences — ${spec.read_hint}", "points": ["1 to 4 short one-line highlights — ${spec.points_hint}; empty array if nothing stands out"]}`;
+  const user = `Check-ins (oldest first), ${metricWord} on a 0-10 scale. ${scaleNote}\n${lines}\n\n${metricWord} oldest→newest: ${scores.join(', ') || 'n/a'}.\nMost frequent themes: ${topThemes || 'n/a'}.`;
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (signature):', response.status); throw new Error('AI signature read failed.'); }
+  const data = await response.json();
+  const raw = (data.content || []).map(b => b.text || '').join('');
+  const clean = raw.replace(/```json|```/g, '').trim();
+  let parsed;
+  try { parsed = JSON.parse(clean); }
+  catch (e) { console.error('Signature model did not return valid JSON.'); throw new Error('AI returned an unexpected format.'); }
+  const read = typeof parsed.read === 'string' ? parsed.read.slice(0, 1500) : '';
+  const points = Array.isArray(parsed.points) ? parsed.points.filter(x => typeof x === 'string' && x.trim()).slice(0, 4).map(x => x.trim().slice(0, 240)) : [];
+  return { read, points, lens, checkInsUsed: consented.length, needsData: false };
+}
+
 // AI-drafted progress note: a clean, paste-ready narrative a clinician can drop
 // into their EMR and then edit, synthesized from the between-session check-ins.
 // Consent-safe (only check-ins the patient let AI process), plain text, neutral,
@@ -2329,6 +2435,28 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
   } catch (err) {
     console.error('Prep brief error:', err.message);
     res.status(502).json({ error: 'Could not generate a brief just now. Please try again.' });
+  }
+});
+
+// Signature read: one discipline-tuned AI insight for the selected patient.
+app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The signature read is unavailable right now.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIns = await listCheckIns(patient.id);
+    const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
+    const result = await signatureRead({
+      name: patient.display_name,
+      discipline: req.clinician.discipline,
+      accountType: req.clinician.account_type,
+      checkIns,
+      lang
+    });
+    res.json(result);
+  } catch (err) {
+    console.error('Signature read error:', err.message);
+    res.status(502).json({ error: 'Could not generate the read just now. Please try again.' });
   }
 });
 
