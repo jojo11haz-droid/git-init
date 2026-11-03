@@ -1487,6 +1487,48 @@ export async function listCheckIns(patientId) {
   return rows;
 }
 
+// Caseload outcomes: for each active patient, the average self-rated score over
+// an "early" window (weeks 5-8 ago) vs a "late" window (last 4 weeks), plus a
+// caseload-wide weekly average series. The caller classifies direction, since
+// higher = better for mood but higher = worse for pain. Computed, no AI.
+export async function caseloadOutcomes(clinicianId) {
+  const perPatient = await pool.query(
+    `SELECT p.id, p.display_name,
+        AVG(CASE WHEN ci.submitted_at <  now() - interval '28 days' THEN ci.mood_score END) AS early,
+        AVG(CASE WHEN ci.submitted_at >= now() - interval '28 days' THEN ci.mood_score END) AS late,
+        COUNT(ci.id) AS n
+       FROM patients p
+       LEFT JOIN check_ins ci
+         ON ci.patient_id = p.id AND ci.deleted_at IS NULL
+        AND ci.mood_score IS NOT NULL
+        AND ci.submitted_at >= now() - interval '56 days'
+      WHERE p.clinician_id = $1 AND p.left_at IS NULL
+      GROUP BY p.id, p.display_name`,
+    [clinicianId]
+  );
+  const weekly = await pool.query(
+    `SELECT date_trunc('week', ci.submitted_at) AS week,
+            AVG(ci.mood_score) AS avg, COUNT(ci.id) AS n
+       FROM check_ins ci
+       JOIN patients p ON p.id = ci.patient_id
+      WHERE p.clinician_id = $1 AND p.left_at IS NULL AND ci.deleted_at IS NULL
+        AND ci.mood_score IS NOT NULL
+        AND ci.submitted_at >= now() - interval '56 days'
+      GROUP BY week ORDER BY week`,
+    [clinicianId]
+  );
+  return {
+    patients: perPatient.rows.map(r => ({
+      id: r.id,
+      name: r.display_name,
+      early: r.early == null ? null : Number(r.early),
+      late: r.late == null ? null : Number(r.late),
+      n: Number(r.n) || 0
+    })),
+    weekly: weekly.rows.map(r => ({ week: r.week, avg: Number(r.avg), n: Number(r.n) || 0 }))
+  };
+}
+
 // How many check-ins a patient has sent in the last `days` days. Used to
 // enforce the free-tier weekly cap for self-serve individuals. Counts only
 // live (not soft-deleted) rows, so deleting an entry frees a slot.
