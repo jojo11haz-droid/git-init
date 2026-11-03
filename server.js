@@ -506,6 +506,46 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
   return { note, checkInsUsed: consented.length, needsData: false };
 }
 
+// A short, warm encouragement message the clinician can send to a patient
+// between sessions — grounded in what the patient actually reported, so it
+// shows they were seen. A draft to review and edit, not an automated send, and
+// never clinical advice. Same consent model (AI-summarised check-ins only).
+async function encouragementDraft({ name, discipline, accountType, checkIns, lang }) {
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  const focus = documentFocusForProfession({ discipline, accountType });
+  const who = name || 'the patient';
+  const first = (String(who).trim().split(/\s+/)[0]) || who;
+  const cutoff = Date.now() - 21 * 24 * 60 * 60 * 1000; // last ~3 weeks
+  const recent = (checkIns || [])
+    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice(0, 10).reverse();
+  const consented = recent.filter(c => c.summary_text && String(c.summary_text).trim());
+  if (!consented.length) return { message: '', checkInsUsed: 0, needsData: true };
+  const lines = consented.map(c => {
+    const d = new Date(c.submitted_at).toISOString().slice(0, 10);
+    const mood = (c.mood_score != null) ? ` (${c.mood_score}/10)` : '';
+    return `- ${d}${mood}: ${String(c.summary_text).trim().slice(0, 300)}`;
+  }).join('\n');
+  const langName = (lang === 'fr') ? 'French' : 'English';
+  const system = `You help a ${focus.role} write a short, warm encouragement message to send to ${who} between sessions — a human note that shows they were seen, not a clinical message.
+Rules:
+- Address ${first} directly and warmly, in the second person. Do NOT add a greeting line ("Dear…") or a sign-off — the clinician adds their own name.
+- Ground it in what ${first} actually reported in the check-ins below: name something specific and real, and acknowledge effort or a small win if there is one.
+- Never diagnose, never give treatment or medical advice, never instruct. No toxic positivity. If the weeks were hard, acknowledge that honestly and kindly.
+- 2 to 4 sentences, plain text, no markdown. Write it in ${langName}.
+- This is a draft the clinician will review and edit before sending.`;
+  const user = `${who}'s recent check-ins (oldest first):\n${lines}`;
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (encouragement):', response.status); throw new Error('AI encouragement failed.'); }
+  const data = await response.json();
+  const message = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 1200);
+  return { message, checkInsUsed: consented.length, needsData: false };
+}
+
 // Weekly reflection for a patient on their OWN check-ins: a warm, personal few
 // sentences on how their week went and the patterns in it. This is the person
 // reflecting on their own data at their own request, so it reads their entries
@@ -2489,6 +2529,28 @@ app.get('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinici
   } catch (err) {
     console.error('Draft note error:', err.message);
     res.status(502).json({ error: 'Could not draft a note just now. Please try again.' });
+  }
+});
+
+// A warm encouragement message to send the patient between sessions (draft).
+app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The encouragement draft is unavailable right now.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const checkIns = await listCheckIns(patient.id);
+    const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
+    const result = await encouragementDraft({
+      name: patient.display_name,
+      discipline: req.clinician.discipline,
+      accountType: req.clinician.account_type,
+      checkIns,
+      lang
+    });
+    res.json(result);
+  } catch (err) {
+    console.error('Encouragement error:', err.message);
+    res.status(502).json({ error: 'Could not draft a message just now. Please try again.' });
   }
 });
 
