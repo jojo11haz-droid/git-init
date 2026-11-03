@@ -3650,6 +3650,17 @@
         <div class="btw-prep-body" id="btwPrepBody"></div>
       </div>
 
+      <div class="btw-prep btw-signature" id="btwSignature" style="display:none;">
+        <div class="btw-prep-head">
+          <div class="btw-prep-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
+            <span id="btwSignatureTitle">Signature read</span>
+          </div>
+          <button type="button" class="btw-prep-gen" id="btwSignatureGen">Generate read</button>
+        </div>
+        <div class="btw-prep-body" id="btwSignatureBody"></div>
+      </div>
+
       <div class="btw-digest" id="btwDigest"></div>
 
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
@@ -4646,6 +4657,12 @@
     "Trends":"Tendances",
     "Health & body":"Santé et corps",
     "mood & themes":"humeur et thèmes",
+    // signature read (per-discipline AI insight)
+    "Signature read":"Lecture signature",
+    "Generate read":"Générer la lecture",
+    "Worth noting":"À noter",
+    "Not enough check-ins with AI turned on yet for a read.":"Pas encore assez de suivis avec l'IA activée pour une lecture.",
+    "Could not generate the read just now.":"Impossible de générer la lecture pour le moment.",
     // caseload "this week" AI digest
     "Summarize":"Résumer",
     "Refresh":"Actualiser",
@@ -13182,6 +13199,84 @@
     });
   })();
 
+  // --- Signature read: one AI insight tuned to the clinician's discipline.
+  // The lens (and its title/hint) follows the field; the server does the read.
+  function signatureLensClient(){
+    var d = curAudience || '';
+    if(['physio','kinesiology','osteo','occupational'].indexOf(d) >= 0) return 'trajectory';
+    if(d === 'nutrition') return 'triggers';
+    if(d === 'recovery') return 'radar';
+    if(d === 'sports') return 'readiness';
+    if(d === 'fitness') return 'drift';
+    if(d === 'neuropsych') return 'cognitive';
+    return 'thread';
+  }
+  var SIGNATURE_TITLES = {
+    thread: ['Between-session thread', 'Le fil entre les séances'],
+    cognitive: ['Cognitive-load read', 'Lecture de la charge cognitive'],
+    trajectory: ['Recovery trajectory', 'Trajectoire de récupération'],
+    triggers: ['Trigger map', 'Carte des déclencheurs'],
+    radar: ['Early-warning radar', 'Radar d’alerte précoce'],
+    readiness: ['Readiness signal', 'Signal de disponibilité'],
+    drift: ['Engagement read', 'Lecture de l’engagement']
+  };
+  function signatureTitle(){ var p = SIGNATURE_TITLES[signatureLensClient()] || SIGNATURE_TITLES.thread; return (curLang === 'fr') ? p[1] : p[0]; }
+  function signatureHint(){
+    var L = function(en, fr){ return curLang === 'fr' ? fr : en; };
+    var m = {
+      thread: L('The one thread running through their weeks, and how it has shifted.', 'Le fil qui traverse ses semaines, et comment il a évolué.'),
+      cognitive: L('What tends to precede their hardest cognitive days.', 'Ce qui précède souvent ses journées cognitives les plus difficiles.'),
+      trajectory: L('Whether the main area is improving, and what the flares cluster around.', 'Si la zone principale s’améliore, et autour de quoi les poussées se regroupent.'),
+      triggers: L('The patterns around their harder days — without judgment.', 'Les tendances autour de ses journées plus difficiles — sans jugement.'),
+      radar: L('Where risk rose or steadied, and any milestone to name.', 'Où le risque a monté ou s’est stabilisé, et tout jalon à souligner.'),
+      readiness: L('A ready / monitor / back-off read from soreness and mood.', 'Un signal prêt / à surveiller / à alléger, selon courbatures et humeur.'),
+      drift: L('Whether they’re staying engaged or quietly drifting.', 'S’il reste engagé ou décroche peu à peu.')
+    };
+    return m[signatureLensClient()] || m.thread;
+  }
+  var _sigFor = null;
+  function renderSignature(){
+    var card = document.getElementById('btwSignature'); if(!card) return;
+    if(!isTherapist() || !state.selectedPatientId){ card.style.display = 'none'; _sigFor = null; return; }
+    card.style.display = '';
+    var title = document.getElementById('btwSignatureTitle'); if(title) title.textContent = signatureTitle();
+    var gen = document.getElementById('btwSignatureGen');
+    if(_sigFor !== state.selectedPatientId){
+      _sigFor = state.selectedPatientId;
+      var body = document.getElementById('btwSignatureBody');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(signatureHint()) + '</div>';
+      if(gen){ gen.disabled = false; gen.textContent = t('Generate read'); }
+    }
+  }
+  function renderSignatureResult(body, d){
+    var html = '';
+    if(d.read) html += '<p class="btw-prep-brief">' + esc(d.read) + '</p>';
+    if(d.points && d.points.length){
+      html += '<div class="btw-prep-sec"><div class="btw-prep-label">' + esc(t('Worth noting')) + '</div><ul class="btw-prep-list">'
+        + d.points.map(function(p){ return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>';
+    }
+    var n = d.checkInsUsed || 0;
+    html += '<div class="btw-prep-foot">' + esc(t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' ' + t('where AI is turned on. Indicative, not a clinical judgment.')) + '</div>';
+    body.innerHTML = html;
+  }
+  (function(){
+    var gen = document.getElementById('btwSignatureGen'); if(!gen) return;
+    gen.addEventListener('click', async function(){
+      if(!state.selectedPatientId) return;
+      var body = document.getElementById('btwSignatureBody');
+      gen.disabled = true; gen.textContent = t('Thinking…');
+      if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Reading the check-ins…')) + '</div>';
+      try{
+        var d = await api('GET', '/api/patients/' + state.selectedPatientId + '/signature?lang=' + (curLang || 'en'));
+        // Title from the server's actual lens, so it always matches the read.
+        if(d && d.lens && SIGNATURE_TITLES[d.lens]){ var ti = document.getElementById('btwSignatureTitle'); if(ti) ti.textContent = (curLang === 'fr') ? SIGNATURE_TITLES[d.lens][1] : SIGNATURE_TITLES[d.lens][0]; }
+        if(d && d.needsData){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Not enough check-ins with AI turned on yet for a read.')) + '</div>'; }
+        else if(body){ renderSignatureResult(body, d || {}); }
+      }catch(e){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc((e && e.message) || t('Could not generate the read just now.')) + '</div>'; }
+      finally{ gen.disabled = false; gen.textContent = t('Refresh'); }
+    });
+  })();
+
   // --- Dashboard zones + collapsible detail sections ---
   // One delegated handler drives every collapsible section (slide open/closed).
   document.addEventListener('click', function(e){
@@ -14396,6 +14491,7 @@
     renderWeekSummary();
     renderDigest();
     renderPrep();
+    renderSignature();
     renderInsights();
     renderBodyOverview();
     renderHealth();
