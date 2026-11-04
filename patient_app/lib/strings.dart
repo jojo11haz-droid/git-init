@@ -36,17 +36,11 @@ class S {
   String get crisisFooter => _(
       'Between is not a crisis service. If you\'re in immediate danger or thinking about suicide, call or text 988, or call 911.',
       'Between n\'est pas un service de crise. Si tu es en danger immédiat ou que tu penses au suicide, appelle ou texte le 988, ou compose le 911.');
-  // Standing support card for self-serve individuals (no clinician notified).
+  // Standing support strip for self-serve individuals (no clinician notified).
   String get supportTitle => _("You're not on your own", "Tu n'es pas seul");
-  String get supportBody => _(
-      "If things feel like too much, support is here any time — you don't have to be in crisis to reach out.",
-      "Si c'est trop lourd, de l'aide est là à tout moment — pas besoin d'être en crise pour tendre la main.");
   String get supportText988 => _('Text 988', 'Texter 988');
   String get supportCall988 => _('Call 988', 'Appeler 988');
   String get supportEmergency => _('Emergency 911', 'Urgence 911');
-  String get supportFoot => _(
-      "988 is the Suicide & Crisis Lifeline. Between isn't a crisis service, and never leaves you without one.",
-      "988 est la ligne d'aide en cas de crise suicidaire. Between n'est pas un service de crise, et ne te laisse jamais sans ressource.");
 
   // Documents (intake paperwork the patient shares, reviewed by AI)
   String get documentsTitle => _('Documents', 'Documents');

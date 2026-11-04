@@ -180,38 +180,50 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {/* dialer/SMS not available on this device; ignore */}
   }
 
-  // Standing support card for a self-serve individual (no clinician to notify):
-  // crisis resources always one tap away, framed calmly.
+  // Standing support strip for a self-serve individual (no clinician to
+  // notify): crisis resources always one tap away, framed calmly. Kept compact
+  // (title + one row of buttons) so the check-in box below stays on the first
+  // screen; the "not a crisis service" footer sits under the composer.
   Widget _supportCard(S s) {
     Widget btn(String label, String uri, {bool urgent = false}) {
-      return urgent
-          ? OutlinedButton(
-              onPressed: () => _launch(uri),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: BtwColors.clay,
-                side: const BorderSide(color: BtwColors.clay),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9)),
-              ),
-              child: Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)))
-          : ElevatedButton(
-              onPressed: () => _launch(uri),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: BtwColors.moss,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9)),
-              ),
-              child: Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)));
+      final text = Text(label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 13, height: 1.2));
+      final shape =
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(9));
+      const pad = EdgeInsets.symmetric(horizontal: 6, vertical: 8);
+      const minSize = Size(0, 44);
+      // Equal columns; on a narrow phone a label wraps inside its button
+      // instead of pushing a button onto a row of its own.
+      return Expanded(
+        child: urgent
+            ? OutlinedButton(
+                onPressed: () => _launch(uri),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: BtwColors.clay,
+                  side: const BorderSide(color: BtwColors.clay),
+                  padding: pad,
+                  minimumSize: minSize,
+                  shape: shape,
+                ),
+                child: text)
+            : ElevatedButton(
+                onPressed: () => _launch(uri),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: BtwColors.moss,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: pad,
+                  minimumSize: minSize,
+                  shape: shape,
+                ),
+                child: text),
+      );
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
         color: BtwColors.mossLight,
         borderRadius: BorderRadius.circular(13),
@@ -224,31 +236,25 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.favorite_border, size: 17, color: BtwColors.moss),
               const SizedBox(width: 8),
-              Text(s.supportTitle,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: BtwColors.moss)),
+              Flexible(
+                child: Text(s.supportTitle,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: BtwColors.moss)),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(s.supportBody,
-              style: const TextStyle(
-                  fontSize: 12.5, height: 1.5, color: BtwColors.ink)),
-          const SizedBox(height: 11),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          const SizedBox(height: 8),
+          Row(
             children: [
               btn(s.supportText988, 'sms:988'),
+              const SizedBox(width: 6),
               btn(s.supportCall988, 'tel:988'),
+              const SizedBox(width: 6),
               btn(s.supportEmergency, 'tel:911', urgent: true),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(s.supportFoot,
-              style: const TextStyle(
-                  fontSize: 11, height: 1.45, color: BtwColors.inkSoft)),
         ],
       ),
     );
