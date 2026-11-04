@@ -4094,8 +4094,11 @@ const FIELD_HEAD_TAGS = [
   [/(<meta property="og:title" content=")[^"]*(")/, 'title'],
   [/(<meta property="og:description" content=")[^"]*(")/, 'description'],
   [/(<meta property="og:url" content=")[^"]*(")/, 'url'],
+  [/(<meta property="og:image" content=")[^"]*(")/, 'image'],
+  [/(<meta property="og:image:alt" content=")[^"]*(")/, 'title'],
   [/(<meta name="twitter:title" content=")[^"]*(")/, 'title'],
-  [/(<meta name="twitter:description" content=")[^"]*(")/, 'description']
+  [/(<meta name="twitter:description" content=")[^"]*(")/, 'description'],
+  [/(<meta name="twitter:image" content=")[^"]*(")/, 'image']
 ];
 function withFieldHead(html, vals) {
   const end = html.indexOf('</head>');
@@ -4121,7 +4124,9 @@ app.get(FIELD_PATHS, (req, res) => {
   // Use send (not sendFile) so our no-cache header isn't overridden.
   if (!meta) return res.type('html').send(baseIndexHtml());
   if (!_fieldHtmlCache.has(req.path)) {
-    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path }));
+    // Link-preview card rendered by scripts/og-images.mjs into public/og/.
+    const image = SITE_URL + '/og' + req.path + '.png';
+    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path, image }));
   }
   res.type('html').send(_fieldHtmlCache.get(req.path));
 });

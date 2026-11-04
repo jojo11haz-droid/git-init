@@ -225,10 +225,22 @@ try {
       if (tag(head, /<meta property="og:title" content="([^"]*)"/) !== title || tag(head, /<meta name="twitter:title" content="([^"]*)"/) !== title) problems.push('og/twitter title ≠ <title>');
       if (tag(head, /<meta property="og:description" content="([^"]*)"/) !== desc || tag(head, /<meta name="twitter:description" content="([^"]*)"/) !== desc) problems.push('og/twitter description ≠ meta description');
       if (tag(head, /<link rel="canonical" href="([^"]*)"/) !== url || tag(head, /<meta property="og:url" content="([^"]*)"/) !== url) problems.push('canonical/og:url ≠ ' + url);
+      const img = 'https://betweenpsych.com/og' + p + '.png';
+      if (tag(head, /<meta property="og:image" content="([^"]*)"/) !== img || tag(head, /<meta name="twitter:image" content="([^"]*)"/) !== img) problems.push('og/twitter image ≠ ' + img);
+      const card = await fetch(base + '/og' + p + '.png');
+      if (card.status !== 200 || card.headers.get('content-type') !== 'image/png') problems.push('/og' + p + '.png → ' + card.status + ' ' + card.headers.get('content-type'));
+      await card.arrayBuffer();
       if (!indexSrc.includes("title: '" + title + "'") || !indexSrc.includes("desc: '" + desc + "'")) problems.push('copy out of sync with FIELD_HEAD in index.html');
       if (body !== baseBody) problems.push('page body was rewritten (only <head> should change)');
       if (problems.length) fail(`GET ${p} head meta — ${problems.join('; ')}`);
-      else ok(`GET ${p} → own title, description, canonical`);
+      else ok(`GET ${p} → own title, description, canonical, preview card`);
+    }
+    {
+      const img = tag(baseHead, /<meta property="og:image" content="([^"]*)"/) || '';
+      const card = await fetch(base + img.replace('https://betweenpsych.com', ''));
+      await card.arrayBuffer();
+      if (img.endsWith('/og/therapy.png') && card.status === 200) ok('GET / → default preview card /og/therapy.png');
+      else fail('GET / preview card — og:image "' + img + '" → ' + card.status);
     }
     const t = await get('/therapy');
     if (t.status === 200 && t.body === indexSrc) ok('GET /therapy → base page (canonical "/")');
