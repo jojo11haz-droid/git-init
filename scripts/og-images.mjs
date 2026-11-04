@@ -1,6 +1,7 @@
 // Renders the 1200×630 link-preview cards (og:image / twitter:image) into
 // public/og/<slug>.png — one per field landing page, slug = URL path
-// (/physio → physio.png; "/" uses therapy.png), plus one per guide article.
+// (/physio → physio.png; "/" uses therapy.png), plus one per guide article,
+// and the PNG logo renders (public/apple-touch-icon.png, public/og/logo.png).
 // Re-run after changing a headline, an illustration, or the brand look:
 //
 //   node scripts/og-images.mjs
@@ -107,6 +108,16 @@ try {
     const h1 = await page.$eval('h1', (el) => el.getBoundingClientRect().height);
     await page.screenshot({ path: join(outDir, slug + '.png') });
     console.log(`${slug}.png  (headline ${Math.round(h1)}px tall)`);
+  }
+  // Square, full-bleed PNGs of the logo: iOS ignores an SVG apple-touch-icon
+  // (and turns transparent corners black — it rounds the corners itself), and
+  // the Organization structured data needs a raster logo.
+  const square = LOGO.replace('rx="14"', 'rx="0"');
+  for (const [file, size] of [['apple-touch-icon.png', 180], ['og/logo.png', 512]]) {
+    await page.setViewportSize({ width: size, height: size });
+    await page.setContent(`<style>*{margin:0}svg{display:block;width:${size}px;height:${size}px}</style>${square}`);
+    await page.screenshot({ path: join(root, 'public', file) });
+    console.log(`${file}  (${size}×${size})`);
   }
 } finally {
   await browser.close();
