@@ -18,9 +18,14 @@
 <meta property="og:title" content="Between — Between-session check-ins for therapy">
 <meta property="og:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
 <meta property="og:url" content="https://betweenpsych.com/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Between — Between-session check-ins for therapy">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Between — Between-session check-ins for therapy">
 <meta name="twitter:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
+<meta name="twitter:image" content="https://betweenpsych.com/og/therapy.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -8024,7 +8029,11 @@
   };
   function applyFieldHead(){
     const m = FIELD_HEAD[curAudience] || FIELD_HEAD.therapy;
+    // Link-preview card: public/og/<path>.png ("/" uses therapy.png).
+    const img = SITE_ORIGIN + '/og/' + ((AUD_TO_PATH[curAudience] || '/').slice(1) || 'therapy') + '.png';
     try {
+      ['meta[property="og:image"]', 'meta[name="twitter:image"]'].forEach(function(s){ const el = document.querySelector(s); if(el) el.setAttribute('content', img); });
+      const oa = document.querySelector('meta[property="og:image:alt"]'); if(oa) oa.setAttribute('content', m.title);
       document.title = m.title;
       const d = document.querySelector('meta[name="description"]'); if(d) d.setAttribute('content', m.desc);
       const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', SITE_ORIGIN + (AUD_TO_PATH[curAudience] || '/'));
