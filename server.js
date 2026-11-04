@@ -4065,13 +4065,12 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
 // single-page app; we serve index.html with the title, description and
 // canonical/social tags swapped for that field so each URL is its own search
 // result. /therapy is the default (canonical "/"), so it serves the base file.
+// The copy here must match FIELD_HEAD in index.html (what the SPA sets on an
+// in-page field switch); scripts/app-tests.mjs fails if the two drift.
 const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
-const DEFAULT_TITLE = 'Between — Between-session check-ins for therapy';
-const DEFAULT_DESC_LONG = 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session. Private, consent-first, and not a crisis service.';
-const DEFAULT_DESC_SHORT = 'Clients send a quick note between sessions, AI summarizes it, and psychotherapists see the pattern before the next session.';
 const FIELD_META = {
-  '/individual': { title: 'Between — Private check-ins for yourself', description: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you, and not a crisis service.' },
+  '/individual': { title: 'Between — Private check-ins for yourself', description: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
   '/physio': { title: 'Between — Between-visit pain check-ins for physiotherapy', description: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
   '/kinesiology': { title: 'Between — Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
   '/osteopathy': { title: 'Between — Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
@@ -4079,15 +4078,41 @@ const FIELD_META = {
   '/neuropsychology': { title: 'Between — Between-session check-ins for neuropsychology', description: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
   '/sports': { title: 'Between — Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
   '/fitness': { title: 'Between — Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
-  '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first, and not a crisis service.' },
-  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first, and not a crisis service.' },
+  '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
+  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
   '/nutrition': { title: 'Between — Between-session check-ins for nutritionists', description: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
 };
+// The <head> tags a field page rewrites, matched by tag name/property — never
+// by their current text. (Matching the text once broke silently: the default
+// copy in index.html was edited, the match stopped hitting, and every field
+// page shipped the therapy description to Google and link previews.) Only the
+// <head> is touched; the SPA body carries its own copy of every field's meta.
+const FIELD_HEAD_TAGS = [
+  [/(<title>)[^<]*(<\/title>)/, 'title'],
+  [/(<meta name="description" content=")[^"]*(")/, 'description'],
+  [/(<link rel="canonical" href=")[^"]*(")/, 'url'],
+  [/(<meta property="og:title" content=")[^"]*(")/, 'title'],
+  [/(<meta property="og:description" content=")[^"]*(")/, 'description'],
+  [/(<meta property="og:url" content=")[^"]*(")/, 'url'],
+  [/(<meta name="twitter:title" content=")[^"]*(")/, 'title'],
+  [/(<meta name="twitter:description" content=")[^"]*(")/, 'description']
+];
+function withFieldHead(html, vals) {
+  const end = html.indexOf('</head>');
+  if (end < 0) return html;
+  let head = html.slice(0, end);
+  for (const [re, key] of FIELD_HEAD_TAGS) {
+    const v = escapeHtml(vals[key]);
+    head = head.replace(re, (m, open, close) => open + v + close);
+  }
+  return head + html.slice(end);
+}
 let _indexHtmlCache = null;
 function baseIndexHtml() {
   if (_indexHtmlCache === null) _indexHtmlCache = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
   return _indexHtmlCache;
 }
+const _fieldHtmlCache = new Map();
 app.get(FIELD_PATHS, (req, res) => {
   // Never cache the marketing HTML so new deploys aren't served stale.
   res.setHeader('Cache-Control', 'no-store');
@@ -4095,14 +4120,10 @@ app.get(FIELD_PATHS, (req, res) => {
   // /therapy is the default and canonical to "/", so it uses the base file.
   // Use send (not sendFile) so our no-cache header isn't overridden.
   if (!meta) return res.type('html').send(baseIndexHtml());
-  const title = escapeHtml(meta.title);
-  const desc = escapeHtml(meta.description);
-  const html = baseIndexHtml()
-    .split(DEFAULT_TITLE).join(title)                 // <title> + og:title + twitter:title
-    .replace(DEFAULT_DESC_LONG, desc)                 // meta description (replace the longer one first)
-    .split(DEFAULT_DESC_SHORT).join(desc)             // og:description + twitter:description
-    .split(SITE_URL + '/"').join(SITE_URL + req.path + '"'); // canonical + og:url
-  res.type('html').send(html);
+  if (!_fieldHtmlCache.has(req.path)) {
+    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path }));
+  }
+  res.type('html').send(_fieldHtmlCache.get(req.path));
 });
 
 // Simple health check — useful for most hosting platforms' uptime checks

@@ -191,6 +191,49 @@ try {
     if ([401, 403, 503].includes(r.status)) ok(`GET /api/admin/engagement (unauthed) → ${r.status}`);
     else fail('GET /api/admin/engagement → ' + r.status + ' (expected 401/403/503)');
   }
+
+  // Field landing pages (/physio, /nutrition, …) each serve their own <head>
+  // meta. This once broke silently: the server swapped tags by matching the
+  // default copy's exact text, the copy was edited, and every field page sent
+  // Google and link previews the therapy description. Also checks the server's
+  // copy matches FIELD_HEAD in index.html (what an in-page field switch sets),
+  // and that only the <head> is rewritten — the SPA body must be untouched.
+  {
+    const indexSrc = readFileSync(join(root, 'public', 'index.html'), 'utf8');
+    const split = (html) => { const i = html.indexOf('</head>'); return [html.slice(0, i), html.slice(i)]; };
+    const decode = (s) => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    const tag = (head, re) => { const m = head.match(re); return m ? decode(m[1]) : null; };
+    const [baseHead, baseBody] = split(indexSrc);
+    const defaultDesc = tag(baseHead, /<meta name="description" content="([^"]*)"/);
+    // path → a word its title or description must contain
+    const FIELDS = {
+      '/individual': 'yourself', '/physio': 'physiotherap', '/kinesiology': 'kinesiolog',
+      '/osteopathy': 'osteopath', '/occupational-therapy': 'occupational therap',
+      '/neuropsychology': 'neuropsycholog', '/sports': 'coaches', '/fitness': 'personal trainers',
+      '/addiction': 'recovery', '/schools': 'school', '/nutrition': 'nutritionist'
+    };
+    for (const [p, word] of Object.entries(FIELDS)) {
+      const r = await get(p);
+      const [head, body] = split(r.body);
+      const title = tag(head, /<title>([^<]*)<\/title>/);
+      const desc = tag(head, /<meta name="description" content="([^"]*)"/);
+      const url = 'https://betweenpsych.com' + p;
+      const problems = [];
+      if (r.status !== 200) problems.push('status ' + r.status);
+      if (!desc || desc === defaultDesc) problems.push('description is the default therapy copy');
+      if (!((title || '') + ' ' + (desc || '')).toLowerCase().includes(word)) problems.push('title/description never mention "' + word + '"');
+      if (tag(head, /<meta property="og:title" content="([^"]*)"/) !== title || tag(head, /<meta name="twitter:title" content="([^"]*)"/) !== title) problems.push('og/twitter title ≠ <title>');
+      if (tag(head, /<meta property="og:description" content="([^"]*)"/) !== desc || tag(head, /<meta name="twitter:description" content="([^"]*)"/) !== desc) problems.push('og/twitter description ≠ meta description');
+      if (tag(head, /<link rel="canonical" href="([^"]*)"/) !== url || tag(head, /<meta property="og:url" content="([^"]*)"/) !== url) problems.push('canonical/og:url ≠ ' + url);
+      if (!indexSrc.includes("title: '" + title + "'") || !indexSrc.includes("desc: '" + desc + "'")) problems.push('copy out of sync with FIELD_HEAD in index.html');
+      if (body !== baseBody) problems.push('page body was rewritten (only <head> should change)');
+      if (problems.length) fail(`GET ${p} head meta — ${problems.join('; ')}`);
+      else ok(`GET ${p} → own title, description, canonical`);
+    }
+    const t = await get('/therapy');
+    if (t.status === 200 && t.body === indexSrc) ok('GET /therapy → base page (canonical "/")');
+    else fail('GET /therapy → ' + t.status + ' (expected the unmodified base page)');
+  }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);
 } finally {
