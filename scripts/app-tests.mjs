@@ -18,7 +18,7 @@
 // Exits non-zero on the first category with a failure so CI turns red.
 
 import { spawn } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -245,6 +245,27 @@ try {
     const t = await get('/therapy');
     if (t.status === 200 && t.body === indexSrc) ok('GET /therapy → base page (canonical "/")');
     else fail('GET /therapy → ' + t.status + ' (expected the unmodified base page)');
+
+    // sitemap.xml: lists every field page (not /therapy — it canonicalizes to
+    // "/") and every guide; each listed URL serves, and so does its og:image.
+    const sm = await get('/sitemap.xml');
+    const locs = [...sm.body.matchAll(/<loc>https:\/\/betweenpsych\.com([^<]*)<\/loc>/g)].map((m) => m[1]);
+    const guides = readdirSync(join(root, 'public', 'guides')).filter((f) => f.endsWith('.html'))
+      .map((f) => '/guides/' + (f === 'index.html' ? '' : f));
+    const missing = [...Object.keys(FIELDS), ...guides].filter((p) => !locs.includes(p));
+    const problems = [];
+    if (sm.status !== 200 || !locs.length) problems.push('sitemap → ' + sm.status + ', ' + locs.length + ' URLs');
+    if (missing.length) problems.push('not listed: ' + missing.join(', '));
+    if (locs.includes('/therapy')) problems.push('lists /therapy (canonical is "/")');
+    for (const p of locs) {
+      const r = await get(p);
+      if (r.status !== 200) { problems.push(p + ' → ' + r.status); continue; }
+      const img = tag(split(r.body)[0], /<meta property="og:image" content="https:\/\/betweenpsych\.com([^"]*)"/);
+      if (img) { const c = await fetch(base + img); await c.arrayBuffer(); if (c.status !== 200) problems.push(p + ' og:image ' + img + ' → ' + c.status); }
+      else if (p === '/' || p.startsWith('/guides/') || FIELDS[p]) problems.push(p + ' has no og:image');
+    }
+    if (problems.length) fail('sitemap — ' + problems.join('; '));
+    else ok(`sitemap.xml → ${locs.length} URLs, all serve, previews present`);
   }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);

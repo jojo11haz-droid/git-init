@@ -1,7 +1,7 @@
 // Renders the 1200×630 link-preview cards (og:image / twitter:image) into
 // public/og/<slug>.png — one per field landing page, slug = URL path
-// (/physio → physio.png; "/" uses therapy.png). Re-run after changing a
-// field's headline, its illustration, or the brand look:
+// (/physio → physio.png; "/" uses therapy.png), plus one per guide article.
+// Re-run after changing a headline, an illustration, or the brand look:
 //
 //   node scripts/og-images.mjs
 //
@@ -35,6 +35,16 @@ const CARDS = {
   nutrition: { lead: 'Between-session check-ins for', em: 'nutritionists', art: 'nutrition', sub: 'Energy, cravings and how the plan is going, noted between sessions. You see the trend before the next appointment.' }
 };
 
+// Guide articles: public/og/guide-<file name>.png (the index → guides.png).
+const GUIDES = {
+  guides: { kicker: 'Guides', lead: 'Getting more from the time', em: 'between sessions', art: 'individual', sub: 'Practical guides for clients and the professionals who work with them.' },
+  'guide-between-session-check-ins': { kicker: 'Guide', lead: 'What are between-session', em: 'check-ins?', art: 'therapy', sub: 'Short notes captured in the moment, so patterns are visible before the next session.' },
+  'guide-what-to-talk-about-in-therapy': { kicker: 'Guide', lead: 'How to remember what to talk about in', em: 'therapy', art: 'therapy', sub: 'Why you blank in session, and simple ways to capture moments between appointments.' },
+  'guide-voice-journaling-for-anxiety': { kicker: 'Guide', lead: 'Voice journaling for', em: 'anxiety', art: 'individual', sub: 'Does it actually help? Why speaking your thoughts out loud is easier to keep up than writing.' },
+  'guide-therapy-homework-what-works-instead': { kicker: 'Guide', lead: 'Therapy homework, and', em: 'what works instead', art: 'therapy', sub: 'Why homework is hard to finish, and a lighter in-the-moment approach that sticks.' },
+  'guide-improve-client-engagement-between-sessions': { kicker: 'Guide', lead: 'Improving client engagement', em: 'between sessions', art: 'therapy', sub: 'Practical, consent-first ways to keep clients engaged without adding to your workload.' }
+};
+
 const LOGO = readFileSync(join(root, 'public', 'favicon.svg'), 'utf8');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // Never break a line inside "check-ins" / "Between-session".
@@ -53,7 +63,9 @@ function cardHtml(c) {
   .brand{display:flex;align-items:center;gap:14px}
   .brand svg{width:50px;height:50px;display:block}
   .brand span{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:34px;letter-spacing:-0.01em}
-  h1{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:${long ? 56 : 62}px;line-height:1.08;letter-spacing:-0.02em;margin-top:auto}
+  .kicker{margin-top:auto;margin-bottom:14px;font-size:17px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#C0392B}
+  h1{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:${long ? 56 : 62}px;line-height:1.08;letter-spacing:-0.02em}
+  .brand + h1{margin-top:auto}
   h1 em,.nb{white-space:nowrap}
   h1 em{font-style:italic;color:#1E4C86;position:relative}
   h1 em::after{content:"";position:absolute;left:2px;right:2px;bottom:4px;height:4px;background:#DCE6F3;border-radius:3px;z-index:-1}
@@ -68,7 +80,8 @@ function cardHtml(c) {
   .art img{position:absolute;left:50%;top:50%;width:310px;height:310px;margin:-155px 0 0 -155px;image-rendering:auto}
   </style></head><body>
   <div class="copy">
-    <div class="brand">${LOGO}<span>Between</span></div>
+    <div class="brand">${LOGO}<span>Between</span></div>${c.kicker ? `
+    <div class="kicker">${esc(c.kicker)}</div>` : ''}
     <h1>${keepHyphens(c.lead)} <em>${esc(c.em)}</em></h1>
     <p>${esc(c.sub)}</p>
     <div class="url">betweenpsych.com</div>
@@ -88,7 +101,7 @@ try {
       route.fulfill({ contentType: 'font/woff2', body: readFileSync(join(process.env.OG_FONT_DIR, italic ? 'newsreader-latin-italic.woff2' : 'newsreader-latin.woff2')) });
     });
   }
-  for (const [slug, c] of Object.entries(CARDS)) {
+  for (const [slug, c] of Object.entries({ ...CARDS, ...GUIDES })) {
     await page.setContent(cardHtml(c), { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
     const h1 = await page.$eval('h1', (el) => el.getBoundingClientRect().height);
