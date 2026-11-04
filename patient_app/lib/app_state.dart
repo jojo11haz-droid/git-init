@@ -72,11 +72,13 @@ class CheckIn {
   bool get moodInferred => raw['mood_inferred'] == true;
   List<String> get tags {
     final alias = kLegacyTagAlias[tagField] ?? const <String, String>{};
-    return [
+    // A set literal: same order, duplicates dropped (an old and a new spelling
+    // of one topic collapse into one).
+    return <String>{
       ...((raw['manual_tags'] as List?) ?? const [])
           .map((t) => alias[t.toString()] ?? t.toString()),
       ...((raw['auto_tags'] as List?) ?? const []).map((t) => t.toString()),
-    ].toSet().toList();
+    }.toList();
   }
   String get summary =>
       (raw['summary_text'] as String?) ??
