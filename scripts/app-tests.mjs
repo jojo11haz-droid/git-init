@@ -295,6 +295,23 @@ try {
       if (probs.length) fail('icons / a11y — ' + probs.join('; '));
       else ok('apple-touch-icon PNG serves; skip link → <main>');
     }
+    // Refresh flash, static guards (scripts/flash-check.mjs is the full visual
+    // check, needs Playwright): the first frame, before the main script runs,
+    // must already carry what that script would add, or a refresh flashes.
+    {
+      const probs = [];
+      if (/class="btw-chooser-card[^"]*\bactive\b/.test(indexSrc)) probs.push('a chooser card is pre-highlighted in the markup');
+      const cards = (indexSrc.match(/<button type="button" class="btw-chooser-card[^"]*" data-aud="[a-z]+">/g) || []).length;
+      const withArt = (indexSrc.match(/<button type="button" class="btw-chooser-card[^"]*" data-aud="[a-z]+"><span class="ic"/g) || []).length;
+      if (!cards || withArt !== cards) probs.push(`${cards - withArt} chooser card(s) with no illustration in the markup`);
+      if (!/id="btwThemeBtn"[^>]*><svg class="ic-moon"[^]*?<svg class="ic-sun"/.test(indexSrc)) probs.push('theme icons not in the button markup');
+      if (!indexSrc.includes('html.btw-pre-gated #btwLoginBtn')) probs.push('first frame of the gated landing shows Log in / Sign up');
+      if (!indexSrc.includes('html.btw-pre-resolving #btwLoginBtn')) probs.push('first frame of a signed-in refresh shows Log in / Sign up');
+      if (!indexSrc.includes('<div class="btw-chooser-groups btw-accordion">')) probs.push("phone accordion isn't collapsed in the first frame");
+      if (!indexSrc.includes('html.btw-pre-gated .btw-home .btw-chooser{')) probs.push('first frame of the gated landing lacks the chooser panel');
+      if (probs.length) fail('refresh flash — ' + probs.join('; '));
+      else ok(`refresh flash guards → ${cards} chooser cards with art, header + panel + accordion set from the first frame`);
+    }
   }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);
