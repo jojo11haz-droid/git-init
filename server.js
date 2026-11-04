@@ -48,7 +48,7 @@ import {
   createMfaChallenge, getValidMfaChallenge, deleteMfaChallenge
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -357,7 +357,7 @@ async function sessionPrepBrief({ name, discipline, accountType, checkIns }) {
     const mood = (c.mood_score != null) ? `mood ${c.mood_score}/10` : 'mood n/a';
     const tags = []
       .concat(Array.isArray(c.auto_tags) ? c.auto_tags : [])
-      .concat(Array.isArray(c.manual_tags) ? c.manual_tags : [])
+      .concat(canonicalTags(c.manual_tags, tagField({ accountType, discipline })))
       .filter(Boolean).slice(0, 5).join(', ');
     return `- ${d} (${mood}${tags ? ', themes: ' + tags : ''}): ${String(c.summary_text).trim().slice(0, 400)}`;
   }).join('\n');
@@ -417,7 +417,7 @@ async function signatureRead({ name, discipline, accountType, checkIns, lang }) 
   const lines = consented.map(c => {
     const dt = new Date(c.submitted_at).toISOString().slice(0, 10);
     const score = (c.mood_score != null) ? `${metricWord} ${c.mood_score}/10` : `${metricWord} n/a`;
-    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], Array.isArray(c.manual_tags) ? c.manual_tags : [])
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], canonicalTags(c.manual_tags, tagField({ accountType, discipline })))
       .filter(Boolean).slice(0, 6).join(', ');
     let areas = '';
     if (bodyLens && c.pain_map && typeof c.pain_map === 'object') {
@@ -428,7 +428,7 @@ async function signatureRead({ name, discipline, accountType, checkIns, lang }) 
   }).join('\n');
   const scores = recent.filter(c => c.mood_score != null).map(c => c.mood_score);
   const tf = {};
-  consented.forEach(c => [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], Array.isArray(c.manual_tags) ? c.manual_tags : [])
+  consented.forEach(c => [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], canonicalTags(c.manual_tags, tagField({ accountType, discipline })))
     .forEach(t => { if (t) tf[t] = (tf[t] || 0) + 1; }));
   const topThemes = Object.keys(tf).sort((a, b) => tf[b] - tf[a]).slice(0, 5).map(t => `${t} (${tf[t]})`).join(', ');
   const langName = (lang === 'fr') ? 'French' : 'English';
@@ -477,7 +477,7 @@ async function draftProgressNote({ name, discipline, accountType, checkIns }) {
   const lines = consented.map(c => {
     const d = new Date(c.submitted_at).toISOString().slice(0, 10);
     const mood = (c.mood_score != null) ? ` (mood ${c.mood_score}/10)` : '';
-    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(Array.isArray(c.manual_tags) ? c.manual_tags : []).filter(Boolean).slice(0, 5).join(', ');
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(canonicalTags(c.manual_tags, tagField({ accountType, discipline }))).filter(Boolean).slice(0, 5).join(', ');
     return `- ${d}${mood}${tags ? ` [${tags}]` : ''}: ${String(c.summary_text).trim().slice(0, 400)}`;
   }).join('\n');
   if (!lines) return { note: '', checkInsUsed: 0, needsData: true };
@@ -551,7 +551,7 @@ Rules:
 // reflecting on their own data at their own request, so it reads their entries
 // directly. Supportive and honest, never clinical, never a diagnosis, and never
 // toxic positivity — it notices, it does not prescribe.
-async function weeklyReflection({ checkIns }) {
+async function weeklyReflection({ checkIns, accountType, discipline }) {
   if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const week = (checkIns || [])
@@ -562,7 +562,7 @@ async function weeklyReflection({ checkIns }) {
   const lines = week.map(c => {
     const d = new Date(c.submitted_at).toISOString().slice(0, 10);
     const mood = (c.mood_score != null) ? ` (mood ${c.mood_score}/10)` : '';
-    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(Array.isArray(c.manual_tags) ? c.manual_tags : []).filter(Boolean).slice(0, 5).join(', ');
+    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(canonicalTags(c.manual_tags, tagField({ accountType, discipline }))).filter(Boolean).slice(0, 5).join(', ');
     const text = (c.summary_text && String(c.summary_text).trim()) || (c.raw_text && String(c.raw_text).trim()) || '';
     return `- ${d}${mood}${tags ? ` [${tags}]` : ''}: ${text.slice(0, 400)}`;
   }).join('\n');
@@ -3825,7 +3825,7 @@ app.get('/api/patient/reflection', requireDb, requirePatientAuth, reflectionLimi
       return res.status(403).json({ error: 'Weekly reflections are a Premium feature.', needsPremium: true });
     }
     const checkIns = await listCheckIns(req.patient.id);
-    const result = await weeklyReflection({ checkIns });
+    const result = await weeklyReflection({ checkIns, accountType: req.patient.clinician_account_type, discipline: req.patient.clinician_discipline });
     res.json(result);
   } catch (err) {
     console.error('Reflection error:', err.message);

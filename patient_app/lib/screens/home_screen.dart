@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<CoachStep> _buildSteps(S s) => [
+  List<CoachStep> _buildSteps(S s, String? providerKey) => [
         CoachStep(title: s.coachWelcomeTitle, body: s.coachWelcomeBody),
         CoachStep(
             targetKey: _kComposer,
@@ -278,17 +278,22 @@ class _HomeScreenState extends State<HomeScreen> {
             targetKey: _kHelp,
             title: s.coachHelpTitle,
             body: s.coachHelpBody),
-        CoachStep(title: s.coachDoneTitle, body: s.coachDoneBody),
+        CoachStep(
+            title: s.coachDoneTitle, body: s.coachDoneBodyFor(providerKey)),
       ];
 
   void _startTour() {
     if (_tourActive) return;
     _tourActive = true;
-    final s = context.read<AppState>().s;
+    final app = context.read<AppState>();
+    final s = app.s;
+    // Who sees the check-ins (null = a solo account), for the last step.
+    final providerKey =
+        app.patient == null ? null : profileFor(app.patient!).providerKey;
     startCoachTour(
       context,
       strings: s,
-      steps: _buildSteps(s),
+      steps: _buildSteps(s, providerKey),
       onDone: () {
         _tourActive = false;
         if (mounted) context.read<AppState>().markTourSeen();
@@ -582,7 +587,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    s.howAreThings,
+                    s.checkInQuestion(profile.providerKey),
                     style: const TextStyle(
                         fontSize: 16.5,
                         color: BtwColors.inkSoft,

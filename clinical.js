@@ -66,3 +66,38 @@ export function clampPoints(a, max = 4, maxLen = 240) {
     ? a.filter(x => typeof x === 'string' && x.trim()).slice(0, max).map(x => x.trim().slice(0, maxLen))
     : [];
 }
+
+// Check-in topics per field. Before each field had its own topic set, the
+// recovery, nutrition and school check-ins showed the therapy topics with new
+// labels but SAVED the underlying word, e.g. a nutrition client tapping
+// "Hydration" saved "Panic", and that reached the clinician's timeline and the
+// AI prompts. Old check-ins are read back as the topic the person actually
+// tapped, for the field they checked in under. Must stay in sync with
+// LEGACY_TAG_ALIAS in public/index.html.
+export const LEGACY_TAG_ALIAS = {
+  recovery: { Work: 'Cravings', Craving: 'Cravings', Family: 'Triggers' },
+  nutrition: { Work: 'Meals', Conflict: 'Digestion', Panic: 'Hydration', Family: 'Energy', Money: 'Snacking', Loneliness: 'Stress', Anger: 'Habits', Craving: 'Cravings' },
+  schools: { Work: 'School', Family: 'Home life' }
+};
+
+// The field whose legacy topic labels apply, from the clinician's account
+// type and discipline (null = no remapping).
+export function tagField({ accountType, discipline } = {}) {
+  if (accountType === 'mentor') return 'recovery';
+  if (accountType === 'school') return 'schools';
+  if (accountType === 'coach' && discipline === 'nutrition') return 'nutrition';
+  return null;
+}
+
+// A check-in's manual tags as the person meant them: legacy words mapped for
+// the field, duplicates dropped, order kept.
+export function canonicalTags(tags, field) {
+  const alias = LEGACY_TAG_ALIAS[field] || {};
+  const out = [];
+  for (const t of Array.isArray(tags) ? tags : []) {
+    if (!t) continue;
+    const v = alias[t] || t;
+    if (!out.includes(v)) out.push(v);
+  }
+  return out;
+}

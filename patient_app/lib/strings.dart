@@ -356,37 +356,83 @@ class S {
   String get high => _('High', 'Élevé');
   String get anythingFits => _('Anything that fits (optional)', 'Ce qui te correspond (facultatif)');
   String get sendToTherapist => _('Send to my therapist', 'Envoyer à mon thérapeute');
+  // Who a check-in goes to, per providerKey (null = a solo account).
+  static const Map<String, String> _providerEn = {
+    'therapist': 'therapist',
+    'physio': 'physio',
+    'kinesiologist': 'kinesiologist',
+    'osteopath': 'osteopath',
+    'occupational therapist': 'occupational therapist',
+    'coach': 'coach',
+    'trainer': 'trainer',
+    'nutritionist': 'nutritionist',
+    'neuropsychologist': 'neuropsychologist',
+    'mentor': 'mentor',
+    'teacher': 'teacher',
+  };
+  static const Map<String, String> _providerFr = {
+    'therapist': 'thérapeute',
+    'physio': 'physio',
+    'kinesiologist': 'kinésiologue',
+    'osteopath': 'ostéopathe',
+    'occupational therapist': 'ergothérapeute',
+    'coach': 'coach',
+    'trainer': 'entraîneur',
+    'nutritionist': 'nutritionniste',
+    'neuropsychologist': 'neuropsychologue',
+    'mentor': 'mentor',
+    'teacher': 'enseignant',
+  };
+
   // Per-discipline send label. providerKey null = a solo account (no clinician).
   String sendToProvider(String? providerKey) {
     if (providerKey == null) return _('Save check-in', 'Enregistrer le suivi');
-    const en = {
-      'therapist': 'therapist',
-      'physio': 'physio',
-      'kinesiologist': 'kinesiologist',
-      'osteopath': 'osteopath',
-      'occupational therapist': 'occupational therapist',
-      'coach': 'coach',
-      'trainer': 'trainer',
-      'nutritionist': 'nutritionist',
-      'neuropsychologist': 'neuropsychologist',
-      'mentor': 'mentor',
-      'teacher': 'teacher',
-    };
-    const fr = {
-      'therapist': 'thérapeute',
-      'physio': 'physio',
-      'kinesiologist': 'kinésiologue',
-      'osteopath': 'ostéopathe',
-      'occupational therapist': 'ergothérapeute',
-      'coach': 'coach',
-      'trainer': 'entraîneur',
-      'nutritionist': 'nutritionniste',
-      'neuropsychologist': 'neuropsychologue',
-      'mentor': 'mentor',
-      'teacher': 'enseignant',
-    };
-    return _('Send to my ${en[providerKey] ?? 'provider'}',
-        'Envoyer à mon ${fr[providerKey] ?? 'intervenant'}');
+    return _('Send to my ${_providerEn[providerKey] ?? 'provider'}',
+        'Envoyer à mon ${_providerFr[providerKey] ?? 'intervenant'}');
+  }
+
+  // The check-in question per profession, mirroring the website.
+  String get qFocusEnergy => _('How are your focus and energy today?',
+      'Comment vont ta concentration et ton énergie aujourd\'hui ?');
+  String get qHoldingUp => _('How are you holding up today?',
+      'Comment tiens-tu le coup aujourd\'hui ?');
+  String get qDay => _('How\'s your day going?', 'Comment se passe ta journée ?');
+  String get qBody => _('How\'s your body feeling today?',
+      'Comment va ton corps aujourd\'hui ?');
+  String get qDailyTasks => _('How are daily tasks going?',
+      'Comment se passent tes activités quotidiennes ?');
+  String get qTrainingFeel => _('How are you feeling about training?',
+      'Comment te sens-tu par rapport à l\'entraînement ?');
+  String get qTraining =>
+      _('How\'s training going?', 'Comment se passe l\'entraînement ?');
+  String get qEating =>
+      _('How\'s eating going?', 'Comment se passe l\'alimentation ?');
+
+  /// The question at the top of the check-in, for whoever it goes to
+  /// (providerKey; null = a solo account, which gets the general question).
+  String checkInQuestion(String? providerKey) {
+    switch (providerKey) {
+      case 'neuropsychologist':
+        return qFocusEnergy;
+      case 'mentor':
+        return qHoldingUp;
+      case 'teacher':
+        return qDay;
+      case 'physio':
+      case 'kinesiologist':
+      case 'osteopath':
+        return qBody;
+      case 'occupational therapist':
+        return qDailyTasks;
+      case 'coach':
+        return qTrainingFeel;
+      case 'trainer':
+        return qTraining;
+      case 'nutritionist':
+        return qEating;
+      default:
+        return howAreThings;
+    }
   }
   String get sending => _('Sending…', 'Envoi…');
 
@@ -507,9 +553,13 @@ class S {
       'This opens the guide — how to use Between, whenever you need it.',
       'Ceci ouvre le guide — comment utiliser Between, quand vous en avez besoin.');
   String get coachDoneTitle => _('You are all set', 'Vous êtes prêt');
-  String get coachDoneBody => _(
-      "Your check-ins are private to you. Add one whenever you're ready.",
-      'Vos suivis sont privés. Faites-en un dès que vous êtes prêt.');
+  // A solo account's check-ins are private; a patient with a clinician is
+  // told who sees them (they always do; AI consent only covers the summaries).
+  String coachDoneBodyFor(String? providerKey) => providerKey == null
+      ? _("Your check-ins are private to you. Add one whenever you're ready.",
+          'Vos suivis sont privés. Faites-en un dès que vous êtes prêt.')
+      : _("Your ${_providerEn[providerKey] ?? 'provider'} sees your check-ins. Add one whenever you're ready.",
+          'Ton ${_providerFr[providerKey] ?? 'intervenant'} voit tes suivis. Fais-en un dès que tu es prêt.');
   // A note to your future self
   String get futureNoteTitle =>
       _('A note to your future self', 'Un mot à votre futur vous');
@@ -662,6 +712,16 @@ class S {
       case 'Overwhelm': return 'Débordement';
       case 'Headache': return 'Maux de tête';
       case 'Friends': return 'Amis';
+      case 'Daily tasks': return 'Tâches quotidiennes';
+      case 'Self-care': return 'Soins personnels';
+      case 'School': return 'École';
+      case 'Home life': return 'Vie à la maison';
+      case 'Homework': return 'Devoirs';
+      case 'Tests': return 'Examens';
+      case 'Worry': return 'Inquiétude';
+      case 'Meetings': return 'Réunions';
+      case 'Snacking': return 'Grignotage';
+      case 'Habits': return 'Habitudes';
       default: return key;
     }
   }

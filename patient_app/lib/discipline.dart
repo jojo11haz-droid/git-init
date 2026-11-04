@@ -29,6 +29,10 @@ const _mindThemes = [
 const _bodyThemes = [
   'Pain', 'Soreness', 'Mobility', 'Exercises', 'Sleep', 'Energy', 'Training', 'Win',
 ];
+// Occupational therapy is about daily function, not training.
+const _otThemes = [
+  'Daily tasks', 'Self-care', 'Pain', 'Mobility', 'Exercises', 'Sleep', 'Energy', 'Win',
+];
 const _nutritionThemes = [
   'Energy', 'Cravings', 'Meals', 'Sleep', 'Digestion', 'Mood', 'Hydration', 'Win',
 ];
@@ -130,7 +134,7 @@ DisciplineProfile profileFor(Patient p) {
               CheckInKind.body, _bodyThemes, 'osteopath');
         case 'occupational':
           return const DisciplineProfile(
-              CheckInKind.body, _bodyThemes, 'occupational therapist');
+              CheckInKind.body, _otThemes, 'occupational therapist');
         case 'sports':
           return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'coach');
         default: // physio
@@ -243,7 +247,7 @@ DisciplineProfile profileByKey(String key) {
       return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'osteopath');
     case 'occupational':
       return const DisciplineProfile(
-          CheckInKind.body, _bodyThemes, 'occupational therapist');
+          CheckInKind.body, _otThemes, 'occupational therapist');
     case 'sports':
       return const DisciplineProfile(CheckInKind.body, _bodyThemes, 'coach');
     case 'trainer':
