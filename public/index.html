@@ -8,7 +8,7 @@
 <meta name="description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session. Private, consent-first and not a crisis service.">
 <link rel="canonical" href="https://betweenpsych.com/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="apple-touch-icon" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#1E4C86">
 
@@ -26,6 +26,52 @@
 <meta name="twitter:title" content="Between — Between-session check-ins for therapy">
 <meta name="twitter:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
 <meta name="twitter:image" content="https://betweenpsych.com/og/therapy.png">
+
+<!-- Structured data for search engines and AI answer engines: who we are, the
+     site, and the product with its plans. Prices must match the pricing page
+     (CAD, data-cad="…") — scripts/app-tests.mjs fails if they drift. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://betweenpsych.com/#org",
+      "name": "Between",
+      "url": "https://betweenpsych.com/",
+      "logo": "https://betweenpsych.com/og/logo.png"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://betweenpsych.com/#website",
+      "name": "Between",
+      "url": "https://betweenpsych.com/",
+      "inLanguage": ["en", "fr"],
+      "publisher": { "@id": "https://betweenpsych.com/#org" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://betweenpsych.com/#app",
+      "name": "Between",
+      "url": "https://betweenpsych.com/",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Web",
+      "image": "https://betweenpsych.com/og/therapy.png",
+      "description": "Between-session check-ins for therapists, physiotherapists, nutritionists, coaches and other professionals. Clients send a quick note or voice memo between appointments, AI summarizes it and the professional sees the pattern before the next session. Private, consent-first and not a crisis service.",
+      "publisher": { "@id": "https://betweenpsych.com/#org" },
+      "offers": [
+        { "@type": "Offer", "name": "Solo — per clinician, billed monthly", "price": "99.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Solo Annual — per clinician, billed yearly", "price": "959.88", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Premium — per clinician, billed monthly", "price": "149.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal — billed monthly", "price": "14.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Annual — billed yearly", "price": "119.88", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Premium — billed monthly", "price": "24.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Premium Annual — billed yearly", "price": "239.88", "priceCurrency": "CAD" }
+      ]
+    }
+  ]
+}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -973,6 +1019,10 @@
   .btw-modal-continue[disabled]{opacity:.4;cursor:not-allowed;}
   .btw-modal-continue:not([disabled]):hover{background:var(--ink);color:var(--paper);}
   .btw-root{position:relative;}
+  /* Keyboard "Skip to content": off-screen until focused (the first Tab). */
+  .btw-skip{position:fixed;left:12px;top:-80px;z-index:100000;background:#1E4C86;color:#fff;padding:10px 16px;border-radius:10px;font:600 14px/1.2 var(--font-body);text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.18);transition:top .15s;}
+  .btw-skip:focus{top:12px;outline:2px solid #fff;outline-offset:2px;}
+  #btwMain:focus{outline:none;}
   .btw-app-hidden{filter:blur(2px);pointer-events:none;user-select:none;}
   /* ---- nav ---- */
   .btw-nav{
@@ -2592,6 +2642,7 @@
 </div>
 
 <div class="btw-root">
+  <a class="btw-skip" href="#btwMain">Skip to content</a>
   <div class="btw-modal-overlay" id="btwImportOverlay" style="display:none;">
     <div class="btw-modal">
       <button class="btw-modal-close" data-close="btwImportOverlay" type="button" aria-label="Close">✕</button>
@@ -2863,10 +2914,10 @@
     </div>
   </div>
 
-  <div class="btw-header">
+  <div class="btw-header" role="banner">
     <div>
       <div class="btw-title" id="btwBrandHome" role="button" tabindex="0" aria-label="Between — go to homepage" title="Home"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
-      <div class="btw-nav">
+      <div class="btw-nav" role="navigation" aria-label="Menu">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
         <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
@@ -2919,6 +2970,7 @@
     </div>
   </div>
 
+  <main id="btwMain" tabindex="-1">
   <div class="btw-view active" id="btwViewHome">
     <div class="btw-home">
 
@@ -4062,6 +4114,7 @@
       <p class="btw-guide-contact">Questions, or want Between for your clinic? Email <a href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>.</p>
     </div>
   </div>
+  </main>
 
   <div class="btw-modal-overlay" id="btwSignupOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:420px;">
@@ -4643,6 +4696,7 @@
     "she saw an old friend on the weekend.":"moment : elle a revu une amie.",
     // how it works
     "How it works":"Comment ça marche",
+    "Skip to content":"Passer au contenu",
     // chooser & field-switcher groups
     "Mind & mood":"Esprit et humeur",
     "Body & movement":"Corps et mouvement",

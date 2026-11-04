@@ -266,6 +266,35 @@ try {
     }
     if (problems.length) fail('sitemap — ' + problems.join('; '));
     else ok(`sitemap.xml → ${locs.length} URLs, all serve, previews present`);
+
+    // Structured data: valid JSON, every plan price is one the pricing page
+    // actually shows (data-cad="…"), and the logo it names serves.
+    {
+      const blocks = [...baseHead.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+      const probs = [];
+      let graph = [];
+      try { graph = blocks.flatMap((b) => JSON.parse(b)['@graph'] || []); } catch (e) { probs.push('invalid JSON-LD: ' + e.message); }
+      const app = graph.find((n) => n['@type'] === 'SoftwareApplication');
+      const org = graph.find((n) => n['@type'] === 'Organization');
+      const offers = (app && app.offers) || [];
+      if (!app || !org) probs.push('missing SoftwareApplication or Organization');
+      if (!offers.length) probs.push('no offers');
+      for (const o of offers) if (!indexSrc.includes('data-cad="' + o.price + '"')) probs.push('"' + o.name + '" price ' + o.price + ' not on the pricing page');
+      if (org && org.logo) { const r = await fetch(base + org.logo.replace('https://betweenpsych.com', '')); await r.arrayBuffer(); if (r.status !== 200) probs.push('logo → ' + r.status); }
+      if (probs.length) fail('JSON-LD — ' + probs.join('; '));
+      else ok(`JSON-LD → ${graph.length} entities, ${offers.length} offers match the pricing page`);
+    }
+    // iOS ignores an SVG apple-touch-icon, so it must be the PNG; and the
+    // "Skip to content" link must point at the <main> landmark.
+    {
+      const icon = await fetch(base + '/apple-touch-icon.png'); await icon.arrayBuffer();
+      const probs = [];
+      if (icon.status !== 200 || icon.headers.get('content-type') !== 'image/png') probs.push('/apple-touch-icon.png → ' + icon.status);
+      if (!baseHead.includes('<link rel="apple-touch-icon" href="/apple-touch-icon.png">')) probs.push('apple-touch-icon link is not the PNG');
+      if (!indexSrc.includes('<a class="btw-skip" href="#btwMain">') || !indexSrc.includes('<main id="btwMain" tabindex="-1">')) probs.push('skip link or <main id="btwMain"> missing');
+      if (probs.length) fail('icons / a11y — ' + probs.join('; '));
+      else ok('apple-touch-icon PNG serves; skip link → <main>');
+    }
   }
 } catch (err) {
   fail('HTTP smoke tests — ' + err.message);

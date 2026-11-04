@@ -25,14 +25,20 @@ for (const f of readdirSync(root).filter(n => n.endsWith('.js')).sort()) {
 // 2. Parse the inline scripts inside public/index.html.
 console.log('Checking public/index.html inline scripts...');
 const html = readFileSync(join(root, 'public', 'index.html'), 'utf8');
-const re = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
-let m, n = 0;
+const re = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/g;
+let m, n = 0, j = 0;
 while ((m = re.exec(html))) {
+  // Structured data (type="application/ld+json") is JSON, not JavaScript.
+  if (/\btype="application\/ld\+json"/.test(m[1])) {
+    j++;
+    try { JSON.parse(m[2]); } catch (e) { fail('JSON-LD block #' + j + ' — ' + e.message); }
+    continue;
+  }
   n++;
-  try { vm.compileFunction(m[1], [], {}); }
+  try { vm.compileFunction(m[2], [], {}); }
   catch (e) { fail('inline script #' + n + ' — ' + e.message); }
 }
-if (!failures) ok(n + ' inline script(s)');
+if (!failures) ok(n + ' inline script(s)' + (j ? ', ' + j + ' JSON-LD block(s)' : ''));
 
 // 3. Boot the server and confirm it starts listening (catches bad imports,
 //    missing exports, and other startup throws).
