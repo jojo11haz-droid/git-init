@@ -4,7 +4,8 @@
 // no database: just the functions. Exits non-zero on the first failure so CI
 // turns red.
 
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints } from '../clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS } from '../clinical.js';
+import { readFileSync } from 'fs';
 
 let failures = 0;
 function eq(actual, expected, msg) {
@@ -52,6 +53,37 @@ eq(clampPoints(['ok', '', '  ', 42, null, 'two']), ['ok', 'two'], 'drops empty a
 eq(clampPoints('not an array'), [], 'non-array → []');
 eq(clampPoints(['y'.repeat(300)])[0].length, 240, 'caps each at 240 chars');
 eq(clampPoints(['a', 'b', 'c'], 2), ['a', 'b'], 'respects a custom max');
+
+console.log('canonicalTags — old relabelled topics read back as what was tapped');
+eq(tagField({ accountType: 'coach', discipline: 'nutrition' }), 'nutrition', 'nutrition coach → nutrition');
+eq(tagField({ accountType: 'mentor' }), 'recovery', 'mentor → recovery');
+eq(tagField({ accountType: 'school' }), 'schools', 'school → schools');
+eq(tagField({ accountType: 'coach', discipline: 'physio' }), null, 'physio → no remapping');
+eq(tagField({ accountType: 'therapist' }), null, 'therapist → no remapping');
+eq(tagField(), null, 'no context → no remapping');
+eq(canonicalTags(['Panic', 'Anger', 'Sleep'], 'nutrition'), ['Hydration', 'Habits', 'Sleep'], 'nutrition: Panic → Hydration, Anger → Habits');
+eq(canonicalTags(['Work', 'Meals'], 'nutrition'), ['Meals'], 'old and new spelling of a topic merge');
+eq(canonicalTags(['Work', 'Craving', 'Family'], 'recovery'), ['Cravings', 'Triggers'], 'recovery: Work/Craving → Cravings, Family → Triggers');
+eq(canonicalTags(['Work', 'Family', 'Craving'], 'schools'), ['School', 'Home life', 'Craving'], 'schools: Work → School, Family → Home life');
+eq(canonicalTags(['Panic', 'Work'], null), ['Panic', 'Work'], 'other fields keep their tags as saved');
+eq(canonicalTags(null, 'nutrition'), [], 'null → []');
+eq(canonicalTags(['', 'Sleep', 'Sleep'], 'nutrition'), ['Sleep'], 'drops empties and duplicates');
+// The client keeps its own copy of the alias table; they must not drift.
+{
+  const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const m = html.match(/const LEGACY_TAG_ALIAS = (\{[\s\S]*?\n  \});/);
+  let client = null;
+  try { client = m && Function('return ' + m[1])(); } catch (e) {}
+  eq(client, LEGACY_TAG_ALIAS, 'index.html LEGACY_TAG_ALIAS matches clinical.js');
+}
+// …and so does the patient app's (a Dart map literal, read as JSON).
+{
+  const dart = readFileSync(new URL('../patient_app/lib/app_state.dart', import.meta.url), 'utf8');
+  const m = dart.match(/kLegacyTagAlias = (\{[\s\S]*?\n\});/);
+  let app = null;
+  try { app = m && JSON.parse(m[1].replace(/'/g, '"').replace(/,(\s*[}\]])/g, '$1')); } catch (e) {}
+  eq(app, LEGACY_TAG_ALIAS, 'patient app kLegacyTagAlias matches clinical.js');
+}
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

@@ -30,18 +30,53 @@ class Patient {
   bool get canWriteFutureNote => hasClinician || isPremium;
 }
 
+/// Before each field had its own check-in topics, the website saved some
+/// recovery, nutrition and school topics under the therapy word they replaced
+/// (a nutrition client tapping "Hydration" saved "Panic"). Those are read back
+/// as what was tapped. Mirrors LEGACY_TAG_ALIAS in clinical.js / index.html.
+const Map<String, Map<String, String>> kLegacyTagAlias = {
+  'recovery': {'Work': 'Cravings', 'Craving': 'Cravings', 'Family': 'Triggers'},
+  'nutrition': {
+    'Work': 'Meals',
+    'Conflict': 'Digestion',
+    'Panic': 'Hydration',
+    'Family': 'Energy',
+    'Money': 'Snacking',
+    'Loneliness': 'Stress',
+    'Anger': 'Habits',
+    'Craving': 'Cravings',
+  },
+  'schools': {'Work': 'School', 'Family': 'Home life'},
+};
+
+/// The field whose old topic words need mapping, from the clinician's account
+/// type and discipline (null = none).
+String? legacyTagField(String? accountType, String? discipline) {
+  if (accountType == 'mentor') return 'recovery';
+  if (accountType == 'school') return 'schools';
+  if (accountType == 'coach' && discipline == 'nutrition') return 'nutrition';
+  return null;
+}
+
 class CheckIn {
-  CheckIn(this.raw);
+  CheckIn(this.raw, {this.tagField});
 
   final Map<String, dynamic> raw;
+
+  /// See [kLegacyTagAlias]; null when the patient's field needs no mapping.
+  final String? tagField;
 
   String get id => raw['id'] as String;
   int? get mood => raw['mood_score'] as int?;
   bool get moodInferred => raw['mood_inferred'] == true;
-  List<String> get tags => [
-        ...((raw['manual_tags'] as List?) ?? const []),
-        ...((raw['auto_tags'] as List?) ?? const []),
-      ].cast<String>().toSet().toList();
+  List<String> get tags {
+    final alias = kLegacyTagAlias[tagField] ?? const <String, String>{};
+    return [
+      ...((raw['manual_tags'] as List?) ?? const [])
+          .map((t) => alias[t.toString()] ?? t.toString()),
+      ...((raw['auto_tags'] as List?) ?? const []).map((t) => t.toString()),
+    ].toSet().toList();
+  }
   String get summary =>
       (raw['summary_text'] as String?) ??
       (raw['raw_text'] as String?) ??
@@ -137,6 +172,8 @@ class AppState extends ChangeNotifier {
   final HealthService _health = HealthService();
 
   Patient? patient;
+  String? get _legacyTagField => legacyTagField(
+      patient?.clinicianAccountType, patient?.clinicianDiscipline);
   bool restoring = true;
 
   /// Shown once, right after a brand-new account is created (signup or accepted
@@ -414,7 +451,8 @@ class AppState extends ChangeNotifier {
     });
     final map = (data as Map).cast<String, dynamic>();
     return SendResult(
-      CheckIn((map['checkIn'] as Map).cast<String, dynamic>()),
+      CheckIn((map['checkIn'] as Map).cast<String, dynamic>(),
+          tagField: _legacyTagField),
       (map['crisis'] as Map?)?.cast<String, dynamic>(),
     );
   }
@@ -422,7 +460,8 @@ class AppState extends ChangeNotifier {
   Future<List<CheckIn>> fetchHistory() async {
     final data = await _api.get('/api/patient/check-ins') as List;
     return data
-        .map((row) => CheckIn((row as Map).cast<String, dynamic>()))
+        .map((row) => CheckIn((row as Map).cast<String, dynamic>(),
+            tagField: _legacyTagField))
         .toList();
   }
 

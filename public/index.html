@@ -4818,6 +4818,31 @@
     // standing support card (solo individuals)
     "You're not on your own":"Vous n'êtes pas seul",
     "Text 988":"Texter 988","Call 988":"Appeler 988","Emergency 911":"Urgence 911",
+    "Need help right now?":"Besoin d'aide maintenant ?",
+    // per-field check-in card: the question, who sees it, and the topics
+    "How are your focus and energy today?":"Comment vont votre concentration et votre énergie aujourd'hui ?",
+    "How are you holding up today?":"Comment tenez-vous le coup aujourd'hui ?",
+    "How's your day going?":"Comment se passe votre journée ?",
+    "How's your body feeling today?":"Comment va votre corps aujourd'hui ?",
+    "How are daily tasks going?":"Comment se passent vos activités quotidiennes ?",
+    "How are you feeling about training?":"Comment vous sentez-vous par rapport à l'entraînement ?",
+    "How's training going?":"Comment se passe l'entraînement ?",
+    "How's eating going?":"Comment se passe l'alimentation ?",
+    "A quick check-in whenever something comes up. Your therapist will see it.":"Un court suivi dès que quelque chose survient. Votre thérapeute le verra.",
+    "A quick check-in whenever something comes up. Your neuropsychologist will see it.":"Un court suivi dès que quelque chose survient. Votre neuropsychologue le verra.",
+    "A quick check-in whenever something comes up. Your mentor will see it.":"Un court suivi dès que quelque chose survient. Votre mentor le verra.",
+    "A quick check-in whenever something comes up. Your school's support staff will see it.":"Un court suivi dès que quelque chose survient. Le personnel de soutien de votre école le verra.",
+    "A quick check-in whenever something comes up. Your physiotherapist will see it.":"Un court suivi dès que quelque chose survient. Votre physiothérapeute le verra.",
+    "A quick check-in whenever something comes up. Your kinesiologist will see it.":"Un court suivi dès que quelque chose survient. Votre kinésiologue le verra.",
+    "A quick check-in whenever something comes up. Your osteopath will see it.":"Un court suivi dès que quelque chose survient. Votre ostéopathe le verra.",
+    "A quick check-in whenever something comes up. Your occupational therapist will see it.":"Un court suivi dès que quelque chose survient. Votre ergothérapeute le verra.",
+    "A quick check-in whenever something comes up. Your coach will see it.":"Un court suivi dès que quelque chose survient. Votre entraîneur le verra.",
+    "A quick check-in whenever something comes up. Your trainer will see it.":"Un court suivi dès que quelque chose survient. Votre entraîneur personnel le verra.",
+    "A quick check-in whenever something comes up. Your nutritionist will see it.":"Un court suivi dès que quelque chose survient. Votre nutritionniste le verra.",
+    "Cravings":"Envies","Triggers":"Déclencheurs","Meetings":"Réunions","Relationships":"Relations",
+    "School":"École","Homework":"Devoirs","Tests":"Examens","Friends":"Amis","Home life":"Vie à la maison","Worry":"Inquiétude",
+    "Meals":"Repas","Digestion":"Digestion","Hydration":"Hydratation","Energy":"Énergie","Snacking":"Grignotage","Habits":"Habitudes",
+    "Daily tasks":"Tâches quotidiennes","Self-care":"Soins personnels",
     // check-in streak (habit chip)
     "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
     "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week — well done":"une semaine complète — bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
@@ -5635,6 +5660,14 @@
   let curIndividualMode = 'mind';     // 'mind' | 'body' | 'sport' | 'eating'
   const INDIVIDUAL_MODE_DISCIPLINE = { mind:'therapy', body:'physio', sport:'sports', eating:'nutrition' };
   function individualDiscipline(){ return INDIVIDUAL_MODE_DISCIPLINE[curIndividualMode] || 'therapy'; }
+  // Physical / "muscle" fields lead their emergency wording with 911 / urgent
+  // care and keep the 988 crisis line second; mental-health fields lead with
+  // 988. A solo individual follows their tracking mode (Body, Sport, Eating).
+  const PHYSICAL_FIELDS = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'];
+  function physicalField(){
+    const aud = (typeof curAudience !== 'undefined') ? curAudience : null;
+    return PHYSICAL_FIELDS.indexOf(aud === 'individual' ? individualDiscipline() : aud) >= 0;
+  }
   const _orig = new WeakMap();
   const heroH1 = document.getElementById('btwHeroH1');
   const heroEn = heroH1 ? heroH1.innerHTML : '';
@@ -7812,7 +7845,7 @@
     // fitness, nutrition) lead with a medical emergency and keep a crisis line
     // second; mental-health fields keep the suicide line first.
     t('btwVizSafeHead', A.safe);
-    var _physSafe = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+    var _physSafe = physicalField();
     var SAFE = _physSafe
       ? (L === 'fr'
           ? { c:'Urgence médicale', cs:'COMPOSEZ LE 911', t:'Parlons Suicide Canada', ts:'APPELEZ OU TEXTEZ 988' }
@@ -7869,7 +7902,7 @@
   // built in its own place); called at the end of translateStatic so it wins
   // over the generic text-node translation.
   function applyCrisisCopy(){
-    var phys = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+    var phys = physicalField();
     var fr = (curLang === 'fr');
     var urgent, modal, paywall;
     if(phys){
@@ -8378,6 +8411,9 @@
     if(window.__btwScoreMode) window.__btwScoreMode();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     try { renderHeroThread(); } catch(e){}
+    // The mode also picks the emergency wording, the check-in question and
+    // the topics (Body/Sport/Eating are physical; Eating uses nutrition's).
+    try { applyCrisisCopy(); applyRoleLabels(); syncComposerTags(); } catch(e){}
     try { renderAll(); } catch(e){}
   }
   document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>{
@@ -8458,13 +8494,28 @@
     return (parts.map(w=>w[0]).join('').slice(0,2).toUpperCase()) || '?';
   }
   // Server row -> shape the render functions use
+  // Before each field had its own check-in topics, recovery, nutrition and
+  // school check-ins showed the therapy topics relabelled but SAVED the
+  // underlying word (a nutrition client tapping "Hydration" saved "Panic").
+  // Read old check-ins back as the topic the person actually tapped. Mirrors
+  // clinical.js; a unit test keeps the two tables identical.
+  const LEGACY_TAG_ALIAS = {
+    recovery: { Work: 'Cravings', Craving: 'Cravings', Family: 'Triggers' },
+    nutrition: { Work: 'Meals', Conflict: 'Digestion', Panic: 'Hydration', Family: 'Energy', Money: 'Snacking', Loneliness: 'Stress', Anger: 'Habits', Craving: 'Cravings' },
+    schools: { Work: 'School', Family: 'Home life' }
+  };
+  function canonicalManualTags(tags){
+    const field = accountAudience() || curAudience;
+    const alias = LEGACY_TAG_ALIAS[field] || {};
+    return (tags || []).filter(Boolean).map(tg => alias[tg] || tg);
+  }
   function mapCheckIn(row){
     return {
       id: row.id,
       time: new Date(row.submitted_at).getTime(),
       mood: row.mood_score,
       moodInferred: !!row.mood_inferred,
-      tags: [...new Set([...(row.manual_tags||[]), ...(row.auto_tags||[])])],
+      tags: [...new Set([...canonicalManualTags(row.manual_tags), ...(row.auto_tags||[])])],
       summary: row.summary_text || row.raw_text || (row.audio_upload_id ? 'Voice memo (no transcript yet).' : 'Check-in received (no notes).'),
       risk: !!row.risk_flag,
       hasAudio: !!row.audio_upload_id,
@@ -10197,15 +10248,52 @@
     applyAudienceLock();
   }
 
+  // The check-in card's question and who reads the check-in, per field. A solo
+  // individual follows their tracking mode and keeps it private. A patient
+  // with a clinician is told who sees it: they always do (there's no sharing
+  // switch; AI consent only controls the AI summaries).
+  function composeField(){
+    const aud = (typeof curAudience !== 'undefined') ? curAudience : 'therapy';
+    return aud === 'individual' ? individualDiscipline() : aud;
+  }
+  const COMPOSE_QUESTION = {
+    neuropsych: 'How are your focus and energy today?',
+    recovery: 'How are you holding up today?',
+    schools: "How's your day going?",
+    physio: "How's your body feeling today?",
+    kinesiology: "How's your body feeling today?",
+    osteo: "How's your body feeling today?",
+    occupational: 'How are daily tasks going?',
+    sports: 'How are you feeling about training?',
+    fitness: "How's training going?",
+    nutrition: "How's eating going?"
+  };
+  const COMPOSE_WHO_SEES = {
+    therapy: 'A quick check-in whenever something comes up. Your therapist will see it.',
+    neuropsych: 'A quick check-in whenever something comes up. Your neuropsychologist will see it.',
+    recovery: 'A quick check-in whenever something comes up. Your mentor will see it.',
+    schools: "A quick check-in whenever something comes up. Your school's support staff will see it.",
+    physio: 'A quick check-in whenever something comes up. Your physiotherapist will see it.',
+    kinesiology: 'A quick check-in whenever something comes up. Your kinesiologist will see it.',
+    osteo: 'A quick check-in whenever something comes up. Your osteopath will see it.',
+    occupational: 'A quick check-in whenever something comes up. Your occupational therapist will see it.',
+    sports: 'A quick check-in whenever something comes up. Your coach will see it.',
+    fitness: 'A quick check-in whenever something comes up. Your trainer will see it.',
+    nutrition: 'A quick check-in whenever something comes up. Your nutritionist will see it.'
+  };
+  function composeQuestion(){ return t(COMPOSE_QUESTION[composeField()] || 'How are things right now?'); }
+  function composeDesc(){
+    if(soloIndividual()) return t('A quick check-in whenever something comes up. It stays private to you.');
+    return t(COMPOSE_WHO_SEES[composeField()] || COMPOSE_WHO_SEES.therapy);
+  }
+
   // Relabel the shared dashboard for whoever's signed in, a therapist sees a
   // caseload, a patient sees their own check-ins.
   function applyRoleLabels(){
     const patient = isPatient();
     const set = (id, txt)=>{ const el = document.getElementById(id); if(el) el.textContent = txt; };
-    set('btwComposeDesc', patient
-      ? t('A quick check-in whenever something comes up. It stays private to you.')
-      : t("Manage this patient's AI consent, invite code and stored data."));
-    if(patient) set('btwComposeHeading', t('How are things right now?'));
+    set('btwComposeDesc', patient ? composeDesc() : t("Manage this patient's AI consent, invite code and stored data."));
+    if(patient) set('btwComposeHeading', composeQuestion());
     set('btwCaseloadTitle', patient ? t('Your check-ins') : t('Caseload'));
     set('btwCaseloadDesc', patient
       ? t('Your own history and trends, updating each time you check in.')
@@ -10223,7 +10311,7 @@
       // Physical / "muscle" fields lead with a medical-emergency message (911 /
       // urgent care) and keep a crisis line as a safety net; mental-health
       // fields keep the suicide-specific wording.
-      const _physAud = ['physio','kinesiology','osteo','occupational','sports','fitness','nutrition'].indexOf(curAudience) >= 0;
+      const _physAud = physicalField();
       const lead = _physAud
         ? t("If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away — don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).")
         : t("This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.");
@@ -12886,7 +12974,15 @@
     // Sports blends the physio and therapist worlds: body and mind together.
     mixed: ['Soreness','Fatigue','Injury','Sleep','Pressure','Confidence','Motivation','Stress'],
     // Neuropsychology: cognition and mood, no body.
-    neuropsych: ['Focus','Memory','Mental fatigue','Word-finding','Overwhelm','Sleep','Mood','Headache']
+    neuropsych: ['Focus','Memory','Mental fatigue','Word-finding','Overwhelm','Sleep','Mood','Headache'],
+    // Each field's own topics, saved exactly as shown. (These used to be the
+    // therapy topics relabelled on screen, which saved the wrong word; see
+    // LEGACY_TAG_ALIAS. So none of these may reuse an alias source word.)
+    recovery: ['Sleep','Cravings','Triggers','Meetings','Conflict','Relationships','Win','Social','Health','Money','Loneliness','Anger'],
+    schools: ['Sleep','School','Homework','Tests','Friends','Home life','Worry','Win','Health','Loneliness','Anger','Conflict'],
+    nutrition: ['Sleep','Meals','Digestion','Cravings','Hydration','Energy','Win','Social','Health','Snacking','Stress','Habits'],
+    // Occupational therapy is about daily function, not training load.
+    ot: ['Daily tasks','Self-care','Soreness','Stiffness','Fatigue','Sleep','Mobility','Stress']
   };
   let _composerTagSet = 'therapy'; // matches the static markup on load
   function renderComposerTags(which){
@@ -12898,6 +12994,9 @@
     (COMPOSER_TAGS[which] || COMPOSER_TAGS.therapy).forEach(tag=>{
       const el = document.createElement('div');
       el.className = 'btw-tag'; el.setAttribute('data-tag', tag); el.textContent = t(tag);
+      // Register the English word as this label's original, so a language
+      // switch re-translates it both ways even if it was drawn in French.
+      try { _orig.set(el.firstChild, tag); } catch(e){}
       picker.insertBefore(el, addBtn);
     });
     presetTags = [...picker.querySelectorAll('.btw-tag[data-tag]')].map(el=>el.dataset.tag.toLowerCase());
@@ -12920,9 +13019,15 @@
   function syncComposerTags(){
     // Sports blends body + mind; other coach/trainer contexts (physio,
     // kinesiology, fitness) stay physical; therapy stays emotional.
+    // Recovery, schools and nutrition get their own topics; a solo individual's
+    // Eating mode counts as nutrition (painDiscipline follows their mode).
+    const d = painDiscipline(), aud = (typeof curAudience !== 'undefined') ? curAudience : null;
     let want = 'therapy';
-    if(painMapContext()) want = (painDiscipline() === 'sports') ? 'mixed' : 'phys';
-    else if(painDiscipline() === 'neuropsych') want = 'neuropsych';
+    if(painMapContext()) want = (d === 'sports') ? 'mixed' : (d === 'occupational' ? 'ot' : 'phys');
+    else if(d === 'neuropsych') want = 'neuropsych';
+    else if(d === 'nutrition' || aud === 'nutrition') want = 'nutrition';
+    else if(aud === 'recovery') want = 'recovery';
+    else if(aud === 'schools') want = 'schools';
     if(want !== _composerTagSet) renderComposerTags(want);
   }
 
@@ -13917,11 +14022,17 @@
     var el = document.getElementById('btwSupport'); if(!el) return;
     if(!(isPatient() && soloIndividual())){ el.style.display = 'none'; return; }
     el.style.display = '';
+    // Same convention as the emergency notes: tracking Body, Sport or Eating
+    // leads with Emergency 911 (medical) and keeps the 988 crisis line second;
+    // Mind leads with 988, framed as support rather than emergency.
+    var phys = physicalField();
     var set = function(id, txt){ var e = document.getElementById(id); if(e) e.textContent = txt; };
-    set('btwSupportTitle', t("You're not on your own"));
+    set('btwSupportTitle', phys ? t('Need help right now?') : t("You're not on your own"));
     set('btwSupportText', t('Text 988'));
     set('btwSupportCall', t('Call 988'));
     set('btwSupportEmerg', t('Emergency 911'));
+    var acts = el.querySelector('.btw-support-actions'), em = document.getElementById('btwSupportEmerg');
+    if(acts && em){ if(phys) acts.insertBefore(em, acts.firstChild); else acts.appendChild(em); }
   }
 
   // --- Patterns: cheap, automatic insight the person gets without asking.
