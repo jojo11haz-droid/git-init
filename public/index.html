@@ -124,6 +124,20 @@
   /* The red "lens" where the two circles overlap, like the logo's centre. Sits
      on top and fades in as they converge (opacity set from scroll in JS). */
   .btw-bg-lens{width:32vmin;height:32vmin;margin:-16vmin 0 0 -16vmin;filter:blur(6px);opacity:0;background:radial-gradient(circle, rgba(192,57,43,.58) 0%, rgba(192,57,43,.28) 46%, transparent 70%);}
+  /* Where the scroll script puts the circles at the top of the page, so the
+     first frame already has them apart (not stacked in the middle, then
+     jumping). Reduced motion pins them at the merged end state instead. */
+  .btw-bg-navy{transform:translate(-60%,0);}
+  .btw-bg-clay{transform:translate(60%,0);}
+  .btw-bg-lens{transform:scale(.6);}
+  @media (prefers-reduced-motion:reduce){
+    .btw-bg-navy{transform:translate(-24%,0);}
+    .btw-bg-clay{transform:translate(24%,0);}
+    .btw-bg-lens{opacity:1;transform:none;}
+  }
+  /* A refresh while signed in lands on the dashboard, which has no circles. */
+  html.btw-pre-resolving .btw-bg-circle,
+  body.btw-resolving .btw-bg-circle{display:none;}
   @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);} }
   :root[data-theme="dark"] .btw-bg-lens{background:radial-gradient(circle, rgba(224,110,94,.44) 0%, rgba(224,110,94,.20) 46%, transparent 70%);}
   /* Per-page backgrounds. Home keeps the two logo circles; the other pages get
@@ -1099,6 +1113,15 @@
   }
   .btw-theme-btn:hover{color:var(--ink);border-color:var(--moss);}
   .btw-theme-btn svg{width:16px;height:16px;}
+  /* Both icons are in the markup and CSS shows the mode you'd switch TO (moon
+     in light, sun in dark), so the button is right from the very first frame. */
+  .btw-theme-btn .ic-sun{display:none;}
+  :root[data-theme="dark"] .btw-theme-btn .ic-sun{display:block;}
+  :root[data-theme="dark"] .btw-theme-btn .ic-moon{display:none;}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .btw-theme-btn .ic-sun{display:block;}
+    :root:not([data-theme="light"]) .btw-theme-btn .ic-moon{display:none;}
+  }
   .btw-lang-btn{
     border:none;
     background:transparent;
@@ -1869,7 +1892,8 @@
   .btw-chooser{position:relative;max-width:980px;margin:0 auto;padding:22px 16px 8px;}
   /* On the first-visit gate the chooser is effectively the whole page, so dress
      it as a calm, self-contained editorial panel with a soft on-brand wash. */
-  .btw-home.btw-gated .btw-chooser{
+  .btw-home.btw-gated .btw-chooser,
+  html.btw-pre-gated .btw-home .btw-chooser{
     margin-top:30px;padding:36px 30px 30px;border-radius:26px;
     background:
       radial-gradient(130% 80% at 12% -12%, var(--moss-light), transparent 60%),
@@ -1934,12 +1958,32 @@
      forces the chooser visible from the very first frame on a plain landing,
      and veils the home view when a session is likely — so a phone never flashes
      the homepage before locking onto the chooser. */
+  /* Each pre-class must leave the page looking exactly like the state the main
+     script then settles on, or the switch shows as a flash on refresh. So the
+     pre-gated frame takes the gated landing's look: panel (above), no Log in /
+     Sign up (like body.btw-gated-landing below). */
   html.btw-pre-gated .btw-nav,
   html.btw-pre-gated .btw-sub,
-  html.btw-pre-gated .btw-audnow{display:none !important;}
+  html.btw-pre-gated .btw-audnow,
+  html.btw-pre-gated #btwLoginBtn,
+  html.btw-pre-gated #btwSignupBtn{display:none !important;}
   html.btw-pre-gated #btwViewHome .btw-home > *:not(.btw-chooser){display:none !important;}
   html.btw-pre-gated #btwViewHome .btw-home .btw-chooser{display:block !important;}
   html.btw-pre-resolving #btwViewHome{visibility:hidden !important;}
+  /* While a likely session is confirmed (pre-class, then body.btw-resolving),
+     show the header a signed-in visitor ends up with (the app-mode rules
+     below): no Log in / Sign up and — unless it's the owner, who keeps the
+     full header (btw-hint-owner, from the last visit) — no page nav, tagline
+     or field pill. An expired session lands on the gated chooser, whose
+     header hides the same things, so nothing flips either way. */
+  html.btw-pre-resolving #btwLoginBtn, html.btw-pre-resolving #btwSignupBtn,
+  body.btw-resolving #btwLoginBtn, body.btw-resolving #btwSignupBtn{display:none !important;}
+  html.btw-pre-resolving:not(.btw-hint-owner) .btw-nav,
+  html.btw-pre-resolving:not(.btw-hint-owner) .btw-sub,
+  html.btw-pre-resolving:not(.btw-hint-owner) .btw-audnow,
+  html:not(.btw-hint-owner) body.btw-resolving .btw-nav,
+  html:not(.btw-hint-owner) body.btw-resolving .btw-sub,
+  html:not(.btw-hint-owner) body.btw-resolving .btw-audnow{display:none !important;}
   .btw-audnow.gated .forpfx{display:none;}
   /* The chooser is the whole landing, so clear the header chrome while gated:
      the page nav (Home / How it works / …), the redundant field pill, the
@@ -2628,7 +2672,11 @@
   var forP=''; try{forP=new URLSearchParams(location.search).get('for')||'';}catch(e){}
   var urlField=!!FP[p]||!!forP;
   var signedIn=false; try{signedIn=!!localStorage.getItem('btw_ptoken')||localStorage.getItem('btw_session')==='1';}catch(e){}
-  if(signedIn) d.classList.add('btw-pre-resolving');
+  if(signedIn){
+    d.classList.add('btw-pre-resolving');
+    // The owner keeps the full header when signed in; remembered from last load.
+    try{ if(localStorage.getItem('btw_owner')==='1') d.classList.add('btw-hint-owner'); }catch(e){}
+  }
   else if(!urlField) d.classList.add('btw-pre-gated');
 }catch(e){}})();
 </script>
@@ -2945,7 +2993,7 @@
         <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
         <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
       </div>
-      <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"></button>
+      <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
@@ -2980,42 +3028,42 @@
           <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
           <p class="btw-chooser-login" id="btwChooserLogin">Already have an account? <button type="button" class="btw-chooser-login-link" id="btwChooserLoginBtn">Log in</button></p>
         </div>
-        <div class="btw-chooser-groups">
+        <div class="btw-chooser-groups btw-accordion">
           <div class="btw-chooser-group">
             <div class="btw-chooser-grouplabel">Mind &amp; mood<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
-              <button type="button" class="btw-chooser-card active" data-aud="therapy"><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="neuropsych"><span class="t">Neuropsychology</span><span class="h">Focus, memory and mood between sessions</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="therapy"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/therapy.png" alt="" loading="lazy"></span><span class="t">Psychotherapist</span><span class="h">Mood check-ins between sessions</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="neuropsych"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/neuropsych.png" alt="" loading="lazy"></span><span class="t">Neuropsychology</span><span class="h">Focus, memory and mood between sessions</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="recovery"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/recovery.png" alt="" loading="lazy"></span><span class="t">Addiction</span><span class="h">Support between meetings</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
             <div class="btw-chooser-grouplabel">Body &amp; movement<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
-              <button type="button" class="btw-chooser-card" data-aud="physio"><span class="t">Physiotherapy</span><span class="h">Pain and a body map between visits</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="occupational"><span class="t">Occupational therapy</span><span class="h">Daily function and recovery between visits</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="physio"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/physio.png" alt="" loading="lazy"></span><span class="t">Physiotherapy</span><span class="h">Pain and a body map between visits</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="osteo"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/osteo.png" alt="" loading="lazy"></span><span class="t">Osteopathy</span><span class="h">Recovery between treatments</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="kinesiology"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/kinesiology.png" alt="" loading="lazy"></span><span class="t">Kinesiology</span><span class="h">Movement and pain between sessions</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="occupational"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/occupational.png" alt="" loading="lazy"></span><span class="t">Occupational therapy</span><span class="h">Daily function and recovery between visits</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
             <div class="btw-chooser-grouplabel">Sport &amp; performance<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
-              <button type="button" class="btw-chooser-card" data-aud="sports"><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="sports"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/sports.png" alt="" loading="lazy"></span><span class="t">Sports</span><span class="h">How players are between practices, games and tournaments</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="fitness"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/fitness.png" alt="" loading="lazy"></span><span class="t">Fitness</span><span class="h">Clients between workouts</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
             <div class="btw-chooser-grouplabel">Wellbeing &amp; support<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
-              <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
-              <button type="button" class="btw-chooser-card" data-aud="schools"><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/nutrition.png" alt="" loading="lazy"></span><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="schools"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/schools.png" alt="" loading="lazy"></span><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
             </div>
           </div>
           <div class="btw-chooser-group">
             <div class="btw-chooser-grouplabel">On your own<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
-              <button type="button" class="btw-chooser-card btw-chooser-card-solo" data-aud="individual"><span class="t">Or just for yourself</span><span class="h">Your own private check-ins, no clinician needed</span></button>
+              <button type="button" class="btw-chooser-card btw-chooser-card-solo" data-aud="individual"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/individual.png" alt="" loading="lazy"></span><span class="t">Or just for yourself</span><span class="h">Your own private check-ins, no clinician needed</span></button>
             </div>
           </div>
         </div>
@@ -8192,7 +8240,16 @@
   // Homepage "Who's it for?" cards switch into the chosen field, same as a tab.
   document.querySelectorAll('.btw-chooser-card').forEach(b=>{
     var slug = b.dataset.aud;
-    if(!b.querySelector('.ic')){
+    var pre = b.querySelector('.ic');
+    if(pre){
+      // The illustration is in the markup (so it shows from the first frame);
+      // still fall back to the line icon if it can't load.
+      var preImg = pre.querySelector('img'), preSvg = AUD_ICON[slug] || '';
+      if(preImg){
+        if(preImg.complete && !preImg.naturalWidth) pre.innerHTML = preSvg;
+        else preImg.addEventListener('error', function(){ pre.innerHTML = preSvg; });
+      }
+    } else {
       var host = document.createElement('span');
       host.className = 'ic'; host.setAttribute('aria-hidden', 'true');
       var url = AUD_IMG[slug], svg = AUD_ICON[slug] || '';
@@ -8208,7 +8265,9 @@
   });
   // Mobile-only accordion for the chooser: on a phone each category collapses so
   // the whole list isn't open at once, with the current field's group open.
-  // Desktop always shows every card (the accordion class is only added on mobile).
+  // Desktop always shows every card. The markup already carries btw-accordion so
+  // a phone's first frame is collapsed too; its CSS only applies under 640px,
+  // and sync() drops the class on desktop.
   (function(){
     var wrap = document.querySelector('.btw-chooser-groups'); if(!wrap) return;
     var labels = [].slice.call(wrap.querySelectorAll('.btw-chooser-grouplabel'));
@@ -10062,6 +10121,9 @@
       document.body.classList.toggle('btw-signed-in', signedIn);
       document.body.classList.toggle('btw-owner', signedIn && isOwnerAccount());
     } catch(e){}
+    // Remember the owner's full-header layout so the next load's first paint
+    // matches it (read by the first-paint script at the top of <body>).
+    try { if(signedIn && isOwnerAccount()) localStorage.setItem('btw_owner','1'); else localStorage.removeItem('btw_owner'); } catch(e){}
     try { if(window.__btwSyncOwnerPreview) window.__btwSyncOwnerPreview(); } catch(e){}
     if(window.__btwUpdateComposePain) window.__btwUpdateComposePain();
     const name = asTherapist ? state.me.name : (asPatient ? state.patient.display_name : '');
@@ -15446,22 +15508,18 @@
   // button icon, flips on click, and remembers the choice.
   (function(){
     var btn=document.getElementById('btwThemeBtn'); if(!btn) return;
-    var SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>';
-    var MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>';
+    // The sun/moon icons are both in the button's markup; CSS shows the right
+    // one for the current theme, so there's nothing to sync here.
     function isDark(){
       var a=document.documentElement.getAttribute('data-theme');
       if(a) return a==='dark';
       try{ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }catch(e){ return false; }
     }
-    function sync(){ btn.innerHTML = isDark()?SUN:MOON; } // show the mode you'd switch TO
     btn.addEventListener('click', function(){
       var next = isDark()?'light':'dark';
       document.documentElement.setAttribute('data-theme', next);
       try{ localStorage.setItem('btw_theme', next); }catch(e){}
-      sync();
     });
-    try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sync); }catch(e){}
-    sync();
   })();
 
   // Ambient background circles: drift together into the logo as the page
