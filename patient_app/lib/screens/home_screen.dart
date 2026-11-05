@@ -593,6 +593,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BtwColors.inkSoft,
                         height: 1.5),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    s.checkInWhoSees(profile.providerKey),
+                    style: const TextStyle(
+                        fontSize: 13.5, color: BtwColors.inkSoft, height: 1.45),
+                  ),
                   if (_streak >= 1) ...[
                     const SizedBox(height: 14),
                     _streakChip(s),

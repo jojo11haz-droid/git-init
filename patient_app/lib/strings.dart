@@ -402,6 +402,14 @@ class S {
   String get qEating =>
       _('How\'s eating going?', 'Comment se passe l\'alimentation ?');
 
+  /// Under the question: who reads the check-in. A solo account keeps it
+  /// private; with a clinician it goes to them, but the notes the person
+  /// leaves for themselves never do (mirrors the website).
+  String checkInWhoSees(String? providerKey) => providerKey == null
+      ? _('It stays private to you.', 'Ça reste privé.')
+      : _('Your ${_providerEn[providerKey] ?? 'provider'} sees your check-ins. Notes you leave yourself stay private.',
+          'Ton ${_providerFr[providerKey] ?? 'intervenant'} voit tes suivis. Les mots que tu te laisses restent privés.');
+
   /// The question at the top of the check-in, for whoever it goes to
   /// (providerKey; null = a solo account, which gets the general question).
   String checkInQuestion(String? providerKey) {
@@ -552,14 +560,19 @@ class S {
   String coachDoneBodyFor(String? providerKey) => providerKey == null
       ? _("Your check-ins are private to you. Add one whenever you're ready.",
           'Vos suivis sont privés. Faites-en un dès que vous êtes prêt.')
-      : _("Your ${_providerEn[providerKey] ?? 'provider'} sees your check-ins. Add one whenever you're ready.",
-          'Ton ${_providerFr[providerKey] ?? 'intervenant'} voit tes suivis. Fais-en un dès que tu es prêt.');
+      : _("Your ${_providerEn[providerKey] ?? 'provider'} sees your check-ins; notes you leave yourself stay private. Add one whenever you're ready.",
+          'Ton ${_providerFr[providerKey] ?? 'intervenant'} voit tes suivis ; les mots que tu te laisses restent privés. Fais-en un dès que tu es prêt.');
   // A note to your future self
   String get futureNoteTitle =>
       _('A note to your future self', 'Un mot à votre futur vous');
   String get futureNoteIntro => _(
       'Leave yourself something kind for a harder day. Between shows it back to you after a low check-in.',
       'Laissez-vous un mot bienveillant pour une journée difficile. Between vous le remontre après un suivi plus bas.');
+  // Only the person can read these notes, never their professional.
+  String futureNotePrivacy(String? providerKey) => providerKey == null
+      ? _('Private to you, always.', 'Privé, toujours.')
+      : _('Private to you; your ${_providerEn[providerKey] ?? 'provider'} never sees these.',
+          'Privé : votre ${_providerFr[providerKey] ?? 'intervenant'} ne les voit jamais.');
   String get futureNoteHint =>
       _('Write a few words…', 'Écrivez quelques mots…');
   String get saveNote => _('Save note', 'Enregistrer le mot');

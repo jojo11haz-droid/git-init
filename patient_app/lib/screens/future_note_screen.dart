@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../strings.dart';
 import '../theme.dart';
 
@@ -96,6 +97,14 @@ class _FutureNoteScreenState extends State<FutureNoteScreen> {
             Text(s.futureNoteIntro,
                 style: const TextStyle(
                     fontSize: 15, height: 1.5, color: BtwColors.inkSoft)),
+            const SizedBox(height: 6),
+            // Who can read these: only them, never their professional.
+            Text(s.futureNotePrivacy(profileFor(state.patient!).providerKey),
+                style: const TextStyle(
+                    fontSize: 13.5,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: BtwColors.moss)),
             const SizedBox(height: 18),
             if (canWrite) ...[
               Container(
