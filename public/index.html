@@ -3238,13 +3238,12 @@
                 <div class="btw-mk-moodhead"><span class="btw-mk-mlabel">Mood right now</span><span class="btw-mk-moodpill" id="btwMkPill">Okay (5/10)</span></div>
                 <div class="btw-mk-moodmode" id="btwMkMoodMode"><button type="button" class="btw-mk-modebtn active" data-mode="self">I'll set it</button><button type="button" class="btw-mk-modebtn" data-mode="ai">Let Between estimate</button></div>
                 <div class="btw-mk-slider" id="btwMkSlider"><div class="fill" id="btwMkFill" style="width:44%;"></div><input type="range" min="1" max="10" step="any" value="5" id="btwMkMood" class="btw-mk-range" aria-label="Mood right now"></div>
-                <div class="btw-mk-scale"><span>Low</span><span>Great</span></div>
+                <div class="btw-mk-scale"><span id="btwMkScaleLo">Low</span><span id="btwMkScaleHi">Great</span></div>
                 <div class="btw-mk-airead"><span class="btw-mk-airead-dot"></span><span class="btw-mk-airead-label">AI reads</span> <span class="btw-mk-airead-val" id="btwMkFeeling">getting by, a mixed day</span></div>
-                <div class="btw-mk-airnote">Move the slider. Between reads how you're feeling from what you share.</div>
                 <div class="btw-mk-sub">What's going on?</div>
                 <div class="btw-mk-moodmode" id="btwMkTopicMode"><button type="button" class="btw-mk-modebtn active" data-tmode="self">I'll pick</button><button type="button" class="btw-mk-modebtn" data-tmode="ai">Not sure</button></div>
-                <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip on" data-topic="Work">Work</span><span class="btw-mk-chip on" data-topic="Sleep">Sleep</span><span class="btw-mk-chip" data-topic="Family">Family</span><span class="btw-mk-chip" data-topic="Win">Win</span></div>
-                <div class="btw-mk-airnote" id="btwMkChipsNote">Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
+                <div class="btw-mk-chips" id="btwMkChips"><span class="btw-mk-chip" data-topic="Work">Work</span><span class="btw-mk-chip" data-topic="Sleep">Sleep</span><span class="btw-mk-chip" data-topic="Family">Family</span><span class="btw-mk-chip" data-topic="Win">Win</span></div>
+                <div class="btw-mk-airnote" id="btwMkChipsNote" hidden>Tap what fits, or let Between pick up what's bothering you from your check-in.</div>
                 <div class="btw-mk-body" id="btwMkBody" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Where does it hurt or feel sore?</div>
                   <div class="btw-mk-moodmode" id="btwMkBodyViews" style="margin:6px 0 10px;flex-wrap:wrap;"><button type="button" class="btw-mk-modebtn active" data-view="front">Front</button><button type="button" class="btw-mk-modebtn" data-view="back">Back</button><button type="button" class="btw-mk-modebtn" data-view="left">Left</button><button type="button" class="btw-mk-modebtn" data-view="right">Right</button></div>
@@ -3258,7 +3257,6 @@
                       <button type="button" class="btw-mk-bodyclear" id="btwMkBodyClear">Clear</button>
                     </div>
                   </div>
-                  <div class="btw-mk-bodyhint">Tap where it hurts, slide to set how strong, then say how it feels.</div>
                 </div>
                 <div class="btw-mk-photo" id="btwMkPhoto" hidden>
                   <div class="btw-mk-sub" style="margin-top:2px;">Add a photo of the sore area</div>
@@ -8750,6 +8748,9 @@
       const wordsT = pmode ? PAIN_WORDS : WORDS;
       const readsT = pmode ? PAIN_READS : READS;
       if(mlabel) mlabel.textContent = pmode ? (fr ? 'Douleur en ce moment' : 'Pain right now') : (fr ? 'Humeur en ce moment' : 'Mood right now');
+      const sLo = document.getElementById('btwMkScaleLo'), sHi = document.getElementById('btwMkScaleHi');
+      if(sLo) sLo.textContent = pmode ? t('No pain') : t('Low');
+      if(sHi) sHi.textContent = pmode ? t('Severe') : t('Great');
       if(fill) fill.style.width = waiting ? '0%' : pct + '%';
       if(pill) pill.textContent = waiting ? (fr ? 'Between estime' : 'Between estimates') : (pick(wordsT, v) + ' (' + v + '/10)');
       // Weave any tapped topics (read live so they follow language + audience)
@@ -8765,7 +8766,9 @@
       if(chipsNote){
         chipsNote.textContent = (topicMode === 'ai')
           ? (fr ? "Pas de souci — Between choisira le sujet d'après votre suivi." : 'No problem — Between will choose the topic from your check-in.')
-          : (fr ? 'Touchez ce qui correspond, ou laissez Between le repérer.' : "Tap what fits, or let Between pick up what's bothering you.");
+          : '';
+        // Like the live check-in: no caption unless they handed the topic to Between.
+        chipsNote.hidden = (topicMode !== 'ai');
       }
       // Keep the guided questions in step with the audience and language, but
       // only rebuild when the discipline or language actually changed, so a
@@ -9149,9 +9152,19 @@
     if(flipped) px = 100 - px; // the right view mirrors the group
     const inside = zones.filter(function(z){ return btwZoneContains(z, px, py); });
     if(inside.length){ inside.sort(function(a,b){ return btwZoneArea(a) - btwZoneArea(b); }); return inside[0]; }
+    // A tap just outside a part (a fingertip's width) still counts for the
+    // part whose EDGE is nearest. A tap further out marks nothing: snapping to
+    // the nearest part's centre from far away used to mark "random" parts.
     let best = null, bestD = Infinity;
-    zones.forEach(function(z){ const c = btwZoneCenter(z); const d = (c.x-px)*(c.x-px) + (c.y-py)*(c.y-py); if(d < bestD){ bestD = d; best = z; } });
-    return (best && bestD <= 24*24) ? best : null; // ignore clicks well off the figure
+    zones.forEach(function(z){
+      const a = z.a;
+      const x0 = z.el === 'ellipse' ? a.cx - a.rx : a.x, x1 = z.el === 'ellipse' ? a.cx + a.rx : a.x + a.width;
+      const y0 = z.el === 'ellipse' ? a.cy - a.ry : a.y, y1 = z.el === 'ellipse' ? a.cy + a.ry : a.y + a.height;
+      const dx = Math.max(x0 - px, 0, px - x1), dy = Math.max(y0 - py, 0, py - y1);
+      const d = dx*dx + dy*dy;
+      if(d < bestD){ bestD = d; best = z; }
+    });
+    return (best && bestD <= 4*4) ? best : null;
   }
 
   // Decorative muscle definition drawn under the tappable regions so the figure
