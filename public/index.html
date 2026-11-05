@@ -1296,6 +1296,8 @@
   .btw-role-patient #btwNextSessionBar,
   .btw-role-patient #btwTodayRoster,
   .btw-role-patient #btwCaseDigest,
+  .btw-role-patient #btwOutcomes,
+  .btw-role-patient #btwSignature,
   .btw-role-patient #btwAlertBanner,
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
@@ -9500,6 +9502,10 @@
     ];
     window.__btwDemoBodyFromText = function(text){
       if(!text) return false;
+      // Spots the visitor tapped win: the text only fills an empty map, so
+      // sending the sample "Knee's still sore…" never adds knees on top of
+      // the spot they actually picked.
+      if(Object.keys(state).length) return false;
       const s = ' ' + String(text).toLowerCase() + ' ';
       let lvl = /sore|hurt|pain|ach|tight|stiff|strain|injur|swollen|twinge/.test(s) ? 5 : 3;
       if(/really|very| so | a lot|badly|killing|worst|sharp|can.?t/.test(s)) lvl = 8;
