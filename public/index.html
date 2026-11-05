@@ -4839,6 +4839,7 @@
     "A quick check-in whenever something comes up. Your coach will see it.":"Un court suivi dès que quelque chose survient. Votre entraîneur le verra.",
     "A quick check-in whenever something comes up. Your trainer will see it.":"Un court suivi dès que quelque chose survient. Votre entraîneur personnel le verra.",
     "A quick check-in whenever something comes up. Your nutritionist will see it.":"Un court suivi dès que quelque chose survient. Votre nutritionniste le verra.",
+    "Notes you leave for yourself stay private.":"Les notes que vous vous laissez restent privées.",
     "Cravings":"Envies","Triggers":"Déclencheurs","Meetings":"Réunions","Relationships":"Relations",
     "School":"École","Homework":"Devoirs","Tests":"Examens","Friends":"Amis","Home life":"Vie à la maison","Worry":"Inquiétude",
     "Meals":"Repas","Digestion":"Digestion","Hydration":"Hydratation","Energy":"Énergie","Snacking":"Grignotage","Habits":"Habitudes",
@@ -10284,7 +10285,9 @@
   function composeQuestion(){ return t(COMPOSE_QUESTION[composeField()] || 'How are things right now?'); }
   function composeDesc(){
     if(soloIndividual()) return t('A quick check-in whenever something comes up. It stays private to you.');
-    return t(COMPOSE_WHO_SEES[composeField()] || COMPOSE_WHO_SEES.therapy);
+    // Check-ins go to their professional; the notes they leave for a harder
+    // (or flare-up) day never do, so say there's a private place too.
+    return t(COMPOSE_WHO_SEES[composeField()] || COMPOSE_WHO_SEES.therapy) + ' ' + t('Notes you leave for yourself stay private.');
   }
 
   // Relabel the shared dashboard for whoever's signed in, a therapist sees a
@@ -10464,6 +10467,13 @@
     return rated.length ? rated[0].mood : null;
   }
   function futureRehab(){ return typeof painMode === 'function' && painMode(); }
+  // Rehab fields' professional (EN, FR with possessive), for "never sees these".
+  const REHAB_PRO = {
+    physio: ['physiotherapist', 'votre physiothérapeute'],
+    kinesiology: ['kinesiologist', 'votre kinésiologue'],
+    osteo: ['osteopath', 'votre ostéopathe'],
+    occupational: ['occupational therapist', 'votre ergothérapeute']
+  };
   let _futureKind = 'helps';
   const FUTURE_PH = {
     note: "You've gotten through this before. Remember that a walk and a good night's sleep usually turn things around…",
@@ -10482,14 +10492,24 @@
     const openBtn = document.getElementById('btwOpenFuture');
     // The button holds a label text node plus the hint div; set only the text.
     if(openBtn && openBtn.childNodes[0]) openBtn.childNodes[0].nodeValue = rehab ? t('Leave a note for a flare-up day') : t('Leave a note for a harder day');
+    // A rehab patient with a clinician is told their professional never sees
+    // these notes, like everyone else with a clinician (solo: "always").
+    const pro = (rehab && !solo) ? (REHAB_PRO[painDiscipline()] || REHAB_PRO.physio) : null;
+    const fr = curLang === 'fr';
     setTxt('btwFutureHint', rehab
-      ? t('On a good day, note what\'s been helping and what you\'re working back toward. When pain spikes, Between shows it back to you. Private to you, always.')
+      ? (pro
+        ? (fr ? 'Un bon jour, notez ce qui vous a aidé et ce vers quoi vous travaillez. Quand la douleur monte, Between vous le remontre. Privé : ' + pro[1] + ' ne les voit jamais.'
+              : 'On a good day, note what\'s been helping and what you\'re working back toward. When pain spikes, Between shows it back to you. Private to you, your ' + pro[0] + ' never sees these.')
+        : t('On a good day, note what\'s been helping and what you\'re working back toward. When pain spikes, Between shows it back to you. Private to you, always.'))
       : (solo
         ? t('Write something kind to your future self. On a low day, Between shows it back to you. Private to you, always.')
         : t('Write something kind to your future self. On a low day, Between shows it back to you. Private to you, your therapist never sees these.')));
     setTxt('btwFutureModalTitle', rehab ? t('A note for a flare-up day') : t('A note for a harder day'));
     setTxt('btwFutureModalDesc', rehab
-      ? t('On a low-pain day, jot what\'s working and where you\'re headed, the movements that ease it and what you want to get back to. When you check in on a rough day, Between shows one back to you. These are private to you, always.')
+      ? (pro
+        ? (fr ? 'Un jour où la douleur est faible, notez ce qui aide et où vous allez, les mouvements qui soulagent et ce que vous voulez retrouver. Lors d\'un jour difficile, Between vous en remontre une. Ces notes sont privées : ' + pro[1] + ' ne les voit jamais.'
+              : 'On a low-pain day, jot what\'s working and where you\'re headed, the movements that ease it and what you want to get back to. When you check in on a rough day, Between shows one back to you. These are private to you; your ' + pro[0] + ' never sees them.')
+        : t('On a low-pain day, jot what\'s working and where you\'re headed, the movements that ease it and what you want to get back to. When you check in on a rough day, Between shows one back to you. These are private to you, always.'))
       : (solo
         ? t('On a good day, leave a few words for your future self, what helps, what to remember, why you\'re doing this. When you check in on a low day, Between shows one of these back to you. These are private to you, always.')
         : t('On a good day, leave a few words for your future self, what helps, what to remember, why you\'re doing this. When you check in on a low day, Between shows one of these back to you. These are private to you; your therapist never sees them.')));
