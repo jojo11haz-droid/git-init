@@ -371,9 +371,10 @@ console.log('Checking body-map close-ups match between web and app...');
       const pubspec = readFileSync(join(root, 'patient_app', 'pubspec.yaml'), 'utf8');
       if (!/\n  assets:\n    - assets\/body\/\n/.test(pubspec)) missing.push('pubspec.yaml does not list assets/body/');
       for (const [k, d] of Object.entries(web)) {
-        for (const im of Object.values(d.img)) {
-          if (!pub.includes(im + '.webp')) missing.push('public/assets/body/' + im + '.webp');
-          if (!appAssets.includes(im + '.webp')) missing.push('patient_app/assets/body/' + im + '.webp');
+        // Every photo in both sets: male <name>.webp and female f_<name>.webp.
+        for (const im of Object.values(d.img)) for (const f of [im + '.webp', 'f_' + im + '.webp']) {
+          if (!pub.includes(f)) missing.push('public/assets/body/' + f);
+          if (!appAssets.includes(f)) missing.push('patient_app/assets/body/' + f);
         }
         for (const [v, spots] of Object.entries(d.views)) {
           if (!d.img[v]) missing.push(`${k} has points for ${v} but no photo`);
@@ -385,7 +386,7 @@ console.log('Checking body-map close-ups match between web and app...');
       }
       if (bad.length) fail('close-up points the server would drop or that sit off the photo: ' + bad.join(', '));
       else if (missing.length) fail('close-up photos missing: ' + missing.join(', '));
-      else ok(`body-map close-ups → ${Object.keys(web).length} areas, ${flat.length} entries identical on web and app; photos present on both; keys pass the server rule`);
+      else ok(`body-map close-ups → ${Object.keys(web).length} areas, ${flat.length} entries identical on web and app; man and woman photos present on both; keys pass the server rule`);
     }
   }
 }
