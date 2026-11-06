@@ -434,15 +434,18 @@ class AppState extends ChangeNotifier {
 
   Future<SendResult> sendCheckIn({
     String? text,
-    int? mood, // null = let Between estimate it from the check-in (needs AI on)
+    int? mood, // null = let Between estimate it (pain: body map's worst spot or AI; mood: AI)
     required List<String> tags,
     String? audioUploadId,
     String? photoUploadId,
     Map<String, int>? painMap,
     Map<String, String>? painSens,
     String? inputMode,
+    bool painScale = false, // the score is pain (physical rehab), not mood
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
+      // Tells the server which scale a skipped score should be estimated on.
+      'scoreKind': painScale ? 'pain' : 'mood',
       'text': text,
       if (mood != null) 'moodScore': mood,
       'manualTags': tags,

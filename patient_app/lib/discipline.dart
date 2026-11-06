@@ -16,6 +16,16 @@ class DisciplineProfile {
   final String? providerKey;
 
   bool get isBody => kind == CheckInKind.body;
+
+  /// Physical rehab (physio, kinesiology, osteopathy, occupational therapy):
+  /// the check-in score is PAIN (1 = mild, 10 = worst), not mood — same rule
+  /// as painMode() on the website.
+  bool get isPainScale => const {
+        'physio',
+        'kinesiologist',
+        'osteopath',
+        'occupational therapist',
+      }.contains(providerKey);
 }
 
 /// Physical / "muscle" disciplines (vs. mental-health ones). Used to pick

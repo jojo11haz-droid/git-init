@@ -5216,6 +5216,8 @@
     "Flagged for review":"Signalé à revoir","At risk":"À risque",
     "Not sure? Let AI estimate it":"Pas certain ? Laissez l'IA l'estimer",
     "AI will estimate your mood from your note.":"L'IA estimera votre humeur à partir de votre note.",
+    "Between will use the worst spot on your body map, or estimate your pain from your note.":"Between utilisera la zone la plus douloureuse de votre carte, ou estimera votre douleur à partir de votre note.",
+    "Between will use the worst spot you mark on the body map.":"Between utilisera la zone la plus douloureuse que vous marquez sur la carte.",
     "No mood will be recorded.":"Aucune humeur ne sera enregistrée.","set it myself":"le définir moi-même","AI est.":"est. IA",
     "You left this for yourself":"Vous avez écrit ceci pour vous-même",
     "No notes yet. The one you write will wait here for a harder day.":"Aucune note pour l'instant. Celle que vous écrivez vous attendra ici pour un jour plus difficile.",
@@ -13223,7 +13225,11 @@
       if(moodValEl) moodValEl.textContent = t('Between estimates');
       const aiOn = !!(state.patient && state.patient.ai_consent_enabled);
       note.style.display = '';
-      note.textContent = aiOn ? t('AI will estimate your mood from your note.') : t('No mood will be recorded.');
+      // Pain scale: Between takes the worst spot marked on the body map, or
+      // estimates the pain from the note (with AI on) — never a mood number.
+      note.textContent = painMode()
+        ? (aiOn ? t('Between will use the worst spot on your body map, or estimate your pain from your note.') : t('Between will use the worst spot you mark on the body map.'))
+        : (aiOn ? t('AI will estimate your mood from your note.') : t('No mood will be recorded.'));
     } else {
       renderMoodVal();
       note.style.display = 'none';
@@ -13634,9 +13640,9 @@
     set('btwMoodLow', pm ? t('No pain') : t('Low'));
     set('btwMoodHigh', pm ? t('Severe') : t('Great'));
     set('btwMoodChartTitle', pm ? t('Pain trend') : t('Mood trend'));
-    const skip = document.getElementById('btwMoodSkipRow'); if(skip) skip.style.display = pm ? 'none' : '';
-    const cmode = document.getElementById('btwComposeMoodMode'); if(cmode) cmode.style.display = pm ? 'none' : '';
-    if(pm && typeof setMoodSkipped === 'function' && moodSkipped) setMoodSkipped(false);
+    // "I'll set it / Let Between estimate" works on both scales: for pain the
+    // server uses the body map's worst spot or a pain estimate (scoreKind).
+    if(typeof setMoodSkipped === 'function' && moodSkipped) setMoodSkipped(true); // refresh the note for this scale
     if(typeof renderMoodVal === 'function') renderMoodVal();
     if(typeof renderAiRead === 'function') renderAiRead();
   }
@@ -15776,12 +15782,12 @@
       if(isPatient()){
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood'
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood'
         });
         risk = !!checkIn.risk_flag;
       }
