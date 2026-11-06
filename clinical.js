@@ -183,3 +183,33 @@ export function noteFormat({ accountType, discipline } = {}) {
   if (a === 'therapist' || a === 'mentor' || d === 'neuropsych' || (a === '' && d === '')) return 'dap';
   return 'soap';
 }
+
+// --- Time saved ---
+// Conservative estimates (minutes) of the clinician work each Between action
+// replaces, used for the "time saved" counter. Kept deliberately low so the
+// number is believable; the dashboard labels it as an estimate.
+export const TIME_SAVED_MINUTES = {
+  note: 6,          // drafting a chart note from between-visit check-ins
+  prep: 4,          // reviewing check-ins to prepare for a session
+  encourage: 3,     // writing a between-session message
+  digest: 5,        // a caseload summary instead of opening each file
+  needs_email: 5,   // the morning "who needs me" triage
+  program_item: 2,  // writing up one exercise / practice with its how-to
+  summary: 1        // a check-in already condensed instead of read raw
+};
+
+// Turn usage counts into the counter: rows with minutes, a total, and a
+// friendly "1 h 25 min" string. Unknown kinds and zero counts are dropped.
+export function timeSavedSummary(counts) {
+  const items = [];
+  let total = 0;
+  for (const [kind, mins] of Object.entries(TIME_SAVED_MINUTES)) {
+    const n = Math.max(0, Math.floor(Number((counts || {})[kind]) || 0));
+    if (!n) continue;
+    items.push({ kind, count: n, minutes: n * mins });
+    total += n * mins;
+  }
+  const h = Math.floor(total / 60), m = total % 60;
+  const label = h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
+  return { items, totalMinutes: total, label };
+}

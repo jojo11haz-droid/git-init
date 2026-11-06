@@ -48,11 +48,12 @@ import {
   createMfaChallenge, getValidMfaChallenge, deleteMfaChallenge
 } from './db.js';
 import {
+  logClinicianEvent, clinicianEventCounts,
   listExercises, addExercise, archiveExercise, listAllExercises,
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -2548,6 +2549,7 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
       accountType: req.clinician.account_type,
       checkIns
     });
+    if (result && !result.needsData) countWork(req.clinician.id, 'prep');
     res.json(result);
   } catch (err) {
     console.error('Prep brief error:', err.message);
@@ -2579,6 +2581,23 @@ app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedCl
 
 // Caseload digest: a short triage read across the whole caseload (state of the
 // week + who to see first), from the caseload signals only.
+// Record a piece of work Between did for a clinician (time-saved counter).
+// Fire-and-forget: a failed count must never break the feature itself.
+function countWork(clinicianId, kind, n = 1) {
+  if (!clinicianId) return;
+  logClinicianEvent(clinicianId, kind, n).catch(err => console.error('countWork failed:', err.message));
+}
+
+app.get('/api/clinician/time-saved', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const days = Math.min(365, Math.max(1, parseInt(req.query.days, 10) || 30));
+    res.json(Object.assign({ days }, timeSavedSummary(await clinicianEventCounts(req.clinician.id, days))));
+  } catch (err) {
+    console.error('Time saved error:', err);
+    res.status(500).json({ error: 'Could not load this just now.' });
+  }
+});
+
 // --- Hands-off mode ---
 // Who needs the clinician today, and why (computed, no AI): safety flags,
 // tingling/numbness, a worsening score, or gone quiet. Same list as the
@@ -2636,6 +2655,7 @@ app.post('/api/patients/:id/exercises', requireDb, requireAuth, requireVerifiedC
       if (ex) added.push(await addExercise(patient.id, ex));
     }
     if (!added.length) return res.status(400).json({ error: 'Give the exercise a name.' });
+    countWork(req.clinician.id, 'program_item', added.length);
     res.status(201).json({ added, exercises: await listExercises(patient.id) });
   } catch (err) {
     console.error('Add exercise error:', err);
@@ -2714,6 +2734,7 @@ app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician
       patients,
       lang
     });
+    countWork(req.clinician.id, 'digest');
     res.json(result);
   } catch (err) {
     console.error('Caseload digest error:', err.message);
@@ -2766,6 +2787,7 @@ app.get('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinici
       checkIns,
       exercises: await listAllExercises(patient.id)
     });
+    if (result && !result.needsData) countWork(req.clinician.id, 'note');
     res.json(result);
   } catch (err) {
     console.error('Draft note error:', err.message);
@@ -2788,6 +2810,7 @@ app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifi
       checkIns,
       lang
     });
+    if (result && !result.needsData) countWork(req.clinician.id, 'encourage');
     res.json(result);
   } catch (err) {
     console.error('Encouragement error:', err.message);
@@ -4570,6 +4593,7 @@ async function runNeedsDigest(base) {
           `Open your dashboard: ${base}/\n\n` +
           `— Between\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
       });
+      countWork(c.id, 'needs_email');
     } catch (err) { console.error('Needs digest email failed for a clinician:', err); }
   }
 }

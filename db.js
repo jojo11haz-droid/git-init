@@ -274,6 +274,16 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercises_done JSONB;
 -- clinician (sent only on days someone does), and the last day it went out.
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_last_sent DATE;
+-- Time-saved counter: one row per piece of work Between did for a clinician
+-- (note drafted, brief, program item, morning email…). Counts only, no content.
+CREATE TABLE IF NOT EXISTS clinician_events (
+  id BIGSERIAL PRIMARY KEY,
+  clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  n INT NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS clinician_events_idx ON clinician_events(clinician_id, created_at);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -1842,5 +1852,35 @@ export async function recentScoresForClinician(clinicianId, n = 4) {
   );
   const out = {};
   for (const r of rows) out[r.patient_id] = r.scores || [];
+  return out;
+}
+
+
+// --- Time-saved counter ---
+export async function logClinicianEvent(clinicianId, kind, n = 1) {
+  await pool.query(
+    `INSERT INTO clinician_events (clinician_id, kind, n) VALUES ($1, $2, $3)`,
+    [clinicianId, kind, Math.max(1, Math.floor(n) || 1)]
+  );
+}
+
+// Counts per kind over the last `days`, plus the check-ins Between condensed
+// (AI-summarised) for this clinician's patients in the same window.
+export async function clinicianEventCounts(clinicianId, days = 30) {
+  const { rows } = await pool.query(
+    `SELECT kind, sum(n)::int AS n FROM clinician_events
+     WHERE clinician_id = $1 AND created_at > now() - ($2 || ' days')::interval
+     GROUP BY kind`,
+    [clinicianId, String(days)]
+  );
+  const out = {};
+  for (const r of rows) out[r.kind] = r.n;
+  const { rows: s } = await pool.query(
+    `SELECT count(*)::int AS n FROM check_ins c JOIN patients p ON p.id = c.patient_id
+     WHERE p.clinician_id = $1 AND c.deleted_at IS NULL AND c.model_version IS NOT NULL
+       AND c.submitted_at > now() - ($2 || ' days')::interval`,
+    [clinicianId, String(days)]
+  );
+  out.summary = s[0] ? s[0].n : 0;
   return out;
 }
