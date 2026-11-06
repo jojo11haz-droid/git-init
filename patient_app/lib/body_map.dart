@@ -131,20 +131,59 @@ final _back = <_Region>[
   ..._shared,
 ];
 
-// The grey silhouette drawn under the regions.
-final _baseRects = <Rect>[
-  Rect.fromLTWH(45, 24, 10, 9), Rect.fromLTWH(28, 30, 44, 24),
-  Rect.fromLTWH(35, 50, 30, 24), Rect.fromLTWH(34, 70, 32, 18),
-  Rect.fromLTWH(21, 33, 11, 36), Rect.fromLTWH(68, 33, 11, 36),
-  Rect.fromLTWH(19, 64, 10, 32), Rect.fromLTWH(71, 64, 10, 32),
-  Rect.fromLTWH(35, 86, 14, 48), Rect.fromLTWH(51, 86, 14, 48),
-  Rect.fromLTWH(37, 136, 11, 48), Rect.fromLTWH(52, 136, 11, 48),
-  Rect.fromLTWH(36, 180, 12, 13), Rect.fromLTWH(52, 180, 12, 13),
-];
-final _baseOvals = <Rect>[
-  Rect.fromCircle(center: const Offset(24, 100), radius: 6), // hands
-  Rect.fromCircle(center: const Offset(76, 100), radius: 6),
-];
+// Smooth front/back body outline in the 100 x 198 map space, a man's and a
+// woman's — identical to BTW_OUTLINE on the website (checked by
+// scripts/app-tests.mjs). The head is drawn separately as an oval.
+const _outline = <String, String>{
+  'm': 'M45.6 24 C44.07 24.92 46.47 28.33 45.2 29.5 C43.93 30.67 40.7 30.45 38 31 C35.3 31.55 31.47 31.88 29 32.8 C26.53 33.72 24.57 34.63 23.2 36.5 C21.83 38.37 21.28 41.08 20.8 44 C20.32 46.92 20.47 50.67 20.3 54 C20.13 57.33 20.03 60.67 19.8 64 C19.57 67.33 19.1 70.67 18.9 74 C18.7 77.33 18.52 80.83 18.6 84 C18.68 87.17 19.4 90.5 19.4 93 C19.4 95.5 18.57 97.08 18.6 99 C18.63 100.92 18.8 103.07 19.6 104.5 C20.4 105.93 22.12 107.35 23.4 107.6 C24.68 107.85 26.3 107.27 27.3 106 C28.3 104.73 29.17 102.08 29.4 100 C29.63 97.92 28.67 96.17 28.7 93.5 C28.73 90.83 29.35 87.25 29.6 84 C29.85 80.75 29.98 77 30.2 74 C30.42 71 30.67 68.83 30.9 66 C31.13 63.17 31.38 59.83 31.6 57 C31.82 54.17 31.87 51.08 32.2 49 C32.53 46.92 32.97 44.33 33.6 44.5 C34.23 44.67 35.37 47.75 36 50 C36.63 52.25 37.07 55.33 37.4 58 C37.73 60.67 38.27 63.5 38 66 C37.73 68.5 36.37 70.67 35.8 73 C35.23 75.33 34.77 77.17 34.6 80 C34.43 82.83 34.67 86.33 34.8 90 C34.93 93.67 35.13 97.33 35.4 102 C35.67 106.67 36.1 113.67 36.4 118 C36.7 122.33 37.03 125 37.2 128 C37.37 131 37.45 133 37.4 136 C37.35 139 36.83 142 36.9 146 C36.97 150 37.42 155.67 37.8 160 C38.18 164.33 38.93 168.83 39.2 172 C39.47 175.17 39.83 176.83 39.4 179 C38.97 181.17 37.1 183.08 36.6 185 C36.1 186.92 35.92 189.17 36.4 190.5 C36.88 191.83 37.82 192.58 39.5 193 C41.18 193.42 44.98 193.5 46.5 193 C48.02 192.5 48.32 191.5 48.6 190 C48.88 188.5 48.37 186 48.2 184 C48.03 182 47.6 181.17 47.6 178 C47.6 174.83 48.07 169.67 48.2 165 C48.33 160.33 48.38 154.17 48.4 150 C48.42 145.83 48.27 143 48.3 140 C48.33 137 48.47 135.67 48.6 132 C48.73 128.33 48.97 123.33 49.1 118 C49.23 112.67 49.25 104.58 49.4 100 C49.55 95.42 49.8 90.5 50 90.5 C50.2 90.5 50.45 95.42 50.6 100 C50.75 104.58 50.77 112.67 50.9 118 C51.03 123.33 51.27 128.33 51.4 132 C51.53 135.67 51.67 137 51.7 140 C51.73 143 51.58 145.83 51.6 150 C51.62 154.17 51.67 160.33 51.8 165 C51.93 169.67 52.4 174.83 52.4 178 C52.4 181.17 51.97 182 51.8 184 C51.63 186 51.12 188.5 51.4 190 C51.68 191.5 51.98 192.5 53.5 193 C55.02 193.5 58.82 193.42 60.5 193 C62.18 192.58 63.12 191.83 63.6 190.5 C64.08 189.17 63.9 186.92 63.4 185 C62.9 183.08 61.03 181.17 60.6 179 C60.17 176.83 60.53 175.17 60.8 172 C61.07 168.83 61.82 164.33 62.2 160 C62.58 155.67 63.03 150 63.1 146 C63.17 142 62.65 139 62.6 136 C62.55 133 62.63 131 62.8 128 C62.97 125 63.3 122.33 63.6 118 C63.9 113.67 64.33 106.67 64.6 102 C64.87 97.33 65.07 93.67 65.2 90 C65.33 86.33 65.57 82.83 65.4 80 C65.23 77.17 64.77 75.33 64.2 73 C63.63 70.67 62.27 68.5 62 66 C61.73 63.5 62.27 60.67 62.6 58 C62.93 55.33 63.37 52.25 64 50 C64.63 47.75 65.77 44.67 66.4 44.5 C67.03 44.33 67.47 46.92 67.8 49 C68.13 51.08 68.18 54.17 68.4 57 C68.62 59.83 68.87 63.17 69.1 66 C69.33 68.83 69.58 71 69.8 74 C70.02 77 70.15 80.75 70.4 84 C70.65 87.25 71.27 90.83 71.3 93.5 C71.33 96.17 70.37 97.92 70.6 100 C70.83 102.08 71.7 104.73 72.7 106 C73.7 107.27 75.32 107.85 76.6 107.6 C77.88 107.35 79.6 105.93 80.4 104.5 C81.2 103.07 81.37 100.92 81.4 99 C81.43 97.08 80.6 95.5 80.6 93 C80.6 90.5 81.32 87.17 81.4 84 C81.48 80.83 81.3 77.33 81.1 74 C80.9 70.67 80.43 67.33 80.2 64 C79.97 60.67 79.87 57.33 79.7 54 C79.53 50.67 79.68 46.92 79.2 44 C78.72 41.08 78.17 38.37 76.8 36.5 C75.43 34.63 73.47 33.72 71 32.8 C68.53 31.88 64.7 31.55 62 31 C59.3 30.45 56.07 30.67 54.8 29.5 C53.53 28.33 55.93 24.92 54.4 24 C52.87 23.08 47.13 23.08 45.6 24 Z',
+  'f': 'M45.8 24 C44.33 24.92 46.62 28.25 45.4 29.5 C44.18 30.75 40.97 30.85 38.5 31.5 C36.03 32.15 32.78 32.48 30.6 33.4 C28.42 34.32 26.63 35.23 25.4 37 C24.17 38.77 23.68 41.17 23.2 44 C22.72 46.83 22.75 50.67 22.5 54 C22.25 57.33 22.05 60.67 21.7 64 C21.35 67.33 20.7 70.67 20.4 74 C20.1 77.33 19.93 80.83 19.9 84 C19.87 87.17 20.38 90.5 20.2 93 C20.02 95.5 18.87 97.08 18.8 99 C18.73 100.92 19.02 103.07 19.8 104.5 C20.58 105.93 22.23 107.35 23.5 107.6 C24.77 107.85 26.4 107.27 27.4 106 C28.4 104.73 29.2 102.08 29.5 100 C29.8 97.92 29.02 96.17 29.2 93.5 C29.38 90.83 30.23 87.25 30.6 84 C30.97 80.75 31.13 77 31.4 74 C31.67 71 31.93 68.83 32.2 66 C32.47 63.17 32.77 59.67 33 57 C33.23 54.33 33.3 51.92 33.6 50 C33.9 48.08 34.27 45.5 34.8 45.5 C35.33 45.5 36.2 48.08 36.8 50 C37.4 51.92 38 54.83 38.4 57 C38.8 59.17 39.37 60.83 39.2 63 C39.03 65.17 38.2 67.67 37.4 70 C36.6 72.33 35.1 74.33 34.4 77 C33.7 79.67 33.27 82.5 33.2 86 C33.13 89.5 33.6 93.33 34 98 C34.4 102.67 35.13 109.33 35.6 114 C36.07 118.67 36.5 122.5 36.8 126 C37.1 129.5 37.35 131.67 37.4 135 C37.45 138.33 36.98 141.83 37.1 146 C37.22 150.17 37.72 155.67 38.1 160 C38.48 164.33 39.15 168.83 39.4 172 C39.65 175.17 40 176.83 39.6 179 C39.2 181.17 37.47 183.08 37 185 C36.53 186.92 36.35 189.17 36.8 190.5 C37.25 191.83 38.1 192.58 39.7 193 C41.3 193.42 44.95 193.5 46.4 193 C47.85 192.5 48.12 191.5 48.4 190 C48.68 188.5 48.23 186 48.1 184 C47.97 182 47.6 181.17 47.6 178 C47.6 174.83 48 169.67 48.1 165 C48.2 160.33 48.2 154.17 48.2 150 C48.2 145.83 48.07 143 48.1 140 C48.13 137 48.28 135.67 48.4 132 C48.52 128.33 48.65 123.33 48.8 118 C48.95 112.67 49.1 104.5 49.3 100 C49.5 95.5 49.77 91 50 91 C50.23 91 50.5 95.5 50.7 100 C50.9 104.5 51.05 112.67 51.2 118 C51.35 123.33 51.48 128.33 51.6 132 C51.72 135.67 51.87 137 51.9 140 C51.93 143 51.8 145.83 51.8 150 C51.8 154.17 51.8 160.33 51.9 165 C52 169.67 52.4 174.83 52.4 178 C52.4 181.17 52.03 182 51.9 184 C51.77 186 51.32 188.5 51.6 190 C51.88 191.5 52.15 192.5 53.6 193 C55.05 193.5 58.7 193.42 60.3 193 C61.9 192.58 62.75 191.83 63.2 190.5 C63.65 189.17 63.47 186.92 63 185 C62.53 183.08 60.8 181.17 60.4 179 C60 176.83 60.35 175.17 60.6 172 C60.85 168.83 61.52 164.33 61.9 160 C62.28 155.67 62.78 150.17 62.9 146 C63.02 141.83 62.55 138.33 62.6 135 C62.65 131.67 62.9 129.5 63.2 126 C63.5 122.5 63.93 118.67 64.4 114 C64.87 109.33 65.6 102.67 66 98 C66.4 93.33 66.87 89.5 66.8 86 C66.73 82.5 66.3 79.67 65.6 77 C64.9 74.33 63.4 72.33 62.6 70 C61.8 67.67 60.97 65.17 60.8 63 C60.63 60.83 61.2 59.17 61.6 57 C62 54.83 62.6 51.92 63.2 50 C63.8 48.08 64.67 45.5 65.2 45.5 C65.73 45.5 66.1 48.08 66.4 50 C66.7 51.92 66.77 54.33 67 57 C67.23 59.67 67.53 63.17 67.8 66 C68.07 68.83 68.33 71 68.6 74 C68.87 77 69.03 80.75 69.4 84 C69.77 87.25 70.62 90.83 70.8 93.5 C70.98 96.17 70.2 97.92 70.5 100 C70.8 102.08 71.6 104.73 72.6 106 C73.6 107.27 75.23 107.85 76.5 107.6 C77.77 107.35 79.42 105.93 80.2 104.5 C80.98 103.07 81.27 100.92 81.2 99 C81.13 97.08 79.98 95.5 79.8 93 C79.62 90.5 80.13 87.17 80.1 84 C80.07 80.83 79.9 77.33 79.6 74 C79.3 70.67 78.65 67.33 78.3 64 C77.95 60.67 77.75 57.33 77.5 54 C77.25 50.67 77.28 46.83 76.8 44 C76.32 41.17 75.83 38.77 74.6 37 C73.37 35.23 71.58 34.32 69.4 33.4 C67.22 32.48 63.97 32.15 61.5 31.5 C59.03 30.85 55.82 30.75 54.6 29.5 C53.38 28.25 55.67 24.92 54.2 24 C52.73 23.08 47.27 23.08 45.8 24 Z',
+};
+const _headRx = <String, double>{'m': 10.5, 'f': 10};
+
+final _outlinePaths = <String, Path>{};
+
+/// Body silhouette (outline + head) for 'm' or 'f', parsed once.
+Path _silhouette(bool female) {
+  final k = female ? 'f' : 'm';
+  return _outlinePaths.putIfAbsent(k, () {
+    final p = _svgPath(_outline[k]!);
+    p.addOval(Rect.fromCenter(
+        center: const Offset(50, 15), width: _headRx[k]! * 2, height: 24));
+    return p;
+  });
+}
+
+/// Minimal SVG path reader for the outline (M, L, C and Z only).
+Path _svgPath(String d) {
+  final path = Path();
+  final tok = RegExp(r'[MLCZ]|-?\d+(?:\.\d+)?')
+      .allMatches(d)
+      .map((m) => m.group(0)!)
+      .toList();
+  var i = 0;
+  var cmd = 'M';
+  double n() => double.parse(tok[i++]);
+  while (i < tok.length) {
+    final t = tok[i];
+    if (t == 'M' || t == 'L' || t == 'C' || t == 'Z') {
+      cmd = t;
+      i++;
+      if (cmd == 'Z') path.close();
+      continue;
+    }
+    if (cmd == 'M') {
+      path.moveTo(n(), n());
+      cmd = 'L';
+    } else if (cmd == 'L') {
+      path.lineTo(n(), n());
+    } else if (cmd == 'C') {
+      path.cubicTo(n(), n(), n(), n(), n(), n());
+    } else {
+      i++;
+    }
+  }
+  return path;
+}
 
 // ---------------------------------------------------------------------------
 // Zoomed close-ups for the main rehab areas — mirrors BTW_DETAIL on the web
@@ -477,7 +516,11 @@ class _BodyMapState extends State<BodyMap> {
       }
     }
     final res = await _pickLevel(region, zoom, sub);
-    if (res == null || !mounted) return;
+    if (!mounted) return;
+    if (res == null) {
+      setState(() {}); // the Man / Woman switch may have changed in the sheet
+      return;
+    }
     final key = res.key;
     setState(() {
       final from = res.moveFrom;
@@ -866,6 +909,10 @@ class _BodyMapState extends State<BodyMap> {
         Row(children: [
           _viewBtn('front', widget.isFr ? 'Avant' : 'Front'),
           _viewBtn('back', widget.isFr ? 'Arrière' : 'Back'),
+          const Spacer(),
+          // Man / Woman: the figure's outline and the close-up photos.
+          _sexBtn(false, widget.isFr ? 'Homme' : 'Man'),
+          _sexBtn(true, widget.isFr ? 'Femme' : 'Woman'),
         ]),
         const SizedBox(height: 12),
         Center(
@@ -879,6 +926,7 @@ class _BodyMapState extends State<BodyMap> {
                   regions: _regions,
                   levels: _levelsFor(_map, _view),
                   scale: _w / 100.0,
+                  female: _female,
                 ),
               ),
             ),
@@ -887,7 +935,37 @@ class _BodyMapState extends State<BodyMap> {
         const SizedBox(height: 10),
         Text(_summary(),
             style: const TextStyle(fontSize: 13, color: BtwColors.inkSoft)),
+        const SizedBox(height: 6),
+        Text(
+          widget.isFr
+              ? 'Astuce : touchez un genou, une épaule, une cheville ou une main pour zoomer et choisir le point exact.'
+              : 'Tip: tap a knee, shoulder, ankle or hand to zoom in and pick the exact spot.',
+          style: const TextStyle(fontSize: 12, color: BtwColors.inkSoft),
+        ),
       ],
+    );
+  }
+
+  Widget _sexBtn(bool female, String label) {
+    final sel = _female == female;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: GestureDetector(
+        onTap: () => setState(() => _setFemale(female)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          decoration: BoxDecoration(
+            color: sel ? BtwColors.moss : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: sel ? BtwColors.moss : BtwColors.line),
+          ),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: sel ? Colors.white : BtwColors.inkSoft)),
+        ),
+      ),
     );
   }
 }
@@ -910,6 +988,7 @@ class BodyMapView extends StatelessWidget {
           regions: regions,
           levels: _levelsFor(map, view),
           scale: width / 100.0,
+          female: _BodyMapState._female,
         ),
       ),
     );
@@ -948,26 +1027,28 @@ String regionLabel(String key, bool isFr) {
 
 class _BodyPainter extends CustomPainter {
   _BodyPainter(
-      {required this.regions, required this.levels, required this.scale});
+      {required this.regions,
+      required this.levels,
+      required this.scale,
+      this.female = false});
   final List<_Region> regions;
   final Map<String, int> levels; // region id -> level, for the current view
   final double scale;
+  final bool female; // a woman's outline instead of a man's
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(scale);
-    final grey = Paint()..color = _bodyGrey;
-    for (final r in _baseRects) {
-      canvas.drawRRect(
-          RRect.fromRectAndRadius(r, const Radius.circular(5)), grey);
-    }
-    for (final o in _baseOvals) {
-      canvas.drawOval(o, grey);
-    }
-    // Head (taller oval).
-    canvas.drawOval(
-        Rect.fromCenter(center: const Offset(50, 15), width: 21, height: 24),
-        grey);
+    final body = _silhouette(female);
+    canvas.drawPath(body, Paint()..color = _bodyGrey);
+    canvas.drawPath(
+        body,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5
+          ..color = const Color(0xFFB9BFCA));
+    // Pain colours are trimmed to the body so they read as body areas.
+    canvas.clipPath(body);
     for (final reg in regions) {
       final lv = levels[reg.id] ?? 0;
       if (lv <= 0) continue;
@@ -983,5 +1064,5 @@ class _BodyPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BodyPainter old) =>
-      old.levels != levels || old.regions != regions;
+      old.levels != levels || old.regions != regions || old.female != female;
 }
