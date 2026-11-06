@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'theme.dart';
 
@@ -451,10 +452,35 @@ class _PickResult {
 
 class _BodyMapState extends State<BodyMap> {
   final Map<String, int> _map = {}; // "view:region" -> 1..10
-  // Which body the figure and close-up photos show. The Man / Woman switch
-  // is off for now, so everyone sees the man's set; the woman's outline and
-  // f_*.webp photos stay in place for when it comes back.
-  static const bool _female = false;
+  // Close-up photo set: the patient's choice of a man's or a woman's body,
+  // remembered on the device (same key as the website's localStorage).
+  static bool _female = false;
+  static const _sexKey = 'btw_body_sex';
+  static const _store = FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSex();
+  }
+
+  Future<void> _loadSex() async {
+    try {
+      final v = await _store.read(key: _sexKey);
+      if (v != null && mounted) setState(() => _female = v == 'f');
+    } catch (_) {}
+  }
+
+  void _setFemale(bool f) {
+    _female = f;
+    _saveSex(f);
+  }
+
+  Future<void> _saveSex(bool f) async {
+    try {
+      await _store.write(key: _sexKey, value: f ? 'f' : 'm');
+    } catch (_) {}
+  }
   final Map<String, String> _sens = {}; // "view:region" -> sensation code
   String _view = 'front';
   static const double _w = 190; // on-screen width; height keeps 100:198 ratio
@@ -490,7 +516,11 @@ class _BodyMapState extends State<BodyMap> {
       }
     }
     final res = await _pickLevel(region, zoom, sub);
-    if (res == null || !mounted) return;
+    if (!mounted) return;
+    if (res == null) {
+      setState(() {}); // the Man / Woman switch may have changed in the sheet
+      return;
+    }
     final key = res.key;
     setState(() {
       final from = res.moveFrom;
@@ -627,12 +657,24 @@ class _BodyMapState extends State<BodyMap> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (zoom != null) ...[
-                  Text(
-                    partName.isEmpty
-                        ? partName
-                        : partName[0].toUpperCase() + partName.substring(1),
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          partName.isEmpty
+                              ? partName
+                              : partName[0].toUpperCase() +
+                                  partName.substring(1),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      chip(isFr ? 'Homme' : 'Man', !_female,
+                          () => setSheet(() => _setFemale(false))),
+                      const SizedBox(width: 6),
+                      chip(isFr ? 'Femme' : 'Woman', _female,
+                          () => setSheet(() => _setFemale(true))),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -867,6 +909,10 @@ class _BodyMapState extends State<BodyMap> {
         Row(children: [
           _viewBtn('front', widget.isFr ? 'Avant' : 'Front'),
           _viewBtn('back', widget.isFr ? 'Arrière' : 'Back'),
+          const Spacer(),
+          // Man / Woman: the figure's outline and the close-up photos.
+          _sexBtn(false, widget.isFr ? 'Homme' : 'Man'),
+          _sexBtn(true, widget.isFr ? 'Femme' : 'Woman'),
         ]),
         const SizedBox(height: 12),
         Center(
@@ -897,6 +943,29 @@ class _BodyMapState extends State<BodyMap> {
           style: const TextStyle(fontSize: 12, color: BtwColors.inkSoft),
         ),
       ],
+    );
+  }
+
+  Widget _sexBtn(bool female, String label) {
+    final sel = _female == female;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: GestureDetector(
+        onTap: () => setState(() => _setFemale(female)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          decoration: BoxDecoration(
+            color: sel ? BtwColors.moss : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: sel ? BtwColors.moss : BtwColors.line),
+          ),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: sel ? Colors.white : BtwColors.inkSoft)),
+        ),
+      ),
     );
   }
 }
