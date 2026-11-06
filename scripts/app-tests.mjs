@@ -410,7 +410,18 @@ console.log('Checking the body outline matches between web and app...');
   if (!w.m || !w.f || !a.m || !a.f || !wh || !ah) fail('body outline not found on web or in app');
   else if (w.m !== a.m || w.f !== a.f) fail('body outline differs between web and app');
   else if (+wh[1] !== +ah[1] || +wh[2] !== +ah[2]) fail('head size differs between web and app');
-  else ok('body outline → man and woman silhouettes identical on web and app');
+  else {
+    // The woman's hair (front/back) must match too.
+    const hw = {}, ha = {};
+    for (const v of ['front', 'back']) {
+      const m1 = html.match(new RegExp(`\n    ${v}: '(M[^']+)'`));
+      const m2 = dart.match(new RegExp(`\n  '${v}': '(M[^']+)'`));
+      hw[v] = m1 && m1[1]; ha[v] = m2 && m2[1];
+    }
+    if (!hw.front || !hw.back || !ha.front || !ha.back) fail('woman\'s hair not found on web or in app');
+    else if (hw.front !== ha.front || hw.back !== ha.back) fail('woman\'s hair differs between web and app');
+    else ok('body outline → man and woman silhouettes (and her hair) identical on web and app');
+  }
 }
 
 if (failures) { console.error('\n' + failures + ' app test(s) failed.'); process.exit(1); }
