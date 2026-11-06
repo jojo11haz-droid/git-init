@@ -9127,6 +9127,14 @@
   // Arm bent forward and away from the body (reaching down-forward) so it reads
   // as a separate raised limb and the whole front torso — chest and abs — shows.
   const BTW_SIDE_ARM_D = 'M50 33 C53 35 52 40 48 43 C43 47 37 52 32 58 C28 62 25 66 23 70 C22 73 25 74 28 72 C33 67 38 62 43 56 C47 52 50 47 51 42 C53 39 52 34 50 33 Z';
+  // A woman's profile: bust, narrower waist, rounder hips and seat. Same
+  // regions and head; only the silhouette changes.
+  const BTW_SIDE_BODY_F = 'M55 26 C57.5 30 59.5 33 59.5 37 C60 41 60 46 60 51 C60 56 58.6 60 58.8 64 C59.2 68 62.5 71.5 63.8 76.5 C64.8 81.5 63 86 59.5 88.5 C58 101 58 118 57 130 C56 137 59 145 60 153 C60 166 56 172 55 178 C55 184 56 188 57 191 L58 194 L31 195 L31 189 C36 186 42 185 45 183 C46 170 46 150 46 140 C46 137 47 135 47 132 C46 120 43 105 43 92 C43 87 42 81 41.6 75 C41.2 69 41.4 63 41.4 58 C41.4 53.5 38 51.5 36.6 47.5 C35.4 43.5 37 38 42 34 C44 32 45 31 46 28 C49 26 52 26 55 26 Z';
+  const BTW_SIDE_BASE_F = [
+    {el:'path', a:{d:BTW_SIDE_BODY_F}},
+    {el:'ellipse', a:{cx:50,cy:14,rx:10.5,ry:12}},
+    {el:'path', a:{d:BTW_SIDE_ARM_D}}
+  ];
   const BTW_SIDE_BASE = [
     {el:'path', a:{d:'M55 26 C58 30 60 33 60 37 C61 41 61 46 61 51 C61 57 60 60 60 64 C60 68 61 72 62 76 C63 80 62 84 59 87 C58 101 58 118 57 130 C56 137 59 145 60 153 C60 166 56 172 55 178 C55 184 56 188 57 191 L58 194 L31 195 L31 189 C36 186 42 185 45 183 C46 170 46 150 46 140 C46 137 47 135 47 132 C46 120 43 105 43 92 C43 87 42 81 41 75 C40 69 39 64 39 57 C39 50 38 46 38 43 C38 39 39 36 42 34 C44 32 45 31 46 28 C49 26 52 26 55 26 Z'}},   // neck + torso + legs
     {el:'ellipse', a:{cx:50,cy:14,rx:11,ry:12}},   // head — plain circle, no face
@@ -9393,9 +9401,13 @@
   const BTW_ART_FRONT_F = BTW_ART_FRONT
     .replace('<path class="fillmus" d="M49 35 C42 34 35 36 32 41 C33 46 38 50 45 49 C48 48 49 43 49 37 Z"/>', '<path d="M48 45 C45 50 38 50 35 46"/>')
     .replace('<line x1="47" y1="38" x2="38" y2="41"/><line x1="47" y1="41" x2="36" y2="45"/><line x1="47" y1="45" x2="39" y2="48"/>', '');
+  // Woman's profile: a bust line instead of the pec mass.
+  const BTW_ART_SIDE_TORSO_F = BTW_ART_SIDE_TORSO
+    .replace('<path class="fillmus" d="M40 35 C39 41 41 47 45 49 C48 46 48 40 46 36 C44 35 42 35 40 35 Z"/>', '<path d="M37.4 47.5 C39.5 50.5 42.5 50.5 44.5 48.5"/>')
+    .replace('<path d="M40 51 C39 58 39 65 41 71"/>', '<path d="M42 52 C41.6 58 41.6 65 42.4 71"/>');
   function btwMuscleArt(v, sex){
     if(btwIsSide(v)){
-      return '<g class="btw-bz-art">' + BTW_ART_SIDE_TORSO +
+      return '<g class="btw-bz-art">' + (sex === 'f' ? BTW_ART_SIDE_TORSO_F : BTW_ART_SIDE_TORSO) +
         '<path class="btw-bz-base" d="' + BTW_SIDE_ARM_D + '"/>' +   // re-cover the arm to hide torso lines behind it
         BTW_ART_SIDE_ARM + BTW_ART_SIDE_LEG + '</g>';
     }
@@ -9554,7 +9566,7 @@
       const list = REGIONS[v].slice(0, -1);
       return list.map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
-    function baseFor(v){ return btwIsSide(v) ? BTW_SIDE_BASE : BASE; }
+    function baseFor(v){ return btwIsSide(v) ? (btwBodySex === 'f' ? BTW_SIDE_BASE_F : BTW_SIDE_BASE) : BASE; }
     let view = 'front';
     const state = {}; // (view + ':' + id) -> 0..10
     const sens = {};  // (view + ':' + id) -> sensation code
@@ -9850,7 +9862,7 @@
       const meta = REGIONS[v][REGIONS[v].length - 1];
       return REGIONS[v].slice(0, -1).map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
-    function baseFor(v){ return btwIsSide(v) ? BTW_SIDE_BASE : BASE; }
+    function baseFor(v){ return btwIsSide(v) ? (btwBodySex === 'f' ? BTW_SIDE_BASE_F : BTW_SIDE_BASE) : BASE; }
     function frL(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     btwCreateBodyMap._n = (btwCreateBodyMap._n || 0) + 1;
