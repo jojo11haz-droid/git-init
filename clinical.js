@@ -162,3 +162,24 @@ export function sanitizeExercise(raw) {
   if (!name) return null;
   return { name, description: clip(raw.description, 400) || null, dosage: clip(raw.dosage, 80) || null };
 }
+
+// What the "between-session program" is called and holds, per profession:
+// exercises for physical/training fields, practices (homework) for mental
+// health, habits for nutrition, daily practices for recovery, strategies for
+// schools. Drives labels, the AI suggestions and the chart note's plan line.
+export function programKind({ accountType, discipline } = {}) {
+  const d = discipline || '', a = accountType || '';
+  if (PAIN_DISCIPLINES.includes(d) || d === 'sports' || a === 'trainer') return 'exercise';
+  if (d === 'nutrition') return 'habit';
+  if (a === 'mentor') return 'recovery';
+  if (a === 'school') return 'school';
+  return 'practice'; // psychotherapy, neuropsychology, anything else
+}
+
+// Chart-note format per profession: DAP (Data / Assessment / Plan) for the
+// mental-health fields that chart that way, SOAP for physical and coaching.
+export function noteFormat({ accountType, discipline } = {}) {
+  const d = discipline || '', a = accountType || '';
+  if (a === 'therapist' || a === 'mentor' || d === 'neuropsych' || (a === '' && d === '')) return 'dap';
+  return 'soap';
+}

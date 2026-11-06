@@ -339,6 +339,15 @@ class S {
   // Home exercise program (assigned by the clinician) — mirrors the website.
   String get homeExercises =>
       _('Your home exercises', 'Vos exercices à domicile');
+  // The same checklist, named for the field (mirrors the website).
+  String get practiceBetween => _('Your practice between sessions',
+      'Votre pratique entre les séances');
+  String get habitsToPractise =>
+      _('Your habits to practise', 'Vos habitudes à pratiquer');
+  String get dailyPractices =>
+      _('Your daily practices', 'Vos pratiques quotidiennes');
+  String get strategiesToPractise =>
+      _('Your strategies to practise', 'Vos stratégies à pratiquer');
   String get tickWhatYouDid => _('Tick what you did since your last check-in.',
       'Cochez ce que vous avez fait depuis votre dernier suivi.');
   // Pain scale (physio, kinesiology, osteopathy, OT) — mirrors the website.

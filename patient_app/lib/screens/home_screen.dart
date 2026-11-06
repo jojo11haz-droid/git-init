@@ -110,6 +110,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // The checklist's title for the field (mirrors the website's wording).
+  String _programTitle(S s, DisciplineProfile p) {
+    switch (p.kind) {
+      case CheckInKind.body:
+        return s.homeExercises;
+      case CheckInKind.nutrition:
+        return s.habitsToPractise;
+      case CheckInKind.recovery:
+        return s.dailyPractices;
+      case CheckInKind.school:
+        return s.strategiesToPractise;
+      case CheckInKind.mind:
+      case CheckInKind.neuro:
+        return s.practiceBetween;
+    }
+  }
+
   Widget _exerciseTile(HomeExercise e) {
     final on = _exDone.contains(e.id);
     final desc = e.description;
@@ -843,6 +860,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ],
                   const SizedBox(height: 16),
+                  // Between-session program from the clinician (exercises,
+                  // practices, habits…): tick what you did. Every profession.
+                  if (_exercises.isNotEmpty) ...[
+                    Text(_programTitle(s, profile),
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(s.tickWhatYouDid,
+                        style: const TextStyle(
+                            fontSize: 12.5, color: BtwColors.inkSoft)),
+                    const SizedBox(height: 8),
+                    for (final e in _exercises) _exerciseTile(e),
+                    const SizedBox(height: 12),
+                  ],
                   // Physical disciplines: a tap-where-it-hurts body map.
                   if (profile.isBody) ...[
                     Text(s.whereHurts,
@@ -855,19 +886,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onSensChanged: (m) => _painSens = m,
                     ),
                     const SizedBox(height: 16),
-                    // Home exercise program: tick what you did.
-                    if (_exercises.isNotEmpty) ...[
-                      Text(s.homeExercises,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
-                      Text(s.tickWhatYouDid,
-                          style: const TextStyle(
-                              fontSize: 12.5, color: BtwColors.inkSoft)),
-                      const SizedBox(height: 8),
-                      for (final e in _exercises) _exerciseTile(e),
-                      const SizedBox(height: 12),
-                    ],
+
                     // Optional photo of the sore area.
                     if (_photoBytes == null)
                       OutlinedButton.icon(
