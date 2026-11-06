@@ -471,6 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
             painSens: _painSens.isEmpty ? null : _painSens,
             inputMode: inputMode,
             painScale: _painScale,
+            bodySex: _painMap.isEmpty ? null : bodyMapSex(),
           );
       if (!mounted) return;
       _text.clear();

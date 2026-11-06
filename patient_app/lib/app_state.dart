@@ -99,6 +99,12 @@ class CheckIn {
     }
     return null;
   }
+  // Which body figure the pain map was drawn on: 'm' | 'f', or null (older).
+  String? get bodySex {
+    final v = raw['body_sex'];
+    return (v == 'm' || v == 'f') ? v as String : null;
+  }
+
   // How each sore spot feels: { "view:region": sensation code }, or null.
   Map<String, String>? get painSens {
     final ps = raw['pain_sensations'];
@@ -441,6 +447,7 @@ class AppState extends ChangeNotifier {
     Map<String, String>? painSens,
     String? inputMode,
     bool painScale = false, // the score is pain (physical rehab), not mood
+    String? bodySex, // 'm' | 'f': the figure the pain map was drawn on
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       // Tells the server which scale a skipped score should be estimated on.
@@ -452,6 +459,9 @@ class AppState extends ChangeNotifier {
       if (photoUploadId != null) 'photoUploadId': photoUploadId,
       if (painMap != null && painMap.isNotEmpty) 'painMap': painMap,
       if (painSens != null && painSens.isNotEmpty) 'painSens': painSens,
+      // So the clinician sees the spots on the same figure.
+      if (painMap != null && painMap.isNotEmpty && bodySex != null)
+        'bodySex': bodySex,
       if (inputMode != null) 'inputMode': inputMode,
     });
     final map = (data as Map).cast<String, dynamic>();

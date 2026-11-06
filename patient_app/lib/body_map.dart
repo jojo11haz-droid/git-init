@@ -981,11 +981,18 @@ class _BodyMapState extends State<BodyMap> {
 
 /// Read-only body figure(s) coloured by a pain map — reuses the same painter
 /// and regions as the interactive map. Shows front and back side by side.
+/// The body figure the patient is drawing on right now ('m' | 'f'), sent
+/// with a check-in so the clinician sees the spots on the same figure.
+String bodyMapSex() => _BodyMapState._female ? 'f' : 'm';
+
 class BodyMapView extends StatelessWidget {
-  const BodyMapView({super.key, required this.map, this.width = 108});
+  const BodyMapView(
+      {super.key, required this.map, this.width = 108, this.sex});
 
   final Map<String, int> map; // "view:region" -> level
   final double width;
+  // The figure a check-in was drawn on ('m' | 'f'); null = current choice.
+  final String? sex;
 
   Widget _figure(String view, List<_Region> regions) {
     final h = width * 198 / 100;
@@ -997,7 +1004,7 @@ class BodyMapView extends StatelessWidget {
           regions: regions,
           levels: _levelsFor(map, view),
           scale: width / 100.0,
-          female: _BodyMapState._female,
+          female: sex != null ? sex == 'f' : _BodyMapState._female,
           view: view,
         ),
       ),
