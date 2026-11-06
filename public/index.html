@@ -1467,7 +1467,11 @@
   /* Zoomed close-up of a joint so the patient can pin the exact spot. */
   .btw-pain-zoom{margin-top:12px;max-width:200px;padding:10px;border:1px solid var(--line,#dcd7cd);border-radius:12px;background:var(--paper,#faf8f3);}
   .btw-pain-zoom[hidden]{display:none;}
-  .btw-pain-zoom-t{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+  .btw-pain-zoom-h{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;}
+  .btw-pain-zoom-t{font-size:11.5px;font-weight:700;color:var(--ink);}
+  .btw-pz-sexes{display:inline-flex;border:1px solid var(--line,#dcd7cd);border-radius:999px;overflow:hidden;flex-shrink:0;}
+  .btw-pz-sex{background:var(--card,#fff);color:var(--ink-soft);border:0;padding:2px 8px;font-family:var(--font-body);font-size:10.5px;font-weight:600;cursor:pointer;}
+  .btw-pz-sex.on{background:var(--moss);color:#fff;}
   .btw-pain-zoom-s{font-size:10.5px;color:var(--ink-soft);margin-bottom:6px;line-height:1.35;}
   .btw-pain-zoom-fig{width:160px;max-width:100%;margin:0 auto 9px;}
   .btw-pz-pic{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#F5F4F1;cursor:pointer;}
@@ -9276,13 +9280,19 @@
   // The close-up for a main-figure part in a view, or null when the part has
   // no detail there: { img, flip, spots:[{id,en,fr,x,y}] }. A right-side part
   // shows the left photo mirrored (flip).
+  // Which photo set the close-up shows: 'm' or 'f' (the patient's choice,
+  // remembered on this device). Female photos are f_<name>.webp, framed the
+  // same as the male ones so the points line up on both.
+  let btwBodySex = 'm';
+  try { if(localStorage.getItem('btw_body_sex') === 'f') btwBodySex = 'f'; } catch(e){}
+  function btwSetBodySex(v){ btwBodySex = (v === 'f') ? 'f' : 'm'; try { localStorage.setItem('btw_body_sex', btwBodySex); } catch(e){} }
   function btwDetailFor(view, zoneId){
     if(view !== 'front' && view !== 'back') return null;
     const m = /^([lr])_(.+)$/.exec(zoneId);
     const d = BTW_DETAIL[m ? m[2] : zoneId];
     if(!d || !!m !== d.sided || !d.views[view]) return null;
     return {
-      img: '/assets/body/' + d.img[view] + '.webp', flip: !!(m && m[1] === 'r'),
+      img: '/assets/body/' + (btwBodySex === 'f' ? 'f_' : '') + d.img[view] + '.webp', flip: !!(m && m[1] === 'r'),
       spots: d.views[view].map(function(x){ return { id:x[0], en:x[1], fr:x[2], x:x[3], y:x[4] }; })
     };
   }
@@ -9949,11 +9959,13 @@
             + ' style="left:' + s.x + '%;top:' + s.y + '%' + (lv ? ';--dc:' + FILL[lv] : '') + '"'
             + ' aria-label="' + esc(frL() ? s.fr : s.en) + '" title="' + esc(frL() ? s.fr : s.en) + '"></button>';
         }).join('');
-        zoom.innerHTML = '<div class="btw-pain-zoom-t"></div><div class="btw-pain-zoom-s"></div>'
+        const sexBtn = function(v, en, fr){ return '<button type="button" class="btw-pz-sex' + (btwBodySex === v ? ' on' : '') + '" data-sex="' + v + '" aria-pressed="' + (btwBodySex === v) + '">' + esc(frL() ? fr : en) + '</button>'; };
+        zoom.innerHTML = '<div class="btw-pain-zoom-h"><div class="btw-pain-zoom-t"></div><div class="btw-pz-sexes" role="group" aria-label="' + esc(frL() ? 'Photo' : 'Photo') + '">' + sexBtn('m', 'Man', 'Homme') + sexBtn('f', 'Woman', 'Femme') + '</div></div><div class="btw-pain-zoom-s"></div>'
           + '<div class="btw-pain-zoom-fig"><div class="btw-pz-pic' + (d.flip ? ' flip' : '') + '"><img src="' + d.img + '" alt="" draggable="false">' + dots + '</div></div>'
           + '<div class="btw-pain-sens-chips"></div>';
         zoom.querySelector('.btw-pain-zoom-t').textContent = pl.charAt(0).toUpperCase() + pl.slice(1);
         zoom.querySelector('.btw-pain-zoom-s').textContent = frL() ? 'Touchez le point exact (facultatif).' : 'Tap the exact point (optional).';
+        zoom.querySelectorAll('.btw-pz-sex').forEach(function(b){ b.addEventListener('click', function(){ btwSetBodySex(b.getAttribute('data-sex')); renderZoom(); }); });
         const chips = zoom.querySelector('.btw-pain-sens-chips');
         [{ id:null, en:'Whole area', fr:'Toute la zone' }].concat(d.spots).forEach(function(s){
           const k = s.id ? partKey + '_' + s.id : partKey;

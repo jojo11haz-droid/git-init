@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'theme.dart';
 
@@ -346,7 +347,10 @@ class _Zoom {
   final String view;
   final bool flip; // right-side part: the left photo mirrored
   List<_Dot> get spots => detail.views[view] ?? const [];
-  String get asset => 'assets/body/${detail.img[view]}.webp';
+  // Female photos are f_<name>.webp, framed like the male ones so the
+  // points line up on both.
+  String asset(bool female) =>
+      'assets/body/${female ? 'f_' : ''}${detail.img[view]}.webp';
 }
 
 _Zoom? _zoomFor(String view, String part) {
@@ -409,6 +413,35 @@ class _PickResult {
 
 class _BodyMapState extends State<BodyMap> {
   final Map<String, int> _map = {}; // "view:region" -> 1..10
+  // Close-up photo set: the patient's choice of a man's or a woman's body,
+  // remembered on the device (same key as the website's localStorage).
+  static bool _female = false;
+  static const _sexKey = 'btw_body_sex';
+  static const _store = FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSex();
+  }
+
+  Future<void> _loadSex() async {
+    try {
+      final v = await _store.read(key: _sexKey);
+      if (v != null && mounted) setState(() => _female = v == 'f');
+    } catch (_) {}
+  }
+
+  void _setFemale(bool f) {
+    _female = f;
+    _saveSex(f);
+  }
+
+  Future<void> _saveSex(bool f) async {
+    try {
+      await _store.write(key: _sexKey, value: f ? 'f' : 'm');
+    } catch (_) {}
+  }
   final Map<String, String> _sens = {}; // "view:region" -> sensation code
   String _view = 'front';
   static const double _w = 190; // on-screen width; height keeps 100:198 ratio
@@ -581,12 +614,24 @@ class _BodyMapState extends State<BodyMap> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (zoom != null) ...[
-                  Text(
-                    partName.isEmpty
-                        ? partName
-                        : partName[0].toUpperCase() + partName.substring(1),
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          partName.isEmpty
+                              ? partName
+                              : partName[0].toUpperCase() +
+                                  partName.substring(1),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      chip(isFr ? 'Homme' : 'Man', !_female,
+                          () => setSheet(() => _setFemale(false))),
+                      const SizedBox(width: 6),
+                      chip(isFr ? 'Femme' : 'Woman', _female,
+                          () => setSheet(() => _setFemale(true))),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -611,7 +656,7 @@ class _BodyMapState extends State<BodyMap> {
                             Positioned.fill(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(zoom.asset,
+                                child: Image.asset(zoom.asset(_female),
                                     fit: BoxFit.cover),
                               ),
                             ),
