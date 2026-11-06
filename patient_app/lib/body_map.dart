@@ -146,233 +146,193 @@ final _baseOvals = <Rect>[
 ];
 
 // ---------------------------------------------------------------------------
-// Zoomed close-ups for the main rehab areas — mirrors BTW_DETAIL on the web.
-// Tapping a knee, shoulder, ankle… opens a drawing of just that part so the
-// patient can pin the exact spot ("inner side of the left knee"). A sub-spot
-// is stored as "view:part_sub" (e.g. "front:l_knee_cap") next to the plain
-// whole-part key. Close-up space is 100 x 100; sided parts are drawn as the
-// LEFT part (midline to the right, so "inner" sits right) and mirrored for
-// the right part.
+// Zoomed close-ups for the main rehab areas — mirrors BTW_DETAIL on the web
+// (kept identical by scripts/app-tests.mjs). Tapping a knee, shoulder,
+// ankle… opens a photo of just that part with a point on each precise spot
+// ("inner side of the left knee"). A spot is stored as "view:part_sub"
+// (e.g. "front:l_knee_cap") next to the plain whole-part key. Points are in
+// percent of the square photo; photos show the LEFT part (midline to the
+// right, so "inner" sits right) and are mirrored for the right part.
 
-class _Detail {
-  const _Detail({
-    required this.sided,
-    required this.outline,
-    required this.art,
-    required this.views,
-  });
-  final bool sided;
-  final String outline; // SVG path (M/L/C/Z) of the part's silhouette
-  final Map<String, String> art; // view -> light anatomy lines
-  final Map<String, List<_Region>> views; // view -> tappable sub-spots
+class _Dot {
+  const _Dot(this.id, this.en, this.fr, this.x, this.y);
+  final String id, en, fr;
+  final double x, y; // percent of the photo
 }
 
-final _detail = <String, _Detail>{
+class _Detail {
+  const _Detail({required this.sided, required this.img, required this.views});
+  final bool sided;
+  final Map<String, String> img; // view -> photo name in assets/body/
+  final Map<String, List<_Dot>> views; // view -> tappable points
+}
+
+const _detail = <String, _Detail>{
   'knee': _Detail(
     sided: true,
-    outline: 'M30 0 L70 0 C71 20 72 32 70 48 C69 60 66 72 64 100 L36 100 C34 72 31 60 30 48 C28 32 29 20 30 0 Z',
-    art: {
-      'front': 'M50 33 C57 33 61 39 61 45 C61 52 57 57 50 57 C43 57 39 52 39 45 C39 39 43 33 50 33 Z M46 58 L47 68 M54 58 L53 68 M40 4 C42 18 44 26 45 33 M60 4 C58 18 56 26 55 33',
-      'back': 'M36 8 C38 24 40 34 42 40 M64 8 C62 24 60 34 58 40 M38 48 C46 52 54 52 62 48 M42 60 C40 72 40 86 44 98 M58 60 C60 72 60 86 56 98',
-    },
+    img: {'front': 'knee_front', 'back': 'knee_back'},
     views: {
       'front': [
-        _Region('above', 'above the kneecap', 'au-dessus de la rotule', 34, 6, 32, 20),
-        _ell('cap', 'kneecap', 'rotule', 50, 45, 13, 14),
-        _Region('below', 'below the kneecap', 'sous la rotule', 38, 64, 24, 20),
-        _Region('outer', 'outer side', 'côté externe', 30, 30, 9, 34),
-        _Region('inner', 'inner side', 'côté interne', 61, 30, 9, 34),
+        _Dot('above', 'above the kneecap', 'au-dessus de la rotule', 50, 26),
+        _Dot('cap', 'kneecap', 'rotule', 49, 46),
+        _Dot('below', 'below the kneecap', 'sous la rotule', 50, 70),
+        _Dot('outer', 'outer side', 'côté externe', 32, 52),
+        _Dot('inner', 'inner side', 'côté interne', 67, 52),
       ],
       'back': [
-        _ell('hollow', 'centre', 'centre', 50, 46, 12, 16),
-        _Region('outer', 'outer side', 'côté externe', 30, 28, 10, 36),
-        _Region('inner', 'inner side', 'côté interne', 60, 28, 10, 36),
-        _Region('calf', 'top of the calf', 'haut du mollet', 38, 70, 24, 24),
+        _Dot('hollow', 'centre', 'centre', 50, 54),
+        _Dot('outer', 'outer side', 'côté externe', 37, 50),
+        _Dot('inner', 'inner side', 'côté interne', 63, 50),
+        _Dot('calf', 'top of the calf', 'haut du mollet', 50, 80),
       ],
     },
   ),
   'shoulder': _Detail(
     sided: true,
-    outline: 'M100 22 C80 20 60 17 42 21 C26 25 14 40 14 60 L14 100 L44 100 L46 78 C56 86 72 90 100 90 Z',
-    art: {
-      'front': 'M18 52 C24 36 40 30 56 33 C60 44 56 62 44 74 M58 37 C70 34 84 38 98 36 M64 46 C72 52 82 56 96 56',
-      'back': 'M18 52 C24 36 40 30 56 33 C60 44 56 62 44 74 M60 44 L88 40 M62 40 L88 44 L82 80 Z',
-    },
+    img: {'front': 'shoulder_front', 'back': 'shoulder_back'},
     views: {
       'front': [
-        _Region('top', 'top', 'dessus', 30, 22, 32, 12),
-        _ell('front', 'front', 'avant', 54, 54, 11, 12),
-        _ell('outer', 'outer side', 'côté externe', 24, 58, 9, 15),
-        _Region('collar', 'collarbone', 'clavicule', 68, 30, 28, 8),
-        _ell('armpit', 'armpit', 'aisselle', 54, 80, 9, 6),
+        _Dot('top', 'top', 'dessus', 28, 23),
+        _Dot('front', 'front', 'avant', 30, 40),
+        _Dot('outer', 'outer side', 'côté externe', 11, 42),
+        _Dot('collar', 'collarbone', 'clavicule', 60, 28),
+        _Dot('armpit', 'armpit', 'aisselle', 37, 70),
       ],
       'back': [
-        _Region('top', 'top', 'dessus', 30, 22, 32, 12),
-        _ell('back', 'back', 'arrière', 40, 56, 12, 13),
-        _ell('blade', 'shoulder blade', 'omoplate', 77, 60, 11, 17),
-        _ell('outer', 'outer side', 'côté externe', 22, 58, 8, 15),
+        _Dot('top', 'top', 'dessus', 40, 12),
+        _Dot('back', 'back', 'arrière', 22, 38),
+        _Dot('blade', 'shoulder blade', 'omoplate', 66, 46),
+        _Dot('outer', 'outer side', 'côté externe', 8, 46),
       ],
     },
   ),
   'neck': _Detail(
     sided: false,
-    outline: 'M30 0 L70 0 C68 30 68 60 74 100 L26 100 C32 60 32 30 30 0 Z',
-    art: {
-      'front': 'M36 10 L48 94 M64 10 L52 94 M46 44 C48 41 52 41 54 44',
-      'back': 'M28 6 C40 14 60 14 72 6 M50 22 L50 30 M50 38 L50 46 M50 54 L50 62 M50 70 L50 78',
-    },
+    img: {'front': 'neck_front', 'back': 'neck_back'},
     views: {
       'front': [
-        _Region('front', 'front', 'avant', 42, 14, 16, 72),
-        _Region('left', 'left side', 'côté gauche', 29, 14, 11, 72),
-        _Region('right', 'right side', 'côté droit', 60, 14, 11, 72),
+        _Dot('front', 'front', 'avant', 50, 36),
+        _Dot('left', 'left side', 'côté gauche', 35, 44),
+        _Dot('right', 'right side', 'côté droit', 65, 44),
       ],
       'back': [
-        _Region('skull', 'base of the skull', 'base du crâne', 32, 2, 36, 14),
-        _Region('spine', 'spine', 'colonne', 44, 20, 12, 66),
-        _Region('left', 'left side', 'côté gauche', 29, 20, 13, 66),
-        _Region('right', 'right side', 'côté droit', 58, 20, 13, 66),
+        _Dot('skull', 'base of the skull', 'base du crâne', 50, 21),
+        _Dot('spine', 'spine', 'colonne', 50, 52),
+        _Dot('left', 'left side', 'côté gauche', 37, 48),
+        _Dot('right', 'right side', 'côté droit', 63, 48),
       ],
     },
   ),
   'lower_back': _Detail(
     sided: false,
-    outline: 'M10 0 L90 0 C88 30 88 60 94 100 L6 100 C12 60 12 30 10 0 Z',
-    art: {
-      'back': 'M50 4 L50 78 M44 8 C40 30 40 50 44 70 M56 8 C60 30 60 50 56 70 M12 74 C30 66 70 66 88 74',
-    },
+    img: {'back': 'lower_back'},
     views: {
       'back': [
-        _Region('spine', 'spine', 'colonne', 44, 8, 12, 68),
-        _Region('left', 'left side', 'côté gauche', 12, 12, 30, 56),
-        _Region('right', 'right side', 'côté droit', 58, 12, 30, 56),
-        _ell('tailbone', 'tailbone', 'coccyx', 50, 86, 10, 8),
+        _Dot('spine', 'spine', 'colonne', 50, 42),
+        _Dot('left', 'left side', 'côté gauche', 29, 42),
+        _Dot('right', 'right side', 'côté droit', 71, 42),
+        _Dot('tailbone', 'tailbone', 'coccyx', 50, 88),
       ],
     },
   ),
   'hips': _Detail(
     sided: false,
-    outline: 'M4 10 L96 10 C98 40 92 70 80 94 L20 94 C8 70 2 40 4 10 Z',
-    art: {
-      'front': 'M24 46 C30 60 40 72 48 86 M76 46 C70 60 60 72 52 86 M14 28 C20 24 26 26 30 30 M86 28 C80 24 74 26 70 30',
-    },
+    img: {'front': 'hips_front'},
     views: {
       'front': [
-        _ell('lhip', 'left hip', 'hanche gauche', 20, 40, 13, 16),
-        _ell('rhip', 'right hip', 'hanche droite', 80, 40, 13, 16),
-        _ell('lgroin', 'left groin', 'aine gauche', 38, 68, 10, 12),
-        _ell('rgroin', 'right groin', 'aine droite', 62, 68, 10, 12),
+        _Dot('lhip', 'left hip', 'hanche gauche', 24, 44),
+        _Dot('rhip', 'right hip', 'hanche droite', 76, 44),
+        _Dot('lgroin', 'left groin', 'aine gauche', 41, 62),
+        _Dot('rgroin', 'right groin', 'aine droite', 59, 62),
       ],
     },
   ),
   'glutes': _Detail(
     sided: false,
-    outline: 'M4 10 L96 10 C100 40 98 74 90 94 L10 94 C2 74 0 40 4 10 Z',
-    art: {
-      'back': 'M50 30 L50 82 M16 80 C28 88 40 88 48 82 M52 82 C60 88 72 88 84 80 M10 24 C30 16 70 16 90 24',
-    },
+    img: {'back': 'glutes'},
     views: {
       'back': [
-        _ell('lbutt', 'left buttock', 'fesse gauche', 32, 54, 16, 22),
-        _ell('rbutt', 'right buttock', 'fesse droite', 68, 54, 16, 22),
-        _Region('louter', 'outside of the left hip', 'côté de la hanche gauche', 4, 30, 10, 40),
-        _Region('router', 'outside of the right hip', 'côté de la hanche droite', 86, 30, 10, 40),
-        _ell('tailbone', 'tailbone', 'coccyx', 50, 22, 7, 7),
+        _Dot('lbutt', 'left buttock', 'fesse gauche', 40, 58),
+        _Dot('rbutt', 'right buttock', 'fesse droite', 60, 58),
+        _Dot('louter', 'outside of the left hip', 'côté de la hanche gauche', 28, 46),
+        _Dot('router', 'outside of the right hip', 'côté de la hanche droite', 72, 46),
+        _Dot('tailbone', 'tailbone', 'coccyx', 50, 40),
       ],
     },
   ),
   'ankle': _Detail(
     sided: true,
-    outline: 'M38 0 L62 0 C63 30 66 44 68 56 C72 70 74 84 74 100 L26 100 C26 84 28 70 32 56 C34 44 37 30 38 0 Z',
-    art: {
-      'front': 'M50 2 L50 36 M44 66 C46 80 46 90 44 98 M56 66 C54 80 54 90 56 98',
-      'back': 'M46 0 L47 60 M54 0 L53 60 M36 88 C44 94 56 94 64 88',
-    },
+    img: {'front': 'ankle_front', 'back': 'ankle_back'},
     views: {
       'front': [
-        _ell('outer', 'outer ankle bone', 'malléole externe', 35, 52, 8, 10),
-        _ell('inner', 'inner ankle bone', 'malléole interne', 65, 52, 8, 10),
-        _Region('front', 'front', 'avant', 43, 38, 14, 26),
-        _Region('achilles', 'Achilles tendon', 'tendon d’Achille', 43, 6, 14, 26),
+        _Dot('outer', 'outer ankle bone', 'malléole externe', 28, 57),
+        _Dot('inner', 'inner ankle bone', 'malléole interne', 71, 57),
+        _Dot('front', 'front', 'avant', 50, 62),
       ],
       'back': [
-        _ell('outer', 'outer ankle bone', 'malléole externe', 35, 52, 8, 10),
-        _ell('inner', 'inner ankle bone', 'malléole interne', 65, 52, 8, 10),
-        _Region('achilles', 'Achilles tendon', 'tendon d’Achille', 43, 10, 14, 52),
+        _Dot('outer', 'outer ankle bone', 'malléole externe', 33, 55),
+        _Dot('inner', 'inner ankle bone', 'malléole interne', 67, 55),
+        _Dot('achilles', 'Achilles tendon', 'tendon d’Achille', 50, 42),
       ],
     },
   ),
   'foot': _Detail(
     sided: true,
-    outline: 'M40 4 C52 2 62 4 64 14 C68 30 76 44 76 62 C76 80 72 94 58 96 L36 96 C26 94 24 80 26 62 C28 44 34 30 36 14 C36 8 38 5 40 4 Z',
-    art: {
-      'front': 'M38 78 L37 94 M46 78 L46 95 M54 78 L55 95 M63 76 L65 94 M44 16 C46 36 48 52 50 72',
-    },
+    img: {'front': 'foot_top'},
     views: {
       'front': [
-        _Region('top', 'top of the foot', 'dessus du pied', 36, 10, 28, 32),
-        _Region('arch', 'arch', 'voûte plantaire', 64, 38, 10, 30),
-        _Region('outer', 'outer edge', 'bord externe', 26, 38, 10, 30),
-        _Region('ball', 'ball of the foot', 'avant-pied', 36, 58, 28, 14),
-        _Region('toes', 'toes', 'orteils', 30, 76, 40, 16),
+        _Dot('top', 'top of the foot', 'dessus du pied', 48, 35),
+        _Dot('arch', 'arch', 'voûte plantaire', 67, 55),
+        _Dot('outer', 'outer edge', 'bord externe', 30, 62),
+        _Dot('ball', 'ball of the foot', 'avant-pied', 52, 72),
+        _Dot('toes', 'toes', 'orteils', 52, 89),
       ],
     },
   ),
   'heel': _Detail(
     sided: true,
-    outline: 'M34 0 L66 0 C67 20 68 32 70 44 C74 60 72 86 62 96 L38 96 C28 86 26 60 30 44 C32 32 33 20 34 0 Z',
-    art: {
-      'back': 'M46 0 L47 34 M54 0 L53 34 M34 66 C44 70 56 70 66 66',
-    },
+    img: {'back': 'heel_back'},
     views: {
       'back': [
-        _Region('achilles', 'Achilles tendon', 'tendon d’Achille', 43, 4, 14, 26),
-        _ell('back', 'back of the heel', 'arrière du talon', 50, 46, 17, 12),
-        _ell('bottom', 'bottom of the heel', 'sous le talon', 50, 78, 18, 12),
+        _Dot('achilles', 'Achilles tendon', 'tendon d’Achille', 50, 25),
+        _Dot('back', 'back of the heel', 'arrière du talon', 50, 62),
+        _Dot('bottom', 'bottom of the heel', 'sous le talon', 50, 90),
       ],
     },
   ),
   'fore': _Detail(
     sided: true,
-    outline: 'M30 0 L70 0 C70 20 68 30 66 50 C64 70 62 84 62 100 L38 100 C38 84 36 70 34 50 C32 30 30 20 30 0 Z',
-    art: {
-      'front': 'M34 20 C44 24 56 24 66 20 M44 28 C46 50 46 70 48 92 M58 30 C56 50 56 70 54 92',
-      'back': 'M44 6 C46 2 54 2 56 6 M46 28 C47 50 48 70 50 94',
-    },
+    img: {'front': 'fore_front', 'back': 'fore_back'},
     views: {
       'front': [
-        _ell('outer_elbow', 'outer elbow', 'coude, côté externe', 36, 16, 8, 11),
-        _ell('inner_elbow', 'inner elbow', 'coude, côté interne', 64, 16, 8, 11),
-        _Region('forearm', 'forearm muscles', 'muscles de l’avant-bras', 38, 34, 24, 44),
-        _Region('wrist', 'near the wrist', 'près du poignet', 38, 82, 24, 14),
+        _Dot('outer_elbow', 'outer elbow', 'coude, côté externe', 36, 12),
+        _Dot('inner_elbow', 'inner elbow', 'coude, côté interne', 60, 12),
+        _Dot('forearm', 'forearm muscles', 'muscles de l’avant-bras', 50, 42),
+        _Dot('wrist', 'near the wrist', 'près du poignet', 50, 85),
       ],
       'back': [
-        _ell('point', 'point of the elbow', 'pointe du coude', 50, 14, 11, 10),
-        _ell('outer_elbow', 'outer elbow', 'coude, côté externe', 34, 22, 7, 10),
-        _ell('inner_elbow', 'inner elbow', 'coude, côté interne', 66, 22, 7, 10),
-        _Region('forearm', 'forearm muscles', 'muscles de l’avant-bras', 38, 38, 24, 48),
+        _Dot('point', 'point of the elbow', 'pointe du coude', 50, 8),
+        _Dot('outer_elbow', 'outer elbow', 'coude, côté externe', 37, 16),
+        _Dot('inner_elbow', 'inner elbow', 'coude, côté interne', 63, 16),
+        _Dot('forearm', 'forearm muscles', 'muscles de l’avant-bras', 50, 46),
       ],
     },
   ),
   'hand': _Detail(
     sided: true,
-    outline: 'M34 0 L66 0 L68 26 C70 40 72 56 70 66 L70 96 C70 99 40 99 40 96 L38 66 C34 62 30 58 25 52 C21 45 21 35 27 32 C31 31 34 37 36 42 L34 26 Z',
-    art: {
-      'front': 'M47 68 L47 97 M54 68 L54 98 M62 68 L62 97 M38 50 C48 44 60 44 70 48 M36 20 C46 22 56 22 66 20',
-      'back': 'M47 68 L47 97 M54 68 L54 98 M62 68 L62 97 M44 26 L46 64 M52 24 L53 64 M60 26 L60 64',
-    },
+    img: {'front': 'hand_palm', 'back': 'hand_back'},
     views: {
       'front': [
-        _Region('wrist', 'wrist', 'poignet', 32, 2, 36, 16),
-        _ell('thumb', 'thumb', 'pouce', 31, 44, 7, 15),
-        _ell('palm', 'palm', 'paume', 54, 44, 15, 15),
-        _Region('fingers', 'fingers', 'doigts', 40, 66, 28, 30),
+        _Dot('wrist', 'wrist', 'poignet', 50, 6),
+        _Dot('thumb', 'thumb', 'pouce', 25, 48),
+        _Dot('palm', 'palm', 'paume', 51, 38),
+        _Dot('fingers', 'fingers', 'doigts', 50, 80),
       ],
       'back': [
-        _Region('wrist', 'wrist', 'poignet', 32, 2, 36, 16),
-        _ell('thumb', 'thumb', 'pouce', 31, 44, 7, 15),
-        _ell('back', 'back of the hand', 'dos de la main', 54, 44, 15, 15),
-        _Region('fingers', 'fingers', 'doigts', 40, 66, 28, 30),
+        _Dot('wrist', 'wrist', 'poignet', 52, 6),
+        _Dot('thumb', 'thumb', 'pouce', 26, 52),
+        _Dot('back', 'back of the hand', 'dos de la main', 56, 38),
+        _Dot('fingers', 'fingers', 'doigts', 58, 82),
       ],
     },
   ),
@@ -384,9 +344,9 @@ class _Zoom {
   final String part; // e.g. 'l_knee'
   final _Detail detail;
   final String view;
-  final bool flip; // right-side part: the left drawing mirrored
-  List<_Region> get spots => detail.views[view] ?? const [];
-  String get art => detail.art[view] ?? '';
+  final bool flip; // right-side part: the left photo mirrored
+  List<_Dot> get spots => detail.views[view] ?? const [];
+  String get asset => 'assets/body/${detail.img[view]}.webp';
 }
 
 _Zoom? _zoomFor(String view, String part) {
@@ -421,107 +381,6 @@ Map<String, int> _levelsFor(Map<String, int> map, String view) {
     if (e.value > (out[part] ?? 0)) out[part] = e.value;
   }
   return out;
-}
-
-/// Minimal SVG path reader for the close-up drawings (M, L, C and Z only).
-Path _svgPath(String d) {
-  final path = Path();
-  final tok = RegExp(r'[MLCZ]|-?\d+(?:\.\d+)?')
-      .allMatches(d)
-      .map((m) => m.group(0)!)
-      .toList();
-  var i = 0;
-  var cmd = 'M';
-  double n() => double.parse(tok[i++]);
-  while (i < tok.length) {
-    final t = tok[i];
-    if (t == 'M' || t == 'L' || t == 'C' || t == 'Z') {
-      cmd = t;
-      i++;
-      if (cmd == 'Z') path.close();
-      continue;
-    }
-    if (cmd == 'M') {
-      path.moveTo(n(), n());
-      cmd = 'L';
-    } else if (cmd == 'L') {
-      path.lineTo(n(), n());
-    } else if (cmd == 'C') {
-      path.cubicTo(n(), n(), n(), n(), n(), n());
-    } else {
-      i++;
-    }
-  }
-  return path;
-}
-
-/// Sub-spot under a tap in close-up space: the smallest spot containing it,
-/// else the one whose edge is within a fingertip (4 units).
-_Region? _pickSpot(List<_Region> spots, Offset p) {
-  final inside = spots.where((s) => s.contains(p)).toList()
-    ..sort((a, b) => (a.w * a.h).compareTo(b.w * b.h));
-  if (inside.isNotEmpty) return inside.first;
-  _Region? best;
-  var bestD = double.infinity;
-  for (final s in spots) {
-    final dx = [s.x - p.dx, 0.0, p.dx - (s.x + s.w)].reduce((a, b) => a > b ? a : b);
-    final dy = [s.y - p.dy, 0.0, p.dy - (s.y + s.h)].reduce((a, b) => a > b ? a : b);
-    final d = dx * dx + dy * dy;
-    if (d < bestD) {
-      bestD = d;
-      best = s;
-    }
-  }
-  return bestD <= 16 ? best : null;
-}
-
-/// The zoomed drawing: silhouette, anatomy lines and the tappable spots,
-/// each filled with its level; the spot being edited gets a dark ring.
-class _ZoomPainter extends CustomPainter {
-  _ZoomPainter(this.zoom, this.levels, this.selected);
-  final _Zoom zoom;
-  final Map<String, int> levels; // sub id -> level
-  final String? selected; // sub id being edited (null = whole part)
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.scale(size.width / 100);
-    if (zoom.flip) {
-      canvas.translate(100, 0);
-      canvas.scale(-1, 1);
-    }
-    canvas.drawPath(_svgPath(zoom.detail.outline), Paint()..color = _bodyGrey);
-    canvas.drawPath(
-        _svgPath(zoom.art),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.9
-          ..strokeCap = StrokeCap.round
-          ..color = BtwColors.inkSoft.withValues(alpha: 0.45));
-    for (final s in zoom.spots) {
-      final lv = levels[s.id] ?? 0;
-      final fill = Paint()
-        ..color = lv > 0 ? _fill[lv] : Colors.white.withValues(alpha: 0.45);
-      final ring = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s.id == selected ? 2 : 0.8
-        ..color = s.id == selected
-            ? BtwColors.ink
-            : BtwColors.inkSoft.withValues(alpha: 0.5);
-      if (s.ellipse) {
-        canvas.drawOval(s.rect, fill);
-        canvas.drawOval(s.rect, ring);
-      } else {
-        final rr = RRect.fromRectAndRadius(s.rect, const Radius.circular(4));
-        canvas.drawRRect(rr, fill);
-        canvas.drawRRect(rr, ring);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ZoomPainter old) =>
-      old.levels != levels || old.selected != selected || old.zoom != zoom;
 }
 
 class BodyMap extends StatefulWidget {
@@ -609,7 +468,29 @@ class _BodyMapState extends State<BodyMap> {
     widget.onSensChanged?.call(Map<String, String>.from(_sens));
   }
 
-  static const double _zw = 150; // close-up drawing size in the sheet
+  static const double _zw = 200; // close-up photo size in the sheet
+
+  // One tappable point on the close-up: brand blue until it has a level,
+  // then that level's colour; the point being edited is bigger with a dark ring.
+  static Widget _dot(int level, bool selected) {
+    final size = selected ? 22.0 : 18.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: level > 0
+            ? _fill[level]
+            : BtwColors.moss.withValues(alpha: 0.88),
+        border: Border.all(
+            color: selected ? BtwColors.ink : Colors.white,
+            width: selected ? 2.5 : 2),
+        boxShadow: const [
+          BoxShadow(color: Color(0x55000000), blurRadius: 3, offset: Offset(0, 1)),
+        ],
+      ),
+    );
+  }
 
   Future<_PickResult?> _pickLevel(
       _Region region, _Zoom? zoom, String? initialSub) {
@@ -710,27 +591,54 @@ class _BodyMapState extends State<BodyMap> {
                   const SizedBox(height: 4),
                   Text(
                     isFr
-                        ? 'Touchez l’endroit exact (facultatif).'
-                        : 'Tap the exact spot (optional).',
+                        ? 'Touchez le point exact (facultatif).'
+                        : 'Tap the exact point (optional).',
                     style: const TextStyle(
                         fontSize: 13, color: BtwColors.inkSoft),
                   ),
                   const SizedBox(height: 10),
+                  // Photo of the part with a point on each spot; a right-side
+                  // part shows the left photo mirrored, points included.
                   Center(
-                    child: GestureDetector(
-                      onTapDown: (d) {
-                        var p = d.localPosition / (_zw / 100);
-                        if (zoom.flip) p = Offset(100 - p.dx, p.dy);
-                        final hitSpot = _pickSpot(zoom.spots, p);
-                        if (hitSpot != null) {
-                          setSheet(() => choose(hitSpot.id));
-                        }
-                      },
+                    child: Transform.flip(
+                      flipX: zoom.flip,
                       child: SizedBox(
                         width: _zw,
                         height: _zw,
-                        child: CustomPaint(
-                            painter: _ZoomPainter(zoom, spotLv, cur)),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(zoom.asset,
+                                    fit: BoxFit.cover),
+                              ),
+                            ),
+                            for (final s in zoom.spots)
+                              Positioned(
+                                left: s.x * _zw / 100 - 17,
+                                top: s.y * _zw / 100 - 17,
+                                child: Semantics(
+                                  button: true,
+                                  selected: cur == s.id,
+                                  label: isFr ? s.fr : s.en,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => setSheet(() => choose(s.id)),
+                                    child: SizedBox(
+                                      width: 34,
+                                      height: 34,
+                                      child: Center(
+                                        child: _dot(spotLv[s.id] ?? 0,
+                                            cur == s.id),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -987,7 +895,7 @@ String regionLabel(String key, bool isFr) {
       orElse: () => _Region(part, part, part, 0, 0, 0, 0));
   final base = isFr ? r.fr : r.en;
   if (sub == null) return base;
-  for (final s in _zoomFor(view, part)?.spots ?? const <_Region>[]) {
+  for (final s in _zoomFor(view, part)?.spots ?? const <_Dot>[]) {
     if (s.id == sub) return '$base · ${isFr ? s.fr : s.en}';
   }
   return base;
