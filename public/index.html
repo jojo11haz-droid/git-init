@@ -8568,7 +8568,8 @@
       hasPhoto: !!row.photo_upload_id,
       viaQuestions: row.input_mode === 'questions',
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null,
-      painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null
+      painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null,
+      bodySex: (row.body_sex === 'f' || row.body_sex === 'm') ? row.body_sex : null
     };
   }
 
@@ -9804,6 +9805,17 @@
   function btwCreateBodyMap(opts){
     opts = opts || {};
     const readOnly = !!opts.readOnly;
+    // Which body to draw. The patient's own map follows their Man / Woman
+    // choice; a read-only map shows the figure the patient used for THAT
+    // check-in (opts.sex / setSex, saved with it), so the clinician sees the
+    // spots on the same body. Older check-ins without one: the patient sees
+    // their current choice, a clinician the default figure.
+    let fixedSex = (opts.sex === 'f' || opts.sex === 'm') ? opts.sex : null;
+    function figSex(){
+      if(!readOnly) return btwBodySex;
+      if(fixedSex) return fixedSex;
+      return (typeof isPatient === 'function' && isPatient()) ? btwBodySex : 'm';
+    }
     // 0-10 pain scale (0 = none, 1 = mild/best, 10 = worst), green->red, with faces.
     const FILL = ['transparent','#7FB84F','#9CC63E','#C9D630','#EAC72E','#F0AE33','#EF8E38','#EA6F3B','#DE5238','#CF3B33','#C0392B'];
     const EMOJI = ['','🙂','🙂','😐','😐','😕','😟','😧','😖','😫','😭'];
@@ -9895,7 +9907,7 @@
       const meta = REGIONS[v][REGIONS[v].length - 1];
       return REGIONS[v].slice(0, -1).map(function(z){ const lbl = z.en ? z : meta[z.id]; return { id:z.id, el:z.el, a:z.a, en:(z.en||lbl.en), fr:(z.fr||lbl.fr) }; });
     }
-    function baseFor(v){ return btwIsSide(v) ? (btwBodySex === 'f' ? BTW_SIDE_BASE_F : BTW_SIDE_BASE) : BASE; }
+    function baseFor(v){ return btwIsSide(v) ? (figSex() === 'f' ? BTW_SIDE_BASE_F : BTW_SIDE_BASE) : BASE; }
     function frL(){ return (typeof curLang !== 'undefined' && curLang === 'fr'); }
     function attrs(a){ var s=''; for(var k in a){ s += ' ' + k + '="' + a[k] + '"'; } return s; }
     btwCreateBodyMap._n = (btwCreateBodyMap._n || 0) + 1;
@@ -10091,12 +10103,12 @@
       const cid = 'bpc_' + uid;
       const B = baseFor(v);
       // Front/back: the smooth man's or woman's outline; side views keep their profile.
-      const OB = btwIsSide(v) ? null : btwBodyBase(cid, btwBodySex, null, v);
+      const OB = btwIsSide(v) ? null : btwBodyBase(cid, figSex(), null, v);
       const clipShapes = OB ? OB.clip : B.map(function(z){ return '<' + z.el + attrs(z.a) + '></' + z.el + '>'; }).join('');
-      const base = OB ? OB.base : (B.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('') + (btwBodySex === 'f' ? btwHairSvg(v) : ''));
+      const base = OB ? OB.base : (B.map(function(z){ return '<' + z.el + ' class="btw-bz-base"' + attrs(z.a) + '></' + z.el + '>'; }).join('') + (figSex() === 'f' ? btwHairSvg(v) : ''));
       const regs = zonesFor(v).map(function(z){ return '<' + z.el + ' class="btw-bz" data-zone="' + z.id + '"' + attrs(z.a) + '><title>' + esc(frL()?z.fr:z.en) + '</title></' + z.el + '>'; }).join('');
       const flip = (v === 'right') ? ' transform="translate(100,0) scale(-1,1)"' : '';
-      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs>' + (OB ? OB.defs : '') + '<clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + btwMuscleArt(v, btwBodySex) + regs + '</g></g></svg>';
+      return '<svg viewBox="0 0 100 198" class="btw-bodysvg" role="img" aria-label="Body pain map"><defs>' + (OB ? OB.defs : '') + '<clipPath id="' + cid + '">' + clipShapes + '</clipPath></defs><g' + flip + '>' + base + '<g clip-path="url(#' + cid + ')">' + btwMuscleArt(v, figSex()) + regs + '</g></g></svg>';
     }
     function paint(){
       // A part shows its worst level, whether marked whole or at a precise spot.
@@ -10181,6 +10193,10 @@
       getSens: function(){ const out = {}; Object.keys(sens).forEach(function(k){ if(state[k]) out[k] = sens[k]; }); return Object.keys(out).length ? out : null; },
       setSens: function(m){ sens = (m && typeof m === 'object') ? Object.assign({}, m) : {}; render(); },
       clear: function(){ state = {}; sens = {}; selected = null; zoomPart = null; render(); },
+      // Draw a read-only map on the figure a check-in was made on ('m'|'f').
+      setSex: function(x){ fixedSex = (x === 'f' || x === 'm') ? x : null; render(); },
+      // The figure the patient is drawing on right now, sent with the check-in.
+      getSex: function(){ return figSex(); },
       fromText: fromText,
       // Human label for a "view:id" pain-map key, e.g. "front:r_knee" -> "right knee".
       labelFor: function(key){
@@ -14660,7 +14676,7 @@
     // Attach a read-only body map to each entry that has one.
     el.querySelectorAll('.btw-ci-pain[data-pain]').forEach(function(host){
       const ci = sorted.find(function(x){ return x.id === host.getAttribute('data-pain'); });
-      if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true }); bm.setMap(ci.painMap); if(ci.painSens) bm.setSens(ci.painSens); host.appendChild(bm.el); }
+      if(ci && ci.painMap){ const bm = btwCreateBodyMap({ readOnly:true, sex: ci.bodySex }); bm.setMap(ci.painMap); if(ci.painSens) bm.setSens(ci.painSens); host.appendChild(bm.el); }
     });
     hydratePatientPhotos();
   }
@@ -14871,7 +14887,9 @@
     });
     if(!Object.keys(merged).length){ host.style.display='none'; host.innerHTML=''; return; }
     host.innerHTML = '<div class="btw-bodyov-l">' + esc(t('Where it hurts')) + '</div>';
-    const bm = btwCreateBodyMap({ readOnly:true });
+    // Drawn on the figure the patient used most recently.
+    const withSex = list.find(function(c){ return c.painMap && c.bodySex; });
+    const bm = btwCreateBodyMap({ readOnly:true, sex: withSex ? withSex.bodySex : null });
     bm.setMap(merged);
     host.appendChild(bm.el);
     // Ranked "most affected areas": the physio's at-a-glance read of where and
@@ -15796,12 +15814,12 @@
       if(isPatient()){
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood'
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood'
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null
         });
         risk = !!checkIn.risk_flag;
       }

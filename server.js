@@ -2202,7 +2202,8 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         has_photo: !!c.photo_upload_id,
         via_questions: c.input_mode === 'questions',
         pain_map: c.pain_map || null,
-        pain_sensations: c.pain_sensations || null
+        pain_sensations: c.pain_sensations || null,
+        body_sex: c.body_sex || null
       }))
     };
     const safeName = String(patient.display_name || 'patient')
@@ -2334,7 +2335,10 @@ function painMapPeak(pm) {
   return Math.max(...Object.values(clean));
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind }) {
+// Which body figure the patient drew on: 'm' | 'f', else null.
+function sanitizeBodySex(v) { return v === 'm' || v === 'f' ? v : null; }
+
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -2379,6 +2383,8 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
     patientId: patient.id, moodScore: finalMood, moodInferred, manualTags, rawText: text || null,
     summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap: sanitizePainMap(painMap),
     painSens: sanitizePainSens(painSens),
+    // Only meaningful alongside a pain map.
+    bodySex: sanitizePainMap(painMap) ? sanitizeBodySex(bodySex) : null,
     inputMode: inputMode === 'questions' ? 'questions' : null
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
@@ -2387,12 +2393,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -3761,7 +3767,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -3822,7 +3828,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
