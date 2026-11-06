@@ -4,7 +4,7 @@
 // no database: just the functions. Exits non-zero on the first failure so CI
 // turns red.
 
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise } from '../clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat } from '../clinical.js';
 import { readFileSync } from 'fs';
 
 let failures = 0;
@@ -116,6 +116,22 @@ eq(sanitizeExercisesDone([], ['x']), null, 'empty → null');
 eq(sanitizeExercise({ name: '  Wall  squat ', description: 'Back on wall.', dosage: '3x10' }), { name: 'Wall squat', description: 'Back on wall.', dosage: '3x10' }, 'exercise trimmed');
 eq(sanitizeExercise({ name: '   ' }), null, 'nameless exercise rejected');
 eq(sanitizeExercise({ name: 'X'.repeat(200) }).name.length, 80, 'name capped at 80');
+
+console.log('programKind / noteFormat — per profession');
+eq(programKind({ accountType: 'coach', discipline: 'physio' }), 'exercise', 'physio → exercises');
+eq(programKind({ accountType: 'coach', discipline: 'sports' }), 'exercise', 'sports coach → exercises');
+eq(programKind({ accountType: 'trainer' }), 'exercise', 'trainer → exercises');
+eq(programKind({ accountType: 'therapist' }), 'practice', 'psychotherapist → practices');
+eq(programKind({ accountType: 'coach', discipline: 'neuropsych' }), 'practice', 'neuropsych → practices');
+eq(programKind({ accountType: 'coach', discipline: 'nutrition' }), 'habit', 'nutrition → habits');
+eq(programKind({ accountType: 'mentor' }), 'recovery', 'recovery mentor → daily practices');
+eq(programKind({ accountType: 'school' }), 'school', 'school → strategies');
+eq(noteFormat({ accountType: 'therapist' }), 'dap', 'psychotherapist → DAP note');
+eq(noteFormat({ accountType: 'mentor' }), 'dap', 'recovery → DAP note');
+eq(noteFormat({ accountType: 'coach', discipline: 'neuropsych' }), 'dap', 'neuropsych → DAP note');
+eq(noteFormat({ accountType: 'coach', discipline: 'physio' }), 'soap', 'physio → SOAP note');
+eq(noteFormat({ accountType: 'coach', discipline: 'nutrition' }), 'soap', 'nutrition → SOAP note');
+eq(noteFormat({ accountType: 'trainer' }), 'soap', 'trainer → SOAP note');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

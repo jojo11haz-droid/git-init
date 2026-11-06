@@ -52,7 +52,7 @@ import {
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -483,7 +483,8 @@ Rules:
 // never diagnostic — it documents what the patient reported, nothing more.
 async function draftProgressNote({ name, discipline, accountType, checkIns, exercises }) {
   if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
-  if (PAIN_DISCIPLINES.includes(discipline || '')) return draftSoapNote({ name, discipline, accountType, checkIns, exercises });
+  // Every profession gets a structured chart note now (SOAP or DAP).
+  return draftSoapNote({ name, discipline, accountType, checkIns, exercises });
   const focus = documentFocusForProfession({ discipline, accountType });
   const who = name || 'the patient';
   const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000;
@@ -530,19 +531,26 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
 // and the clinical part of the Plan are left for the clinician to write.
 async function draftSoapNote({ name, discipline, accountType, checkIns, exercises }) {
   const focus = documentFocusForProfession({ discipline, accountType });
+  const pain = PAIN_DISCIPLINES.includes(discipline || '');
+  const format = noteFormat({ accountType, discipline });
+  const kind = programKind({ accountType, discipline });
+  const progWord = { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise' }[kind];
+  const scoreWord = pain ? 'pain' : 'mood';
   const who = name || 'the patient';
   const cutoff = Date.now() - 28 * 24 * 60 * 60 * 1000;
   const recent = (checkIns || [])
     .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
     .slice(0, 20).reverse();
-  if (!recent.length) return { note: '', checkInsUsed: 0, needsData: true, format: 'soap' };
+  if (!recent.length) return { note: '', checkInsUsed: 0, needsData: true, format };
   const exById = {};
   for (const e of exercises || []) exById[e.id] = e;
   const active = (exercises || []).filter(e => !e.archived_at);
   const lines = recent.map(c => {
     const d = new Date(c.submitted_at).toISOString().slice(0, 10);
     const parts = [];
-    if (c.mood_score != null) parts.push(`pain ${c.mood_score}/10${c.mood_inferred ? ' (estimated)' : ''}`);
+    if (c.mood_score != null) parts.push(`${scoreWord} ${c.mood_score}/10${c.mood_inferred ? ' (estimated)' : ''}`);
+    const tg = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : [], canonicalTags(c.manual_tags, tagField({ accountType, discipline }))).filter(Boolean).slice(0, 5);
+    if (tg.length) parts.push('themes: ' + tg.join(', '));
     if (c.pain_map && typeof c.pain_map === 'object') {
       const areas = Object.entries(c.pain_map).slice(0, 6).map(([k, v]) => {
         const s = c.pain_sensations && c.pain_sensations[k];
@@ -558,20 +566,25 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
   }).join('\n');
   const adherence = active.length
     ? active.map(e => `${e.name}: ticked in ${recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length} of ${recent.length} check-ins`).join('; ')
-    : 'no home program assigned in Between';
+    : 'nothing assigned in Between yet';
   const first = new Date(recent[0].submitted_at).toISOString().slice(0, 10);
   const last = new Date(recent[recent.length - 1].submitted_at).toISOString().slice(0, 10);
-  const system = `You draft a ${focus.role}'s chart note in SOAP format for ${who}, from what ${who} reported between visits (${first} to ${last}), for the clinician to paste into their charting software and edit.
+  const blocks = format === 'dap'
+    ? `D: Data — what ${who} reported between sessions (in 2-4 sentences, close to their words), the ${scoreWord} scores (range and trend with numbers), recurring themes, and completion of the between-session work. End with "In-session observations: [to add]".
+A: [Clinician to complete]
+P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`
+    : `S: what ${who} reported between visits (${pain ? 'symptoms, where, how it feels, activities/function' : 'how things went, what got in the way, what helped'}, in 2-4 sentences, close to their words).
+O: Patient-reported between visits — ${scoreWord} scores (range and trend with numbers)${pain ? ', body areas marked' : ''}, and completion of the ${progWord.toLowerCase()}. End with "${pain ? 'In-clinic findings' : 'Session observations'}: [to add]".
+A: [Clinician to complete]
+P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`;
+  const system = `You draft a ${focus.role}'s chart note in ${format === 'dap' ? 'DAP' : 'SOAP'} format for ${who}, from what ${who} reported between ${pain ? 'visits' : 'sessions'} (${first} to ${last}), for the clinician to paste into their charting software and edit.
 Rules:
 - Document ONLY what is in the data. Never diagnose, never assess, never recommend treatment, never invent findings.
 - Body-map keys look like "front:l_knee_cap" or "back:lower_back": write them as plain anatomy ("left knee, kneecap", "lower back"). l_ = left, r_ = right. Sensation codes: ache = aching, tight = tightness, stiff = stiffness/locking, sharp = sharp/shooting, numb = tingling/numbness, throb = throbbing/heat.
-- Same language as the check-ins. Plain text, no markdown, exactly these four labelled lines/blocks:
-S: what the patient reported between visits (symptoms, where, how it feels, activities/function, in 2-4 sentences, close to their words).
-O: Patient-reported between visits — pain scores (range and trend with numbers), body areas marked, home exercise adherence. End with "In-clinic findings: [to add]".
-A: [Clinician to complete]
-P: Home program: list the assigned exercises with their adherence. Then "[Clinician to add plan]".
+- Same language as the check-ins. Plain text, no markdown, exactly these labelled lines/blocks:
+${blocks}
 - Keep it under about 220 words.`;
-  const user = `Check-ins (oldest first):\n${lines}\n\nHome program adherence: ${adherence}`;
+  const user = `Check-ins (oldest first):\n${lines}\n\n${progWord} completion: ${adherence}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -580,7 +593,7 @@ P: Home program: list the assigned exercises with their adherence. Then "[Clinic
   if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
   const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 3000);
-  return { note, checkInsUsed: recent.length, needsData: false, format: 'soap' };
+  return { note, checkInsUsed: recent.length, needsData: false, format };
 }
 
 // A short, warm encouragement message the clinician can send to a patient
@@ -2646,13 +2659,21 @@ app.delete('/api/patients/:id/exercises/:exId', requireDb, requireAuth, requireV
 // AI suggestions: the clinician types the goal or area ("early patellofemoral
 // pain, can't do stairs") and gets a few common exercises with a one-line
 // how-to and a starting dose, to pick from and edit. Never auto-assigned.
+const PROGRAM_PROMPT = {
+  exercise: { what: 'home exercise program', items: 'common, well-established, low-risk home exercises', dose: 'a typical starting dose (e.g. "3 x 10, daily" or "hold 30 s x 3")' },
+  practice: { what: 'between-session practice (homework)', items: 'common, evidence-informed between-session practices or skills (e.g. from CBT, DBT, ACT, behavioural activation, mindfulness, sleep hygiene) that a client can do on their own', dose: 'how often (e.g. "once a day, 5 min" or "when you notice the worry")' },
+  habit: { what: 'set of habits to practise', items: 'small, realistic, well-established eating and lifestyle habits', dose: 'how often (e.g. "daily" or "at 3 meals")' },
+  recovery: { what: 'daily recovery practices', items: 'common, supportive recovery practices (coping with cravings, routines, connection, self-care)', dose: 'how often (e.g. "every evening")' },
+  school: { what: 'set of strategies to practise', items: 'simple, age-appropriate strategies a student can practise at school or home (focus, organisation, calming, friendships)', dose: 'when or how often (e.g. "before homework")' }
+};
 async function suggestExercises({ goal, discipline, accountType, lang }) {
   const focus = documentFocusForProfession({ discipline, accountType });
   const fr = lang === 'fr';
-  const system = `You help a ${focus.role} build a home exercise program quickly. Suggest 4 to 6 common, well-established, low-risk home exercises for the goal the clinician gives.
+  const pp = PROGRAM_PROMPT[programKind({ accountType, discipline })];
+  const system = `You help a ${focus.role} build a ${pp.what} quickly. Suggest 4 to 6 ${pp.items} for the goal the professional gives.
 Rules:
-- The clinician decides; these are suggestions to pick from and edit, not a prescription.
-- Each exercise: a short name, ONE plain-language sentence on how to do it (for the patient to read), and a typical starting dose (e.g. "3 x 10, daily" or "hold 30 s x 3").
+- The professional decides; these are suggestions to pick from and edit, not a prescription.
+- Each item: a short name, ONE plain-language sentence on how to do it (for the client to read), and ${pp.dose}.
 - No diagnosis, no medical claims, nothing risky or advanced. Write in ${fr ? 'French' : 'English'}.
 - Respond with ONLY a JSON array, no prose, no markdown fences: [{"name": "...", "description": "...", "dosage": "..."}]`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {

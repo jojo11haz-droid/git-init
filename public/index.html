@@ -4894,6 +4894,33 @@
     "Tick what you did since your last check-in.":"Cochez ce que vous avez fait depuis votre dernier suivi.",
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
+    "Between-session practice":"Pratique entre les séances",
+    "Your practice between sessions":"Votre pratique entre les séances",
+    "Goal, e.g. worry at night, low motivation":"Objectif, p. ex. inquiétudes le soir, peu de motivation",
+    "Suggest practices":"Suggérer des pratiques",
+    "Practice name":"Nom de la pratique",
+    "How often, e.g. daily, 5 min":"Fréquence, p. ex. chaque jour, 5 min",
+    "Add practice":"Ajouter la pratique",
+    "Habits to practise":"Habitudes à pratiquer",
+    "Your habits to practise":"Vos habitudes à pratiquer",
+    "Goal, e.g. more energy in the afternoon":"Objectif, p. ex. plus d'énergie l'après-midi",
+    "Suggest habits":"Suggérer des habitudes",
+    "Habit":"Habitude",
+    "How often, e.g. daily":"Fréquence, p. ex. chaque jour",
+    "Add habit":"Ajouter l'habitude",
+    "Daily recovery practices":"Pratiques de rétablissement quotidiennes",
+    "Your daily practices":"Vos pratiques quotidiennes",
+    "Goal, e.g. cravings in the evening":"Objectif, p. ex. envies le soir",
+    "How often, e.g. every evening":"Fréquence, p. ex. chaque soir",
+    "Strategies to practise":"Stratégies à pratiquer",
+    "Your strategies to practise":"Vos stratégies à pratiquer",
+    "Goal, e.g. focus during homework":"Objectif, p. ex. concentration pendant les devoirs",
+    "Suggest strategies":"Suggérer des stratégies",
+    "Strategy":"Stratégie",
+    "When, e.g. before homework":"Quand, p. ex. avant les devoirs",
+    "Add strategy":"Ajouter la stratégie",
+    "Ticked something in":"Au moins un élément coché dans",
+    "Chart note (DAP) — add your assessment and plan, then copy it into your chart":"Note de dossier (DAP) — ajoutez votre évaluation et le plan, puis copiez-la dans votre dossier",
     "Add":"Ajouter",
     "Copy note":"Copier la note",
     "Not enough check-ins with AI turned on yet to draft a note.":
@@ -13918,6 +13945,31 @@
     }
   }
 
+  // What the between-session program is called, per profession (mirrors
+  // programKind in clinical.js): exercises for physical/training fields,
+  // practices for mental health, habits for nutrition, daily practices for
+  // recovery, strategies for schools.
+  function hepKind(at, disc){
+    if(['physio','kinesiology','osteo','occupational','sports'].indexOf(disc) >= 0 || at === 'trainer') return 'exercise';
+    if(disc === 'nutrition') return 'habit';
+    if(at === 'mentor') return 'recovery';
+    if(at === 'school') return 'school';
+    return 'practice';
+  }
+  const HEP_WORDS = {
+    exercise: { title:'Home exercise program', mine:'Your home exercises', goal:'Goal or area, e.g. knee pain on stairs, early stage', sug:'Suggest exercises', name:'Exercise name', dose:'Dose, e.g. 3 x 10', add:'Add exercise' },
+    practice: { title:'Between-session practice', mine:'Your practice between sessions', goal:'Goal, e.g. worry at night, low motivation', sug:'Suggest practices', name:'Practice name', dose:'How often, e.g. daily, 5 min', add:'Add practice' },
+    habit:    { title:'Habits to practise', mine:'Your habits to practise', goal:'Goal, e.g. more energy in the afternoon', sug:'Suggest habits', name:'Habit', dose:'How often, e.g. daily', add:'Add habit' },
+    recovery: { title:'Daily recovery practices', mine:'Your daily practices', goal:'Goal, e.g. cravings in the evening', sug:'Suggest practices', name:'Practice name', dose:'How often, e.g. every evening', add:'Add practice' },
+    school:   { title:'Strategies to practise', mine:'Your strategies to practise', goal:'Goal, e.g. focus during homework', sug:'Suggest strategies', name:'Strategy', dose:'When, e.g. before homework', add:'Add strategy' }
+  };
+  function hepWords(){
+    var at, disc;
+    if(isPatient()){ at = state.patient && state.patient.clinician_account_type; disc = state.patient && state.patient.clinician_discipline; }
+    else { at = state.me && state.me.account_type; disc = state.me && state.me.discipline; }
+    return HEP_WORDS[hepKind(at, disc)];
+  }
+
   // --- Home exercise program (clinician side) ---
   // Assign exercises once (typed, or picked from AI suggestions with a short
   // how-to); the patient ticks them off in their check-in, and adherence shows
@@ -13937,7 +13989,7 @@
   function renderHep(){
     var host = document.getElementById('btwHep'); if(!host) return;
     var p = (typeof selectedPatient === 'function') ? selectedPatient() : null;
-    if(!isTherapist() || !p || !painMapContext()){ host.style.display = 'none'; return; }
+    if(!isTherapist() || !p){ host.style.display = 'none'; return; }
     host.style.display = '';
     var pid = p.id;
     if(host._pid !== pid){ host._pid = pid; host._sug = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
@@ -13945,11 +13997,12 @@
   }
   function drawHep(host, pid, d){
     var ex = (d && d.exercises) || [];
+    var W = hepWords();
     var cutoff = Date.now() - 14 * 86400000;
     var recentN = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff; }).length;
     var any = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff && Array.isArray(c.exercisesDone) && c.exercisesDone.length; }).length;
-    var h = '<div class="btw-hep-h"><span class="btw-hep-t">' + esc(t('Home exercise program')) + '</span>'
-      + '<span class="btw-hep-meta">' + (ex.length ? esc(t('Did exercises in') + ' ' + any + ' ' + t('of') + ' ' + recentN + ' ' + t('check-ins (last 2 weeks)')) : esc(t('Assign once — your patient ticks them off when they check in.'))) + '</span></div>';
+    var h = '<div class="btw-hep-h"><span class="btw-hep-t">' + esc(t(W.title)) + '</span>'
+      + '<span class="btw-hep-meta">' + (ex.length ? esc(t('Ticked something in') + ' ' + any + ' ' + t('of') + ' ' + recentN + ' ' + t('check-ins (last 2 weeks)')) : esc(t('Assign once — your patient ticks them off when they check in.'))) + '</span></div>';
     ex.forEach(function(e){
       var a = hepAdherence(e.id);
       h += '<div class="btw-hep-row"><div class="btw-hep-main"><span class="btw-hep-name">' + esc(e.name) + '</span>'
@@ -13959,12 +14012,12 @@
         + '<button type="button" class="btw-hep-x" data-del="' + esc(e.id) + '" aria-label="' + esc(t('Remove') + ' ' + e.name) + '" title="' + esc(t('Remove')) + '">×</button></div>';
     });
     h += '<div class="btw-hep-ai"><div class="btw-hep-ai-l">' + esc(t('Suggest with AI')) + '</div>'
-      + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t('Goal or area, e.g. knee pain on stairs, early stage')) + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t('Suggest exercises')) + '</span></button></div>'
+      + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t(W.goal)) + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t(W.sug)) + '</span></button></div>'
       + '<div class="hep-sugs"></div></div>'
       + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
-      + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t('Exercise name')) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t('Dose, e.g. 3 x 10')) + '">'
+      + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
       + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
-      + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t('Add exercise')) + '</span></button></div></details>'
+      + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t(W.add)) + '</span></button></div></details>'
       + '<div class="btw-hep-msg hep-msg"></div>';
     host.innerHTML = h;
     var msg = host.querySelector('.hep-msg');
@@ -14031,7 +14084,7 @@
         drawSugs(host._sug);
         if(!host._sug.length) msg.textContent = t('No suggestions came back — try describing the goal differently.');
       } catch(e){ msg.textContent = (e && e.message) || t('Could not suggest exercises just now.'); }
-      finally { sugBtn.disabled = false; sp.textContent = t('Suggest exercises'); }
+      finally { sugBtn.disabled = false; sp.textContent = t(W.sug); }
     });
   }
 
@@ -14043,7 +14096,7 @@
     var ex = isPatient() ? (state.exercises || []) : [];
     if(!ex.length){ box.style.display = 'none'; return; }
     box.style.display = '';
-    var lbl = document.getElementById('btwComposeHepLabel'); if(lbl) lbl.textContent = t('Your home exercises');
+    var lbl = document.getElementById('btwComposeHepLabel'); if(lbl) lbl.textContent = t(hepWords().mine);
     var sub = document.getElementById('btwComposeHepSub'); if(sub) sub.textContent = t('Tick what you did since your last check-in.');
     var list = document.getElementById('btwComposeHepList'); list.innerHTML = '';
     ex.forEach(function(e){
@@ -15650,9 +15703,12 @@
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/note');
         var soap = !!(d && d.format === 'soap');
-        if(label) label.textContent = soap ? t('Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart') : t('Draft note — review and edit before using');
-        if(ta) ta.rows = soap ? 12 : 7;
-        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = soap ? t('Copy to chart') : t('Copy note');
+        var dap = !!(d && d.format === 'dap');
+        if(label) label.textContent = soap ? t('Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart')
+          : dap ? t('Chart note (DAP) — add your assessment and plan, then copy it into your chart')
+          : t('Draft note — review and edit before using');
+        if(ta) ta.rows = (soap || dap) ? 12 : 7;
+        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap) ? t('Copy to chart') : t('Copy note');
         if(d && d.needsData){
           if(ta) ta.value = t('Not enough check-ins with AI turned on yet to draft a note.');
           if(meta) meta.textContent = '';
