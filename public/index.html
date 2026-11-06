@@ -9313,11 +9313,8 @@
   // Which photo set the close-up shows: 'm' or 'f' (the patient's choice,
   // remembered on this device). Female photos are f_<name>.webp, framed the
   // same as the male ones so the points line up on both.
-  // The Man / Woman switch is off for now: everyone sees the man's figure and
-  // photos. The woman's set (BTW_OUTLINE.f, BTW_SIDE_BASE_F, f_*.webp) stays
-  // in place; to bring the switch back, read the saved 'btw_body_sex' here
-  // and restore the switch in btwCreateBodyMap.
   let btwBodySex = 'm';
+  try { if(localStorage.getItem('btw_body_sex') === 'f') btwBodySex = 'f'; } catch(e){}
   function btwSetBodySex(v){ btwBodySex = (v === 'f') ? 'f' : 'm'; try { localStorage.setItem('btw_body_sex', btwBodySex); } catch(e){} }
   // Smooth front/back body outline in the 100x198 map space, a man's and a
   // woman's, shared by every figure (check-in map, demo, recovery figures)
@@ -9919,9 +9916,23 @@
     const figWrap = document.createElement('div'); figWrap.className = 'btw-mk-bodyfig' + (readOnly ? ' btw-mk-bodyfigt' : '');
     const side = document.createElement('div');
     rowEl.appendChild(figWrap); rowEl.appendChild(side);
-    // View buttons row (the Man / Woman switch that sat here is off for now).
+    // Man / Woman: which body the figure and the close-up photos show. Same
+    // remembered choice everywhere; the stored spots don't change with it.
     const top = document.createElement('div'); top.className = 'btw-pm-top';
     top.appendChild(views);
+    if(!readOnly){
+      const sexes = document.createElement('div'); sexes.className = 'btw-pz-sexes'; sexes.setAttribute('role', 'group');
+      sexes.setAttribute('aria-label', frL() ? 'Silhouette' : 'Body');
+      [['m', 'Man', 'Homme'], ['f', 'Woman', 'Femme']].forEach(function(o){
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btw-pz-sex'; b.setAttribute('data-sex', o[0]);
+        b.textContent = frL() ? o[2] : o[1];
+        b.addEventListener('click', function(){ btwSetBodySex(o[0]); syncSex(); render(); });
+        sexes.appendChild(b);
+      });
+      top.appendChild(sexes);
+    }
+    function syncSex(){ top.querySelectorAll('.btw-pz-sex').forEach(function(b){ const on = b.getAttribute('data-sex') === btwBodySex; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); }
+    syncSex();
     root.appendChild(top); root.appendChild(rowEl);
     if(readOnly){
       side.className = 'btw-mk-bodysum';
