@@ -14026,7 +14026,9 @@
     setDisp('btwAccTimeline', showDetail && n > 0);
     var bodyEl = document.getElementById('btwBodyOverview');
     var healthEl = document.getElementById('btwHealth');
-    var bodyVis = !!(bodyEl && bodyEl.style.display !== 'none' && bodyEl.innerHTML);
+    // The body overview only counts toward "Health & body" while it sits in it
+    // (a patient's is shown openly above the collapsible sections).
+    var bodyVis = !!(bodyEl && bodyEl.style.display !== 'none' && bodyEl.innerHTML && bodyEl.closest && bodyEl.closest('#btwAccHealth'));
     var healthVis = !!(healthEl && healthEl.style.display !== 'none' && healthEl.innerHTML);
     setDisp('btwAccHealth', showDetail && (bodyVis || healthVis));
     // One-line previews on the collapsed rows.
@@ -14815,6 +14817,17 @@
   function renderBodyOverview(){
     const host = document.getElementById('btwBodyOverview');
     if(!host) return;
+    // A patient in a physical field sees "Where it hurts" right under their
+    // progress, not folded into "Health & body" where it was easy to miss
+    // (the app shows it openly on My progress too). Clinicians keep it in the
+    // collapsible section.
+    const trendsAcc = document.getElementById('btwAccTrends');
+    const healthEl = document.getElementById('btwHealth');
+    if(isPatient()){
+      if(trendsAcc && host.nextSibling !== trendsAcc) trendsAcc.parentNode.insertBefore(host, trendsAcc);
+    } else if(healthEl && host.nextSibling !== healthEl){
+      healthEl.parentNode.insertBefore(host, healthEl);
+    }
     const list = state.checkIns || [];
     if(!painMapContext() || !list.length){ host.style.display='none'; host.innerHTML=''; return; }
     const merged = {}, freq = {};
@@ -14853,12 +14866,15 @@
       const catLbl = cl ? (fr ? cl.fr : cl.en) : '';
       const read = document.createElement('div');
       read.className = 'btw-bodyov-read';
-      let html = '<div class="btw-bodyov-readl">' + esc(fr ? 'Ce que décrit le patient' : 'How it reads') + '</div>'
+      const me = isPatient();
+      let html = '<div class="btw-bodyov-readl">' + esc(fr ? (me ? 'Ce que vous décrivez' : 'Ce que décrit le patient') : 'How it reads') + '</div>'
         + '<div class="btw-bodyov-readv">' + esc(catLbl) + '</div>';
       if(sensRead.flag){
-        html += '<div class="btw-bodyov-flag">⚑ ' + esc(fr
-          ? 'Signale des picotements / engourdissements — à revoir avant la prochaine visite.'
-          : 'Reports tingling / numbness — worth a look before the next visit.') + '</div>';
+        html += '<div class="btw-bodyov-flag">⚑ ' + esc(me
+          ? (fr ? 'Vous avez signalé des picotements / engourdissements — à mentionner avant votre prochaine visite.'
+                : 'You mentioned tingling / numbness — worth raising before your next visit.')
+          : (fr ? 'Signale des picotements / engourdissements — à revoir avant la prochaine visite.'
+                : 'Reports tingling / numbness — worth a look before the next visit.')) + '</div>';
       }
       read.innerHTML = html;
       host.appendChild(read);
