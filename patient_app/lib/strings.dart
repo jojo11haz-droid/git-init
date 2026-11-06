@@ -336,6 +336,11 @@ class S {
   String get betweenWillReadMood => _(
       'Between will read your mood from your check-in.',
       'Between estimera votre humeur à partir de votre suivi.');
+  // Home exercise program (assigned by the clinician) — mirrors the website.
+  String get homeExercises =>
+      _('Your home exercises', 'Vos exercices à domicile');
+  String get tickWhatYouDid => _('Tick what you did since your last check-in.',
+      'Cochez ce que vous avez fait depuis votre dernier suivi.');
   // Pain scale (physio, kinesiology, osteopathy, OT) — mirrors the website.
   String get painRightNow => _('Pain right now', 'Douleur en ce moment');
   String get noPain => _('No pain', 'Aucune douleur');

@@ -47,8 +47,12 @@ import {
   getClinicianMfa, setMfaSecret, setMfaEnabled,
   createMfaChallenge, getValidMfaChallenge, deleteMfaChallenge
 } from './db.js';
+import {
+  listExercises, addExercise, archiveExercise, listAllExercises,
+  setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
+} from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -477,8 +481,9 @@ Rules:
 // into their EMR and then edit, synthesized from the between-session check-ins.
 // Consent-safe (only check-ins the patient let AI process), plain text, neutral,
 // never diagnostic — it documents what the patient reported, nothing more.
-async function draftProgressNote({ name, discipline, accountType, checkIns }) {
+async function draftProgressNote({ name, discipline, accountType, checkIns, exercises }) {
   if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  if (PAIN_DISCIPLINES.includes(discipline || '')) return draftSoapNote({ name, discipline, accountType, checkIns, exercises });
   const focus = documentFocusForProfession({ discipline, accountType });
   const who = name || 'the patient';
   const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000;
@@ -516,6 +521,66 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
   const data = await response.json();
   const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 2500);
   return { note, checkInsUsed: consented.length, needsData: false };
+}
+
+// Physical-rehab chart note in SOAP format (Subjective / Objective /
+// Assessment / Plan), drafted from the between-visit check-ins: what the
+// patient said, their pain scores, body-map areas and how it feels, and home
+// exercise adherence. The AI only documents what was reported; Assessment
+// and the clinical part of the Plan are left for the clinician to write.
+async function draftSoapNote({ name, discipline, accountType, checkIns, exercises }) {
+  const focus = documentFocusForProfession({ discipline, accountType });
+  const who = name || 'the patient';
+  const cutoff = Date.now() - 28 * 24 * 60 * 60 * 1000;
+  const recent = (checkIns || [])
+    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice(0, 20).reverse();
+  if (!recent.length) return { note: '', checkInsUsed: 0, needsData: true, format: 'soap' };
+  const exById = {};
+  for (const e of exercises || []) exById[e.id] = e;
+  const active = (exercises || []).filter(e => !e.archived_at);
+  const lines = recent.map(c => {
+    const d = new Date(c.submitted_at).toISOString().slice(0, 10);
+    const parts = [];
+    if (c.mood_score != null) parts.push(`pain ${c.mood_score}/10${c.mood_inferred ? ' (estimated)' : ''}`);
+    if (c.pain_map && typeof c.pain_map === 'object') {
+      const areas = Object.entries(c.pain_map).slice(0, 6).map(([k, v]) => {
+        const s = c.pain_sensations && c.pain_sensations[k];
+        return `${k}=${v}/10${s ? ' ' + s : ''}`;
+      }).join(', ');
+      if (areas) parts.push(`areas: ${areas}`);
+    }
+    if (Array.isArray(c.exercises_done) && c.exercises_done.length) {
+      parts.push('did: ' + c.exercises_done.map(id => exById[id] ? exById[id].name : null).filter(Boolean).join(', '));
+    }
+    const said = c.summary_text ? String(c.summary_text).trim().slice(0, 300) : '';
+    return `- ${d} (${parts.join('; ') || 'no score'})${said ? ': ' + said : ''}`;
+  }).join('\n');
+  const adherence = active.length
+    ? active.map(e => `${e.name}: ticked in ${recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length} of ${recent.length} check-ins`).join('; ')
+    : 'no home program assigned in Between';
+  const first = new Date(recent[0].submitted_at).toISOString().slice(0, 10);
+  const last = new Date(recent[recent.length - 1].submitted_at).toISOString().slice(0, 10);
+  const system = `You draft a ${focus.role}'s chart note in SOAP format for ${who}, from what ${who} reported between visits (${first} to ${last}), for the clinician to paste into their charting software and edit.
+Rules:
+- Document ONLY what is in the data. Never diagnose, never assess, never recommend treatment, never invent findings.
+- Body-map keys look like "front:l_knee_cap" or "back:lower_back": write them as plain anatomy ("left knee, kneecap", "lower back"). l_ = left, r_ = right. Sensation codes: ache = aching, tight = tightness, stiff = stiffness/locking, sharp = sharp/shooting, numb = tingling/numbness, throb = throbbing/heat.
+- Same language as the check-ins. Plain text, no markdown, exactly these four labelled lines/blocks:
+S: what the patient reported between visits (symptoms, where, how it feels, activities/function, in 2-4 sentences, close to their words).
+O: Patient-reported between visits — pain scores (range and trend with numbers), body areas marked, home exercise adherence. End with "In-clinic findings: [to add]".
+A: [Clinician to complete]
+P: Home program: list the assigned exercises with their adherence. Then "[Clinician to add plan]".
+- Keep it under about 220 words.`;
+  const user = `Check-ins (oldest first):\n${lines}\n\nHome program adherence: ${adherence}`;
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 800, system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
+  const data = await response.json();
+  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 3000);
+  return { note, checkInsUsed: recent.length, needsData: false, format: 'soap' };
 }
 
 // A short, warm encouragement message the clinician can send to a patient
@@ -2203,7 +2268,8 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         via_questions: c.input_mode === 'questions',
         pain_map: c.pain_map || null,
         pain_sensations: c.pain_sensations || null,
-        body_sex: c.body_sex || null
+        body_sex: c.body_sex || null,
+        exercises_done: c.exercises_done || null
       }))
     };
     const safeName = String(patient.display_name || 'patient')
@@ -2338,7 +2404,7 @@ function painMapPeak(pm) {
 // Which body figure the patient drew on: 'm' | 'f', else null.
 function sanitizeBodySex(v) { return v === 'm' || v === 'f' ? v : null; }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex }) {
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -2385,6 +2451,9 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
     painSens: sanitizePainSens(painSens),
     // Only meaningful alongside a pain map.
     bodySex: sanitizePainMap(painMap) ? sanitizeBodySex(bodySex) : null,
+    // Home-exercise ticks, only for exercises in this patient's active program.
+    exercisesDone: Array.isArray(exercisesDone) && exercisesDone.length
+      ? sanitizeExercisesDone(exercisesDone, (await listExercises(patient.id)).map(e => e.id)) : null,
     inputMode: inputMode === 'questions' ? 'questions' : null
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
@@ -2393,12 +2462,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -2497,6 +2566,122 @@ app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedCl
 
 // Caseload digest: a short triage read across the whole caseload (state of the
 // week + who to see first), from the caseload signals only.
+// --- Hands-off mode ---
+// Who needs the clinician today, and why (computed, no AI): safety flags,
+// tingling/numbness, a worsening score, or gone quiet. Same list as the
+// morning email, so the dashboard and the inbox always agree.
+async function needsListFor(clinician) {
+  const patients = await listPatients(clinician.id);
+  const scores = await recentScoresForClinician(clinician.id, 4);
+  return needsAttention(patients, scores, { pain: PAIN_DISCIPLINES.includes(clinician.discipline || '') });
+}
+
+app.get('/api/caseload/needs', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    res.json({ items: await needsListFor(req.clinician), digestEnabled: !!req.clinician.needs_digest_enabled, emailReady: emailConfigured() });
+  } catch (err) {
+    console.error('Needs list error:', err);
+    res.status(500).json({ error: 'Could not load the list just now.' });
+  }
+});
+
+app.post('/api/clinician/needs-digest', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const enabled = !!(req.body && req.body.enabled);
+    await setClinicianNeedsDigest(req.clinician.id, enabled);
+    res.json({ enabled });
+  } catch (err) {
+    console.error('Needs digest setting error:', err);
+    res.status(500).json({ error: 'Could not save that setting.' });
+  }
+});
+
+// --- Home exercise program ---
+// The clinician assigns exercises (typed, or picked from AI suggestions with a
+// short how-to); the patient ticks them off in their check-in.
+app.get('/api/patients/:id/exercises', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ exercises: await listExercises(patient.id), all: await listAllExercises(patient.id) });
+  } catch (err) {
+    console.error('List exercises error:', err);
+    res.status(500).json({ error: 'Could not load exercises.' });
+  }
+});
+
+app.post('/api/patients/:id/exercises', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const list = Array.isArray(req.body && req.body.exercises) ? req.body.exercises : [req.body];
+    const current = await listExercises(patient.id);
+    if (current.length + list.length > 20) return res.status(400).json({ error: 'A program can have up to 20 exercises.' });
+    const added = [];
+    for (const raw of list.slice(0, 10)) {
+      const ex = sanitizeExercise(raw);
+      if (ex) added.push(await addExercise(patient.id, ex));
+    }
+    if (!added.length) return res.status(400).json({ error: 'Give the exercise a name.' });
+    res.status(201).json({ added, exercises: await listExercises(patient.id) });
+  } catch (err) {
+    console.error('Add exercise error:', err);
+    res.status(500).json({ error: 'Could not save the exercise.' });
+  }
+});
+
+app.delete('/api/patients/:id/exercises/:exId', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.exId)) return res.status(400).json({ error: 'Unknown exercise.' });
+    await archiveExercise(patient.id, req.params.exId);
+    res.json({ exercises: await listExercises(patient.id) });
+  } catch (err) {
+    console.error('Remove exercise error:', err);
+    res.status(500).json({ error: 'Could not remove the exercise.' });
+  }
+});
+
+// AI suggestions: the clinician types the goal or area ("early patellofemoral
+// pain, can't do stairs") and gets a few common exercises with a one-line
+// how-to and a starting dose, to pick from and edit. Never auto-assigned.
+async function suggestExercises({ goal, discipline, accountType, lang }) {
+  const focus = documentFocusForProfession({ discipline, accountType });
+  const fr = lang === 'fr';
+  const system = `You help a ${focus.role} build a home exercise program quickly. Suggest 4 to 6 common, well-established, low-risk home exercises for the goal the clinician gives.
+Rules:
+- The clinician decides; these are suggestions to pick from and edit, not a prescription.
+- Each exercise: a short name, ONE plain-language sentence on how to do it (for the patient to read), and a typical starting dose (e.g. "3 x 10, daily" or "hold 30 s x 3").
+- No diagnosis, no medical claims, nothing risky or advanced. Write in ${fr ? 'French' : 'English'}.
+- Respond with ONLY a JSON array, no prose, no markdown fences: [{"name": "...", "description": "...", "dosage": "..."}]`;
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system, messages: [{ role: 'user', content: `Goal: ${String(goal).slice(0, 300)}` }] })
+  });
+  if (!response.ok) { console.error('Anthropic API error (exercises):', response.status); throw new Error('AI suggestions failed.'); }
+  const data = await response.json();
+  const raw = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
+  let parsed; try { parsed = JSON.parse(raw); } catch (e) { throw new Error('AI returned an unexpected format.'); }
+  return (Array.isArray(parsed) ? parsed : []).map(sanitizeExercise).filter(Boolean).slice(0, 6);
+}
+
+app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'Exercise suggestions are unavailable right now.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const goal = req.body && typeof req.body.goal === 'string' ? req.body.goal.trim() : '';
+    if (goal.length < 3) return res.status(400).json({ error: 'Describe the goal or area in a few words.' });
+    const lang = (req.body && req.body.lang === 'fr') ? 'fr' : 'en';
+    res.json({ suggestions: await suggestExercises({ goal, discipline: req.clinician.discipline, accountType: req.clinician.account_type, lang }) });
+  } catch (err) {
+    console.error('Suggest exercises error:', err.message);
+    res.status(502).json({ error: 'Could not suggest exercises just now. Please try again.' });
+  }
+});
+
 app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
   try {
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The caseload digest is unavailable right now.' });
@@ -2557,7 +2742,8 @@ app.get('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinici
       name: patient.display_name,
       discipline: req.clinician.discipline,
       accountType: req.clinician.account_type,
-      checkIns
+      checkIns,
+      exercises: await listAllExercises(patient.id)
     });
     res.json(result);
   } catch (err) {
@@ -3767,7 +3953,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -3828,7 +4014,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.
@@ -3926,6 +4112,16 @@ app.get('/api/patient/health', requireDb, requirePatientAuth, async (req, res) =
 // --- Future-self notes ---
 // A private note a patient leaves for a harder day; the app surfaces it back to
 // them when their mood is low. Patient-scoped only; never visible to a clinician.
+// The patient's home exercise program, to tick off in their check-in.
+app.get('/api/patient/exercises', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    res.json({ exercises: await listExercises(req.patient.id) });
+  } catch (err) {
+    console.error('Patient exercises error:', err);
+    res.status(500).json({ error: 'Could not load your exercises.' });
+  }
+});
+
 app.get('/api/patient/future-notes', requireDb, requirePatientAuth, async (req, res) => {
   try {
     res.json(await listFutureNotes(req.patient.id));
@@ -4323,6 +4519,38 @@ async function runReminderSweep() {
     console.error('Quiet reminder sweep failed:', err);
   }
   if (scheduled || quiet) console.log(`📣 Reminder sweep: ${scheduled} scheduled, ${quiet} quiet-nudge.`);
+  try { await runNeedsDigest(base); } catch (err) { console.error('Needs digest sweep failed:', err); }
+}
+
+// Hands-off mode: each morning (from 7:30 local), email clinicians who opted in
+// the list of patients who need them — and nothing on days nobody does. One
+// email per clinician per day (claimNeedsDigest), no patient content beyond
+// first name + reason, so it's safe in an inbox.
+const NEEDS_DIGEST_FROM_MIN = 7 * 60 + 30;
+async function runNeedsDigest(base) {
+  if (!emailConfigured()) return;
+  const now = tzNow(REMINDER_DEFAULT_TZ);
+  if (now.minutes < NEEDS_DIGEST_FROM_MIN) return;
+  for (const c of await listNeedsDigestClinicians()) {
+    if (c.needs_digest_last_sent === now.date) continue; // already done today
+    const items = await needsListFor(c);
+    if (!(await claimNeedsDigest(c.id, now.date))) continue; // another tick got it
+    if (!items.length) continue; // quiet day: nothing to send
+    const firstName = (p) => (String(p.name || '').trim().split(/\s+/)[0]) || 'A patient';
+    const lines = items.slice(0, 25).map(p => `• ${firstName(p)} — ${p.reasons.map(r => r.en).join('; ')}`).join('\n');
+    const more = items.length > 25 ? `\n…and ${items.length - 25} more.` : '';
+    try {
+      await sendEmail({
+        to: c.email,
+        subject: `${items.length} ${items.length === 1 ? 'patient needs' : 'patients need'} you today — Between`,
+        text: `Good morning${c.name ? ' ' + String(c.name).split(/\s+/)[0] : ''},\n\n` +
+          `Only the people who need you today:\n\n${lines}${more}\n\n` +
+          `Everyone else is checking in fine — nothing to do for them.\n\n` +
+          `Open your dashboard: ${base}/\n\n` +
+          `— Between\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
+      });
+    } catch (err) { console.error('Needs digest email failed for a clinician:', err); }
+  }
 }
 
 function startReminderSweep() {

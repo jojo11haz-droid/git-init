@@ -126,6 +126,16 @@ class CheckIn {
 
 /// An intake document the patient shared, plus the AI starting summary that
 /// Between prepared for the clinician (only present once ai_status == 'done').
+/// One exercise in the patient's home program, assigned by their clinician.
+class HomeExercise {
+  HomeExercise(this.raw);
+  final Map<String, dynamic> raw;
+  String get id => raw['id'] as String;
+  String get name => (raw['name'] as String?) ?? '';
+  String? get description => raw['description'] as String?;
+  String? get dosage => raw['dosage'] as String?;
+}
+
 class PatientDocument {
   PatientDocument(this.raw);
 
@@ -387,6 +397,15 @@ class AppState extends ChangeNotifier {
         ((result as Map)['document'] as Map).cast<String, dynamic>());
   }
 
+  /// The home exercise program to tick off in a check-in (empty if none).
+  Future<List<HomeExercise>> fetchExercises() async {
+    final data = await _api.get('/api/patient/exercises');
+    final list = ((data as Map)['exercises'] as List?) ?? const [];
+    return list
+        .map((e) => HomeExercise((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
   Future<List<PatientDocument>> fetchDocuments() async {
     final data = await _api.get('/api/patient/documents');
     final list = ((data as Map)['documents'] as List?) ?? const [];
@@ -449,6 +468,7 @@ class AppState extends ChangeNotifier {
     String? inputMode,
     bool painScale = false, // the score is pain (physical rehab), not mood
     String? bodySex, // 'm' | 'f': the figure the pain map was drawn on
+    List<String>? exercisesDone, // home-program exercise ids ticked off
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       // Tells the server which scale a skipped score should be estimated on.
@@ -463,6 +483,8 @@ class AppState extends ChangeNotifier {
       // So the clinician sees the spots on the same figure.
       if (painMap != null && painMap.isNotEmpty && bodySex != null)
         'bodySex': bodySex,
+      if (exercisesDone != null && exercisesDone.isNotEmpty)
+        'exercisesDone': exercisesDone,
       if (inputMode != null) 'inputMode': inputMode,
     });
     final map = (data as Map).cast<String, dynamic>();
