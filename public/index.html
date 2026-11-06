@@ -1284,6 +1284,11 @@
   /* Hands-off "Needs you today" card + home exercise program. */
   .btw-needs{border-color:var(--clay,#C0392B);background:linear-gradient(180deg,rgba(192,57,43,.06),transparent 90%);}
   .btw-needs .btw-today-row .meta{color:var(--clay,#C0392B);}
+  .btw-saved{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin:0 0 16px;background:var(--panel);}
+  .btw-saved-ic{width:34px;height:34px;border-radius:50%;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .btw-saved-big{font-size:14px;color:var(--ink);line-height:1.35;}
+  .btw-saved-big strong{color:var(--moss);}
+  .btw-saved-break{font-size:11.5px;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
   .btw-needs-empty{font-size:12.5px;color:var(--ink-soft);padding:2px 2px 4px;}
   .btw-needs-mail{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12px;color:var(--ink-soft);cursor:pointer;line-height:1.4;}
   .btw-needs-mail input{margin-top:2px;accent-color:var(--moss);}
@@ -3794,6 +3799,10 @@
       <!-- ============ ZONE: caseload overview ============ -->
       <div class="btw-zone" id="btwZoneOverview"><span class="btw-zone-pin">◆</span><span id="btwZoneOverviewLabel">Caseload overview</span></div>
 
+      <div class="btw-saved" id="btwSaved" style="display:none;">
+        <div class="btw-saved-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+        <div><div class="btw-saved-big" id="btwSavedBig"></div><div class="btw-saved-break" id="btwSavedBreak"></div></div>
+      </div>
       <div class="btw-today btw-needs" id="btwNeeds" style="display:none;">
         <div class="btw-today-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -4894,6 +4903,11 @@
     "Tick what you did since your last check-in.":"Cochez ce que vous avez fait depuis votre dernier suivi.",
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
+    "Time saved will show here":"Le temps gagné s'affichera ici",
+    "As Between drafts your notes, builds programs and summarises check-ins, it adds up the time it saves you.":"À mesure que Between rédige vos notes, prépare vos programmes et résume les suivis, il calcule le temps qu'il vous fait gagner.",
+    "Between saved you about":"Between vous a fait gagner environ",
+    "in the last 30 days":"ces 30 derniers jours",
+    "estimated":"estimation",
     "Between-session practice":"Pratique entre les séances",
     "Your practice between sessions":"Votre pratique entre les séances",
     "Goal, e.g. worry at night, low motivation":"Objectif, p. ex. inquiétudes le soir, peu de motivation",
@@ -11082,6 +11096,7 @@
     }
     loadAlerts().catch(()=>{}); // best-effort, in parallel
     loadNeeds().catch(()=>{});  // hands-off "needs you today" list
+    loadTimeSaved().catch(()=>{}); // "Between saved you ~X this month"
     await loadCheckIns();
   }
 
@@ -13895,6 +13910,48 @@
     });
   }
 
+  // --- Time saved: what Between did for the clinician this month ---
+  // An estimate (conservative minutes per action, see clinical.js) of the
+  // charting, prep and program writing Between took off their plate.
+  const SAVED_WORDS = {
+    note:{ en:['chart note','chart notes'], fr:['note de dossier','notes de dossier'] },
+    prep:{ en:['session brief','session briefs'], fr:['résumé de séance','résumés de séance'] },
+    encourage:{ en:['message drafted','messages drafted'], fr:['message rédigé','messages rédigés'] },
+    digest:{ en:['caseload summary','caseload summaries'], fr:['résumé de clientèle','résumés de clientèle'] },
+    needs_email:{ en:['morning triage email','morning triage emails'], fr:['courriel de tri du matin','courriels de tri du matin'] },
+    program_item:{ en:['program item written','program items written'], fr:['élément de programme rédigé','éléments de programme rédigés'] },
+    summary:{ en:['check-in summarised','check-ins summarised'], fr:['suivi résumé','suivis résumés'] }
+  };
+  async function loadTimeSaved(){
+    if(!isTherapist()) return;
+    try { state.timeSaved = await api('GET', '/api/clinician/time-saved?days=30'); }
+    catch(e){ state.timeSaved = null; }
+    renderTimeSaved();
+  }
+  function renderTimeSaved(){
+    var card = document.getElementById('btwSaved'); if(!card) return;
+    var d = state.timeSaved;
+    if(!isTherapist() || !d){ card.style.display = 'none'; return; }
+    card.style.display = 'flex';
+    var fr = curLang === 'fr';
+    var big = document.getElementById('btwSavedBig');
+    var brk = document.getElementById('btwSavedBreak');
+    if(!d.totalMinutes){
+      big.textContent = t('Time saved will show here');
+      brk.textContent = t('As Between drafts your notes, builds programs and summarises check-ins, it adds up the time it saves you.');
+      return;
+    }
+    var h = Math.floor(d.totalMinutes / 60), m = d.totalMinutes % 60;
+    var lbl = h ? (m ? h + ' h ' + m + ' min' : h + ' h') : m + ' min';
+    big.innerHTML = esc(t('Between saved you about')) + ' <strong>' + esc(lbl) + '</strong> ' + esc(t('in the last 30 days'));
+    var parts = (d.items || []).slice().sort(function(a,b){ return b.minutes - a.minutes; }).map(function(it){
+      var w = SAVED_WORDS[it.kind]; if(!w) return null;
+      var pair = fr ? w.fr : w.en;
+      return it.count + ' ' + (it.count === 1 ? pair[0] : pair[1]);
+    }).filter(Boolean);
+    brk.textContent = parts.join(' · ') + ' — ' + t('estimated');
+  }
+
   // --- Hands-off mode: "Needs you today" ---
   // Only the patients who need the clinician (safety flag, tingling/numbness,
   // worsening score, gone quiet), with the reason — everyone else needs
@@ -15615,6 +15672,7 @@
     renderDigest();
     renderPrep();
     renderNeeds();
+    renderTimeSaved();
     renderHep();
     renderSignature();
     renderInsights();

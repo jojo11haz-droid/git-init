@@ -4,7 +4,7 @@
 // no database: just the functions. Exits non-zero on the first failure so CI
 // turns red.
 
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat } from '../clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, TIME_SAVED_MINUTES } from '../clinical.js';
 import { readFileSync } from 'fs';
 
 let failures = 0;
@@ -132,6 +132,13 @@ eq(noteFormat({ accountType: 'coach', discipline: 'neuropsych' }), 'dap', 'neuro
 eq(noteFormat({ accountType: 'coach', discipline: 'physio' }), 'soap', 'physio → SOAP note');
 eq(noteFormat({ accountType: 'coach', discipline: 'nutrition' }), 'soap', 'nutrition → SOAP note');
 eq(noteFormat({ accountType: 'trainer' }), 'soap', 'trainer → SOAP note');
+
+console.log('timeSavedSummary — the time-saved counter');
+eq(timeSavedSummary({ note: 3, summary: 10, prep: 0, bogus: 9 }), { items: [{ kind: 'note', count: 3, minutes: 18 }, { kind: 'summary', count: 10, minutes: 10 }], totalMinutes: 28, label: '28 min' }, 'counts → minutes; zero and unknown kinds dropped');
+eq(timeSavedSummary({ note: 10, program_item: 5 }).label, '1 h 10 min', 'hours + minutes label');
+eq(timeSavedSummary({ note: 10 }).label, '1 h', 'whole hours label');
+eq(timeSavedSummary({}).totalMinutes, 0, 'nothing yet → 0');
+eq(Object.values(TIME_SAVED_MINUTES).every(m => m > 0 && m <= 10), true, 'every estimate is conservative (1–10 min)');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');
