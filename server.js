@@ -184,7 +184,11 @@ if (!ANTHROPIC_API_KEY) {
 const VALID_TAGS = ['Sleep', 'Work', 'Conflict', 'Craving', 'Panic', 'Family', 'Health', 'Money', 'Loneliness', 'Anger', 'Win', 'Social', 'Other'];
 const MODEL_VERSION = 'claude-sonnet-5';
 
-async function summarizeCheckIn(text) {
+// opts.pain: the check-in is on the pain scale (physical fields), so the model
+// also estimates a pain level (1 = mild, 10 = worst) — the mood estimate runs
+// the other way and must never be stored as a pain score.
+async function summarizeCheckIn(text, opts) {
+  const wantPain = !!(opts && opts.pain);
   if (!ANTHROPIC_API_KEY) {
     throw new Error('Server is not configured with an API key.');
   }
@@ -192,7 +196,7 @@ async function summarizeCheckIn(text) {
   const prompt = `A patient sent this between-session check-in to their therapist: "${text.replace(/"/g, '\\"')}"
 
 Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly this shape:
-{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation. Write the summary in the SAME language the patient wrote in (e.g. French if they wrote in French).", "auto_tags": ["choose 0-3 from these exact English keys regardless of the patient's language: Sleep, Work, Conflict, Craving, Panic, Family, Health, Money, Loneliness, Anger, Win, Social, Other"], "mood_estimate": an integer from 1 (very low) to 10 (very good) estimating the patient's current mood from what they wrote, or null if there is genuinely not enough emotional content to estimate, "risk_flag": true or false (true ONLY if there is language, in any language, suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
+{"summary": "2-3 neutral sentences describing what the patient reported, close to their own words, no clinical diagnosis or interpretation. Write the summary in the SAME language the patient wrote in (e.g. French if they wrote in French).", "auto_tags": ["choose 0-3 from these exact English keys regardless of the patient's language: Sleep, Work, Conflict, Craving, Panic, Family, Health, Money, Loneliness, Anger, Win, Social, Other"], "mood_estimate": an integer from 1 (very low) to 10 (very good) estimating the patient's current mood from what they wrote, or null if there is genuinely not enough emotional content to estimate, ${wantPain ? '"pain_estimate": an integer from 1 (barely any pain) to 10 (worst pain imaginable) estimating the physical pain the patient describes right now, or null if they don\'t describe their pain clearly enough to estimate, ' : ''}"risk_flag": true or false (true ONLY if there is language, in any language, suggesting self-harm, suicidal ideation, or an acute safety concern)}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -234,10 +238,18 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
     if (r >= 1 && r <= 10) moodEstimate = r;
   }
 
+  let painEstimate = null;
+  const pe = parsed.pain_estimate;
+  if (wantPain && typeof pe === 'number' && Number.isFinite(pe)) {
+    const r = Math.round(pe);
+    if (r >= 1 && r <= 10) painEstimate = r;
+  }
+
   return {
     summary: typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : 'Check-in received.',
     auto_tags: Array.isArray(parsed.auto_tags) ? parsed.auto_tags.filter(t => VALID_TAGS.includes(t)).slice(0, 3) : [],
     mood_estimate: moodEstimate,
+    pain_estimate: painEstimate,
     risk_flag: parsed.risk_flag === true
   };
 }
@@ -2315,7 +2327,14 @@ function sanitizePainSens(ps) {
   return Object.keys(out).length ? out : null;
 }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode }) {
+// The worst level on a pain map (1..10), or null when nothing is marked.
+function painMapPeak(pm) {
+  const clean = sanitizePainMap(pm);
+  if (!clean) return null;
+  return Math.max(...Object.values(clean));
+}
+
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -2324,18 +2343,27 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
   const moodProvided = moodScore != null;
   let finalMood = moodProvided ? moodScore : null;
   let moodInferred = false;
+  // Pain-scale check-ins (physical fields) estimate a PAIN level, never a mood:
+  // first the worst spot the patient marked on the body map (their own
+  // rating, no AI needed), else the AI's pain estimate from what they wrote.
+  const painKind = scoreKind === 'pain';
+  if (!moodProvided && painKind) {
+    const peak = painMapPeak(painMap);
+    if (peak != null) { finalMood = peak; moodInferred = true; }
+  }
 
   // Only call the AI if this patient has actually opted in — mirrors the
   // privacy-by-default rule from the consent flow, enforced server-side too.
   if (patient.ai_consent_enabled && text && text.trim()) {
     try {
-      const result = await summarizeCheckIn(text.trim());
+      const result = await summarizeCheckIn(text.trim(), { pain: painKind });
       summaryText = result.summary;
       autoTags = result.auto_tags;
       riskFlag = result.risk_flag;
       modelVersion = MODEL_VERSION;
-      if (!moodProvided && result.mood_estimate != null) {
-        finalMood = result.mood_estimate;
+      const est = painKind ? result.pain_estimate : result.mood_estimate;
+      if (!moodProvided && finalMood == null && est != null) {
+        finalMood = est;
         moodInferred = true;
       }
     } catch (aiErr) {
@@ -2359,12 +2387,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, painSens, inputMode } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -3733,7 +3761,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -3794,7 +3822,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.

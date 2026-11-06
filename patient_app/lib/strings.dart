@@ -330,6 +330,13 @@ class S {
   String get betweenWillReadMood => _(
       'Between will read your mood from your check-in.',
       'Between estimera votre humeur à partir de votre suivi.');
+  // Pain scale (physio, kinesiology, osteopathy, OT) — mirrors the website.
+  String get painRightNow => _('Pain right now', 'Douleur en ce moment');
+  String get noPain => _('No pain', 'Aucune douleur');
+  String get severe => _('Severe', 'Sévère');
+  String get betweenWillReadPain => _(
+      'Between will use the worst spot on your body map, or estimate your pain from what you write.',
+      'Between utilisera la zone la plus douloureuse de votre carte, ou estimera votre douleur à partir de ce que vous écrivez.');
   String get illPick => _('I\'ll pick', 'Je choisis');
   String get notSureYet => _('Not sure yet', 'Pas encore sûr');
   String get betweenWillPickTopic => _(

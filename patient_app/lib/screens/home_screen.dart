@@ -68,7 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _questionsMode = false;
   List<TextEditingController> _answerCtrls = [];
   // "Can't decide?" options — let Between read mood/topic from the check-in.
-  bool _moodEstimate = false; // true = let Between estimate the mood
+  bool _moodEstimate = false; // true = let Between estimate the mood / pain
+  bool _painScale = false; // set each build from the discipline profile
   bool _topicAuto = false; // true = let Between pick the theme
 
   final _recorder = AudioRecorder();
@@ -469,6 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
             painMap: _painMap.isEmpty ? null : _painMap,
             painSens: _painSens.isEmpty ? null : _painSens,
             inputMode: inputMode,
+            painScale: _painScale,
           );
       if (!mounted) return;
       _text.clear();
@@ -518,6 +520,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ? profileByKey(state.previewCategory!)
         : profileFor(patient);
     final aiOn = patient.aiConsentEnabled; // "let Between decide" needs AI on
+    // Physical rehab rates pain (high = worse), not mood (high = better).
+    final painScale = profile.isPainScale;
+    _painScale = painScale;
     _ensureAnswerCtrls(questionsFor(profile, s.isFr).length);
     return Scaffold(
       body: SafeArea(
@@ -821,12 +826,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     secondChild: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s.moodRightNow,
+                        Text(painScale ? s.painRightNow : s.moodRightNow,
                             style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600)),
-                        // "I'll set it / Let Between estimate" — only when AI
-                        // summaries are on, since that's what reads it.
-                        if (aiOn) ...[
+                        // "I'll set it / Let Between estimate" — when AI
+                        // summaries are on (it reads the note), or on the pain
+                        // scale, where the body map's worst spot needs no AI.
+                        if (aiOn || painScale) ...[
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerLeft,
@@ -842,7 +848,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (_moodEstimate)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Text(s.betweenWillReadMood,
+                            child: Text(
+                                painScale
+                                    ? s.betweenWillReadPain
+                                    : s.betweenWillReadMood,
                                 style: const TextStyle(
                                     fontSize: 13,
                                     color: BtwColors.inkSoft,
@@ -851,7 +860,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         else
                           Row(
                             children: [
-                              Text(s.low,
+                              Text(painScale ? s.noPain : s.low,
                                   style: const TextStyle(
                                       fontSize: 12, color: BtwColors.inkSoft)),
                               Expanded(
@@ -865,7 +874,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onChanged: (v) => setState(() => _mood = v),
                                 ),
                               ),
-                              Text(s.high,
+                              Text(painScale ? s.severe : s.high,
                                   style: const TextStyle(
                                       fontSize: 12, color: BtwColors.inkSoft)),
                             ],
