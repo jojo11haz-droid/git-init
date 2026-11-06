@@ -1469,10 +1469,16 @@
   .btw-pain-zoom[hidden]{display:none;}
   .btw-pain-zoom-t{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:2px;}
   .btw-pain-zoom-s{font-size:10.5px;color:var(--ink-soft);margin-bottom:6px;line-height:1.35;}
-  .btw-pain-zoom-fig{width:120px;max-width:100%;margin:0 auto 8px;cursor:pointer;}
-  .btw-pain-zoom-fig svg{width:100%;height:auto;display:block;}
-  .btw-bzd{fill:#fff;fill-opacity:.35;stroke:#9A4A31;stroke-opacity:.45;stroke-width:.8;stroke-dasharray:2 1.6;pointer-events:all;transition:fill .12s ease;}
-  .btw-bzd.sel{stroke:var(--ink);stroke-opacity:.9;stroke-width:1.6;stroke-dasharray:none;}
+  .btw-pain-zoom-fig{width:160px;max-width:100%;margin:0 auto 9px;}
+  .btw-pz-pic{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#F5F4F1;cursor:pointer;}
+  .btw-pz-pic.flip{transform:scaleX(-1);}
+  .btw-pz-pic img{width:100%;height:100%;display:block;object-fit:cover;user-select:none;-webkit-user-drag:none;}
+  .btw-pz-dot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;padding:0;border-radius:50%;border:2px solid #fff;background:var(--dc,rgba(30,76,134,.88));box-shadow:0 0 0 1px rgba(26,30,28,.35),0 1px 3px rgba(0,0,0,.3);cursor:pointer;transition:transform .12s ease,background .12s ease;}
+  .btw-pz-dot::after{content:"";position:absolute;inset:-9px;border-radius:50%;}
+  .btw-pz-dot:hover{transform:scale(1.15);}
+  .btw-pz-dot.on{background:var(--dc);}
+  .btw-pz-dot.sel{transform:scale(1.3);border-color:var(--ink,#1A1E1C);box-shadow:0 0 0 3px rgba(255,255,255,.85),0 1px 4px rgba(0,0,0,.35);}
+  .btw-pz-dot:focus-visible{outline:2px solid var(--moss);outline-offset:3px;}
   .btw-pain-zoom .btw-pain-sens-chips{gap:5px;}
   .btw-pain-zoom .btw-pain-sens-chip{padding:4px 9px;font-size:11px;}
   .btw-bodyov-read{margin-top:12px;padding-top:11px;border-top:1px solid var(--line,#e5e0d6);}
@@ -9179,119 +9185,105 @@
     return (best && bestD <= 4*4) ? best : null;
   }
 
-  // Precise sub-spots for the main rehab areas, drawn as a zoomed close-up.
-  // Close-up space is 100x100: an outline path, light anatomy lines, and the
-  // tappable spots. Sided parts are authored for the LEFT part (the body's
-  // midline lies to the right of the drawing, so "inner" sits right) and
-  // mirrored for the right part. A sub-spot is stored as "view:part_sub", e.g.
+  // Precise sub-spots for the main rehab areas: a close-up photo of the part
+  // with a tappable point on each spot. Points are [id, en, fr, x, y] with x/y
+  // in percent of the (square) photo. Photos show the LEFT part (the body's
+  // midline to the right, so "inner" sits right); the right part shows the
+  // same photo mirrored. A sub-spot is stored as "view:part_sub", e.g.
   // "front:l_knee_cap", next to the plain "front:l_knee" whole-part key.
-  // Kept in step with patient_app/lib/body_map.dart (_detail).
-  function btwE(cx,cy,rx,ry){ return {el:'ellipse', a:{cx:cx,cy:cy,rx:rx,ry:ry}}; }
-  function btwR(x,y,w,h){ return {el:'rect', a:{x:x,y:y,width:w,height:h,rx:Math.min(5, w/2, h/2)}}; }
+  // Kept in step with patient_app/lib/body_map.dart (_detail) by app-tests.
   const BTW_DETAIL = {
-    knee: { sided:true, out:'M30 0 L70 0 C71 20 72 32 70 48 C69 60 66 72 64 100 L36 100 C34 72 31 60 30 48 C28 32 29 20 30 0 Z',
-      art:{front:'M50 33 C57 33 61 39 61 45 C61 52 57 57 50 57 C43 57 39 52 39 45 C39 39 43 33 50 33 Z M46 58 L47 68 M54 58 L53 68 M40 4 C42 18 44 26 45 33 M60 4 C58 18 56 26 55 33', back:'M36 8 C38 24 40 34 42 40 M64 8 C62 24 60 34 58 40 M38 48 C46 52 54 52 62 48 M42 60 C40 72 40 86 44 98 M58 60 C60 72 60 86 56 98'}, views:{
-      front:[['above','above the kneecap','au-dessus de la rotule',btwR(34,6,32,20)],
-             ['cap','kneecap','rotule',btwE(50,45,13,14)],
-             ['below','below the kneecap','sous la rotule',btwR(38,64,24,20)],
-             ['outer','outer side','côté externe',btwR(30,30,9,34)],
-             ['inner','inner side','côté interne',btwR(61,30,9,34)]],
-      back:[['hollow','centre','centre',btwE(50,46,12,16)],
-            ['outer','outer side','côté externe',btwR(30,28,10,36)],
-            ['inner','inner side','côté interne',btwR(60,28,10,36)],
-            ['calf','top of the calf','haut du mollet',btwR(38,70,24,24)]] } },
-    shoulder: { sided:true, out:'M100 22 C80 20 60 17 42 21 C26 25 14 40 14 60 L14 100 L44 100 L46 78 C56 86 72 90 100 90 Z',
-      art:{front:'M18 52 C24 36 40 30 56 33 C60 44 56 62 44 74 M58 37 C70 34 84 38 98 36 M64 46 C72 52 82 56 96 56', back:'M18 52 C24 36 40 30 56 33 C60 44 56 62 44 74 M60 44 L88 40 M62 40 L88 44 L82 80 Z'}, views:{
-      front:[['top','top','dessus',btwR(30,22,32,12)],
-             ['front','front','avant',btwE(54,54,11,12)],
-             ['outer','outer side','côté externe',btwE(24,58,9,15)],
-             ['collar','collarbone','clavicule',btwR(68,30,28,8)],
-             ['armpit','armpit','aisselle',btwE(54,80,9,6)]],
-      back:[['top','top','dessus',btwR(30,22,32,12)],
-            ['back','back','arrière',btwE(40,56,12,13)],
-            ['blade','shoulder blade','omoplate',btwE(77,60,11,17)],
-            ['outer','outer side','côté externe',btwE(22,58,8,15)]] } },
-    neck: { sided:false, out:'M30 0 L70 0 C68 30 68 60 74 100 L26 100 C32 60 32 30 30 0 Z',
-      art:{front:'M36 10 L48 94 M64 10 L52 94 M46 44 C48 41 52 41 54 44', back:'M28 6 C40 14 60 14 72 6 M50 22 L50 30 M50 38 L50 46 M50 54 L50 62 M50 70 L50 78'}, views:{
-      front:[['front','front','avant',btwR(42,14,16,72)],
-             ['left','left side','côté gauche',btwR(29,14,11,72)],
-             ['right','right side','côté droit',btwR(60,14,11,72)]],
-      back:[['skull','base of the skull','base du crâne',btwR(32,2,36,14)],
-            ['spine','spine','colonne',btwR(44,20,12,66)],
-            ['left','left side','côté gauche',btwR(29,20,13,66)],
-            ['right','right side','côté droit',btwR(58,20,13,66)]] } },
-    lower_back: { sided:false, out:'M10 0 L90 0 C88 30 88 60 94 100 L6 100 C12 60 12 30 10 0 Z',
-      art:{back:'M50 4 L50 78 M44 8 C40 30 40 50 44 70 M56 8 C60 30 60 50 56 70 M12 74 C30 66 70 66 88 74'}, views:{
-      back:[['spine','spine','colonne',btwR(44,8,12,68)],
-            ['left','left side','côté gauche',btwR(12,12,30,56)],
-            ['right','right side','côté droit',btwR(58,12,30,56)],
-            ['tailbone','tailbone','coccyx',btwE(50,86,10,8)]] } },
-    hips: { sided:false, out:'M4 10 L96 10 C98 40 92 70 80 94 L20 94 C8 70 2 40 4 10 Z',
-      art:{front:'M24 46 C30 60 40 72 48 86 M76 46 C70 60 60 72 52 86 M14 28 C20 24 26 26 30 30 M86 28 C80 24 74 26 70 30'}, views:{
-      front:[['lhip','left hip','hanche gauche',btwE(20,40,13,16)],
-             ['rhip','right hip','hanche droite',btwE(80,40,13,16)],
-             ['lgroin','left groin','aine gauche',btwE(38,68,10,12)],
-             ['rgroin','right groin','aine droite',btwE(62,68,10,12)]] } },
-    glutes: { sided:false, out:'M4 10 L96 10 C100 40 98 74 90 94 L10 94 C2 74 0 40 4 10 Z',
-      art:{back:'M50 30 L50 82 M16 80 C28 88 40 88 48 82 M52 82 C60 88 72 88 84 80 M10 24 C30 16 70 16 90 24'}, views:{
-      back:[['lbutt','left buttock','fesse gauche',btwE(32,54,16,22)],
-            ['rbutt','right buttock','fesse droite',btwE(68,54,16,22)],
-            ['louter','outside of the left hip','côté de la hanche gauche',btwR(4,30,10,40)],
-            ['router','outside of the right hip','côté de la hanche droite',btwR(86,30,10,40)],
-            ['tailbone','tailbone','coccyx',btwE(50,22,7,7)]] } },
-    ankle: { sided:true, out:'M38 0 L62 0 C63 30 66 44 68 56 C72 70 74 84 74 100 L26 100 C26 84 28 70 32 56 C34 44 37 30 38 0 Z',
-      art:{front:'M50 2 L50 36 M44 66 C46 80 46 90 44 98 M56 66 C54 80 54 90 56 98', back:'M46 0 L47 60 M54 0 L53 60 M36 88 C44 94 56 94 64 88'}, views:{
-      front:[['outer','outer ankle bone','malléole externe',btwE(35,52,8,10)],
-             ['inner','inner ankle bone','malléole interne',btwE(65,52,8,10)],
-             ['front','front','avant',btwR(43,38,14,26)],
-             ['achilles','Achilles tendon','tendon d’Achille',btwR(43,6,14,26)]],
-      back:[['outer','outer ankle bone','malléole externe',btwE(35,52,8,10)],
-            ['inner','inner ankle bone','malléole interne',btwE(65,52,8,10)],
-            ['achilles','Achilles tendon','tendon d’Achille',btwR(43,10,14,52)]] } },
-    foot: { sided:true, out:'M40 4 C52 2 62 4 64 14 C68 30 76 44 76 62 C76 80 72 94 58 96 L36 96 C26 94 24 80 26 62 C28 44 34 30 36 14 C36 8 38 5 40 4 Z',
-      art:{front:'M38 78 L37 94 M46 78 L46 95 M54 78 L55 95 M63 76 L65 94 M44 16 C46 36 48 52 50 72'}, views:{
-      front:[['top','top of the foot','dessus du pied',btwR(36,10,28,32)],
-             ['arch','arch','voûte plantaire',btwR(64,38,10,30)],
-             ['outer','outer edge','bord externe',btwR(26,38,10,30)],
-             ['ball','ball of the foot','avant-pied',btwR(36,58,28,14)],
-             ['toes','toes','orteils',btwR(30,76,40,16)]] } },
-    heel: { sided:true, out:'M34 0 L66 0 C67 20 68 32 70 44 C74 60 72 86 62 96 L38 96 C28 86 26 60 30 44 C32 32 33 20 34 0 Z',
-      art:{back:'M46 0 L47 34 M54 0 L53 34 M34 66 C44 70 56 70 66 66'}, views:{
-      back:[['achilles','Achilles tendon','tendon d’Achille',btwR(43,4,14,26)],
-            ['back','back of the heel','arrière du talon',btwE(50,46,17,12)],
-            ['bottom','bottom of the heel','sous le talon',btwE(50,78,18,12)]] } },
-    fore: { sided:true, out:'M30 0 L70 0 C70 20 68 30 66 50 C64 70 62 84 62 100 L38 100 C38 84 36 70 34 50 C32 30 30 20 30 0 Z',
-      art:{front:'M34 20 C44 24 56 24 66 20 M44 28 C46 50 46 70 48 92 M58 30 C56 50 56 70 54 92', back:'M44 6 C46 2 54 2 56 6 M46 28 C47 50 48 70 50 94'}, views:{
-      front:[['outer_elbow','outer elbow','coude, côté externe',btwE(36,16,8,11)],
-             ['inner_elbow','inner elbow','coude, côté interne',btwE(64,16,8,11)],
-             ['forearm','forearm muscles','muscles de l’avant-bras',btwR(38,34,24,44)],
-             ['wrist','near the wrist','près du poignet',btwR(38,82,24,14)]],
-      back:[['point','point of the elbow','pointe du coude',btwE(50,14,11,10)],
-            ['outer_elbow','outer elbow','coude, côté externe',btwE(34,22,7,10)],
-            ['inner_elbow','inner elbow','coude, côté interne',btwE(66,22,7,10)],
-            ['forearm','forearm muscles','muscles de l’avant-bras',btwR(38,38,24,48)]] } },
-    hand: { sided:true, out:'M34 0 L66 0 L68 26 C70 40 72 56 70 66 L70 96 C70 99 40 99 40 96 L38 66 C34 62 30 58 25 52 C21 45 21 35 27 32 C31 31 34 37 36 42 L34 26 Z',
-      art:{front:'M47 68 L47 97 M54 68 L54 98 M62 68 L62 97 M38 50 C48 44 60 44 70 48 M36 20 C46 22 56 22 66 20', back:'M47 68 L47 97 M54 68 L54 98 M62 68 L62 97 M44 26 L46 64 M52 24 L53 64 M60 26 L60 64'}, views:{
-      front:[['wrist','wrist','poignet',btwR(32,2,36,16)],
-             ['thumb','thumb','pouce',btwE(31,44,7,15)],
-             ['palm','palm','paume',btwE(54,44,15,15)],
-             ['fingers','fingers','doigts',btwR(40,66,28,30)]],
-      back:[['wrist','wrist','poignet',btwR(32,2,36,16)],
-            ['thumb','thumb','pouce',btwE(31,44,7,15)],
-            ['back','back of the hand','dos de la main',btwE(54,44,15,15)],
-            ['fingers','fingers','doigts',btwR(40,66,28,30)]] } }
+    knee: { sided:true, img:{ front:'knee_front', back:'knee_back' }, views:{
+      front:[['above','above the kneecap','au-dessus de la rotule',50,26],
+             ['cap','kneecap','rotule',49,46],
+             ['below','below the kneecap','sous la rotule',50,70],
+             ['outer','outer side','côté externe',32,52],
+             ['inner','inner side','côté interne',67,52]],
+      back:[['hollow','centre','centre',50,54],
+            ['outer','outer side','côté externe',37,50],
+            ['inner','inner side','côté interne',63,50],
+            ['calf','top of the calf','haut du mollet',50,80]] } },
+    shoulder: { sided:true, img:{ front:'shoulder_front', back:'shoulder_back' }, views:{
+      front:[['top','top','dessus',28,23],
+             ['front','front','avant',30,40],
+             ['outer','outer side','côté externe',11,42],
+             ['collar','collarbone','clavicule',60,28],
+             ['armpit','armpit','aisselle',37,70]],
+      back:[['top','top','dessus',40,12],
+            ['back','back','arrière',22,38],
+            ['blade','shoulder blade','omoplate',66,46],
+            ['outer','outer side','côté externe',8,46]] } },
+    neck: { sided:false, img:{ front:'neck_front', back:'neck_back' }, views:{
+      front:[['front','front','avant',50,36],
+             ['left','left side','côté gauche',35,44],
+             ['right','right side','côté droit',65,44]],
+      back:[['skull','base of the skull','base du crâne',50,21],
+            ['spine','spine','colonne',50,52],
+            ['left','left side','côté gauche',37,48],
+            ['right','right side','côté droit',63,48]] } },
+    lower_back: { sided:false, img:{ back:'lower_back' }, views:{
+      back:[['spine','spine','colonne',50,42],
+            ['left','left side','côté gauche',29,42],
+            ['right','right side','côté droit',71,42],
+            ['tailbone','tailbone','coccyx',50,88]] } },
+    hips: { sided:false, img:{ front:'hips_front' }, views:{
+      front:[['lhip','left hip','hanche gauche',24,44],
+             ['rhip','right hip','hanche droite',76,44],
+             ['lgroin','left groin','aine gauche',41,62],
+             ['rgroin','right groin','aine droite',59,62]] } },
+    glutes: { sided:false, img:{ back:'glutes' }, views:{
+      back:[['lbutt','left buttock','fesse gauche',40,58],
+            ['rbutt','right buttock','fesse droite',60,58],
+            ['louter','outside of the left hip','côté de la hanche gauche',28,46],
+            ['router','outside of the right hip','côté de la hanche droite',72,46],
+            ['tailbone','tailbone','coccyx',50,40]] } },
+    ankle: { sided:true, img:{ front:'ankle_front', back:'ankle_back' }, views:{
+      front:[['outer','outer ankle bone','malléole externe',28,57],
+             ['inner','inner ankle bone','malléole interne',71,57],
+             ['front','front','avant',50,62]],
+      back:[['outer','outer ankle bone','malléole externe',33,55],
+            ['inner','inner ankle bone','malléole interne',67,55],
+            ['achilles','Achilles tendon','tendon d’Achille',50,42]] } },
+    foot: { sided:true, img:{ front:'foot_top' }, views:{
+      front:[['top','top of the foot','dessus du pied',48,35],
+             ['arch','arch','voûte plantaire',67,55],
+             ['outer','outer edge','bord externe',30,62],
+             ['ball','ball of the foot','avant-pied',52,72],
+             ['toes','toes','orteils',52,89]] } },
+    heel: { sided:true, img:{ back:'heel_back' }, views:{
+      back:[['achilles','Achilles tendon','tendon d’Achille',50,25],
+            ['back','back of the heel','arrière du talon',50,62],
+            ['bottom','bottom of the heel','sous le talon',50,90]] } },
+    fore: { sided:true, img:{ front:'fore_front', back:'fore_back' }, views:{
+      front:[['outer_elbow','outer elbow','coude, côté externe',36,12],
+             ['inner_elbow','inner elbow','coude, côté interne',60,12],
+             ['forearm','forearm muscles','muscles de l’avant-bras',50,42],
+             ['wrist','near the wrist','près du poignet',50,85]],
+      back:[['point','point of the elbow','pointe du coude',50,8],
+            ['outer_elbow','outer elbow','coude, côté externe',37,16],
+            ['inner_elbow','inner elbow','coude, côté interne',63,16],
+            ['forearm','forearm muscles','muscles de l’avant-bras',50,46]] } },
+    hand: { sided:true, img:{ front:'hand_palm', back:'hand_back' }, views:{
+      front:[['wrist','wrist','poignet',50,6],
+             ['thumb','thumb','pouce',25,48],
+             ['palm','palm','paume',51,38],
+             ['fingers','fingers','doigts',50,80]],
+      back:[['wrist','wrist','poignet',52,6],
+            ['thumb','thumb','pouce',26,52],
+            ['back','back of the hand','dos de la main',56,38],
+            ['fingers','fingers','doigts',58,82]] } }
   };
   // The close-up for a main-figure part in a view, or null when the part has
-  // no detail there: { out, art, flip, spots:[{id,en,fr,el,a}] }. A right-side
-  // part reuses the left drawing mirrored (flip).
+  // no detail there: { img, flip, spots:[{id,en,fr,x,y}] }. A right-side part
+  // shows the left photo mirrored (flip).
   function btwDetailFor(view, zoneId){
     if(view !== 'front' && view !== 'back') return null;
     const m = /^([lr])_(.+)$/.exec(zoneId);
     const d = BTW_DETAIL[m ? m[2] : zoneId];
     if(!d || !!m !== d.sided || !d.views[view]) return null;
     return {
-      out: d.out, art: d.art[view] || '', flip: !!(m && m[1] === 'r'),
-      spots: d.views[view].map(function(x){ return { id:x[0], en:x[1], fr:x[2], el:x[3].el, a:x[3].a }; })
+      img: '/assets/body/' + d.img[view] + '.webp', flip: !!(m && m[1] === 'r'),
+      spots: d.views[view].map(function(x){ return { id:x[0], en:x[1], fr:x[2], x:x[3], y:x[4] }; })
     };
   }
   // Split a stored region id into its main-figure part and sub-spot:
@@ -9949,16 +9941,19 @@
         zoom.hidden = false;
         const partKey = zoomPart.v + ':' + zoomPart.part;
         const pl = spotLabel(zoomPart.v, zoomPart.part) || '';
-        const spots = d.spots.map(function(s){
+        // Photo of the part with a point on each spot. A right-side part
+        // shows the left photo mirrored; the points mirror with it.
+        const dots = d.spots.map(function(s){
           const k = partKey + '_' + s.id, lv = state[k] || 0;
-          return '<' + s.el + ' class="btw-bzd' + (k === selected ? ' sel' : '') + '" data-sub="' + s.id + '"' + attrs(s.a) + (lv ? ' style="fill:' + FILL[lv] + ';fill-opacity:.9"' : '') + '><title>' + esc(frL() ? s.fr : s.en) + '</title></' + s.el + '>';
+          return '<button type="button" class="btw-pz-dot' + (k === selected ? ' sel' : '') + (lv ? ' on' : '') + '" data-sub="' + s.id + '"'
+            + ' style="left:' + s.x + '%;top:' + s.y + '%' + (lv ? ';--dc:' + FILL[lv] : '') + '"'
+            + ' aria-label="' + esc(frL() ? s.fr : s.en) + '" title="' + esc(frL() ? s.fr : s.en) + '"></button>';
         }).join('');
         zoom.innerHTML = '<div class="btw-pain-zoom-t"></div><div class="btw-pain-zoom-s"></div>'
-          + '<div class="btw-pain-zoom-fig"><svg viewBox="0 0 100 100" role="img"><g' + (d.flip ? ' transform="translate(100,0) scale(-1,1)"' : '') + '><path class="btw-bz-base" d="' + d.out + '"></path><path class="btw-bz-art" d="' + d.art + '"></path>' + spots + '</g></svg></div>'
+          + '<div class="btw-pain-zoom-fig"><div class="btw-pz-pic' + (d.flip ? ' flip' : '') + '"><img src="' + d.img + '" alt="" draggable="false">' + dots + '</div></div>'
           + '<div class="btw-pain-sens-chips"></div>';
         zoom.querySelector('.btw-pain-zoom-t').textContent = pl.charAt(0).toUpperCase() + pl.slice(1);
-        zoom.querySelector('.btw-pain-zoom-s').textContent = frL() ? 'Touchez l’endroit exact (facultatif).' : 'Tap the exact spot (optional).';
-        zoom.querySelector('svg').setAttribute('aria-label', pl);
+        zoom.querySelector('.btw-pain-zoom-s').textContent = frL() ? 'Touchez le point exact (facultatif).' : 'Tap the exact point (optional).';
         const chips = zoom.querySelector('.btw-pain-sens-chips');
         [{ id:null, en:'Whole area', fr:'Toute la zone' }].concat(d.spots).forEach(function(s){
           const k = s.id ? partKey + '_' + s.id : partKey;
@@ -9969,10 +9964,18 @@
           b.addEventListener('click', function(){ pickSpot(s.id); });
           chips.appendChild(b);
         });
-        const fig = zoom.querySelector('.btw-pain-zoom-fig');
-        fig.addEventListener('click', function(e){
-          const z = btwPickZone(fig.querySelector('svg'), d.spots, d.flip, e.clientX, e.clientY, 100);
-          if(z) pickSpot(z.id);
+        // A tap on a point picks it; a tap elsewhere on the photo picks the
+        // nearest point within a fingertip or two.
+        const pic = zoom.querySelector('.btw-pz-pic');
+        pic.addEventListener('click', function(e){
+          const dot = e.target.closest && e.target.closest('.btw-pz-dot');
+          if(dot){ pickSpot(dot.getAttribute('data-sub')); return; }
+          const r = pic.getBoundingClientRect(); if(!r.width) return;
+          let px = (e.clientX - r.left) / r.width * 100; const py = (e.clientY - r.top) / r.height * 100;
+          if(d.flip) px = 100 - px;
+          let best = null, bd = 18 * 18;
+          d.spots.forEach(function(s){ const dd = (s.x - px) * (s.x - px) + (s.y - py) * (s.y - py); if(dd < bd){ bd = dd; best = s; } });
+          if(best) pickSpot(best.id);
         });
       };
       side.appendChild(cur); side.appendChild(rng); side.appendChild(ends); side.appendChild(zoom); side.appendChild(sensWrap); side.appendChild(clr);
