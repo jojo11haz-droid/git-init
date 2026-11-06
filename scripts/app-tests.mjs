@@ -391,5 +391,27 @@ console.log('Checking body-map close-ups match between web and app...');
   }
 }
 
+// ---------------------------------------------------------------------------
+// D. Body outline: the smooth man's / woman's silhouette is the same on the
+//    web (BTW_OUTLINE) and in the app (_outline), with the same head sizes.
+// ---------------------------------------------------------------------------
+console.log('Checking the body outline matches between web and app...');
+{
+  const html = readFileSync(join(root, 'public', 'index.html'), 'utf8');
+  const dart = readFileSync(join(root, 'patient_app', 'lib', 'body_map.dart'), 'utf8');
+  const w = {}, a = {};
+  for (const x of ['m', 'f']) {
+    const wm = html.match(new RegExp(`\\n    ${x}: '(M[^']+)'`));
+    const am = dart.match(new RegExp(`\\n  '${x}': '(M[^']+)'`));
+    w[x] = wm && wm[1]; a[x] = am && am[1];
+  }
+  const wh = html.match(/const BTW_HEAD_RX = \{ m:([\d.]+), f:([\d.]+) \};/);
+  const ah = dart.match(/const _headRx = <String, double>\{'m': ([\d.]+), 'f': ([\d.]+)\};/);
+  if (!w.m || !w.f || !a.m || !a.f || !wh || !ah) fail('body outline not found on web or in app');
+  else if (w.m !== a.m || w.f !== a.f) fail('body outline differs between web and app');
+  else if (+wh[1] !== +ah[1] || +wh[2] !== +ah[2]) fail('head size differs between web and app');
+  else ok('body outline → man and woman silhouettes identical on web and app');
+}
+
 if (failures) { console.error('\n' + failures + ' app test(s) failed.'); process.exit(1); }
 console.log('\nAll app tests passed.');
