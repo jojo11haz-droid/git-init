@@ -14044,7 +14044,7 @@
     var bodyEl = document.getElementById('btwBodyOverview');
     var healthEl = document.getElementById('btwHealth');
     // The body overview only counts toward "Health & body" while it sits in it
-    // (a patient's is shown openly above the collapsible sections).
+    // (it's now shown openly above the collapsible sections).
     var bodyVis = !!(bodyEl && bodyEl.style.display !== 'none' && bodyEl.innerHTML && bodyEl.closest && bodyEl.closest('#btwAccHealth'));
     var healthVis = !!(healthEl && healthEl.style.display !== 'none' && healthEl.innerHTML);
     setDisp('btwAccHealth', showDetail && (bodyVis || healthVis));
@@ -14834,17 +14834,12 @@
   function renderBodyOverview(){
     const host = document.getElementById('btwBodyOverview');
     if(!host) return;
-    // A patient in a physical field sees "Where it hurts" right under their
-    // progress, not folded into "Health & body" where it was easy to miss
-    // (the app shows it openly on My progress too). Clinicians keep it in the
-    // collapsible section.
+    // In a physical field, "Where it hurts" sits openly above Trends /
+    // Timeline — right under a patient's progress, and under the selected
+    // patient's summary for the clinician — not folded into "Health & body"
+    // where it was easy to miss (the app shows it openly on My progress too).
     const trendsAcc = document.getElementById('btwAccTrends');
-    const healthEl = document.getElementById('btwHealth');
-    if(isPatient()){
-      if(trendsAcc && host.nextSibling !== trendsAcc) trendsAcc.parentNode.insertBefore(host, trendsAcc);
-    } else if(healthEl && host.nextSibling !== healthEl){
-      healthEl.parentNode.insertBefore(host, healthEl);
-    }
+    if(trendsAcc && host.nextSibling !== trendsAcc) trendsAcc.parentNode.insertBefore(host, trendsAcc);
     const list = state.checkIns || [];
     if(!painMapContext() || !list.length){ host.style.display='none'; host.innerHTML=''; return; }
     const merged = {}, freq = {};
