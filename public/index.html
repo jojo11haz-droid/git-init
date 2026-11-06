@@ -4612,9 +4612,20 @@
   let _ownerPreviewMode = 'clinician';
   let _ownerPreviewSaved = null;
   let _ownerPrevAud = null;
+  // The field the owner is looking at decides what kind of clinician the
+  // preview patient has, so the patient preview matches that field (a physio
+  // patient gets the pain scale, body tags and body map — not the owner's own
+  // therapist account type). Mirrors the account types/disciplines at signup.
+  const PREVIEW_CLINICIAN = {
+    therapy:{ at:'therapist', disc:null }, recovery:{ at:'mentor', disc:null }, schools:{ at:'school', disc:null },
+    fitness:{ at:'trainer', disc:null }, sports:{ at:'coach', disc:'sports' }, physio:{ at:'coach', disc:'physio' },
+    kinesiology:{ at:'coach', disc:'kinesiology' }, osteo:{ at:'coach', disc:'osteo' }, occupational:{ at:'coach', disc:'occupational' },
+    neuropsych:{ at:'coach', disc:'neuropsych' }, nutrition:{ at:'coach', disc:'nutrition' }
+  };
   function makePreviewPatient(mode){
     const me = (_ownerPreviewSaved ? _ownerPreviewSaved.me : state.me) || {};
     const individual = (mode === 'individual');
+    const field = PREVIEW_CLINICIAN[(typeof curAudience !== 'undefined') ? curAudience : 'therapy'];
     return {
       id: '__preview__',
       display_name: (me.name || 'You') + ' (preview)',
@@ -4623,8 +4634,8 @@
       ai_consent_enabled: true,
       // A self-serve individual has no clinician attached — that's what flips
       // soloIndividual() and the individual-side copy/billing on.
-      clinician_account_type: individual ? null : (me.account_type || 'therapist'),
-      clinician_discipline: individual ? null : (me.discipline || null),
+      clinician_account_type: individual ? null : (field ? field.at : (me.account_type || 'therapist')),
+      clinician_discipline: individual ? null : (field ? field.disc : (me.discipline || null)),
       check_in_mode_lock: 'any', weekly_checkin_cap: 999,
       reminders_enabled: false, reminder_time: null, reminder_days: null, phone: null
     };
@@ -8246,6 +8257,12 @@
     updateIndividualModeUI();
     translateStatic();
     syncAudSelLabel();
+    // Owner previewing the patient side: switching field re-dresses the preview
+    // patient for that field (pain scale + body map for physical fields, …).
+    if(typeof _ownerPreview !== 'undefined' && _ownerPreview && _ownerPreviewMode === 'patient'){
+      state.patient = makePreviewPatient('patient');
+      try { renderAll(); } catch(e){}
+    }
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
