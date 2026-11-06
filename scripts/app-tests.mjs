@@ -319,5 +319,68 @@ try {
   if (server) { try { server.kill('SIGKILL'); } catch (_) {} }
 }
 
+// ---------------------------------------------------------------------------
+// C. Body-map close-ups: the web (BTW_DETAIL) and the app (_detail in
+//    patient_app/lib/body_map.dart) must offer the same precise spots with the
+//    same ids, labels, drawings and coordinates, or a spot the patient pins in
+//    the app reads back as a raw id on the clinician's dashboard.
+// ---------------------------------------------------------------------------
+console.log('Checking body-map close-ups match between web and app...');
+{
+  const html = readFileSync(join(root, 'public', 'index.html'), 'utf8');
+  const dart = readFileSync(join(root, 'patient_app', 'lib', 'body_map.dart'), 'utf8');
+  const a = html.indexOf('  function btwE(cx'), b = html.indexOf('  const BTW_DETAIL = {');
+  const e = html.indexOf('\n  };\n', b);
+  if (a < 0 || b < 0 || e < 0) fail('BTW_DETAIL not found in index.html');
+  else {
+    const web = new Function(html.slice(a, e + 5) + '\nreturn BTW_DETAIL;')();
+    const flat = [];
+    for (const [k, d] of Object.entries(web)) {
+      flat.push(`${k}|${d.sided}|${d.out}`);
+      for (const [v, p] of Object.entries(d.art)) flat.push(`${k}|art|${v}|${p}`);
+      for (const [v, spots] of Object.entries(d.views)) for (const [id, en, fr, sh] of spots) {
+        const n = (x) => String(+x.toFixed(2));
+        const g = sh.el === 'ellipse' ? ['e', sh.a.cx, sh.a.cy, sh.a.rx, sh.a.ry] : ['r', sh.a.x, sh.a.y, sh.a.width, sh.a.height];
+        flat.push(`${k}|${v}|${id}|${en}|${fr}|${g[0]}|${g.slice(1).map(n).join(',')}`);
+      }
+    }
+    // Same flattening from the Dart source.
+    const appFlat = [];
+    const ds = dart.indexOf('final _detail = <String, _Detail>{'), de = dart.indexOf('\n};\n', ds);
+    const body = ds < 0 ? '' : dart.slice(ds, de);
+    const q = `'((?:\\\\.|[^'\\\\])*)'`;
+    const unq = (s) => s.replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+    const partRe = new RegExp(`\\n  ${q}: _Detail\\(\\n    sided: (true|false),\\n    outline: ${q},([\\s\\S]*?)\\n  \\),`, 'g');
+    let pm;
+    while ((pm = partRe.exec(body))) {
+      const [, k, sided, out, rest] = pm;
+      appFlat.push(`${unq(k)}|${sided}|${unq(out)}`);
+      const artBlock = rest.slice(0, rest.indexOf('views:'));
+      for (const m of artBlock.matchAll(new RegExp(`${q}: ${q},`, 'g'))) appFlat.push(`${unq(k)}|art|${unq(m[1])}|${unq(m[2])}`);
+      const viewsBlock = rest.slice(rest.indexOf('views:'));
+      for (const vm of viewsBlock.matchAll(new RegExp(`\\n      ${q}: \\[([\\s\\S]*?)\\n      \\],`, 'g'))) {
+        for (const sm of vm[2].matchAll(new RegExp(`(_ell|_Region)\\(${q}, ${q}, ${q}, ([-\\d.]+), ([-\\d.]+), ([-\\d.]+), ([-\\d.]+)\\)`, 'g'))) {
+          const nums = sm.slice(5, 9).map((x) => String(+(+x).toFixed(2)));
+          appFlat.push(`${unq(k)}|${unq(vm[1])}|${unq(sm[2])}|${unq(sm[3])}|${unq(sm[4])}|${sm[1] === '_ell' ? 'e' : 'r'}|${nums.join(',')}`);
+        }
+      }
+    }
+    const w = new Set(flat), ap = new Set(appFlat);
+    const onlyWeb = flat.filter((x) => !ap.has(x)), onlyApp = appFlat.filter((x) => !w.has(x));
+    if (!appFlat.length) fail('could not read _detail from body_map.dart');
+    else if (onlyWeb.length || onlyApp.length) fail('close-ups differ — web only: ' + onlyWeb.slice(0, 3).join(' ; ') + ' — app only: ' + onlyApp.slice(0, 3).join(' ; '));
+    else {
+      // Every stored key must pass the server's pain-map key rule.
+      const keyRe = /^[a-z]+:[a-z_]+$/;
+      const bad = [];
+      for (const [k, d] of Object.entries(web)) for (const [v, spots] of Object.entries(d.views)) for (const [id] of spots) {
+        for (const part of d.sided ? ['l_' + k, 'r_' + k] : [k]) { const key = `${v}:${part}_${id}`; if (!keyRe.test(key) || key.length > 40) bad.push(key); }
+      }
+      if (bad.length) fail('close-up keys the server would drop: ' + bad.join(', '));
+      else ok(`body-map close-ups → ${Object.keys(web).length} areas, ${flat.length} entries identical on web and app; keys pass the server rule`);
+    }
+  }
+}
+
 if (failures) { console.error('\n' + failures + ' app test(s) failed.'); process.exit(1); }
 console.log('\nAll app tests passed.');
