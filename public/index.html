@@ -1281,6 +1281,39 @@
   .btw-today-head strong{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--ink);}
   .btw-today-count{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);margin-left:auto;}
   .btw-today-list{display:flex;flex-direction:column;gap:6px;}
+  /* Hands-off "Needs you today" card + home exercise program. */
+  .btw-needs{border-color:var(--clay,#C0392B);background:linear-gradient(180deg,rgba(192,57,43,.06),transparent 90%);}
+  .btw-needs .btw-today-row .meta{color:var(--clay,#C0392B);}
+  .btw-needs-empty{font-size:12.5px;color:var(--ink-soft);padding:2px 2px 4px;}
+  .btw-needs-mail{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12px;color:var(--ink-soft);cursor:pointer;line-height:1.4;}
+  .btw-needs-mail input{margin-top:2px;accent-color:var(--moss);}
+  .btw-hep{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 18px;background:var(--panel);}
+  .btw-hep-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+  .btw-hep-t{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);}
+  .btw-hep-meta{font-size:12px;color:var(--ink-soft);}
+  .btw-hep-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);}
+  .btw-hep-row:first-of-type{border-top:0;}
+  .btw-hep-main{flex:1;min-width:0;}
+  .btw-hep-name{font-weight:600;font-size:13.5px;color:var(--ink);}
+  .btw-hep-dose{font-size:12px;color:var(--moss);margin-left:6px;font-weight:600;}
+  .btw-hep-desc{font-size:12.5px;color:var(--ink-soft);line-height:1.45;margin-top:2px;}
+  .btw-hep-adh{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .btw-hep-x{background:none;border:0;color:var(--ink-soft);font-size:18px;line-height:1;cursor:pointer;padding:0 4px;}
+  .btw-hep-x:hover{color:var(--clay);}
+  .btw-hep-add{display:grid;grid-template-columns:1fr 130px;gap:8px;margin-top:10px;}
+  .btw-hep-add textarea{grid-column:1 / -1;min-height:44px;}
+  .btw-hep input,.btw-hep textarea{font-family:var(--font-body);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--ink);width:100%;box-sizing:border-box;}
+  .btw-hep-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .btw-hep-ai{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);}
+  .btw-hep-ai-l{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .btw-hep-sug{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);}
+  .btw-hep-msg{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .btw-compose-hep{margin:4px 0 16px;}
+  .btw-hep-sub{font-size:12px;color:var(--ink-soft);margin:-2px 0 8px;}
+  .btw-hep-check{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;cursor:pointer;background:var(--card,#fff);}
+  .btw-hep-check input{margin-top:3px;width:17px;height:17px;accent-color:var(--moss);flex-shrink:0;}
+  .btw-hep-check.on{border-color:var(--moss);background:var(--moss-light);}
+  @media (max-width:520px){ .btw-hep-add{grid-template-columns:1fr;} }
   .btw-today-row{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;font-family:var(--font-body);transition:border-color .15s ease,transform .12s ease;}
   .btw-today-row:hover{border-color:var(--moss);transform:translateY(-1px);}
   .btw-today-row .nm{font-size:13.5px;font-weight:600;color:var(--ink);flex:1;min-width:0;}
@@ -3656,6 +3689,12 @@
         <div class="btw-field-label">Where does it hurt or feel sore?</div>
       </div>
 
+      <div id="btwComposeHep" class="btw-compose-hep" style="display:none;">
+        <div class="btw-field-label" id="btwComposeHepLabel">Your home exercises</div>
+        <div class="btw-hep-sub" id="btwComposeHepSub">Tick what you did since your last check-in.</div>
+        <div id="btwComposeHepList"></div>
+      </div>
+
       <div id="btwComposePhoto" class="btw-compose-photo" style="display:none;">
         <div class="btw-field-label" id="btwComposePhotoLabel">Add a photo of the sore area (optional)</div>
         <input type="file" id="btwPhotoInput" accept="image/*" capture="environment" style="display:none;">
@@ -3755,6 +3794,15 @@
       <!-- ============ ZONE: caseload overview ============ -->
       <div class="btw-zone" id="btwZoneOverview"><span class="btw-zone-pin">◆</span><span id="btwZoneOverviewLabel">Caseload overview</span></div>
 
+      <div class="btw-today btw-needs" id="btwNeeds" style="display:none;">
+        <div class="btw-today-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <strong id="btwNeedsTitle">Needs you today</strong>
+          <span class="btw-today-count" id="btwNeedsCount"></span>
+        </div>
+        <div class="btw-today-list" id="btwNeedsList"></div>
+        <label class="btw-needs-mail" id="btwNeedsMailRow"><input type="checkbox" id="btwNeedsMail"> <span id="btwNeedsMailLbl">Email me this list each morning — only on days someone needs me</span></label>
+      </div>
       <div class="btw-today" id="btwTodayRoster" style="display:none;">
         <div class="btw-today-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -3836,6 +3884,8 @@
           <button type="button" id="btwEncourageCopy" class="btw-emr-btn"><span>Copy message</span></button>
         </div>
       </div>
+
+      <div class="btw-hep" id="btwHep" style="display:none;"></div>
 
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
       <div class="btw-prep" id="btwPrep" style="display:none;">
@@ -4816,6 +4866,36 @@
     "AI draft note":"Note rédigée par IA",
     "Refresh note":"Actualiser la note",
     "Draft note — review and edit before using":"Brouillon de note — à relire et modifier avant usage",
+    "Needs you today":"Ont besoin de vous aujourd'hui",
+    "Nobody needs you right now — everyone's checking in fine.":"Personne n'a besoin de vous pour l'instant — tout le monde fait ses suivis normalement.",
+    "Email me this list each morning — only on days someone needs me":"M'envoyer cette liste chaque matin — seulement les jours où quelqu'un a besoin de moi",
+    "Could not save that setting.":"Impossible d'enregistrer ce réglage.",
+    "Home exercise program":"Programme d'exercices à domicile",
+    "Did exercises in":"Exercices faits dans",
+    "check-ins (last 2 weeks)":"suivis (2 dernières semaines)",
+    "Assign once — your patient ticks them off when they check in.":"Assignez-les une fois — votre patient les coche lors de ses suivis.",
+    "Ticked in":"Coché dans",
+    "Suggest with AI":"Suggestions de l'IA",
+    "Goal or area, e.g. knee pain on stairs, early stage":"Objectif ou zone, p. ex. douleur au genou dans les escaliers, début",
+    "Suggest exercises":"Suggérer des exercices",
+    "Add one yourself":"En ajouter un vous-même",
+    "Exercise name":"Nom de l'exercice",
+    "Dose, e.g. 3 x 10":"Dosage, p. ex. 3 x 10",
+    "How to do it, in one or two lines (your patient sees this)":"Comment le faire, en une ou deux lignes (votre patient le voit)",
+    "Add exercise":"Ajouter l'exercice",
+    "Add all":"Tout ajouter",
+    "AI suggestions — check they suit this patient before adding.":"Suggestions de l'IA — vérifiez qu'elles conviennent à ce patient avant de les ajouter.",
+    "No suggestions came back — try describing the goal differently.":"Aucune suggestion — essayez de décrire l'objectif autrement.",
+    "Could not suggest exercises just now.":"Impossible de suggérer des exercices pour le moment.",
+    "Could not load exercises.":"Impossible de charger les exercices.",
+    "Could not save the exercise.":"Impossible d'enregistrer l'exercice.",
+    "Could not remove the exercise.":"Impossible de retirer l'exercice.",
+    "Your home exercises":"Vos exercices à domicile",
+    "Tick what you did since your last check-in.":"Cochez ce que vous avez fait depuis votre dernier suivi.",
+    "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
+    "Copy to chart":"Copier dans le dossier",
+    "Add":"Ajouter",
+    "Copy note":"Copier la note",
     "Not enough check-ins with AI turned on yet to draft a note.":
       "Pas encore assez de suivis avec l'IA activée pour rédiger une note.",
     "Could not draft a note just now.":"Impossible de rédiger une note pour le moment.",
@@ -8569,6 +8649,7 @@
       viaQuestions: row.input_mode === 'questions',
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null,
       painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null,
+      exercisesDone: Array.isArray(row.exercises_done) ? row.exercises_done : null,
       bodySex: (row.body_sex === 'f' || row.body_sex === 'm') ? row.body_sex : null
     };
   }
@@ -10764,6 +10845,10 @@
   async function loadPatientCheckIns(){
     const rows = await pApi('GET', '/api/patient/check-ins');
     state.checkIns = rows.map(mapCheckIn);
+    try { const ex = await pApi('GET', '/api/patient/exercises'); state.exercises = (ex && ex.exercises) || []; }
+    catch(e){ state.exercises = []; }
+    // Drop ticks for exercises no longer in the program.
+    if(state.hepDone){ const ids = new Set(state.exercises.map(e => e.id)); [...state.hepDone].forEach(id => { if(!ids.has(id)) state.hepDone.delete(id); }); }
     await loadFutureNotes();
     await loadHealth();
     renderAll();
@@ -10969,6 +11054,7 @@
       state.selectedPatientId = state.patients.length ? state.patients[0].id : null;
     }
     loadAlerts().catch(()=>{}); // best-effort, in parallel
+    loadNeeds().catch(()=>{});  // hands-off "needs you today" list
     await loadCheckIns();
   }
 
@@ -13781,6 +13867,195 @@
       list.appendChild(row);
     });
   }
+
+  // --- Hands-off mode: "Needs you today" ---
+  // Only the patients who need the clinician (safety flag, tingling/numbness,
+  // worsening score, gone quiet), with the reason — everyone else needs
+  // nothing. The same list goes out by email each morning if they opt in.
+  async function loadNeeds(){
+    if(!isTherapist()) return;
+    try { state.needs = await api('GET', '/api/caseload/needs'); }
+    catch(e){ state.needs = null; }
+    renderNeeds();
+  }
+  function renderNeeds(){
+    var card = document.getElementById('btwNeeds'); if(!card) return;
+    var d = state.needs;
+    if(!isTherapist() || !d || !(state.patients||[]).length){ card.style.display = 'none'; return; }
+    card.style.display = '';
+    var fr = curLang === 'fr';
+    var items = d.items || [];
+    var title = document.getElementById('btwNeedsTitle'); if(title) title.textContent = t('Needs you today');
+    var cnt = document.getElementById('btwNeedsCount'); if(cnt) cnt.textContent = items.length ? (items.length + ' ' + (items.length === 1 ? t('person') : t('people'))) : '';
+    var list = document.getElementById('btwNeedsList'); list.innerHTML = '';
+    if(!items.length){
+      var e = document.createElement('div'); e.className = 'btw-needs-empty';
+      e.textContent = t("Nobody needs you right now — everyone's checking in fine.");
+      list.appendChild(e);
+    }
+    items.forEach(function(it){
+      var p = (state.patients||[]).find(function(x){ return x.id === it.id; });
+      var row = document.createElement('button'); row.type = 'button'; row.className = 'btw-today-row';
+      var why = it.reasons.map(function(r){ return fr ? r.fr : r.en; }).join(' · ');
+      row.innerHTML = (p ? statusPing(p) : '') + '<span class="nm">' + esc(it.name || '') + '</span><span class="meta">' + esc(why) + '</span>';
+      row.addEventListener('click', function(){ state.selectedPatientId = it.id; renderAll(); var dg = document.getElementById('btwDigest'); if(dg) dg.scrollIntoView({ behavior:'smooth', block:'start' }); });
+      list.appendChild(row);
+    });
+    var mail = document.getElementById('btwNeedsMail');
+    var mailRow = document.getElementById('btwNeedsMailRow');
+    if(mailRow) mailRow.style.display = d.emailReady === false ? 'none' : '';
+    var lbl = document.getElementById('btwNeedsMailLbl'); if(lbl) lbl.textContent = t('Email me this list each morning — only on days someone needs me');
+    if(mail){
+      mail.checked = !!d.digestEnabled;
+      if(!mail._wired){
+        mail._wired = true;
+        mail.addEventListener('change', async function(){
+          var want = mail.checked;
+          try { var r = await api('POST', '/api/clinician/needs-digest', { enabled: want }); if(state.needs) state.needs.digestEnabled = !!r.enabled; }
+          catch(e){ mail.checked = !want; alert(t('Could not save that setting.')); }
+        });
+      }
+    }
+  }
+
+  // --- Home exercise program (clinician side) ---
+  // Assign exercises once (typed, or picked from AI suggestions with a short
+  // how-to); the patient ticks them off in their check-in, and adherence shows
+  // here and flows into the SOAP chart note.
+  state.hepCache = state.hepCache || {};
+  async function fetchHep(pid, force){
+    if(!force && state.hepCache[pid]) return state.hepCache[pid];
+    var d = await api('GET', '/api/patients/' + pid + '/exercises');
+    state.hepCache[pid] = d; return d;
+  }
+  function hepAdherence(exId){
+    var cutoff = Date.now() - 14 * 86400000;
+    var recent = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff; });
+    var n = recent.filter(function(c){ return Array.isArray(c.exercisesDone) && c.exercisesDone.indexOf(exId) >= 0; }).length;
+    return { n: n, of: recent.length };
+  }
+  function renderHep(){
+    var host = document.getElementById('btwHep'); if(!host) return;
+    var p = (typeof selectedPatient === 'function') ? selectedPatient() : null;
+    if(!isTherapist() || !p || !painMapContext()){ host.style.display = 'none'; return; }
+    host.style.display = '';
+    var pid = p.id;
+    if(host._pid !== pid){ host._pid = pid; host._sug = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
+    fetchHep(pid).then(function(d){ if(host._pid === pid) drawHep(host, pid, d); }).catch(function(){ if(host._pid === pid) host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Could not load exercises.')) + '</div>'; });
+  }
+  function drawHep(host, pid, d){
+    var ex = (d && d.exercises) || [];
+    var cutoff = Date.now() - 14 * 86400000;
+    var recentN = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff; }).length;
+    var any = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff && Array.isArray(c.exercisesDone) && c.exercisesDone.length; }).length;
+    var h = '<div class="btw-hep-h"><span class="btw-hep-t">' + esc(t('Home exercise program')) + '</span>'
+      + '<span class="btw-hep-meta">' + (ex.length ? esc(t('Did exercises in') + ' ' + any + ' ' + t('of') + ' ' + recentN + ' ' + t('check-ins (last 2 weeks)')) : esc(t('Assign once — your patient ticks them off when they check in.'))) + '</span></div>';
+    ex.forEach(function(e){
+      var a = hepAdherence(e.id);
+      h += '<div class="btw-hep-row"><div class="btw-hep-main"><span class="btw-hep-name">' + esc(e.name) + '</span>'
+        + (e.dosage ? '<span class="btw-hep-dose">' + esc(e.dosage) + '</span>' : '')
+        + (e.description ? '<div class="btw-hep-desc">' + esc(e.description) + '</div>' : '')
+        + '<div class="btw-hep-adh">' + esc(t('Ticked in') + ' ' + a.n + ' ' + t('of') + ' ' + a.of + ' ' + t('check-ins (last 2 weeks)')) + '</div></div>'
+        + '<button type="button" class="btw-hep-x" data-del="' + esc(e.id) + '" aria-label="' + esc(t('Remove') + ' ' + e.name) + '" title="' + esc(t('Remove')) + '">×</button></div>';
+    });
+    h += '<div class="btw-hep-ai"><div class="btw-hep-ai-l">' + esc(t('Suggest with AI')) + '</div>'
+      + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t('Goal or area, e.g. knee pain on stairs, early stage')) + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t('Suggest exercises')) + '</span></button></div>'
+      + '<div class="hep-sugs"></div></div>'
+      + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
+      + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t('Exercise name')) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t('Dose, e.g. 3 x 10')) + '">'
+      + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
+      + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t('Add exercise')) + '</span></button></div></details>'
+      + '<div class="btw-hep-msg hep-msg"></div>';
+    host.innerHTML = h;
+    var msg = host.querySelector('.hep-msg');
+    function setList(list){ state.hepCache[pid] = Object.assign({}, state.hepCache[pid] || {}, { exercises: list }); drawHep(host, pid, state.hepCache[pid]); }
+    host.querySelectorAll('[data-del]').forEach(function(b){
+      b.addEventListener('click', async function(){
+        b.disabled = true;
+        try { var r = await api('DELETE', '/api/patients/' + pid + '/exercises/' + b.getAttribute('data-del')); setList(r.exercises || []); }
+        catch(e){ b.disabled = false; msg.textContent = (e && e.message) || t('Could not remove the exercise.'); }
+      });
+    });
+    async function add(list){
+      var r = await api('POST', '/api/patients/' + pid + '/exercises', { exercises: list });
+      setList(r.exercises || []);
+    }
+    var addBtn = host.querySelector('.hep-add-btn');
+    addBtn.addEventListener('click', async function(){
+      var name = host.querySelector('.hep-name').value.trim();
+      if(!name){ host.querySelector('.hep-name').focus(); return; }
+      addBtn.disabled = true;
+      try { await add([{ name: name, dosage: host.querySelector('.hep-dose').value, description: host.querySelector('.hep-desc').value }]); }
+      catch(e){ addBtn.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
+    });
+    var sugBtn = host.querySelector('.hep-sug-btn');
+    var sugs = host.querySelector('.hep-sugs');
+    function drawSugs(list){
+      if(!list || !list.length){ sugs.innerHTML = ''; return; }
+      var s = '';
+      list.forEach(function(x, i){
+        s += '<div class="btw-hep-sug"><div class="btw-hep-main"><span class="btw-hep-name">' + esc(x.name) + '</span>'
+          + (x.dosage ? '<span class="btw-hep-dose">' + esc(x.dosage) + '</span>' : '')
+          + (x.description ? '<div class="btw-hep-desc">' + esc(x.description) + '</div>' : '')
+          + '</div><button type="button" class="btw-emr-btn" data-add="' + i + '"><span>' + esc(t('Add')) + '</span></button></div>';
+      });
+      s += '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-all"><span>' + esc(t('Add all')) + '</span></button></div>'
+        + '<div class="btw-hep-msg">' + esc(t('AI suggestions — check they suit this patient before adding.')) + '</div>';
+      sugs.innerHTML = s;
+      sugs.querySelectorAll('[data-add]').forEach(function(b){
+        b.addEventListener('click', async function(){
+          var i = +b.getAttribute('data-add'); b.disabled = true;
+          try { var item = host._sug[i]; host._sug = host._sug.filter(function(_, j){ return j !== i; }); await add([item]); }
+          catch(e){ b.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
+        });
+      });
+      var all = sugs.querySelector('.hep-add-all');
+      all.addEventListener('click', async function(){
+        all.disabled = true;
+        try { var items = host._sug; host._sug = null; await add(items); }
+        catch(e){ all.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
+      });
+    }
+    drawSugs(host._sug);
+    var goalIn = host.querySelector('.hep-goal');
+    if(host._goal) goalIn.value = host._goal;
+    goalIn.addEventListener('input', function(){ host._goal = goalIn.value; });
+    goalIn.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); sugBtn.click(); } });
+    sugBtn.addEventListener('click', async function(){
+      var goal = goalIn.value.trim();
+      if(goal.length < 3){ goalIn.focus(); return; }
+      var sp = sugBtn.querySelector('span'); sugBtn.disabled = true; sp.textContent = t('Thinking…'); msg.textContent = '';
+      try {
+        var r = await api('POST', '/api/patients/' + pid + '/exercises/suggest', { goal: goal, lang: curLang === 'fr' ? 'fr' : 'en' });
+        host._sug = (r && r.suggestions) || [];
+        drawSugs(host._sug);
+        if(!host._sug.length) msg.textContent = t('No suggestions came back — try describing the goal differently.');
+      } catch(e){ msg.textContent = (e && e.message) || t('Could not suggest exercises just now.'); }
+      finally { sugBtn.disabled = false; sp.textContent = t('Suggest exercises'); }
+    });
+  }
+
+  // --- Home exercise program (patient side) ---
+  // A checklist in the check-in: tick what you did; it's sent with the check-in.
+  state.hepDone = state.hepDone || new Set();
+  function renderComposeHep(){
+    var box = document.getElementById('btwComposeHep'); if(!box) return;
+    var ex = isPatient() ? (state.exercises || []) : [];
+    if(!ex.length){ box.style.display = 'none'; return; }
+    box.style.display = '';
+    var lbl = document.getElementById('btwComposeHepLabel'); if(lbl) lbl.textContent = t('Your home exercises');
+    var sub = document.getElementById('btwComposeHepSub'); if(sub) sub.textContent = t('Tick what you did since your last check-in.');
+    var list = document.getElementById('btwComposeHepList'); list.innerHTML = '';
+    ex.forEach(function(e){
+      var row = document.createElement('label'); row.className = 'btw-hep-check' + (state.hepDone.has(e.id) ? ' on' : '');
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.hepDone.has(e.id);
+      var main = document.createElement('div'); main.className = 'btw-hep-main';
+      main.innerHTML = '<span class="btw-hep-name">' + esc(e.name) + '</span>' + (e.dosage ? '<span class="btw-hep-dose">' + esc(e.dosage) + '</span>' : '')
+        + (e.description ? '<div class="btw-hep-desc">' + esc(e.description) + '</div>' : '');
+      cb.addEventListener('change', function(){ if(cb.checked) state.hepDone.add(e.id); else state.hepDone.delete(e.id); row.classList.toggle('on', cb.checked); });
+      row.appendChild(cb); row.appendChild(main); list.appendChild(row);
+    });
+  }
   function renderNextSessionBar(){
     var bar = document.getElementById('btwNextSessionBar'); if(!bar) return;
     var p = selectedPatient();
@@ -15262,6 +15537,7 @@
       renderWeekSummary();
       renderWeeklyReflection();
       renderGoals();
+      renderComposeHep();
       renderPatterns();
       renderSharePro();
       renderAiReflection();
@@ -15285,6 +15561,8 @@
     renderWeekSummary();
     renderDigest();
     renderPrep();
+    renderNeeds();
+    renderHep();
     renderSignature();
     renderInsights();
     renderBodyOverview();
@@ -15371,6 +15649,10 @@
       btn.disabled = true; if(span) span.textContent = t('Thinking…');
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/note');
+        var soap = !!(d && d.format === 'soap');
+        if(label) label.textContent = soap ? t('Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart') : t('Draft note — review and edit before using');
+        if(ta) ta.rows = soap ? 12 : 7;
+        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = soap ? t('Copy to chart') : t('Copy note');
         if(d && d.needsData){
           if(ta) ta.value = t('Not enough check-ins with AI turned on yet to draft a note.');
           if(meta) meta.textContent = '';
@@ -15794,7 +16076,8 @@
     const manualTags = [...state.selectedTags];
     const painMap = (painMapContext() && composeBodyMap) ? composeBodyMap.getMap() : null;
     const painSens = (painMapContext() && composeBodyMap) ? composeBodyMap.getSens() : null;
-    if(!text && manualTags.length===0 && !painMap && !composePhoto){
+    const hepTicked = isPatient() && state.hepDone && state.hepDone.size > 0;
+    if(!text && manualTags.length===0 && !painMap && !composePhoto && !hepTicked){
       if(composeMode === 'questions'){ const first = document.querySelector('#btwComposeQuestions textarea'); if(first) first.focus(); }
       else { textEl.placeholder = t('Say a bit about what happened before sending…'); textEl.focus(); }
       return;
@@ -15814,7 +16097,8 @@
       if(isPatient()){
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
-          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null
+          text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null,
+          exercisesDone: [...(state.hepDone || [])]
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
       } else {
@@ -15838,6 +16122,7 @@
       if(typeof setComposeTopicAi === 'function') setComposeTopicAi(false);
       if(composeBodyMap) composeBodyMap.clear();
       clearComposePhoto();
+      if(state.hepDone) state.hepDone.clear();
 
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();

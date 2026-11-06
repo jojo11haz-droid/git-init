@@ -60,6 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _tags = {};
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
   Map<String, String> _painSens = {}; // "view:region" -> sensation code
+  List<HomeExercise> _exercises = []; // home program from the clinician
+  final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
   bool _detailsOpen = false;
@@ -99,12 +101,93 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     // Check-in streak for the habit chip — best-effort, never blocks the screen.
     _loadStreak();
+    _loadExercises();
     // First run (after the intro): show the spotlight tour once.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final st = context.read<AppState>();
       if (!st.tourSeen && !st.showOnboarding) _startTour();
     });
+  }
+
+  Widget _exerciseTile(HomeExercise e) {
+    final on = _exDone.contains(e.id);
+    final desc = e.description;
+    final dose = e.dosage;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => setState(() => on ? _exDone.remove(e.id) : _exDone.add(e.id)),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 8, 12, 10),
+          decoration: BoxDecoration(
+            color: on ? BtwColors.mossLight : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: on ? BtwColors.moss : BtwColors.line),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: on,
+                activeColor: BtwColors.moss,
+                visualDensity: VisualDensity.compact,
+                onChanged: (v) => setState(
+                    () => v == true ? _exDone.add(e.id) : _exDone.remove(e.id)),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(TextSpan(children: [
+                        TextSpan(
+                            text: e.name,
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600)),
+                        if (dose != null && dose.isNotEmpty)
+                          TextSpan(
+                              text: '  $dose',
+                              style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: BtwColors.moss)),
+                      ])),
+                      if (desc != null && desc.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(desc,
+                            style: const TextStyle(
+                                fontSize: 12.5,
+                                color: BtwColors.inkSoft,
+                                height: 1.4)),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // The home exercise program, ticked off in the check-in. Best-effort.
+  Future<void> _loadExercises() async {
+    final app = context.read<AppState>();
+    try {
+      final list = await app.fetchExercises();
+      if (!mounted) return;
+      setState(() {
+        _exercises = list;
+        _exDone.removeWhere((id) => !list.any((e) => e.id == id));
+      });
+    } catch (_) {
+      // No program (or offline): the checklist just stays hidden.
+    }
   }
 
   Future<void> _loadStreak() async {
@@ -443,6 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _tags.isEmpty &&
         recording == null &&
         _painMap.isEmpty &&
+        _exDone.isEmpty &&
         _photoBytes == null) {
       messenger.showSnackBar(SnackBar(content: Text(s.saySomething)));
       return;
@@ -472,6 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
             inputMode: inputMode,
             painScale: _painScale,
             bodySex: _painMap.isEmpty ? null : bodyMapSex(),
+            exercisesDone: _exDone.isEmpty ? null : _exDone.toList(),
           );
       if (!mounted) return;
       _text.clear();
@@ -482,6 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _tags.clear();
         _painMap = {};
         _painSens = {};
+        _exDone.clear();
         _photoBytes = null;
         _mood = 5;
         _moodEstimate = false;
@@ -769,6 +855,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       onSensChanged: (m) => _painSens = m,
                     ),
                     const SizedBox(height: 16),
+                    // Home exercise program: tick what you did.
+                    if (_exercises.isNotEmpty) ...[
+                      Text(s.homeExercises,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(s.tickWhatYouDid,
+                          style: const TextStyle(
+                              fontSize: 12.5, color: BtwColors.inkSoft)),
+                      const SizedBox(height: 8),
+                      for (final e in _exercises) _exerciseTile(e),
+                      const SizedBox(height: 12),
+                    ],
                     // Optional photo of the sore area.
                     if (_photoBytes == null)
                       OutlinedButton.icon(

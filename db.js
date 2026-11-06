@@ -257,6 +257,23 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS input_mode TEXT;
 -- Which body figure the patient used on the pain map ('m' | 'f'), so the
 -- clinician sees the spots on the same figure. NULL for older check-ins.
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS body_sex TEXT;
+-- Home exercise program: the exercises a clinician assigns a patient (with a
+-- short how-to), and which of them the patient ticked off on each check-in.
+CREATE TABLE IF NOT EXISTS patient_exercises (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  dosage TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  archived_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS patient_exercises_patient_idx ON patient_exercises(patient_id);
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercises_done JSONB;
+-- Hands-off mode: a morning email listing only the patients who need the
+-- clinician (sent only on days someone does), and the last day it went out.
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_last_sent DATE;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -295,7 +312,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, needs_digest_enabled, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -1403,11 +1420,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null]
   );
   return rows[0];
 }
@@ -1742,4 +1759,88 @@ export async function deleteFutureNote(id, patientId) {
     [id, patientId]
   );
   return rows[0] || null;
+}
+
+
+// --- Home exercise program ---
+// A patient's active (not archived) exercises, oldest first so the order the
+// clinician built the program in is the order the patient sees.
+export async function listExercises(patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, name, description, dosage, created_at FROM patient_exercises
+     WHERE patient_id = $1 AND archived_at IS NULL ORDER BY created_at ASC, id ASC`,
+    [patientId]
+  );
+  return rows;
+}
+
+export async function addExercise(patientId, { name, description, dosage }) {
+  const { rows } = await pool.query(
+    `INSERT INTO patient_exercises (patient_id, name, description, dosage)
+     VALUES ($1, $2, $3, $4) RETURNING id, name, description, dosage, created_at`,
+    [patientId, name, description || null, dosage || null]
+  );
+  return rows[0];
+}
+
+// Archive rather than delete, so past check-ins that ticked it still resolve.
+export async function archiveExercise(patientId, exerciseId) {
+  const { rowCount } = await pool.query(
+    `UPDATE patient_exercises SET archived_at = now()
+     WHERE id = $1 AND patient_id = $2 AND archived_at IS NULL`,
+    [exerciseId, patientId]
+  );
+  return rowCount > 0;
+}
+
+// Every exercise a patient was ever assigned (archived too), for labelling
+// what past check-ins ticked.
+export async function listAllExercises(patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, name, description, dosage, created_at, archived_at FROM patient_exercises
+     WHERE patient_id = $1 ORDER BY created_at ASC, id ASC`,
+    [patientId]
+  );
+  return rows;
+}
+
+// --- Hands-off "needs you" digest ---
+export async function setClinicianNeedsDigest(clinicianId, enabled) {
+  await pool.query(`UPDATE clinicians SET needs_digest_enabled = $2 WHERE id = $1`, [clinicianId, !!enabled]);
+}
+
+export async function listNeedsDigestClinicians() {
+  const { rows } = await pool.query(
+    `SELECT id, name, email, account_type, discipline, needs_digest_last_sent::text AS needs_digest_last_sent FROM clinicians
+     WHERE needs_digest_enabled = true AND licence_verified = true AND email IS NOT NULL`
+  );
+  return rows;
+}
+
+// Claim today's send for a clinician (local date string). Returns true once per
+// day, so overlapping sweeps can never email twice.
+export async function claimNeedsDigest(clinicianId, localDate) {
+  const { rowCount } = await pool.query(
+    `UPDATE clinicians SET needs_digest_last_sent = $2::date
+     WHERE id = $1 AND needs_digest_last_sent IS DISTINCT FROM $2::date`,
+    [clinicianId, localDate]
+  );
+  return rowCount > 0;
+}
+
+// The last few scores per patient of a clinician (newest first), to spot a
+// worsening trend without loading every check-in.
+export async function recentScoresForClinician(clinicianId, n = 4) {
+  const { rows } = await pool.query(
+    `SELECT p.id AS patient_id,
+       (SELECT array_agg(s.mood_score ORDER BY s.submitted_at DESC) FROM (
+          SELECT mood_score, submitted_at FROM check_ins
+          WHERE patient_id = p.id AND deleted_at IS NULL AND mood_score IS NOT NULL
+          ORDER BY submitted_at DESC LIMIT $2) s) AS scores
+     FROM patients p WHERE p.clinician_id = $1 AND p.left_at IS NULL`,
+    [clinicianId, n]
+  );
+  const out = {};
+  for (const r of rows) out[r.patient_id] = r.scores || [];
+  return out;
 }

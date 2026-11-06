@@ -4,7 +4,7 @@
 // no database: just the functions. Exits non-zero on the first failure so CI
 // turns red.
 
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS } from '../clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise } from '../clinical.js';
 import { readFileSync } from 'fs';
 
 let failures = 0;
@@ -84,6 +84,38 @@ eq(canonicalTags(['', 'Sleep', 'Sleep'], 'nutrition'), ['Sleep'], 'drops empties
   try { app = m && JSON.parse(m[1].replace(/'/g, '"').replace(/,(\s*[}\]])/g, '$1')); } catch (e) {}
   eq(app, LEGACY_TAG_ALIAS, 'patient app kLegacyTagAlias matches clinical.js');
 }
+
+console.log('needsAttention — who needs the clinician today');
+{
+  const now = Date.parse('2026-11-10T12:00:00Z');
+  const ago = (d) => new Date(now - d * 86400000).toISOString();
+  const pts = [
+    { id: 'a', display_name: 'Ann', check_in_count: 5, last_check_in_at: ago(1) },                       // pain up 3
+    { id: 'b', display_name: 'Ben', check_in_count: 4, last_check_in_at: ago(1), has_recent_risk: true }, // risk
+    { id: 'c', display_name: 'Cy', check_in_count: 3, last_check_in_at: ago(10) },                        // quiet
+    { id: 'd', display_name: 'Di', check_in_count: 3, last_check_in_at: ago(1) },                         // steady → none
+    { id: 'e', display_name: 'Ed', check_in_count: 2, last_check_in_at: ago(1), has_recent_nerve_flag: true },
+    { id: 'f', display_name: 'Fi', check_in_count: 0, last_check_in_at: null },                           // never checked in → none
+    { id: 'g', display_name: 'Gus', check_in_count: 9, last_check_in_at: ago(30), left_at: ago(5) }       // left → skipped
+  ];
+  const scores = { a: [7, 4, 4, 4], b: [5, 5], c: [4, 4], d: [5, 5, 6, 5], e: [3, 3] };
+  const pain = needsAttention(pts, scores, { pain: true, now });
+  eq(pain.map(x => x.id), ['b', 'e', 'a', 'c'], 'pain: order risk → nerve → worse → quiet; steady/new/left excluded');
+  eq(pain.find(x => x.id === 'a').reasons[0].en, 'Pain up 3 points', 'pain: rise of 3 over baseline reads as worse');
+  eq(pain.find(x => x.id === 'c').reasons[0].en, 'Quiet for 10 days', 'quiet after 7+ days');
+  const mood = needsAttention(pts, { a: [3, 6, 6, 6] }, { pain: false, now });
+  eq(mood.find(x => x.id === 'a').reasons[0].en, 'Down 3 points', 'mood: drop of 3 reads as worse');
+  eq(needsAttention([{ id: 'h', display_name: 'H', check_in_count: 1, last_check_in_at: ago(0) }], { h: [9] }, { pain: true, now })[0].reasons[0].en, 'High pain (9/10)', 'pain: single high score flagged');
+  eq(needsAttention([{ id: 'h', display_name: 'H', check_in_count: 1, last_check_in_at: ago(0) }], { h: [9] }, { pain: false, now }), [], 'mood: 9/10 is good, not flagged');
+}
+
+console.log('exercise sanitizers');
+eq(sanitizeExercisesDone(['x', 'y', 'x', 'evil', 5], ['x', 'y']), ['x', 'y'], 'ticks limited to the program, de-duplicated');
+eq(sanitizeExercisesDone('x', ['x']), null, 'non-array ignored');
+eq(sanitizeExercisesDone([], ['x']), null, 'empty → null');
+eq(sanitizeExercise({ name: '  Wall  squat ', description: 'Back on wall.', dosage: '3x10' }), { name: 'Wall squat', description: 'Back on wall.', dosage: '3x10' }, 'exercise trimmed');
+eq(sanitizeExercise({ name: '   ' }), null, 'nameless exercise rejected');
+eq(sanitizeExercise({ name: 'X'.repeat(200) }).name.length, 80, 'name capped at 80');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

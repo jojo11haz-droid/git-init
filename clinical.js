@@ -101,3 +101,64 @@ export function canonicalTags(tags, field) {
   }
   return out;
 }
+
+// --- Hands-off "needs you" list ---
+// Which patients actually need the clinician today, and why — the only list a
+// busy clinician has to look at. Pure: works from listPatients() rows plus each
+// patient's last few scores (newest first). Pain disciplines read the score
+// the other way (higher = worse). Order: safety first, then nerve signs, then
+// worsening, then gone quiet.
+export const PAIN_DISCIPLINES = ['physio', 'kinesiology', 'osteo', 'occupational'];
+export function needsAttention(patients, scoresByPatient, { pain = false, now = Date.now(), quietDays = 7 } = {}) {
+  const out = [];
+  for (const p of patients || []) {
+    if (!p || p.left_at) continue;
+    const reasons = [];
+    if (p.has_recent_risk) reasons.push({ code: 'risk', en: 'Flagged for review', fr: 'Signalé pour révision' });
+    if (p.has_recent_nerve_flag) reasons.push({ code: 'nerve', en: 'Reported tingling or numbness', fr: 'A signalé des picotements ou un engourdissement' });
+    const s = ((scoresByPatient || {})[p.id] || []).filter(v => typeof v === 'number');
+    if (s.length) {
+      const latest = s[0];
+      const prev = s.slice(1);
+      const base = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : null;
+      const worse = base == null ? 0 : (pain ? latest - base : base - latest);
+      if (worse >= 2) {
+        const pts = Math.round(worse);
+        reasons.push(pain
+          ? { code: 'worse', en: `Pain up ${pts} points`, fr: `Douleur en hausse de ${pts} points` }
+          : { code: 'worse', en: `Down ${pts} points`, fr: `En baisse de ${pts} points` });
+      } else if (pain ? latest >= 8 : latest <= 3) {
+        reasons.push(pain
+          ? { code: 'high', en: `High pain (${latest}/10)`, fr: `Douleur élevée (${latest}/10)` }
+          : { code: 'high', en: `Low score (${latest}/10)`, fr: `Score bas (${latest}/10)` });
+      }
+    }
+    if ((p.check_in_count || 0) > 0 && p.last_check_in_at) {
+      const days = Math.floor((now - new Date(p.last_check_in_at).getTime()) / 86400000);
+      if (days >= quietDays) reasons.push({ code: 'quiet', en: `Quiet for ${days} days`, fr: `Silencieux depuis ${days} jours` });
+    }
+    if (reasons.length) out.push({ id: p.id, name: p.display_name || '', reasons });
+  }
+  const rank = { risk: 0, nerve: 1, worse: 2, high: 3, quiet: 4 };
+  out.sort((a, b) => (rank[a.reasons[0].code] - rank[b.reasons[0].code]) || a.name.localeCompare(b.name));
+  return out;
+}
+
+// Exercises a check-in may tick: only ids from the patient's active program,
+// de-duplicated, capped.
+export function sanitizeExercisesDone(raw, validIds) {
+  if (!Array.isArray(raw)) return null;
+  const ok = new Set(validIds || []);
+  const out = [];
+  for (const v of raw) { if (typeof v === 'string' && ok.has(v) && !out.includes(v)) out.push(v); if (out.length >= 30) break; }
+  return out.length ? out : null;
+}
+
+// Clean one clinician-entered (or AI-suggested) exercise.
+export function sanitizeExercise(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const clip = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
+  const name = clip(raw.name, 80);
+  if (!name) return null;
+  return { name, description: clip(raw.description, 400) || null, dosage: clip(raw.dosage, 80) || null };
+}
