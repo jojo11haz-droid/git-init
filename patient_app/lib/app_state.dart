@@ -22,6 +22,8 @@ class Patient {
   String? get clinicianAccountType => raw['clinician_account_type'] as String?;
   String? get clinicianDiscipline => raw['clinician_discipline'] as String?;
   bool get isPremium => raw['is_premium'] == true;
+  // The body map's Man / Woman figure, saved on the account ('m' / 'f').
+  String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
   // A self-serve individual's own intentions (up to two short lines).
   List<String> get goals =>
@@ -366,6 +368,18 @@ class AppState extends ChangeNotifier {
     await _clearToken();
     patient = null;
     notifyListeners();
+  }
+
+  // Remember the body map's Man / Woman choice on the account (best-effort).
+  Future<void> saveBodySex(String sex) async {
+    if (patient?.bodySex == sex) return;
+    try {
+      final data = await _api.put('/api/patient/body-sex', {'sex': sex});
+      patient = Patient(
+          ((data as Map)['patient'] as Map).cast<String, dynamic>());
+    } catch (_) {
+      // Offline: the device still remembers it; it syncs on the next change.
+    }
   }
 
   // Save the individual's own intentions/goals (up to two short lines).

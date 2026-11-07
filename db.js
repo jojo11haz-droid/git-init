@@ -302,6 +302,8 @@ CREATE TABLE IF NOT EXISTS clinician_messages (
 );
 CREATE INDEX IF NOT EXISTS clinician_messages_patient_idx ON clinician_messages(patient_id, created_at DESC);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
+-- The body map's Man / Woman figure, remembered on the account (web + app).
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS body_sex TEXT;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMPTZ;
@@ -744,7 +746,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -1068,6 +1070,14 @@ export async function setPatientReminders(patientId, enabled, token, { phone, ti
 
 // A self-serve individual's own intentions/goals (a small JSON array of short
 // strings). Set by the patient for themselves; read back on their profile.
+export async function setPatientBodySex(patientId, sex) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET body_sex = $2 WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,
+    [patientId, sex === 'f' ? 'f' : 'm']
+  );
+  return rows[0] || null;
+}
+
 export async function setPatientGoals(patientId, goals) {
   const { rows } = await pool.query(
     `UPDATE patients SET goals = $2 WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,

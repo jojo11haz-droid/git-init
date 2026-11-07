@@ -976,6 +976,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       isFr: s.isFr,
                       onChanged: (m) => _painMap = m,
                       onSensChanged: (m) => _painSens = m,
+                      accountSex: patient.bodySex,
+                      onSexChanged: (x) =>
+                          context.read<AppState>().saveBodySex(x),
                     ),
                     const SizedBox(height: 16),
 

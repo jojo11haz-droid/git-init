@@ -440,11 +440,17 @@ class BodyMap extends StatefulWidget {
     required this.onChanged,
     this.onSensChanged,
     required this.isFr,
+    this.accountSex,
+    this.onSexChanged,
   });
 
   final ValueChanged<Map<String, int>> onChanged;
   final ValueChanged<Map<String, String>>? onSensChanged;
   final bool isFr;
+  // The Man / Woman figure saved on the account ('m' / 'f'), which wins over
+  // this device's; onSexChanged saves a new choice back to the account.
+  final String? accountSex;
+  final ValueChanged<String>? onSexChanged;
 
   @override
   State<BodyMap> createState() => _BodyMapState();
@@ -473,15 +479,24 @@ class _BodyMapState extends State<BodyMap> {
   }
 
   Future<void> _loadSex() async {
+    final acc = widget.accountSex;
+    if (acc == 'f' || acc == 'm') {
+      if (mounted) setState(() => _female = acc == 'f');
+      _saveSex(acc == 'f');
+      return;
+    }
     try {
       final v = await _store.read(key: _sexKey);
       if (v != null && mounted) setState(() => _female = v == 'f');
+      // First time on this account: keep what the device had, on the account.
+      widget.onSexChanged?.call(_female ? 'f' : 'm');
     } catch (_) {}
   }
 
   void _setFemale(bool f) {
     _female = f;
     _saveSex(f);
+    widget.onSexChanged?.call(f ? 'f' : 'm');
   }
 
   Future<void> _saveSex(bool f) async {

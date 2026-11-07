@@ -33,7 +33,7 @@ import {
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
@@ -3322,6 +3322,7 @@ function publicPatient(p) {
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
     clinician_name: p.clinician_name || null,
+    body_sex: p.body_sex === 'f' || p.body_sex === 'm' ? p.body_sex : null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
     reminders_enabled: !!p.reminders_enabled,
     phone: p.phone || null,
@@ -3737,6 +3738,21 @@ app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
 
 // A self-serve individual's own intentions/goals. Up to two short lines they
 // set for themselves — a private anchor on their dashboard, never shared.
+// The body map's Man / Woman figure, saved on the account so it stays the
+// same on every device and in the app.
+app.put('/api/patient/body-sex', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const sex = req.body && req.body.sex;
+    if (sex !== 'm' && sex !== 'f') return res.status(400).json({ error: 'Pick man or woman.' });
+    const updated = await setPatientBodySex(req.patient.id, sex);
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.json({ patient: publicPatient(await withClinicianInfo(updated, req.patient)) });
+  } catch (e) {
+    console.error('set body sex failed', e);
+    res.status(500).json({ error: 'Could not save that.' });
+  }
+});
+
 app.put('/api/patient/goals', requireDb, requirePatientAuth, async (req, res) => {
   try {
     const goals = sanitizeGoals(req.body && req.body.goals);
