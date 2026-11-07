@@ -794,6 +794,26 @@
     margin:4px auto 10px;
   }
   .btw-legend{font-size:11px;line-height:1.9;}
+  #btwMoodChart{display:block;width:100%;height:auto;overflow:visible;}
+  .btw-ch-grid{stroke:var(--line);stroke-width:1;}
+  .btw-ch-ax{font-family:var(--font-mono);font-size:9px;fill:var(--ink-soft);}
+  .btw-ch-empty{font-size:11px;fill:var(--ink-soft);}
+  .btw-ch-line{fill:none;stroke:var(--moss);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;}
+  .btw-ch-area{fill:var(--moss);opacity:.08;}
+  .btw-ch-dot{fill:var(--moss);stroke:var(--paper);stroke-width:1.5;}
+  .btw-ch-dot.risk{fill:var(--amber);}
+  .btw-ch-dot.est{fill:var(--paper);stroke:var(--moss);}
+  .btw-ch-dot.last{stroke-width:2.5;}
+  .btw-ch-val{font-family:var(--font-mono);font-size:9.5px;fill:var(--ink-soft);}
+  .btw-ch-val.last{fill:var(--ink);font-weight:700;font-size:10.5px;}
+  .btw-themebars{display:flex;flex-direction:column;gap:9px;line-height:1.3;margin-top:4px;}
+  .btw-tb{display:grid;grid-template-columns:minmax(60px,auto) 1fr auto;align-items:center;gap:10px;font-size:12.5px;}
+  .btw-tb-name{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+  .btw-tb-track{height:8px;border-radius:4px;background:var(--line);overflow:hidden;}
+  .btw-tb-bar{display:block;height:100%;border-radius:4px;}
+  .btw-tb-n{font-family:var(--font-mono);font-size:11.5px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .btw-tb-of{color:var(--ink-soft);}
+  .btw-tb-note{font-size:11px;color:var(--ink-soft);margin-top:2px;}
   .btw-legend-dot{
     display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;
   }
@@ -4110,7 +4130,7 @@
               <svg id="btwMoodChart" viewBox="0 0 260 90" width="100%" height="90"></svg>
             </div>
             <div class="btw-chart-box">
-              <div class="btw-chart-title">Theme frequency</div>
+              <div class="btw-chart-title">Themes</div>
               <div class="btw-pie" id="btwPie"></div>
               <div class="btw-legend" id="btwLegend"></div>
             </div>
@@ -5122,6 +5142,14 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "No scores yet":"Pas encore de scores",
+    "Average pain":"Douleur moyenne",
+    "Average mood":"Humeur moyenne",
+    "10 = worst pain":"10 = douleur maximale",
+    "10 = best":"10 = au mieux",
+    "Check-ins that mention each theme":"Suivis qui mentionnent chaque thème",
+    "No themes tagged yet":"Aucun thème pour l'instant",
+    "Themes":"Thèmes",
     "Check in person before loading":"À vérifier en personne avant de charger",
     "Their check-ins show":"Ses suivis montrent",
     " and ":" et ",
@@ -16072,52 +16100,66 @@
     }
   }
 
+  // Score over time on a 1-10 scale, with dates, values on the points when
+  // there are few of them, and the latest point marked. Colours come from CSS
+  // classes so the chart reads in light and dark mode.
   function renderMoodChart(){
-    const svg = document.getElementById('btwMoodChart');
+    const svg = document.getElementById('btwMoodChart'); if(!svg) return;
     const sorted = [...state.checkIns].filter(c=>c.mood!=null).sort((a,b)=>a.time-b.time);
-    const w=260,h=90,pad=10;
-    const n = sorted.length;
-    if(n===0){ svg.innerHTML = `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4E3DD" stroke-width="1"/>`; return; }
-    const pts = sorted.map((c,i)=>{
-      const x = pad + (n<=1?0:(i/(n-1))*(w-2*pad));
-      const y = h-pad - ((c.mood-1)/9)*(h-2*pad);
-      return [x,y];
+    const pm = painMode();
+    const W = 320, H = 132, L = 26, R = 14, T = 12, B = 24;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('height', H);
+    const yOf = v => T + (1 - (v - 1) / 9) * (H - T - B);
+    let g = '';
+    [1, 5, 10].forEach(v => {
+      g += `<line class="btw-ch-grid" x1="${L}" x2="${W - R}" y1="${yOf(v).toFixed(1)}" y2="${yOf(v).toFixed(1)}"/>`
+        + `<text class="btw-ch-ax" x="${L - 6}" y="${(yOf(v) + 3.5).toFixed(1)}" text-anchor="end">${v}</text>`;
     });
-    const path = pts.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-    // Estimated moods (AI-filled when the patient skipped the slider) are drawn
-    // as hollow dots so they're visibly distinct from self-reported ones.
-    const dots = pts.map((p,i)=>{
-      const color = sorted[i].risk ? '#B8701F' : '#1E4C86';
-      return sorted[i].moodInferred
-        ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#F5F4F1" stroke="${color}" stroke-width="1.5"/>`
-        : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${color}"/>`;
-    }).join('');
-    svg.innerHTML = `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E4E3DD" stroke-width="1"/>
-      <path d="${path}" fill="none" stroke="#1E4C86" stroke-width="2"/>
-      ${dots}`;
+    const n = sorted.length;
+    if(n === 0){
+      svg.innerHTML = g + `<text class="btw-ch-empty" x="${(L + W - R) / 2}" y="${H / 2}" text-anchor="middle">${esc(t('No scores yet'))}</text>`;
+      return;
+    }
+    const t0 = sorted[0].time, t1 = sorted[n - 1].time;
+    // Spread by date (so gaps show), falling back to even spacing.
+    const xOf = (c, i) => n === 1 ? (L + W - R) / 2 : (t1 > t0 ? L + 8 + ((c.time - t0) / (t1 - t0)) * (W - R - L - 16) : L + 8 + (i / (n - 1)) * (W - R - L - 16));
+    const pts = sorted.map((c, i) => [xOf(c, i), yOf(c.mood)]);
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const area = n > 1 ? line + ` L${pts[n - 1][0].toFixed(1)},${(H - B).toFixed(1)} L${pts[0][0].toFixed(1)},${(H - B).toFixed(1)} Z` : '';
+    const loc = curLang === 'fr' ? 'fr-CA' : 'en-CA';
+    const day = ts => new Date(ts).toLocaleDateString(loc, { month: 'short', day: 'numeric' });
+    const few = n <= 8;
+    let dots = '';
+    pts.forEach((p, i) => {
+      const c = sorted[i], last = i === n - 1;
+      const cls = 'btw-ch-dot' + (c.risk ? ' risk' : '') + (c.moodInferred ? ' est' : '') + (last ? ' last' : '');
+      dots += `<circle class="${cls}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${last ? 4.5 : 3}"><title>${esc(day(c.time))}: ${c.mood}/10${c.moodInferred ? ' (' + t('estimated') + ')' : ''}</title></circle>`;
+      if(few || last) dots += `<text class="btw-ch-val${last ? ' last' : ''}" x="${p[0].toFixed(1)}" y="${(p[1] - 8).toFixed(1)}" text-anchor="middle">${c.mood}</text>`;
+    });
+    const xl = `<text class="btw-ch-ax" x="${pts[0][0].toFixed(1)}" y="${H - 6}" text-anchor="${n === 1 ? 'middle' : 'start'}">${esc(day(t0))}</text>`
+      + (n > 1 ? `<text class="btw-ch-ax" x="${pts[n - 1][0].toFixed(1)}" y="${H - 6}" text-anchor="end">${esc(day(t1))}</text>` : '');
+    const key = `<text class="btw-ch-ax" x="${W - R}" y="${T - 2}" text-anchor="end">${esc(pm ? t('10 = worst pain') : t('10 = best'))}</text>`;
+    svg.innerHTML = g + key + (area ? `<path class="btw-ch-area" d="${area}"/>` : '') + (n > 1 ? `<path class="btw-ch-line" d="${line}"/>` : '') + dots + xl;
   }
 
+  // Themes as bars with counts (a pie said nothing with one or two themes).
   function renderPie(){
     const counts = {};
-    state.checkIns.forEach(c=> c.tags.forEach(t=> counts[t]=(counts[t]||0)+1));
-    const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
-    // Assign colours by frequency so the biggest slices get the lead palette
-    // tones, and pie and legend stay in step since both read the same map.
-    const ordered = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    state.checkIns.forEach(c=> c.tags.forEach(tg=> counts[tg]=(counts[tg]||0)+1));
+    const ordered = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, 6);
     const colorMap = themeColorMap(ordered.map(([tag])=>tag));
-    let acc = 0;
-    const stops = Object.entries(counts).map(([tag,count])=>{
-      const start = (acc/total)*360;
-      acc += count;
-      const end = (acc/total)*360;
+    const pie = document.getElementById('btwPie'); if(pie) pie.style.display = 'none';
+    const max = ordered.length ? ordered[0][1] : 1;
+    const nCi = state.checkIns.length || 1;
+    const el = document.getElementById('btwLegend'); if(!el) return;
+    el.className = 'btw-legend btw-themebars';
+    el.innerHTML = ordered.length ? ordered.map(([tag,count])=>{
       const color = colorMap[tag] || tagColors.Other;
-      return `${color} ${start}deg ${end}deg`;
-    });
-    document.getElementById('btwPie').style.background = stops.length ? `conic-gradient(${stops.join(',')})` : '#E4E3DD';
-    document.getElementById('btwLegend').innerHTML = ordered.map(([tag,count])=>{
-      const color = colorMap[tag] || tagColors.Other;
-      return `<div><span class="btw-legend-dot" style="background:${color}"></span>${esc(curLang==='fr'?(FR[tag]||tag):tag)} (${count})</div>`;
-    }).join('');
+      return `<div class="btw-tb"><span class="btw-tb-name">${esc(curLang==='fr'?(FR[tag]||tag):tag)}</span>`
+        + `<span class="btw-tb-track"><span class="btw-tb-bar" style="width:${Math.max(6, Math.round(count / max * 100))}%;background:${color}"></span></span>`
+        + `<span class="btw-tb-n">${count}<span class="btw-tb-of">/${nCi}</span></span></div>`;
+    }).join('') + `<div class="btw-tb-note">${esc(t('Check-ins that mention each theme'))}</div>`
+      : `<div class="btw-tb-note">${esc(t('No themes tagged yet'))}</div>`;
   }
 
   // Derive extra signal from what's already been submitted, mood direction,
@@ -16136,7 +16178,8 @@
         const ea = rated.slice(0,half);
         const ra = rated.slice(rated.length-half);
         out.delta = (ra.reduce((s,c)=>s+c.mood,0)/ra.length) - (ea.reduce((s,c)=>s+c.mood,0)/ea.length);
-      } else if(rated.length >= 2){
+      } else if(rated.length >= 3){
+        // Two points aren't a direction: needs at least three scores.
         out.delta = rated[rated.length-1].mood - rated[0].mood;
       }
     }
@@ -16196,7 +16239,7 @@
           sub = (pm ? t('avg pain') : t('avg mood')) + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + '/10)';
         }
       }
-      cards.push(card(pm ? t('Pain trend') : t('Mood direction'), value, sub));
+      cards.push(card(ins.delta == null ? (pm ? t('Average pain') : t('Average mood')) : (pm ? t('Pain trend') : t('Mood direction')), value, sub));
     }
     if(ins.low != null){
       const wLow = scoreWord(ins.low), wHigh = scoreWord(ins.high);
