@@ -12378,8 +12378,19 @@
       <div><span class="label">Practice:</span> <strong>${esc(practice)}</strong></div>
       <div><span class="label">Province or State:</span> <strong>${esc(province)}</strong></div>
       <div><span class="label">Licence:</span> <strong>${esc(orderText)}</strong> · <strong>${esc(licence)}</strong></div>
-      <div><span class="label">Plan:</span> <strong>${planLabels[selectedPlan]}</strong> · starts after verification</div>
+      <div><span class="label">Plan:</span> <strong>${esc(reviewPlanLabel(selectedPlan))}</strong> · starts after verification</div>
     `;
+  }
+  // The review step's plan line. planLabels only knows the two therapist
+  // plans, so a physio / neuropsych / nutrition (team_*) or premium signup
+  // showed "Plan: undefined": fall back to the billing plan list.
+  function reviewPlanLabel(plan){
+    if(planLabels[plan]) return planLabels[plan];
+    for(const k in PLAN_OPTIONS){
+      const o = PLAN_OPTIONS[k].find(x => x.plan === plan);
+      if(o) return o.label + (o.price ? ', ' + o.price.replace(/ per month/, ' CAD per month') : '') + (/_annual$/.test(plan) ? ' (billed yearly)' : '');
+    }
+    return plan || 'Solo';
   }
 
   document.getElementById('btwStep3Back').addEventListener('click', ()=> showStep('btwStep2'));
@@ -15005,7 +15016,11 @@
         }
       }catch(err){
         if(err && err.code === 'patient_limit_reached'){
-          if(confirm(err.message + '\n\n' + t('Upgrade to Premium now?'))) changePlan('solo_premium');
+          // Upgrade to the premium plan of their own account type (a physio is
+          // a coach account → team_premium, not the therapist solo_premium).
+          const premFor = { therapist:'solo_premium', coach:'team_premium', school:'school_premium', trainer:'trainer_premium' }[(state.me && state.me.account_type) || 'therapist'];
+          if(!premFor) alert(err.message);
+          else if(confirm(err.message + '\n\n' + t('Upgrade to Premium now?'))) changePlan(premFor);
         } else {
           alert(err.message);
         }

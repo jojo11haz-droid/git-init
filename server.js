@@ -3153,6 +3153,23 @@ function patientWeeklyCap(p) {
   return paidPersonal ? WEEKLY_CHECKIN_CAP : FREE_WEEKLY_CHECKIN_CAP;
 }
 
+// Rows straight from an UPDATE / plain SELECT don't carry the clinician's
+// account type and discipline (only the session lookup joins them in). Without
+// them the page treats an invited client as someone on their own — a physio's
+// client got the mood check-in instead of the pain scale and body map until
+// they refreshed. Fill them in from the clinician (or the session's copy).
+async function withClinicianInfo(p, base) {
+  if (!p || p.clinician_account_type !== undefined) return p;
+  if (base && base.clinician_account_type !== undefined && base.id === p.id) {
+    return { ...p, clinician_account_type: base.clinician_account_type, clinician_discipline: base.clinician_discipline };
+  }
+  if (!p.clinician_id) return { ...p, clinician_account_type: null, clinician_discipline: null };
+  try {
+    const c = await getClinicianById(p.clinician_id);
+    return { ...p, clinician_account_type: c ? c.account_type : null, clinician_discipline: c ? c.discipline : null };
+  } catch (e) { return p; }
+}
+
 function publicPatient(p) {
   return {
     id: p.id,
@@ -3411,7 +3428,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
 
     const token = await startPatientSession(patient.id);
     sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
-    res.status(201).json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
+    res.status(201).json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
@@ -3515,7 +3532,7 @@ app.post('/api/patient/checkout/verify', requireDb, requirePatientAuth, async (r
       customerId: session.customer,
       subscriptionId: session.subscription
     });
-    res.json({ patient: publicPatient(updated || req.patient), paid });
+    res.json({ patient: publicPatient(await withClinicianInfo(updated || req.patient, req.patient)), paid });
   } catch (err) {
     console.error('Error verifying checkout:', err);
     res.status(500).json({ error: 'Could not verify your payment.' });
@@ -3532,7 +3549,7 @@ app.post('/api/patient/subscription/cancel', requireDb, requirePatientAuth, asyn
     if (!s || !s.stripe_subscription_id) return res.status(400).json({ error: 'No subscription on file.' });
     await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, !reactivate);
     const updated = await updatePatientSubscription(req.patient.id, { status: reactivate ? 'active' : 'canceling' });
-    res.json({ patient: publicPatient(updated || req.patient) });
+    res.json({ patient: publicPatient(await withClinicianInfo(updated || req.patient, req.patient)) });
   } catch (err) {
     console.error('Error changing patient subscription:', err);
     res.status(500).json({ error: 'Could not update your subscription.' });
@@ -3556,7 +3573,7 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
     }
 
     const token = await startPatientSession(patient.id);
-    res.json({ token, patient: publicPatient(patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
+    res.json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
   } catch (err) {
     console.error('Error in patient login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -3585,7 +3602,7 @@ app.put('/api/patient/goals', requireDb, requirePatientAuth, async (req, res) =>
     const goals = sanitizeGoals(req.body && req.body.goals);
     const updated = await setPatientGoals(req.patient.id, goals);
     if (!updated) return res.status(404).json({ error: 'Not found' });
-    res.json({ patient: publicPatient(updated) });
+    res.json({ patient: publicPatient(await withClinicianInfo(updated, req.patient)) });
   } catch (e) {
     console.error('set goals failed', e);
     res.status(500).json({ error: 'Could not save your intentions.' });
@@ -3609,7 +3626,7 @@ app.post('/api/patient/consent', requireDb, requirePatientAuth, async (req, res)
   try {
     const { enabled } = req.body || {};
     const patient = await setOwnConsent(req.patient.id, !!enabled, CONSENT_VERSION);
-    res.json({ patient: publicPatient(patient) });
+    res.json({ patient: publicPatient(await withClinicianInfo(patient, req.patient)) });
   } catch (err) {
     console.error('Error recording patient consent:', err);
     res.status(500).json({ error: 'Could not record your choice.' });
@@ -3666,7 +3683,7 @@ app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, re
       days: normalizedDays,
       tz: normalizedTz
     });
-    res.json({ patient: publicPatient(patient), smsConfigured: smsConfigured() });
+    res.json({ patient: publicPatient(await withClinicianInfo(patient, req.patient)), smsConfigured: smsConfigured() });
   } catch (err) {
     console.error('Error updating reminder preference:', err);
     res.status(500).json({ error: 'Could not save your choice.' });
