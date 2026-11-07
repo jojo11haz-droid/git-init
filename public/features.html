@@ -72,7 +72,7 @@
   /* Print / PDF: one compact document. */
   @media print{
     :root{ --paper:#fff; --panel:#fff; --ink:#1A1E1C; --ink-soft:#4A5159; --moss:#1E4C86; --moss-light:#E6EDF6; --line:#DADCD6; }
-    @page{ size: Letter; margin: 13mm 12mm; }
+    @page{ size: Letter; margin: 9mm 12mm; }
     body{font-size:11px;background:#fff;}
     .wrap{max-width:none;padding:0;}
     .no-print,.top,.controls,.toc,footer,.cta .btn{display:none !important;}
@@ -114,8 +114,8 @@
   <nav class="toc no-print" id="toc" aria-label="Sections"></nav>
   <div id="sections"></div>
   <div class="cta">
-    <div><h2 id="ctaH">Try it free for 14 days</h2><p id="ctaP"></p></div>
-    <a class="btn pri" id="ctaBtn" href="/">Start free trial</a>
+    <div><h2 id="ctaH">See it for your clinic</h2><p id="ctaP"></p></div>
+    <a class="btn pri" id="ctaBtn" href="/">Get started</a>
     <div class="print-only purl" id="pUrl"></div>
   </div>
   <p class="note" id="note"></p>
@@ -150,7 +150,7 @@
     en: {
       title:'Everything Between does', eyebrow:'All features', back:'← Between', fieldLbl:'Show it for', print:'Save as PDF',
       lede:'Between captures what happens between appointments and turns it into what you need for the next one: who needs you, a chart note, a program that adapts. Here is the full list, in your field’s words.',
-      ctaH:'Try it free for 14 days', ctaP:'Your {cs} check in by voice or text and you see the pattern before you walk in.', ctaB:'Start free trial',
+      ctaH:'See it for your {org}', ctaP:'Your {cs} check in by voice or text and you see the pattern before you walk in.', ctaB:'Get started',
       note:'Features marked AI use AI only for {cs} who have turned AI summaries on. Voice check-ins, dictation and session recording need speech-to-text to be switched on for your account.',
       ai:'AI', prem:'Personal Premium',
       sections:[
@@ -221,7 +221,7 @@
     fr: {
       title:'Tout ce que fait Between', eyebrow:'Toutes les fonctionnalités', back:'← Between', fieldLbl:'Afficher pour', print:'Enregistrer en PDF',
       lede:'Between capte ce qui se passe entre les rendez-vous et le transforme en ce qu’il vous faut pour le prochain : qui a besoin de vous, une note au dossier, un programme qui s’ajuste. Voici la liste complète, dans les mots de votre domaine.',
-      ctaH:'Essayez gratuitement pendant 14 jours', ctaP:'Vos {cs} font leurs suivis par la voix ou par écrit, et vous voyez la tendance avant d’entrer.', ctaB:'Commencer l’essai gratuit',
+      ctaH:'Voyez-le pour votre {org}', ctaP:'Vos {cs} font leurs suivis par la voix ou par écrit, et vous voyez la tendance avant d’entrer.', ctaB:'Commencer',
       note:'Les fonctionnalités marquées IA n’utilisent l’IA que pour les {cs} qui ont activé les résumés IA. Les suivis vocaux, la dictée et l’enregistrement de séance demandent que la transcription soit activée pour votre compte.',
       ai:'IA', prem:'Personnel Premium',
       sections:[
@@ -310,7 +310,7 @@
     document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
     var set = function(id, v){ var e = document.getElementById(id); if(e) e.textContent = v; };
     set('h1', L.title); set('eyebrow', L.eyebrow); set('backTxt', L.back); set('fieldLbl', L.fieldLbl); set('printTxt', L.print);
-    set('lede', fill(L.lede, w)); set('ctaH', L.ctaH); set('ctaP', fill(L.ctaP, w)); set('note', fill(L.note, w));
+    set('lede', fill(L.lede, w)); set('ctaH', fill(L.ctaH, w)); set('ctaP', fill(L.ctaP, w)); set('note', fill(L.note, w));
     set('pfootR', w[0]);
     set('pEyebrow', 'betweenpsych.com · ' + w[0]);
     set('pUrl', 'betweenpsych.com/' + SLUG[fk]);
