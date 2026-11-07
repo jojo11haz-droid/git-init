@@ -4,7 +4,7 @@
 // no database: just the functions. Exits non-zero on the first failure so CI
 // turns red.
 
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, TIME_SAVED_MINUTES } from '../clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, TIME_SAVED_MINUTES, programContext, sanitizeSuggestion, areaLabel } from '../clinical.js';
 import { readFileSync } from 'fs';
 
 let failures = 0;
@@ -140,6 +140,34 @@ eq(timeSavedSummary({ note: 10 }).label, '1 h', 'whole hours label');
 eq(timeSavedSummary({}).totalMinutes, 0, 'nothing yet → 0');
 eq(Object.values(TIME_SAVED_MINUTES).every(m => m > 0 && m <= 15), true, 'every estimate is conservative (1–15 min)');
 eq(timeSavedSummary({ scribe: 2 }).totalMinutes, 24, 'a recorded session written up counts 12 min');
+
+// --- program context (AI program suggestions) ---
+{
+  const NOW = Date.UTC(2026, 10, 7);
+  const day = n => new Date(NOW - n * 86400000).toISOString();
+  const knee = [
+    { submitted_at: day(10), mood_score: 3, pain_map: { 'front:l_knee_cap': 3 } },
+    { submitted_at: day(6), mood_score: 4, pain_map: { 'front:l_knee_cap': 4 } },
+    { submitted_at: day(3), mood_score: 6, pain_map: { 'front:l_knee_cap': 6 }, pain_sensations: { 'front:l_knee_cap': 'sharp' }, exercises_done: ['e1'] },
+    { submitted_at: day(1), mood_score: 6, pain_map: { 'front:l_knee_cap': 6, 'back:lower_back': 2 } },
+    { submitted_at: day(40), mood_score: 9, pain_map: { 'front:r_wrist': 9 } }   // older than 4 weeks: ignored
+  ];
+  const c = programContext(knee, [{ id: 'e1', name: 'Wall squat', dosage: '3 x 10' }], { pain: true, now: NOW });
+  eq(c.checkIns, 4, 'program context: only the last 4 weeks');
+  eq(c.trend, 'worse', 'program context: pain rising reads as worse');
+  eq(c.hint, 'Left kneecap, about 6/10, getting worse (sharp)', 'program context: goal hint from the most-marked area');
+  eq(JSON.stringify(c.caution), JSON.stringify({ reasons: ['sharp pain that is getting worse'], areas: ['Left kneecap'] }), 'program context: sharp + worsening raises a caution for that area only');
+  eq(/Wall squat \(3 x 10\) — ticked in 1 of 4/.test(c.text), true, 'program context: adherence in the AI summary');
+  const numb = programContext([{ submitted_at: day(1), mood_score: 3, pain_map: { 'front:r_wrist': 3 }, pain_sensations: { 'front:r_wrist': 'numb' } }], [], { pain: true, now: NOW });
+  eq(numb.caution && numb.caution.reasons[0], 'tingling or numbness', 'program context: tingling/numbness always raises a caution');
+  const sev = programContext([{ submitted_at: day(2), mood_score: 8 }], [], { pain: true, now: NOW });
+  eq(!!sev.caution, true, 'program context: 8/10 this week raises a caution');
+  const mood = programContext([{ submitted_at: day(5), mood_score: 3 }, { submitted_at: day(3), mood_score: 5 }, { submitted_at: day(1), mood_score: 7 }], [], { pain: false, now: NOW });
+  eq(mood.trend + '|' + (mood.caution === null) + '|' + mood.hint, 'better|true|', 'program context: mood rising is better, no caution or body hint');
+  eq(areaLabel('back:lower_back'), 'Lower back', 'area label: plain anatomy');
+  const sg = sanitizeSuggestion({ name: '  Step-downs ', description: 'Slow.', dosage: 'x'.repeat(200), pain_rule: 'Up to 3/10.', why: 'Stairs.', harder: 'Higher step', easier: 'Lower step', junk: 1 });
+  eq(sg.name + '|' + sg.dosage.length + '|' + sg.pain_rule + '|' + ('junk' in sg), 'Step-downs|120|Up to 3/10.|false', 'suggestion: trimmed, capped, extra keys dropped');
+}
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

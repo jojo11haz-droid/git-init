@@ -1269,6 +1269,12 @@
   .btw-ainote-text:focus{outline:none;border-color:var(--moss);}
   .btw-ainote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;}
   .btw-ainote-btns{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+  .btw-hep-caution{font-size:12.8px;line-height:1.5;color:var(--ink);background:var(--amber-bg);border:1px solid var(--amber);border-radius:10px;padding:9px 12px;margin:0 0 10px;}
+  .btw-hep-caution b{color:var(--amber);}
+  .btw-hep-from{font-size:11.8px;color:var(--ink-soft);margin:6px 0 2px;line-height:1.45;}
+  .btw-hep-rule{font-size:12.5px;line-height:1.45;margin-top:5px;color:var(--ink);}
+  .btw-hep-rule b,.btw-hep-steps b{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-right:4px;}
+  .btw-hep-steps{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.45;}
   .btw-ai-notice{display:none;font-size:13.5px;line-height:1.5;color:var(--ink);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-top:4px;}
   .btw-ai-empty .btw-ai-notice{display:block;}
   .btw-ai-empty > .btw-ainote-text, .btw-ai-empty > .btw-ainote-foot{display:none !important;}
@@ -5116,6 +5122,21 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Check in person before loading":"À vérifier en personne avant de charger",
+    "Their check-ins show":"Ses suivis montrent",
+    " and ":" et ",
+    "tingling or numbness":"des picotements ou un engourdissement",
+    "pain at 8/10 or more this week":"une douleur de 8/10 ou plus cette semaine",
+    "sharp pain that is getting worse":"une douleur vive qui s'aggrave",
+    "Suggestions stay gentle and avoid loading that area.":"Les suggestions restent douces et évitent de charger cette région.",
+    "Filled in from their check-ins. Suggestions also use where it hurts, how it is trending and what they already do.":"Rempli à partir de ses suivis. Les suggestions tiennent aussi compte de l'endroit de la douleur, de son évolution et de ce qui est déjà fait.",
+    "Suggestions use their recent check-ins: what they reported and what they already do.":"Les suggestions s'appuient sur ses suivis récents : ce qui a été rapporté et ce qui est déjà fait.",
+    "AI summaries are off for this client, so nothing from their check-ins goes to the AI: suggestions use only the goal you type.":"Les résumés IA sont désactivés pour ce client : rien de ses suivis n'est envoyé à l'IA, les suggestions n'utilisent que l'objectif que vous tapez.",
+    "Pain rule":"Règle de douleur",
+    "Easier":"Plus facile",
+    "Harder":"Plus difficile",
+    "Based on":"Selon",
+    "AI suggestions — check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.":"Suggestions de l'IA — vérifiez qu'elles conviennent à ce patient avant de les ajouter. Votre patient voit la marche à suivre, la dose et la règle de douleur; les raisons et les variantes plus faciles ou difficiles sont pour vous.",
     "this client":"ce client",
     "AI summaries are off for {name}, so there is nothing to draft from yet. Turn them on under “View patient data & AI settings” once they agree.":"Les résumés IA sont désactivés pour {name} : il n'y a donc rien à partir de quoi rédiger pour l'instant. Activez-les dans « Voir les données du patient et les réglages IA » une fois son accord obtenu.",
     "No check-ins with an AI summary from {name} in the last 4 weeks yet.":"Aucun suivi avec résumé IA de {name} au cours des 4 dernières semaines pour l'instant.",
@@ -14950,8 +14971,16 @@
         + '<div class="btw-hep-adh">' + esc(t('Ticked in') + ' ' + a.n + ' ' + t('of') + ' ' + a.of + ' ' + t('check-ins (last 2 weeks)')) + '</div></div>'
         + '<button type="button" class="btw-hep-x" data-del="' + esc(e.id) + '" aria-label="' + esc(t('Remove') + ' ' + e.name) + '" title="' + esc(t('Remove')) + '">×</button></div>';
     });
+    var ctx = (d && d.context) || {};
+    var caution = ctx.caution && ctx.caution.reasons && ctx.caution.reasons.length ? ctx.caution : null;
+    var CR = { 'tingling or numbness':t('tingling or numbness'), 'pain at 8/10 or more this week':t('pain at 8/10 or more this week'), 'sharp pain that is getting worse':t('sharp pain that is getting worse') };
     h += '<div class="btw-hep-ai"><div class="btw-hep-ai-l">' + esc(t('Suggest with AI')) + '</div>'
-      + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t(W.goal)) + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t(W.sug)) + '</span></button></div>'
+      + (caution ? '<div class="btw-hep-caution" role="note"><b>' + esc(t('Check in person before loading')) + (caution.areas && caution.areas.length ? ' · ' + esc(caution.areas.join(', ')) : '') + '</b> '
+          + esc(t('Their check-ins show') + ' ' + caution.reasons.map(function(r){ return CR[r] || r; }).join(t(' and ')) + '. ' + t('Suggestions stay gentle and avoid loading that area.')) + '</div>' : '')
+      + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t(W.goal)) + '" value="' + esc(ctx.hint || '') + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t(W.sug)) + '</span></button></div>'
+      + (ctx.checkIns ? '<div class="btw-hep-from">' + esc(ctx.aiConsent
+          ? (ctx.hint ? t('Filled in from their check-ins. Suggestions also use where it hurts, how it is trending and what they already do.') : t('Suggestions use their recent check-ins: what they reported and what they already do.'))
+          : t('AI summaries are off for this client, so nothing from their check-ins goes to the AI: suggestions use only the goal you type.')) + '</div>' : '')
       + '<div class="hep-sugs"></div></div>'
       + (ex.length ? '<div class="btw-hep-rev"><div class="btw-hep-btns" style="margin-top:0;"><button type="button" class="btw-emr-btn hep-rev-btn"><span>' + esc(t('Review program with AI')) + '</span></button><span class="btw-hep-meta">' + esc(t('Suggests what to progress, ease off, add or drop — you approve each change.')) + '</span></div><div class="hep-revs"></div></div>' : '')
       + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
@@ -14981,6 +15010,11 @@
       try { await add([{ name: name, dosage: host.querySelector('.hep-dose').value, description: host.querySelector('.hep-desc').value }]); }
       catch(e){ addBtn.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
     });
+    // What the client sees: the how-to plus the pain rule, and the dose.
+    function forClient(x){
+      var desc = [x.description, x.pain_rule].filter(Boolean).join(' ');
+      return { name: x.name, dosage: x.dosage, description: desc.slice(0, 400) };
+    }
     var sugBtn = host.querySelector('.hep-sug-btn');
     var sugs = host.querySelector('.hep-sugs');
     function drawSugs(list){
@@ -14990,22 +15024,25 @@
         s += '<div class="btw-hep-sug"><div class="btw-hep-main"><span class="btw-hep-name">' + esc(x.name) + '</span>'
           + (x.dosage ? '<span class="btw-hep-dose">' + esc(x.dosage) + '</span>' : '')
           + (x.description ? '<div class="btw-hep-desc">' + esc(x.description) + '</div>' : '')
+          + (x.pain_rule ? '<div class="btw-hep-rule"><b>' + esc(t('Pain rule')) + '</b> ' + esc(x.pain_rule) + '</div>' : '')
+          + (x.why ? '<div class="btw-hep-why">' + esc(x.why) + '</div>' : '')
+          + ((x.harder || x.easier) ? '<div class="btw-hep-steps">' + (x.easier ? '<span><b>' + esc(t('Easier')) + '</b> ' + esc(x.easier) + '</span>' : '') + (x.harder ? '<span><b>' + esc(t('Harder')) + '</b> ' + esc(x.harder) + '</span>' : '') + '</div>' : '')
           + '</div><button type="button" class="btw-emr-btn" data-add="' + i + '"><span>' + esc(t('Add')) + '</span></button></div>';
       });
       s += '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-all"><span>' + esc(t('Add all')) + '</span></button></div>'
-        + '<div class="btw-hep-msg">' + esc(t('AI suggestions — check they suit this patient before adding.')) + '</div>';
+        + '<div class="btw-hep-msg">' + esc((host._sugUsed ? t('Based on') + ' ' + host._sugUsed + ' ' + (host._sugUsed === 1 ? t('check-in') : t('check-ins')) + '. ' : '') + t('AI suggestions — check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.')) + '</div>';
       sugs.innerHTML = s;
       sugs.querySelectorAll('[data-add]').forEach(function(b){
         b.addEventListener('click', async function(){
           var i = +b.getAttribute('data-add'); b.disabled = true;
-          try { var item = host._sug[i]; host._sug = host._sug.filter(function(_, j){ return j !== i; }); await add([item]); }
+          try { var item = host._sug[i]; host._sug = host._sug.filter(function(_, j){ return j !== i; }); await add([forClient(item)]); }
           catch(e){ b.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
         });
       });
       var all = sugs.querySelector('.hep-add-all');
       all.addEventListener('click', async function(){
         all.disabled = true;
-        try { var items = host._sug; host._sug = null; await add(items); }
+        try { var items = host._sug.map(forClient); host._sug = null; await add(items); }
         catch(e){ all.disabled = false; msg.textContent = (e && e.message) || t('Could not save the exercise.'); }
       });
     }
@@ -15054,11 +15091,13 @@
     goalIn.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); sugBtn.click(); } });
     sugBtn.addEventListener('click', async function(){
       var goal = goalIn.value.trim();
-      if(goal.length < 3){ goalIn.focus(); return; }
+      var c0 = (d && d.context) || {};
+      if(goal.length < 3 && !(c0.aiConsent && c0.checkIns)){ goalIn.focus(); return; }
       var sp = sugBtn.querySelector('span'); sugBtn.disabled = true; sp.textContent = t('Thinking…'); msg.textContent = '';
       try {
         var r = await api('POST', '/api/patients/' + pid + '/exercises/suggest', { goal: goal, lang: curLang === 'fr' ? 'fr' : 'en' });
         host._sug = (r && r.suggestions) || [];
+        host._sugUsed = (r && r.usedCheckIns) || 0;
         drawSugs(host._sug);
         if(!host._sug.length) msg.textContent = t('No suggestions came back — try describing the goal differently.');
       } catch(e){ msg.textContent = (e && e.message) || t('Could not suggest exercises just now.'); }
