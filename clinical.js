@@ -160,7 +160,7 @@ export function sanitizeExercise(raw) {
   const clip = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
   const name = clip(raw.name, 80);
   if (!name) return null;
-  return { name, description: clip(raw.description, 400) || null, dosage: clip(raw.dosage, 80) || null };
+  return { name, description: clip(raw.description, 400) || null, dosage: clip(raw.dosage, 120) || null };
 }
 
 // What the "between-session program" is called and holds, per profession:
@@ -215,4 +215,91 @@ export function timeSavedSummary(counts) {
   const h = Math.floor(total / 60), m = total % 60;
   const label = h ? (m ? `${h} h ${m} min` : `${h} h`) : `${m} min`;
   return { items, totalMinutes: total, label };
+}
+
+// --- Program context: what the check-ins say, for AI program suggestions ---
+// A plain read of the last few weeks (no AI): where it hurts, how much and
+// which way it's going, how it feels, what they've been doing. Gives the AI
+// its context, pre-fills the goal box, and raises a safety caution (tingling
+// or numbness, severe pain, sharp pain getting worse) so the suggestions hold
+// back on loading that area.
+const SIDE = { l: 'left', r: 'right' };
+const SENSATION_WORDS = { ache: 'aching', tight: 'tight', stiff: 'stiff', sharp: 'sharp', numb: 'tingling or numbness', throb: 'throbbing' };
+export function areaLabel(key) {
+  const part = String(key || '').split(':')[1] || String(key || '');
+  const bits = part.split('_');
+  const side = SIDE[bits[0]] && bits.length > 1 ? SIDE[bits.shift()] + ' ' : '';
+  const words = bits.join(' ').replace(/\bknee cap\b/, 'kneecap').trim();
+  const s = (side + words).trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+export function programContext(checkIns, exercises, { pain = false, days = 28, now = Date.now() } = {}) {
+  const cutoff = now - days * 86400000, weekAgo = now - 7 * 86400000;
+  const recent = (checkIns || []).filter(c => c && c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
+    .slice().sort((a, b) => new Date(a.submitted_at) - new Date(b.submitted_at)); // oldest first
+  const scores = recent.filter(c => Number.isFinite(c.mood_score)).map(c => c.mood_score);
+  const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
+  const firstAvg = avg(scores.slice(0, 2)), lastAvg = avg(scores.slice(-2));
+  const delta = (scores.length >= 3 && firstAvg != null && lastAvg != null) ? Math.round((lastAvg - firstAvg) * 10) / 10 : 0;
+  // For pain, up is worse; for everything else, up is better.
+  const trend = !delta || Math.abs(delta) < 1 ? 'steady' : ((pain ? delta > 0 : delta < 0) ? 'worse' : 'better');
+  const areas = {};
+  const sens = new Set();
+  let severe = false;
+  for (const c of recent) {
+    const t = new Date(c.submitted_at).getTime();
+    if (c.pain_map && typeof c.pain_map === 'object') {
+      for (const [k, v] of Object.entries(c.pain_map)) {
+        const lv = Number(v); if (!Number.isFinite(lv)) continue;
+        const a = areas[k] || (areas[k] = { key: k, label: areaLabel(k), n: 0, max: 0, last: lv, sens: new Set() });
+        a.n++; a.max = Math.max(a.max, lv); a.last = lv;
+        if (pain && lv >= 8 && t >= weekAgo) { severe = true; a.severe = true; }
+      }
+    }
+    if (c.pain_sensations && typeof c.pain_sensations === 'object') {
+      for (const [k, v] of Object.entries(c.pain_sensations)) {
+        if (!SENSATION_WORDS[v]) continue;
+        sens.add(v); if (areas[k]) areas[k].sens.add(v);
+      }
+    }
+    if (pain && Number.isFinite(c.mood_score) && c.mood_score >= 8 && t >= weekAgo) severe = true;
+  }
+  const top = Object.values(areas).sort((a, b) => b.n - a.n || b.max - a.max).slice(0, 3);
+  const numb = sens.has('numb');
+  const sharpWorse = sens.has('sharp') && trend === 'worse';
+  const caution = pain && (numb || severe || sharpWorse)
+    ? { reasons: [numb && 'tingling or numbness', severe && 'pain at 8/10 or more this week', sharpWorse && 'sharp pain that is getting worse'].filter(Boolean),
+        // Only the areas behind the caution (all marked areas if it came from the overall score).
+        areas: (function(){ const f = Object.values(areas).filter(a => a.sens.has('numb') || a.severe || (sharpWorse && a.sens.has('sharp'))).map(a => a.label); return f.length ? f : top.map(a => a.label); })() }
+    : null;
+  const exById = {}; for (const e of exercises || []) exById[e.id] = e;
+  const adherence = (exercises || []).filter(e => !e.archived_at).map(e => ({
+    name: e.name, dosage: e.dosage || '',
+    done: recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length, of: recent.length
+  }));
+  // A short goal line the clinician can send as-is.
+  let hint = '';
+  if (pain && top.length) {
+    const a = top[0];
+    hint = `${a.label}, about ${Math.round(a.last)}/10` + (trend === 'worse' ? ', getting worse' : trend === 'better' ? ', easing' : '')
+      + (a.sens.size ? ` (${[...a.sens].map(x => SENSATION_WORDS[x]).join(', ')})` : '');
+  }
+  const lines = [];
+  if (recent.length) lines.push(`${recent.length} check-in(s) in the last ${days} days.`);
+  if (scores.length) lines.push(`${pain ? 'Pain' : 'Score'} (1-10): from ${scores[0]} to ${scores[scores.length - 1]}, average ${avg(scores)}, ${pain ? 'max ' + Math.max(...scores) + ', ' : ''}trend ${trend}.`);
+  for (const a of top) lines.push(`Area: ${a.label} — marked ${a.n} time(s), worst ${a.max}/10, latest ${a.last}/10${a.sens.size ? ', feels ' + [...a.sens].map(x => SENSATION_WORDS[x]).join(', ') : ''}.`);
+  for (const ad of adherence) lines.push(`Already assigned: ${ad.name}${ad.dosage ? ' (' + ad.dosage + ')' : ''} — ticked in ${ad.done} of ${ad.of} check-ins.`);
+  const said = recent.filter(c => c.summary_text).slice(-5).map(c => `- ${String(c.summary_text).trim().slice(0, 220)}`);
+  if (said.length) lines.push('What they reported (most recent last):\n' + said.join('\n'));
+  return { hint, caution, trend, checkIns: recent.length, text: lines.join('\n') };
+}
+
+// One AI program suggestion, cleaned: the client-facing parts (name, how-to,
+// dose, pain rule) and the clinician-only parts (why it fits, harder, easier).
+export function sanitizeSuggestion(raw) {
+  const base = sanitizeExercise(raw);
+  if (!base) return null;
+  const clip = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
+  return { ...base, dosage: clip(raw.dosage, 120) || null, pain_rule: clip(raw.pain_rule, 200) || null,
+    why: clip(raw.why, 240) || null, harder: clip(raw.harder, 140) || null, easier: clip(raw.easier, 140) || null };
 }

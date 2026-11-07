@@ -53,7 +53,7 @@ import {
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -2646,7 +2646,16 @@ app.get('/api/patients/:id/exercises', requireDb, requireAuth, requireVerifiedCl
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    res.json({ exercises: await listExercises(patient.id), all: await listAllExercises(patient.id) });
+    const exercises = await listExercises(patient.id);
+    // A plain (non-AI) read of the check-ins: pre-fills the goal box and raises
+    // a safety caution. Nothing here is sent anywhere.
+    const f = fieldOf(req);
+    const ctx = programContext(await listCheckIns(patient.id), exercises, { pain: PAIN_DISCIPLINES.includes(f.discipline || '') });
+    // Without the client's AI consent, no goal is pre-filled: it's built from
+    // their check-ins and would reach the AI once sent. The caution is only
+    // shown to the clinician, so it always comes back.
+    const consent = !!patient.ai_consent_enabled;
+    res.json({ exercises, all: await listAllExercises(patient.id), context: { hint: consent ? ctx.hint : '', caution: ctx.caution, checkIns: ctx.checkIns, aiConsent: consent } });
   } catch (err) {
     console.error('List exercises error:', err);
     res.status(500).json({ error: 'Could not load exercises.' });
@@ -2697,26 +2706,36 @@ const PROGRAM_PROMPT = {
   recovery: { what: 'daily recovery practices', items: 'common, supportive recovery practices (coping with cravings, routines, connection, self-care)', dose: 'how often (e.g. "every evening")' },
   school: { what: 'set of strategies to practise', items: 'simple, age-appropriate strategies a student can practise at school or home (focus, organisation, calming, friendships)', dose: 'when or how often (e.g. "before homework")' }
 };
-async function suggestExercises({ goal, discipline, accountType, lang }) {
+async function suggestExercises({ goal, discipline, accountType, lang, context, caution }) {
   const focus = documentFocusForProfession({ discipline, accountType });
   const fr = lang === 'fr';
-  const pp = PROGRAM_PROMPT[programKind({ accountType, discipline })];
-  const system = `You help a ${focus.role} build a ${pp.what} quickly. Suggest 4 to 6 ${pp.items} for the goal the professional gives.
+  const kind = programKind({ accountType, discipline });
+  const pp = PROGRAM_PROMPT[kind];
+  const ex = kind === 'exercise';
+  const fields = ex
+    ? `"name", "description" (1-2 plain sentences for the client: how to do it, the key form cue), "dosage" (precise: sets x reps or hold time, tempo if it matters, rest if it matters, and how often — e.g. "3 x 10, 3-second lower, once a day"), "pain_rule" (one sentence for the client on how much discomfort is OK and when to stop or tell the clinician — e.g. "Discomfort up to 3/10 is fine; it should settle by the next morning. Stop and tell me if it's sharp."), "why" (one sentence for the clinician tying it to what the check-ins show, with the specifics), "harder" (one short progression), "easier" (one short regression)`
+    : `"name", "description" (1-2 plain sentences for the client: exactly what to do), "dosage" (precise: how often, how long and when — e.g. "once a day after dinner, 5 minutes"), "why" (one sentence for the clinician tying it to what the check-ins show), "harder" (one short way to build on it), "easier" (one short way to make it lighter)`;
+  const safety = caution
+    ? `\n- SAFETY: the check-ins show ${caution.reasons.join(' and ')} (${caution.areas.join(', ') || 'the main area'}). Do NOT suggest strengthening, loading, stretching into pain or impact for that area. Suggest only gentle, pain-free range-of-motion, positioning or general movement that avoids it, and say in each "why" that loading waits until it has been checked in person.`
+    : '';
+  const system = `You help a ${focus.role} build a ${pp.what} quickly. Suggest 4 to 6 ${pp.items} that fit THIS client.
 Rules:
 - The professional decides; these are suggestions to pick from and edit, not a prescription.
-- Each item: a short name, ONE plain-language sentence on how to do it (for the client to read), and ${pp.dose}.
-- No diagnosis, no medical claims, nothing risky or advanced. Write in ${fr ? 'French' : 'English'}.
-- Respond with ONLY a JSON array, no prose, no markdown fences: [{"name": "...", "description": "...", "dosage": "..."}]`;
+- Use the check-in summary (where it hurts, how much, which way it is going, how it feels, what they wrote, what they already do) to choose and to set the starting level: lower and gentler when pain is high or rising, a step up when it is easing and they are doing their current program. Don't repeat what is already assigned unless proposing a change to it.
+- No diagnosis, no medical claims, nothing risky or advanced.${safety}
+- Write the client-facing parts in ${fr ? 'French' : 'English'}, plain and warm; the clinician parts concise.
+- Respond with ONLY a JSON array, no prose, no markdown fences, each item with: ${fields}.`;
+  const user = `Goal from the professional: ${String(goal || '(none given — use the check-ins)').slice(0, 300)}${context ? `\n\nCheck-in summary:\n${String(context).slice(0, 3500)}` : '\n\n(No check-in data shared for this client.)'}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system, messages: [{ role: 'user', content: `Goal: ${String(goal).slice(0, 300)}` }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1800, system, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (exercises):', response.status); throw new Error('AI suggestions failed.'); }
   const data = await response.json();
   const raw = (data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim();
   let parsed; try { parsed = JSON.parse(raw); } catch (e) { throw new Error('AI returned an unexpected format.'); }
-  return (Array.isArray(parsed) ? parsed : []).map(sanitizeExercise).filter(Boolean).slice(0, 6);
+  return (Array.isArray(parsed) ? parsed : []).map(sanitizeSuggestion).filter(Boolean).map(x => ex ? x : { ...x, pain_rule: null }).slice(0, 6);
 }
 
 app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
@@ -2725,9 +2744,17 @@ app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireV
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const goal = req.body && typeof req.body.goal === 'string' ? req.body.goal.trim() : '';
-    if (goal.length < 3) return res.status(400).json({ error: 'Describe the goal or area in a few words.' });
     const lang = (req.body && req.body.lang === 'fr') ? 'fr' : 'en';
-    res.json({ suggestions: await suggestExercises({ goal, discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type, lang }) });
+    const f = fieldOf(req);
+    const ctx = programContext(await listCheckIns(patient.id), await listExercises(patient.id), { pain: PAIN_DISCIPLINES.includes(f.discipline || '') });
+    // Check-in details go to the AI only with the client's AI consent; the
+    // safety caution is worked out locally and always applies.
+    const shared = patient.ai_consent_enabled && ctx.checkIns ? ctx.text : '';
+    if (goal.length < 3 && !shared) return res.status(400).json({ error: 'Describe the goal or area in a few words.' });
+    // The caution (and its areas) is check-in-derived too: it shapes the AI's
+    // suggestions only with consent. Without it the clinician still sees it.
+    const suggestions = await suggestExercises({ goal, discipline: f.discipline, accountType: f.account_type, lang, context: shared, caution: patient.ai_consent_enabled ? ctx.caution : null });
+    res.json({ suggestions, caution: ctx.caution, usedCheckIns: shared ? ctx.checkIns : 0 });
   } catch (err) {
     console.error('Suggest exercises error:', err.message);
     res.status(502).json({ error: 'Could not suggest exercises just now. Please try again.' });
