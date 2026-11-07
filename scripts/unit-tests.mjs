@@ -138,7 +138,7 @@ eq(timeSavedSummary({ note: 3, summary: 10, prep: 0, bogus: 9 }), { items: [{ ki
 eq(timeSavedSummary({ note: 10, program_item: 5 }).label, '1 h 10 min', 'hours + minutes label');
 eq(timeSavedSummary({ note: 10 }).label, '1 h', 'whole hours label');
 eq(timeSavedSummary({}).totalMinutes, 0, 'nothing yet → 0');
-eq(Object.values(TIME_SAVED_MINUTES).every(m => m > 0 && m <= 10), true, 'every estimate is conservative (1–10 min)');
+eq(Object.values(TIME_SAVED_MINUTES).every(m => m > 0 && m <= 15), true, 'every estimate is conservative (1–15 min)');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

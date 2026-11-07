@@ -270,6 +270,10 @@ CREATE TABLE IF NOT EXISTS patient_exercises (
 );
 CREATE INDEX IF NOT EXISTS patient_exercises_patient_idx ON patient_exercises(patient_id);
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercises_done JSONB;
+-- One short AI follow-up question asked after a check-in, and the patient's
+-- (optional) answer, which the clinician sees with the check-in.
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_q TEXT;
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_a TEXT;
 -- Hands-off mode: a morning email listing only the patients who need the
 -- clinician (sent only on days someone does), and the last day it went out.
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -1430,11 +1434,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone, followupQ }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done, followup_q)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null, followupQ || null]
   );
   return rows[0];
 }
@@ -1883,4 +1887,33 @@ export async function clinicianEventCounts(clinicianId, days = 30) {
   );
   out.summary = s[0] ? s[0].n : 0;
   return out;
+}
+
+
+// Patient answers their check-in's follow-up question (once; their own check-in only).
+export async function answerFollowup(patientId, checkInId, answer) {
+  const { rows } = await pool.query(
+    `UPDATE check_ins SET followup_a = $3
+     WHERE id = $1 AND patient_id = $2 AND deleted_at IS NULL AND followup_q IS NOT NULL AND followup_a IS NULL
+     RETURNING *`,
+    [checkInId, patientId, answer]
+  );
+  return rows[0] || null;
+}
+
+// A follow-up answer raised a safety concern: flag the check-in so it shows
+// as flagged for the clinician (and in their "needs you" list).
+export async function flagCheckInRisk(checkInId) {
+  await pool.query(`UPDATE check_ins SET risk_flag = true WHERE id = $1`, [checkInId]);
+}
+
+// Edit one exercise of a patient's program in place (progressions/regressions).
+export async function updateExercise(patientId, exerciseId, { name, description, dosage }) {
+  const { rows } = await pool.query(
+    `UPDATE patient_exercises SET name = $3, description = $4, dosage = $5
+     WHERE id = $1 AND patient_id = $2 AND archived_at IS NULL
+     RETURNING id, name, description, dosage, created_at`,
+    [exerciseId, patientId, name, description || null, dosage || null]
+  );
+  return rows[0] || null;
 }

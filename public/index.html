@@ -1284,6 +1284,26 @@
   /* Hands-off "Needs you today" card + home exercise program. */
   .btw-needs{border-color:var(--clay,#C0392B);background:linear-gradient(180deg,rgba(192,57,43,.06),transparent 90%);}
   .btw-needs .btw-today-row .meta{color:var(--clay,#C0392B);}
+  .btw-ainote-own{margin:0 0 10px;padding:10px 12px;border:1px dashed var(--line);border-radius:11px;background:var(--card,#fff);}
+  .btw-ainote-own-l{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .btw-ainote-own textarea{width:100%;box-sizing:border-box;font-family:var(--font-body);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);min-height:62px;}
+  .btw-ainote-own-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center;}
+  .btw-rec-on{background:var(--clay,#C0392B) !important;color:#fff !important;border-color:var(--clay,#C0392B) !important;}
+  .btw-report-opts{display:grid;grid-template-columns:200px 1fr auto;gap:8px;margin-bottom:10px;}
+  .btw-report-opts select,.btw-report-opts input{font-family:var(--font-body);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--ink);min-width:0;}
+  @media (max-width:620px){ .btw-report-opts{grid-template-columns:1fr;} }
+  .btw-hep-rev{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+  .btw-hep-act{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--moss-light);color:var(--moss);margin-right:6px;}
+  .btw-hep-act.remove{background:rgba(192,57,43,.1);color:var(--clay,#C0392B);}
+  .btw-hep-why{font-size:11.5px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+  .btw-followup{margin:12px 0 4px;padding:13px 14px;border:1px solid var(--moss);border-radius:13px;background:var(--moss-light);}
+  .btw-followup-l{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
+  .btw-followup-q{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.4;}
+  .btw-followup textarea{width:100%;box-sizing:border-box;font-family:var(--font-body);font-size:13.5px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);color:var(--ink);min-height:54px;}
+  .btw-followup-btns{display:flex;gap:10px;align-items:center;margin-top:8px;}
+  .btw-followup-skip{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-size:12.5px;}
+  .btw-entry-fu{margin-top:6px;font-size:12.5px;color:var(--ink);background:var(--moss-light);border-radius:9px;padding:7px 10px;line-height:1.45;}
+  .btw-entry-fu b{color:var(--moss);font-weight:600;}
   .btw-saved{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin:0 0 16px;background:var(--panel);}
   .btw-saved-ic{width:34px;height:34px;border-radius:50%;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .btw-saved-big{font-size:14px;color:var(--ink);line-height:1.35;}
@@ -3736,6 +3756,7 @@
         <div class="btw-wave"><span></span><span></span><span></span><span></span><span></span></div>
         <div class="btw-processing-label">Summarizing for your therapist…</div>
       </div>
+      <div id="btwFollowup" class="btw-followup" style="display:none;"></div>
       <div id="btwCrisis" class="btw-crisis" style="display:none;">
         This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact <strong>988</strong> (Suicide &amp; Crisis Lifeline, US) or your local emergency number. Your therapist has also been notified.
       </div>
@@ -3872,17 +3893,49 @@
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path></svg>
           <span>AI draft note</span>
         </button>
+        <button type="button" id="btwReportBtn" class="btw-emr-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
+          <span>Report / letter</span>
+        </button>
         <button type="button" id="btwEncourageBtn" class="btw-emr-btn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
           <span>Encouragement</span>
         </button>
       </div>
       <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
+        <div class="btw-ainote-own">
+          <div class="btw-ainote-own-l" id="btwAiOwnLabel">Your session notes (optional) — dictate or type, and Between writes them into the note</div>
+          <textarea id="btwAiFindings" maxlength="3000" placeholder="What you observed, your assessment and the plan — in your own words, as short as you like."></textarea>
+          <div class="btw-ainote-own-btns">
+            <button type="button" id="btwDictateBtn" class="btw-emr-btn"><span>Dictate</span></button>
+            <button type="button" id="btwAiNoteUpdate" class="btw-emr-btn"><span>Update note</span></button>
+            <span id="btwAiOwnMsg" style="font-size:12px;color:var(--ink-soft);"></span>
+          </div>
+        </div>
         <div class="btw-ainote-label" id="btwAiNoteLabel">Draft note — review and edit before using</div>
         <textarea id="btwAiNoteText" class="btw-ainote-text" rows="7" spellcheck="true"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwAiNoteMeta"></span>
           <button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button>
+        </div>
+      </div>
+      <div id="btwReportPanel" class="btw-ainote" style="display:none;">
+        <div class="btw-ainote-label" id="btwReportLabel">Report or letter — Between drafts it from the history; add your clinical input where marked</div>
+        <div class="btw-report-opts">
+          <select id="btwReportKind" aria-label="Kind of report">
+            <option value="progress">Progress report</option>
+            <option value="discharge">Discharge summary</option>
+            <option value="referral">Letter to a doctor / professional</option>
+            <option value="insurer">Report for an insurer</option>
+            <option value="school">Letter to a school or workplace</option>
+          </select>
+          <input type="text" id="btwReportTo" maxlength="120" placeholder="Addressed to (optional), e.g. Dr. Tremblay">
+          <button type="button" id="btwReportGo" class="btw-emr-btn"><span>Draft it</span></button>
+        </div>
+        <textarea id="btwReportText" class="btw-ainote-text" rows="12" spellcheck="true" style="display:none;"></textarea>
+        <div class="btw-ainote-foot">
+          <span id="btwReportMeta"></span>
+          <button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button>
         </div>
       </div>
       <div id="btwEncouragePanel" class="btw-ainote" style="display:none;">
@@ -4903,6 +4956,45 @@
     "Tick what you did since your last check-in.":"Cochez ce que vous avez fait depuis votre dernier suivi.",
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
+    "Your session notes (optional) — dictate or type, and Between writes them into the note":"Vos notes de séance (facultatif) — dictez ou tapez, et Between les intègre à la note",
+    "Dictate":"Dicter",
+    "Update note":"Mettre à jour la note",
+    "Stop":"Arrêter",
+    "Transcribing…":"Transcription…",
+    "Recording — tap Stop when done.":"Enregistrement — touchez Arrêter quand c'est fini.",
+    "Recording is not supported in this browser — type instead.":"L'enregistrement n'est pas pris en charge par ce navigateur — tapez plutôt.",
+    "Microphone access was blocked — type instead.":"L'accès au micro a été bloqué — tapez plutôt.",
+    "Added — tap \"Update note\" to write it into the note.":"Ajouté — touchez « Mettre à jour la note » pour l'intégrer.",
+    "Could not transcribe that just now.":"Impossible de transcrire pour le moment.",
+    "Add your session notes or wait for a check-in first.":"Ajoutez vos notes de séance ou attendez un premier suivi.",
+    "your session notes":"vos notes de séance",
+    "Report / letter":"Rapport / lettre",
+    "What you observed, your assessment and the plan — in your own words, as short as you like.":"Ce que vous avez observé, votre évaluation et le plan — dans vos mots, aussi bref que vous voulez.",
+    "Report or letter — Between drafts it from the history; add your clinical input where marked":"Rapport ou lettre — Between le rédige à partir de l'historique; ajoutez votre avis clinique aux endroits indiqués",
+    "Progress report":"Rapport d'évolution",
+    "Discharge summary":"Résumé de fin de suivi",
+    "Letter to a doctor / professional":"Lettre à un médecin / professionnel",
+    "Report for an insurer":"Rapport pour un assureur",
+    "Letter to a school or workplace":"Lettre à une école ou un employeur",
+    "Addressed to (optional), e.g. Dr. Tremblay":"Destinataire (facultatif), p. ex. Dre Tremblay",
+    "Draft it":"Rédiger",
+    "No check-ins yet to build a report from.":"Pas encore de suivis pour rédiger un rapport.",
+    "Draft — add your clinical input where marked, then copy.":"Brouillon — ajoutez votre avis clinique aux endroits indiqués, puis copiez.",
+    "Could not draft the report just now.":"Impossible de rédiger le rapport pour le moment.",
+    "Review program with AI":"Réviser le programme avec l'IA",
+    "Suggests what to progress, ease off, add or drop — you approve each change.":"Suggère quoi faire progresser, alléger, ajouter ou retirer — vous approuvez chaque changement.",
+    "Progress":"Progresser",
+    "Ease off":"Alléger",
+    "Apply":"Appliquer",
+    "The program looks right as it is — no changes suggested.":"Le programme semble adéquat — aucun changement suggéré.",
+    "Could not apply that change.":"Impossible d'appliquer ce changement.",
+    "Could not review the program just now.":"Impossible de réviser le programme pour le moment.",
+    "One quick question":"Une petite question",
+    "A few words is plenty (optional)":"Quelques mots suffisent (facultatif)",
+    "Send answer":"Envoyer la réponse",
+    "Skip":"Passer",
+    "Could not send your answer.":"Impossible d'envoyer votre réponse.",
+    "Follow-up":"Précision",
     "Time saved will show here":"Le temps gagné s'affichera ici",
     "As Between drafts your notes, builds programs and summarises check-ins, it adds up the time it saves you.":"À mesure que Between rédige vos notes, prépare vos programmes et résume les suivis, il calcule le temps qu'il vous fait gagner.",
     "Between saved you about":"Between vous a fait gagner environ",
@@ -8691,6 +8783,8 @@
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null,
       painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null,
       exercisesDone: Array.isArray(row.exercises_done) ? row.exercises_done : null,
+      followupQ: row.followup_q || null,
+      followupA: row.followup_a || null,
       bodySex: (row.body_sex === 'f' || row.body_sex === 'm') ? row.body_sex : null
     };
   }
@@ -13920,7 +14014,9 @@
     digest:{ en:['caseload summary','caseload summaries'], fr:['résumé de clientèle','résumés de clientèle'] },
     needs_email:{ en:['morning triage email','morning triage emails'], fr:['courriel de tri du matin','courriels de tri du matin'] },
     program_item:{ en:['program item written','program items written'], fr:['élément de programme rédigé','éléments de programme rédigés'] },
-    summary:{ en:['check-in summarised','check-ins summarised'], fr:['suivi résumé','suivis résumés'] }
+    summary:{ en:['check-in summarised','check-ins summarised'], fr:['suivi résumé','suivis résumés'] },
+    report:{ en:['report drafted','reports drafted'], fr:['rapport rédigé','rapports rédigés'] },
+    program_review:{ en:['program review','program reviews'], fr:['révision de programme','révisions de programme'] }
   };
   async function loadTimeSaved(){
     if(!isTherapist()) return;
@@ -13951,6 +14047,119 @@
     }).filter(Boolean);
     brk.textContent = parts.join(' · ') + ' — ' + t('estimated');
   }
+
+
+  // --- Smart follow-up: one short question Between asks after a check-in ---
+  // Only when something worth clarifying was mentioned; never on a flagged
+  // check-in. The answer is screened server-side like any check-in text.
+  function renderFollowup(){
+    var box = document.getElementById('btwFollowup'); if(!box) return;
+    var f = state.pendingFollowup;
+    if(!isPatient() || !f){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    box.innerHTML = '<div class="btw-followup-l">' + esc(t('One quick question')) + '</div>'
+      + '<div class="btw-followup-q"></div>'
+      + '<textarea maxlength="1000" placeholder="' + esc(t('A few words is plenty (optional)')) + '"></textarea>'
+      + '<div class="btw-followup-btns"><button type="button" class="btw-emr-btn fu-send"><span>' + esc(t('Send answer')) + '</span></button>'
+      + '<button type="button" class="btw-followup-skip">' + esc(t('Skip')) + '</button><span class="fu-msg" style="font-size:12px;color:var(--ink-soft);"></span></div>';
+    box.querySelector('.btw-followup-q').textContent = f.q;
+    var ta = box.querySelector('textarea');
+    box.querySelector('.btw-followup-skip').addEventListener('click', function(){ state.pendingFollowup = null; renderFollowup(); });
+    var send = box.querySelector('.fu-send');
+    send.addEventListener('click', async function(){
+      var a = ta.value.trim(); if(!a){ ta.focus(); return; }
+      send.disabled = true;
+      try {
+        var r = await pApi('POST', '/api/patient/check-ins/' + encodeURIComponent(f.id) + '/followup', { answer: a });
+        state.pendingFollowup = null; renderFollowup();
+        if(r && r.crisis){ var ce = document.getElementById('btwCrisis'); if(ce) ce.style.display = 'block'; }
+        else showSentToast();
+        loadPatientCheckIns().catch(function(){});
+      } catch(e){ send.disabled = false; box.querySelector('.fu-msg').textContent = (e && e.message) || t('Could not send your answer.'); }
+    });
+  }
+
+  // --- Dictated / typed session notes → chart note ---
+  (function(){
+    var dict = document.getElementById('btwDictateBtn');
+    var upd = document.getElementById('btwAiNoteUpdate');
+    var ta = document.getElementById('btwAiFindings');
+    var msg = document.getElementById('btwAiOwnMsg');
+    if(!dict || !upd || !ta) return;
+    var rec = null, chunks = [], stream = null;
+    function setMsg(m){ if(msg) msg.textContent = m || ''; }
+    dict.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var sp = dict.querySelector('span');
+      if(rec && rec.state === 'recording'){ rec.stop(); return; }
+      if(!window.MediaRecorder || !navigator.mediaDevices){ setMsg(t('Recording is not supported in this browser — type instead.')); return; }
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch(e){ setMsg(t('Microphone access was blocked — type instead.')); return; }
+      chunks = [];
+      rec = new MediaRecorder(stream);
+      rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = async function(){
+        stream.getTracks().forEach(function(tr){ tr.stop(); });
+        dict.classList.remove('btw-rec-on'); sp.textContent = t('Dictate');
+        var blob = new Blob(chunks, { type: (rec.mimeType || 'audio/webm').split(';')[0] });
+        if(!blob.size){ setMsg(''); return; }
+        setMsg(t('Transcribing…')); dict.disabled = true;
+        try {
+          var resp = await fetch('/api/patients/' + encodeURIComponent(p.id) + '/dictate', { method: 'POST', headers: { 'Content-Type': blob.type }, body: blob });
+          var d = null; try { d = await resp.json(); } catch(_){}
+          if(!resp.ok) throw new Error((d && d.error) || t('Could not transcribe that just now.'));
+          ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + (d.text || '');
+          setMsg(t('Added — tap "Update note" to write it into the note.'));
+        } catch(e){ setMsg((e && e.message) || t('Could not transcribe that just now.')); }
+        finally { dict.disabled = false; }
+      };
+      rec.start();
+      dict.classList.add('btw-rec-on'); sp.textContent = t('Stop'); setMsg(t('Recording — tap Stop when done.'));
+    });
+    upd.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var noteTa = document.getElementById('btwAiNoteText');
+      var meta = document.getElementById('btwAiNoteMeta');
+      var sp = upd.querySelector('span'); upd.disabled = true; sp.textContent = t('Thinking…');
+      try {
+        var d = await api('POST', '/api/patients/' + p.id + '/note', { findings: ta.value });
+        if(d && d.needsData){ setMsg(t('Add your session notes or wait for a check-in first.')); }
+        else {
+          if(noteTa) noteTa.value = (d && d.note) || '';
+          var n = (d && d.checkInsUsed) || 0;
+          if(meta) meta.textContent = t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + (ta.value.trim() ? ' + ' + t('your session notes') : '') + ' · ' + t('Indicative, not a clinical record.');
+          setMsg('');
+        }
+      } catch(e){ setMsg((e && e.message) || t('Could not draft a note just now.')); }
+      finally { upd.disabled = false; sp.textContent = t('Update note'); }
+    });
+  })();
+
+  // --- Reports & letters ---
+  (function(){
+    var btn = document.getElementById('btwReportBtn'); if(!btn) return;
+    var panel = document.getElementById('btwReportPanel');
+    var go = document.getElementById('btwReportGo');
+    var out = document.getElementById('btwReportText');
+    var meta = document.getElementById('btwReportMeta');
+    var copy = document.getElementById('btwReportCopy');
+    btn.addEventListener('click', function(){ panel.style.display = panel.style.display === 'none' ? '' : 'none'; });
+    go.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var sp = go.querySelector('span'); go.disabled = true; sp.textContent = t('Thinking…'); meta.textContent = '';
+      try {
+        var d = await api('POST', '/api/patients/' + p.id + '/report', { kind: document.getElementById('btwReportKind').value, recipient: document.getElementById('btwReportTo').value, lang: curLang === 'fr' ? 'fr' : 'en' });
+        if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; meta.textContent = t('No check-ins yet to build a report from.'); }
+        else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; meta.textContent = t('Draft — add your clinical input where marked, then copy.'); }
+      } catch(e){ meta.textContent = (e && e.message) || t('Could not draft the report just now.'); }
+      finally { go.disabled = false; sp.textContent = t('Draft it'); }
+    });
+    copy.addEventListener('click', async function(){
+      var ok = await copyTextToClipboard(out.value);
+      var cs = copy.querySelector('span');
+      if(ok){ var o = cs.textContent; cs.textContent = t('Copied ✓'); setTimeout(function(){ cs.textContent = o; }, 1600); }
+    });
+  })();
 
   // --- Hands-off mode: "Needs you today" ---
   // Only the patients who need the clinician (safety flag, tingling/numbness,
@@ -14049,7 +14258,13 @@
     if(!isTherapist() || !p){ host.style.display = 'none'; return; }
     host.style.display = '';
     var pid = p.id;
-    if(host._pid !== pid){ host._pid = pid; host._sug = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
+    if(host._pid !== pid){
+      // New patient: never carry one person's session notes or report draft to another.
+      ['btwAiFindings','btwReportText','btwReportTo'].forEach(function(id){ var el = document.getElementById(id); if(el) el.value = ''; });
+      ['btwAiNotePanel','btwReportPanel'].forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; });
+      var om = document.getElementById('btwAiOwnMsg'); if(om) om.textContent = '';
+    }
+    if(host._pid !== pid){ host._pid = pid; host._sug = null; host._rev = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
     fetchHep(pid).then(function(d){ if(host._pid === pid) drawHep(host, pid, d); }).catch(function(){ if(host._pid === pid) host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Could not load exercises.')) + '</div>'; });
   }
   function drawHep(host, pid, d){
@@ -14071,6 +14286,7 @@
     h += '<div class="btw-hep-ai"><div class="btw-hep-ai-l">' + esc(t('Suggest with AI')) + '</div>'
       + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t(W.goal)) + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t(W.sug)) + '</span></button></div>'
       + '<div class="hep-sugs"></div></div>'
+      + (ex.length ? '<div class="btw-hep-rev"><div class="btw-hep-btns" style="margin-top:0;"><button type="button" class="btw-emr-btn hep-rev-btn"><span>' + esc(t('Review program with AI')) + '</span></button><span class="btw-hep-meta">' + esc(t('Suggests what to progress, ease off, add or drop — you approve each change.')) + '</span></div><div class="hep-revs"></div></div>' : '')
       + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
       + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
       + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
@@ -14127,6 +14343,44 @@
       });
     }
     drawSugs(host._sug);
+    // Program review: suggested changes, each applied with one tap.
+    var revBtn = host.querySelector('.hep-rev-btn');
+    var revs = host.querySelector('.hep-revs');
+    var ACT = { progress: t('Progress'), ease: t('Ease off'), add: t('Add'), remove: t('Remove') };
+    function drawRevs(list){
+      if(!revs) return;
+      if(!list){ revs.innerHTML = ''; return; }
+      if(!list.length){ revs.innerHTML = '<div class="btw-hep-msg">' + esc(t('The program looks right as it is — no changes suggested.')) + '</div>'; return; }
+      var s = '';
+      list.forEach(function(r, i){
+        s += '<div class="btw-hep-sug"><div class="btw-hep-main"><span class="btw-hep-act ' + (r.action === 'remove' ? 'remove' : '') + '">' + esc(ACT[r.action] || r.action) + '</span><span class="btw-hep-name">' + esc(r.name || '') + '</span>'
+          + (r.dosage ? '<span class="btw-hep-dose">' + esc(r.dosage) + '</span>' : '')
+          + (r.description ? '<div class="btw-hep-desc">' + esc(r.description) + '</div>' : '')
+          + (r.reason ? '<div class="btw-hep-why">' + esc(r.reason) + '</div>' : '')
+          + '</div><button type="button" class="btw-emr-btn" data-apply="' + i + '"><span>' + esc(t('Apply')) + '</span></button></div>';
+      });
+      revs.innerHTML = s;
+      revs.querySelectorAll('[data-apply]').forEach(function(b){
+        b.addEventListener('click', async function(){
+          var r = host._rev[+b.getAttribute('data-apply')]; b.disabled = true;
+          try {
+            var res;
+            if(r.action === 'add') res = await api('POST', '/api/patients/' + pid + '/exercises', { exercises: [{ name: r.name, description: r.description, dosage: r.dosage }] });
+            else if(r.action === 'remove') res = await api('DELETE', '/api/patients/' + pid + '/exercises/' + r.exerciseId);
+            else res = await api('PATCH', '/api/patients/' + pid + '/exercises/' + r.exerciseId, { name: r.name, description: r.description, dosage: r.dosage });
+            host._rev = host._rev.filter(function(x){ return x !== r; });
+            setList(res.exercises || []);
+          } catch(e){ b.disabled = false; msg.textContent = (e && e.message) || t('Could not apply that change.'); }
+        });
+      });
+    }
+    drawRevs(host._rev);
+    if(revBtn) revBtn.addEventListener('click', async function(){
+      var sp = revBtn.querySelector('span'); revBtn.disabled = true; sp.textContent = t('Thinking…'); msg.textContent = '';
+      try { var r = await api('POST', '/api/patients/' + pid + '/exercises/review', { lang: curLang === 'fr' ? 'fr' : 'en' }); host._rev = (r && r.suggestions) || []; drawRevs(host._rev); }
+      catch(e){ msg.textContent = (e && e.message) || t('Could not review the program just now.'); }
+      finally { revBtn.disabled = false; sp.textContent = t('Review program with AI'); }
+    });
     var goalIn = host.querySelector('.hep-goal');
     if(host._goal) goalIn.value = host._goal;
     goalIn.addEventListener('input', function(){ host._goal = goalIn.value; });
@@ -15043,6 +15297,7 @@
         <div>
           <div class="btw-entry-mood ${c.risk?'risk':''}">${esc(painMode()?t('pain'):t('mood'))} ${c.mood!=null?esc(scoreWord(c.mood))+' <span style="font-weight:400;opacity:.6;">('+esc(c.mood)+'/10)</span>':'–'}${c.moodInferred?' <span style="font-weight:400;opacity:.7;">· '+esc(t('AI est.'))+'</span>':''}</div>
           <div class="btw-entry-summary">${esc(c.summary)}</div>
+          ${(c.followupQ && c.followupA) ? `<div class="btw-entry-fu"><b>${esc(t('Follow-up'))}:</b> ${esc(c.followupQ)}<br>${esc(c.followupA)}</div>` : ''}
           ${methodHtml}
           ${audioHtml}
           ${photoHtml}
@@ -16215,6 +16470,7 @@
           exercisesDone: [...(state.hepDone || [])]
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
+        state.pendingFollowup = (!risk && resp.checkIn && resp.checkIn.followup_q) ? { id: resp.checkIn.id, q: resp.checkIn.followup_q } : null;
       } else {
         const checkIn = await api('POST', '/api/patients/' + p.id + '/check-ins', {
           text: text || null, moodScore: mood, manualTags, painMap, painSens, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null
@@ -16224,6 +16480,7 @@
 
       if(risk) crisisEl.style.display = 'block';
       else if(isPatient()) showSentToast();
+      if(isPatient()) renderFollowup();
 
       // reset compose form
       textEl.value = '';

@@ -69,6 +69,10 @@ class CheckIn {
 
   String get id => raw['id'] as String;
   int? get mood => raw['mood_score'] as int?;
+  // One short follow-up question Between asked after this check-in, and the
+  // patient's answer (both null when there was none).
+  String? get followupQuestion => raw['followup_q'] as String?;
+  String? get followupAnswer => raw['followup_a'] as String?;
   bool get moodInferred => raw['mood_inferred'] == true;
   List<String> get tags {
     final alias = kLegacyTagAlias[tagField] ?? const <String, String>{};
@@ -521,6 +525,15 @@ class AppState extends ChangeNotifier {
 
   /// Grace-period undo for a just-sent check-in.
   Future<void> undoCheckIn(String id) => _api.delete('/api/patient/check-ins/$id');
+
+  /// Answer the follow-up question. Returns crisis resources if the answer
+  /// raised a safety concern (it's screened like any check-in), else null.
+  Future<Map<String, dynamic>?> answerFollowup(String id, String answer) async {
+    final data =
+        await _api.post('/api/patient/check-ins/$id/followup', {'answer': answer});
+    final m = (data as Map).cast<String, dynamic>();
+    return (m['crisis'] as Map?)?.cast<String, dynamic>();
+  }
 
   /// Law 25 erasure request — soft-deletes the whole history.
   Future<void> requestDeletion() => _api.delete('/api/patient/check-ins');
