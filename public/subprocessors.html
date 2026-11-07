@@ -56,13 +56,13 @@
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">privacy</a></td>
           <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in (only when the client has opted in to AI summaries). Also reads a document or photo a clinician uploads — to summarize an intake document, or to pull out first names when adding several patients at once.</td>
-          <td>Check-in text (only with the client's AI consent), plus any document, file or photo a clinician uploads for document review or to add patients.</td>
+          <td>Check-in text (only with the client's AI consent), plus any document, file or photo a clinician uploads for document review or to add patients, and the transcript of a recorded session or dictation the clinician asks to write up (not stored by Between).</td>
           <td>United States</td>
         </tr>
         <tr>
           <td><strong>Deepgram</strong><br><a href="https://deepgram.com/privacy">privacy</a></td>
-          <td>Transcribes a voice memo to text so it can be summarized. Runs only when a client records a voice check-in and only where configured.</td>
-          <td>The voice memo audio.</td>
+          <td>Transcribes a voice memo to text so it can be summarized. Also transcribes a clinician's dictated notes, or an appointment the clinician records (only after confirming the client agreed). Used only where configured.</td>
+          <td>The voice memo audio; the audio of a dictation or recorded session, which Between does not store.</td>
           <td>United States</td>
         </tr>
         <tr>
@@ -102,6 +102,7 @@
     <ul>
       <li>AI analysis is <strong>off by default</strong> and runs only with the client's explicit consent. If a client leaves AI off, their check-ins are never sent to Anthropic.</li>
       <li>Voice memos and photos are stored in the database on Neon and a voice memo reaches Deepgram only if the client records one.</li>
+      <li>A session a clinician records (with the client's agreement) is transcribed and written up, then dropped: Between keeps neither the audio nor the transcript.</li>
       <li>We do not sell data and we do not use it to train AI models.</li>
       <li>A client can see, correct and delete their own data at any time.</li>
       <li>Because this can involve storing and processing personal information in the United States, outside Quebec and outside Canada, we take applicable cross-border requirements into account under Canadian privacy law, including the federal PIPEDA and Quebec's Law 25.</li>
@@ -127,13 +128,13 @@
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">confidentialité</a></td>
           <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi (uniquement si le client a activé les résumés IA). Lit aussi un document ou une photo qu'un clinicien téléverse — pour résumer un document d'accueil, ou pour en extraire des prénoms lors de l'ajout de plusieurs patients à la fois.</td>
-          <td>Le texte du suivi (uniquement avec le consentement IA du client), ainsi que tout document, fichier ou photo qu'un clinicien téléverse pour l'analyse de document ou pour ajouter des patients.</td>
+          <td>Le texte du suivi (uniquement avec le consentement IA du client), ainsi que tout document, fichier ou photo qu'un clinicien téléverse pour l'analyse de document ou pour ajouter des patients, et la transcription d'une séance enregistrée ou d'une dictée que le clinicien fait rédiger (non conservée par Between).</td>
           <td>États-Unis</td>
         </tr>
         <tr>
           <td><strong>Deepgram</strong><br><a href="https://deepgram.com/privacy">confidentialité</a></td>
-          <td>Transcrit une note vocale en texte pour qu'elle puisse être résumée. Ne s'exécute que si un client enregistre une note vocale, et là où il est configuré.</td>
-          <td>L'audio de la note vocale.</td>
+          <td>Transcrit une note vocale en texte pour qu'elle puisse être résumée. Transcrit aussi les notes dictées par un clinicien, ou une séance qu'il enregistre (seulement après avoir confirmé l'accord du client). Utilisé seulement là où il est configuré.</td>
+          <td>L'audio de la note vocale; l'audio d'une dictée ou d'une séance enregistrée, que Between ne conserve pas.</td>
           <td>États-Unis</td>
         </tr>
         <tr>
@@ -173,6 +174,7 @@
     <ul>
       <li>L'analyse par IA est <strong>désactivée par défaut</strong> et ne s'exécute qu'avec le consentement explicite du client. Si un client laisse l'IA désactivée, ses suivis ne sont jamais envoyés à Anthropic.</li>
       <li>Les notes vocales et les photos sont stockées dans la base de données sur Neon, et une note vocale n'atteint Deepgram que si le client en enregistre une.</li>
+      <li>Une séance qu'un clinicien enregistre (avec l'accord du client) est transcrite et rédigée, puis abandonnée : Between ne conserve ni l'audio ni la transcription.</li>
       <li>Nous ne vendons pas les données et nous ne les utilisons pas pour entraîner des modèles d'IA.</li>
       <li>Un client peut consulter, corriger et supprimer ses propres données en tout temps.</li>
       <li>Comme cela peut impliquer le stockage et le traitement de renseignements personnels aux États-Unis, hors du Québec et hors du Canada, nous tenons compte des exigences applicables en matière de transferts sous les lois canadiennes sur la vie privée, dont la LPRPDE fédérale et la loi 25 du Québec.</li>
