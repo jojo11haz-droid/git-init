@@ -21,13 +21,27 @@ class BtwColors {
   static const amberInk = Color(0xFF7A2C20); // crisis card text
 }
 
-ThemeData buildTheme() {
+/// Preset accents a professional (for their clients) or a Premium individual
+/// (for themselves) can pick. Keys mirror ACCENTS in brand.js and the website.
+const Map<String, Color> kAccents = {
+  'blue': Color(0xFF1E4C86),
+  'teal': Color(0xFF0F6B6B),
+  'green': Color(0xFF2E6B3A),
+  'plum': Color(0xFF6A3D7C),
+  'berry': Color(0xFF9B2C55),
+  'clay': Color(0xFFA8432E),
+  'slate': Color(0xFF3D4A5C),
+  'indigo': Color(0xFF3B3F99),
+};
+
+ThemeData buildTheme({Color? accent}) {
+  final primary = accent ?? BtwColors.moss;
   final base = ThemeData(
     useMaterial3: true,
     fontFamily: 'Roboto', // bundled — see pubspec.yaml
     colorScheme: ColorScheme.fromSeed(
-      seedColor: BtwColors.moss,
-      primary: BtwColors.moss,
+      seedColor: primary,
+      primary: primary,
       surface: BtwColors.cream,
     ),
     scaffoldBackgroundColor: BtwColors.cream,
@@ -45,7 +59,7 @@ ThemeData buildTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: BtwColors.moss,
+        backgroundColor: primary,
         foregroundColor: Colors.white,
         minimumSize: const Size.fromHeight(58),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -76,7 +90,7 @@ ThemeData buildTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: BtwColors.moss, width: 2),
+        borderSide: BorderSide(color: primary, width: 2),
       ),
     ),
     snackBarTheme: SnackBarThemeData(

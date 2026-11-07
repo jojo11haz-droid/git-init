@@ -1317,6 +1317,30 @@
   .btw-msg-att{font-size:12px;color:var(--moss);margin-top:3px;}
   /* Client side: messages from their professional */
   .btw-inbox{display:flex;flex-direction:column;gap:10px;margin:0 0 16px;}
+  /* Personalization: the professional's welcome card on the client's page,
+     the accent swatches, and an individual's hidden sections. */
+  .btw-brand-card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--panel);margin:0 0 16px;}
+  .btw-brand-h{display:flex;align-items:center;gap:12px;}
+  .btw-brand-h b{font-family:var(--font-display);font-size:17px;color:var(--ink);font-weight:600;}
+  .btw-brand-logo{max-height:40px;max-width:120px;object-fit:contain;border-radius:6px;}
+  .btw-brand-welcome{font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-line;}
+  .btw-brand-h + .btw-brand-welcome{margin-top:9px;}
+  .btw-swatches{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px;}
+  .btw-swatch{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;}
+  .btw-swatch.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink);}
+  .btw-swatch:disabled{cursor:not-allowed;opacity:.45;}
+  .btw-brand-sec{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;}
+  .btw-brand-sec h3{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+  .btw-brand-pill{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);background:var(--moss-light);border-radius:100px;padding:2px 8px;}
+  .btw-brand-hint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;}
+  .btw-brand-logo-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .btw-brand-logo-row img{max-height:44px;max-width:140px;object-fit:contain;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff;}
+  #btwBrandWelcome{width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.5;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);resize:vertical;}
+  .btw-brand-toggle{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink);padding:6px 0;cursor:pointer;}
+  .btw-brand-toggle input{width:18px;height:18px;accent-color:var(--moss);}
+  .btw-brand-status{font-size:12.5px;color:var(--ink-soft);margin-left:10px;}
+  .btw-brand-preview-lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:16px 0 6px;font-family:var(--font-mono);}
+  body.btw-hide-streak #btwStreak, body.btw-hide-reflection #btwWeeklyReflection, body.btw-hide-goals #btwGoals{display:none !important;}
   .btw-inbox-card{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:var(--panel);}
   .btw-inbox-card.new{border-color:var(--moss);box-shadow:0 0 0 3px var(--moss-light);}
   .btw-inbox-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
@@ -3232,6 +3256,7 @@
           <button class="btw-nav-btn" id="btwEngagementBtn" style="display:none;">Engagement</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing &amp; subscription</button>
           <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My clinic</button>
+          <button class="btw-nav-btn" id="btwBrandBtn" style="display:none;">Personalize</button>
           <button class="btw-nav-btn" id="btwSecurityBtn" style="display:none;">Security</button>
           <button class="btw-nav-btn" id="btwMenuSettings" style="display:none;">Account, data &amp; billing</button>
           <button class="btw-nav-btn" id="btwDownloadData" style="display:none;">Download my data</button>
@@ -3788,6 +3813,7 @@
   <div class="btw-grid" id="btwDashGrid" style="display:none;">
     <!-- PATIENT PANE -->
     <div class="btw-pane">
+      <div class="btw-brand-card" id="btwBrandCard" style="display:none;"></div>
       <div class="btw-inbox" id="btwInbox" style="display:none;" aria-live="polite"></div>
       <div class="btw-eyebrow" id="btwPatientPaneEyebrow">Patient view</div>
       <h3 id="btwComposeHeading">How are things right now?</h3>
@@ -4742,6 +4768,14 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwBrandOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:460px;">
+      <button class="btw-modal-close" data-close="btwBrandOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Personalize</div>
+      <h2 id="btwBrandTitle">Make it yours</h2>
+      <div id="btwBrandBody"></div>
+    </div>
+  </div>
   <div class="btw-modal-overlay" id="btwAddOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:420px;">
       <button class="btw-modal-close" data-close="btwAddOverlay" type="button" aria-label="Close">✕</button>
@@ -5189,6 +5223,38 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Personalize":"Personnaliser",
+    "Make it yours":"À votre image",
+    "What your clients see":"Ce que voient vos clients",
+    "Shown at the top of your clients’ check-in page and in the app.":"Affiché en haut de la page de suivi de vos clients et dans l’application.",
+    "Welcome note":"Mot d’accueil",
+    "e.g. Hi, it’s Dr. Lee. Check in whenever something comes up. I read these before each session.":"p. ex. Bonjour, c’est Dre Lee. Faites un suivi dès que quelque chose survient. Je les lis avant chaque séance.",
+    "Add your clinic name, logo and colour with Premium. Your welcome note works on every plan.":"Ajoutez le nom, le logo et la couleur de votre clinique avec Premium. Votre mot d’accueil fonctionne avec tous les forfaits.",
+    "Clinic name":"Nom de la clinique",
+    "Logo":"Logo",
+    "Upload":"Téléverser",
+    "PNG, JPG or WebP, under 300 KB.":"PNG, JPG ou WebP, moins de 300 Ko.",
+    "Colour":"Couleur",
+    "Preview":"Aperçu",
+    "Nothing yet. Your clients see your welcome note here.":"Rien pour l’instant. Vos clients verront votre mot d’accueil ici.",
+    "That image is too big. Keep it under 300 KB.":"Cette image est trop lourde. Gardez-la sous 300 Ko.",
+    "Could not save the logo.":"Impossible d’enregistrer le logo.",
+    "Logo saved":"Logo enregistré",
+    "Logo removed":"Logo retiré",
+    "Show my streak":"Afficher ma série",
+    "Show the weekly reflection":"Afficher le bilan de la semaine",
+    "Show my goals":"Afficher mes objectifs",
+    "Pick your colour and choose what shows on your page. This follows you to the app.":"Choisissez votre couleur et ce qui s’affiche sur votre page. Ça vous suit dans l’application.",
+    "With Premium you can pick your colour and choose what shows on your page.":"Avec Premium, vous pouvez choisir votre couleur et ce qui s’affiche sur votre page.",
+    "On my page":"Sur ma page",
+    "Blue":"Bleu",
+    "Teal":"Sarcelle",
+    "Green":"Vert",
+    "Plum":"Prune",
+    "Berry":"Petits fruits",
+    "Clay":"Terre cuite",
+    "Slate":"Ardoise",
+    "Indigo":"Indigo",
     "Messages from your clinician":"Messages de votre clinicien",
     "Notes from your clinician show here, with any exercises they attached and how to do them.":"Les mots de votre clinicien s'affichent ici, avec les exercices joints et comment les faire.",
     "Show where it hurts":"Montrez où ça fait mal",
@@ -11377,6 +11443,12 @@
     document.getElementById('btwBillingBtn').style.display = (asTherapist && billingEnabled && !pendingVerify) ? '' : 'none';
     const practiceBtn = document.getElementById('btwPracticeBtn');
     if(practiceBtn) practiceBtn.style.display = (asTherapist && !pendingVerify) ? '' : 'none';
+    // Personalize: a professional brands what their clients see; a solo
+    // individual styles their own page. (An invited client gets their
+    // professional's branding instead.)
+    const brandBtn = document.getElementById('btwBrandBtn');
+    if(brandBtn) brandBtn.style.display = ((asTherapist && !pendingVerify) || (asPatient && soloIndividual() && !_ownerPreview)) ? '' : 'none';
+    try { btwApplyAccent(); } catch(e){}
     const adminBtn = document.getElementById('btwAdminBtn');
     if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const engBtn = document.getElementById('btwEngagementBtn');
@@ -15356,6 +15428,175 @@
   // Messages from the client's professional, newest first; the unread ones are
   // highlighted, then marked read on the server once shown.
   var _inboxAll = false, _inboxMarked = false;
+  // --- Personalization ---
+  // Preset accents only (light + dark shade each), so a chosen colour can never
+  // make buttons unreadable. Mirrors ACCENTS in brand.js and kAccents in the app.
+  const ACCENT_SHADES = { blue:['#1E4C86','#5C92D3'], teal:['#0F6B6B','#4FB3B0'], green:['#2E6B3A','#6DBA7C'], plum:['#6A3D7C','#B48AC6'], berry:['#9B2C55','#E07AA0'], clay:['#A8432E','#E38B72'], slate:['#3D4A5C','#9AA8BC'], indigo:['#3B3F99','#8D92E8'] };
+  const ACCENT_NAMES = { blue:'Blue', teal:'Teal', green:'Green', plum:'Plum', berry:'Berry', clay:'Clay', slate:'Slate', indigo:'Indigo' };
+  function mixHex(a, b, w){
+    const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+    const ch = function(sh){ return Math.round(((pa >> sh) & 255) * (1 - w) + ((pb >> sh) & 255) * w); };
+    return '#' + ((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1);
+  }
+  function clinicianBrandPremium(){ return !!(ownerFreeAccess || /premium/.test((state.me && state.me.plan) || '')); }
+  function currentAccent(){
+    if(isTherapist() && state.me) return clinicianBrandPremium() ? ((state.me.brand || {}).accent || '') : '';
+    if(isPatient() && state.patient && !_ownerPreview){
+      const b = state.patient.clinician_brand; if(b && b.accent) return b.accent;
+      const pr = state.patient.prefs; if(pr && pr.accent) return pr.accent;
+    }
+    return '';
+  }
+  function accentCss(k){
+    const sh = ACCENT_SHADES[k]; if(!sh) return '';
+    const dk = '--moss:' + sh[1] + ';--moss-light:' + mixHex(sh[1], '#14171A', 0.78) + ';';
+    return ':root{--moss:' + sh[0] + ';--moss-light:' + mixHex(sh[0], '#FFFFFF', 0.86) + ';}'
+      + '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){' + dk + '}}'
+      + ':root[data-theme="dark"]{' + dk + '}';
+  }
+  function btwApplyAccent(){
+    const k = (state.me || state.patient) ? currentAccent() : '';
+    let el = document.getElementById('btwAccentStyle');
+    if(!k || k === 'blue' || !ACCENT_SHADES[k]){ if(el) el.remove(); return; }
+    const css = accentCss(k);
+    if(!el){ el = document.createElement('style'); el.id = 'btwAccentStyle'; document.head.appendChild(el); }
+    if(el.textContent !== css) el.textContent = css;
+  }
+  function btwApplyPrefs(){
+    const pr = isPatient() && !_ownerPreview && state.patient && state.patient.prefs;
+    const hide = (pr && pr.hide) || [];
+    ['streak','reflection','goals'].forEach(function(k){ document.body.classList.toggle('btw-hide-' + k, hide.indexOf(k) >= 0); });
+  }
+  function brandCardHtml(b, fallbackName){
+    const who = b.clinic || fallbackName || '';
+    const head = (b.logo_url || who) ? '<div class="btw-brand-h">' + (b.logo_url ? '<img class="btw-brand-logo" src="' + esc(b.logo_url) + '" alt="">' : '') + (who ? '<b>' + esc(who) + '</b>' : '') + '</div>' : '';
+    return head + (b.welcome ? '<div class="btw-brand-welcome">' + esc(b.welcome) + '</div>' : '');
+  }
+  function renderBrandCard(){
+    const box = document.getElementById('btwBrandCard'); if(!box) return;
+    const b = isPatient() && !_ownerPreview && state.patient && state.patient.clinician_brand;
+    if(!b || !(b.welcome || b.clinic || b.logo_url)){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.innerHTML = brandCardHtml(b, state.patient.clinician_name);
+    box.style.display = '';
+  }
+  function swatchesHtml(sel, disabled){
+    return '<div class="btw-swatches" role="radiogroup" aria-label="' + esc(t('Colour')) + '">' + Object.keys(ACCENT_SHADES).map(function(k){
+      return '<button type="button" class="btw-swatch' + ((sel || 'blue') === k ? ' on' : '') + '" data-accent="' + k + '" role="radio" aria-checked="' + ((sel || 'blue') === k) + '" aria-label="' + esc(t(ACCENT_NAMES[k])) + '" title="' + esc(t(ACCENT_NAMES[k])) + '" style="background:' + ACCENT_SHADES[k][0] + ';"' + (disabled ? ' disabled' : '') + '></button>';
+    }).join('') + '</div>';
+  }
+  function wireSwatches(root, onPick){
+    root.querySelectorAll('.btw-swatch').forEach(function(b){ b.addEventListener('click', function(){
+      root.querySelectorAll('.btw-swatch').forEach(function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); });
+      onPick(b.dataset.accent);
+    }); });
+  }
+  function openBrandPanel(){
+    const ov = document.getElementById('btwBrandOverlay'), body = document.getElementById('btwBrandBody');
+    if(!ov || !body) return;
+    if(isTherapist() && state.me) renderClinicianBrand(body); else if(isPatient() && state.patient) renderIndividualPrefs(body); else return;
+    ov.style.display = 'flex';
+  }
+  function renderClinicianBrand(body){
+    document.getElementById('btwBrandTitle').textContent = t('What your clients see');
+    const prem = clinicianBrandPremium();
+    const b = Object.assign({}, state.me.brand || {});
+    let accent = b.accent || 'blue';
+    const premPlan = { therapist:'solo_premium', coach:'team_premium', school:'school_premium', trainer:'trainer_premium' }[(state.me && state.me.account_type) || 'therapist'];
+    const logoUrl = function(){ const v = (state.me.brand || {}).logo_v; return v ? '/api/brand-logo/' + encodeURIComponent(state.me.id) + '?v=' + encodeURIComponent(v) : ''; };
+    body.innerHTML = '<p class="btw-brand-hint">' + esc(t('Shown at the top of your clients’ check-in page and in the app.')) + '</p>'
+      + '<div class="btw-form-field"><label for="btwBrandWelcome">' + esc(t('Welcome note')) + '</label>'
+      + '<textarea id="btwBrandWelcome" maxlength="500" rows="3" placeholder="' + esc(t('e.g. Hi, it’s Dr. Lee. Check in whenever something comes up. I read these before each session.')) + '"></textarea></div>'
+      + '<div class="btw-brand-sec"><h3>' + esc(t('Your clinic')) + ' <span class="btw-brand-pill">Premium</span></h3>'
+      + (prem ? '' : '<p class="btw-brand-hint">' + esc(t('Add your clinic name, logo and colour with Premium. Your welcome note works on every plan.')) + '</p>')
+      + '<div class="btw-form-field"><label for="btwBrandClinic">' + esc(t('Clinic name')) + '</label><input type="text" id="btwBrandClinic" maxlength="80"' + (prem ? '' : ' disabled') + '></div>'
+      + '<div class="btw-form-field"><label>' + esc(t('Logo')) + '</label><div class="btw-brand-logo-row"><span id="btwBrandLogoPrev"></span>'
+      + '<label class="btw-nav-btn" style="cursor:' + (prem ? 'pointer' : 'not-allowed') + ';' + (prem ? '' : 'opacity:.5;') + '">' + esc(t('Upload')) + '<input type="file" id="btwBrandLogoFile" accept="image/png,image/jpeg,image/webp" style="display:none;"' + (prem ? '' : ' disabled') + '></label>'
+      + '<button type="button" class="btw-nav-btn" id="btwBrandLogoDel" style="display:none;">' + esc(t('Remove')) + '</button></div>'
+      + '<div class="btw-brand-hint" style="margin-top:6px;">' + esc(t('PNG, JPG or WebP, under 300 KB.')) + '</div></div>'
+      + '<div class="btw-form-field"><label>' + esc(t('Colour')) + '</label>' + swatchesHtml(accent, !prem) + '</div>'
+      + (!prem && premPlan ? '<button type="button" class="btw-modal-continue" id="btwBrandUpgrade" style="margin-top:6px;">' + esc(t('Upgrade to Premium')) + '</button>' : '')
+      + '</div>'
+      + '<div class="btw-brand-preview-lbl">' + esc(t('Preview')) + '</div><div class="btw-brand-card" id="btwBrandPreview" style="margin:0;"></div>'
+      + '<div class="btw-form-error" id="btwBrandErr"></div>'
+      + '<div style="display:flex;align-items:center;margin-top:12px;"><button type="button" class="btw-modal-continue" id="btwBrandSave" style="width:auto;padding:10px 22px;margin:0;">' + esc(t('Save')) + '</button><span class="btw-brand-status" id="btwBrandStatus"></span></div>';
+    const wel = body.querySelector('#btwBrandWelcome'), cl = body.querySelector('#btwBrandClinic');
+    wel.value = b.welcome || ''; cl.value = b.clinic || '';
+    const err = body.querySelector('#btwBrandErr'), status = body.querySelector('#btwBrandStatus');
+    const preview = function(){
+      const pv = body.querySelector('#btwBrandPreview');
+      const lu = prem ? logoUrl() : '';
+      const card = { welcome: wel.value.trim(), clinic: prem ? cl.value.trim() : '', logo_url: lu };
+      pv.innerHTML = (card.welcome || card.clinic || card.logo_url) ? brandCardHtml(card, state.me.name) : '<div class="btw-brand-hint" style="margin:0;">' + esc(t('Nothing yet. Your clients see your welcome note here.')) + '</div>';
+      const css = prem ? accentCss(accent) : '';
+      pv.style.borderColor = css ? ACCENT_SHADES[accent][0] : '';
+      const lp = body.querySelector('#btwBrandLogoPrev');
+      lp.innerHTML = lu ? '<img src="' + esc(lu) + '" alt="">' : '';
+      body.querySelector('#btwBrandLogoDel').style.display = lu ? '' : 'none';
+    };
+    wel.addEventListener('input', preview); cl.addEventListener('input', preview);
+    wireSwatches(body, function(k){ accent = k; preview(); });
+    preview();
+    const up = body.querySelector('#btwBrandUpgrade');
+    if(up) up.addEventListener('click', function(){ document.getElementById('btwBrandOverlay').style.display = 'none'; changePlan(premPlan); });
+    body.querySelector('#btwBrandLogoFile').addEventListener('change', async function(e){
+      const f = e.target.files && e.target.files[0]; e.target.value = '';
+      if(!f) return;
+      err.textContent = '';
+      if(f.size > 300 * 1024){ err.textContent = t('That image is too big. Keep it under 300 KB.'); return; }
+      status.textContent = t('Uploading…');
+      try{
+        const resp = await fetch('/api/clinician/brand/logo', { method:'PUT', headers:{ 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+        let data = null; try{ data = await resp.json(); }catch(x){}
+        if(!resp.ok) throw new Error((data && data.error) || t('Could not save the logo.'));
+        state.me = data.clinician; status.textContent = t('Logo saved'); preview();
+      }catch(x){ status.textContent = ''; err.textContent = x.message; }
+    });
+    body.querySelector('#btwBrandLogoDel').addEventListener('click', async function(){
+      err.textContent = '';
+      try{ const r = await api('DELETE', '/api/clinician/brand/logo'); state.me = r.clinician; status.textContent = t('Logo removed'); preview(); }
+      catch(x){ err.textContent = x.message; }
+    });
+    body.querySelector('#btwBrandSave').addEventListener('click', async function(){
+      err.textContent = ''; status.textContent = t('Saving…');
+      try{
+        const r = await api('PUT', '/api/clinician/brand', { welcome: wel.value, clinic: cl.value, accent: accent === 'blue' ? '' : accent });
+        state.me = r.clinician; btwApplyAccent(); status.textContent = t('Saved');
+      }catch(x){ status.textContent = ''; err.textContent = x.message; }
+    });
+  }
+  function renderIndividualPrefs(body){
+    document.getElementById('btwBrandTitle').textContent = t('Make it yours');
+    const prem = !!(state.patient && state.patient.is_premium);
+    const pr = (state.patient && state.patient.prefs) || { accent:'', hide:[] };
+    let accent = pr.accent || 'blue';
+    const hide = (pr.hide || []).slice();
+    const rows = [['streak', t('Show my streak')], ['reflection', t('Show the weekly reflection')], ['goals', t('Show my goals')]];
+    body.innerHTML = (prem ? '<p class="btw-brand-hint">' + esc(t('Pick your colour and choose what shows on your page. This follows you to the app.')) + '</p>'
+        : '<p class="btw-brand-hint">' + esc(t('With Premium you can pick your colour and choose what shows on your page.')) + '</p>')
+      + '<div class="btw-form-field"><label>' + esc(t('Colour')) + '</label>' + swatchesHtml(accent, !prem) + '</div>'
+      + '<div class="btw-form-field"><label>' + esc(t('On my page')) + '</label>' + rows.map(function(r){
+          return '<label class="btw-brand-toggle"><input type="checkbox" data-sec="' + r[0] + '"' + (hide.indexOf(r[0]) < 0 ? ' checked' : '') + (prem ? '' : ' disabled') + '> ' + esc(r[1]) + '</label>';
+        }).join('') + '</div>'
+      + '<div class="btw-form-error" id="btwBrandErr"></div>'
+      + (prem ? '<div style="display:flex;align-items:center;margin-top:12px;"><button type="button" class="btw-modal-continue" id="btwBrandSave" style="width:auto;padding:10px 22px;margin:0;">' + esc(t('Save')) + '</button><span class="btw-brand-status" id="btwBrandStatus"></span></div>'
+        : '<button type="button" class="btw-modal-continue" id="btwBrandUpgrade">' + esc(t('Upgrade to Premium')) + '</button>');
+    wireSwatches(body, function(k){ accent = k; });
+    const up = body.querySelector('#btwBrandUpgrade');
+    if(up) up.addEventListener('click', function(){ startPremiumUpgrade(); });
+    const save = body.querySelector('#btwBrandSave');
+    if(save) save.addEventListener('click', async function(){
+      const err = body.querySelector('#btwBrandErr'), status = body.querySelector('#btwBrandStatus');
+      const hidden = [].slice.call(body.querySelectorAll('input[data-sec]')).filter(function(i){ return !i.checked; }).map(function(i){ return i.dataset.sec; });
+      err.textContent = ''; status.textContent = t('Saving…');
+      try{
+        const r = await pApi('PUT', '/api/patient/prefs', { accent: accent === 'blue' ? '' : accent, hide: hidden });
+        if(r && r.patient) state.patient = r.patient;
+        status.textContent = t('Saved'); renderAll();
+      }catch(x){ status.textContent = ''; err.textContent = x.message; }
+    });
+  }
+  (function(){ const bb = document.getElementById('btwBrandBtn'); if(bb) bb.addEventListener('click', function(){ const m = document.getElementById('btwNavMenu'); if(m) m.style.display = 'none'; openBrandPanel(); }); })();
+
   function renderInbox(){
     var box = document.getElementById('btwInbox'); if(!box) return;
     var list = (isPatient() && !_ownerPreview) ? (state.messages || []) : [];
@@ -16934,6 +17175,7 @@
 
   function renderAll(){
     btwApplyAccountBodySex();
+    try { btwApplyAccent(); btwApplyPrefs(); renderBrandCard(); } catch(e){}
     if(isPatient()){
       document.getElementById('btwPatientPaneEyebrow').textContent = t('Your check-in');
       document.getElementById('btwSend').disabled = false;

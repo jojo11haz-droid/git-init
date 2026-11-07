@@ -6,6 +6,7 @@
 
 import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, TIME_SAVED_MINUTES, programContext, sanitizeSuggestion, areaLabel } from '../clinical.js';
 import { readFileSync } from 'fs';
+import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage } from '../brand.js';
 
 let failures = 0;
 function eq(actual, expected, msg) {
@@ -167,6 +168,19 @@ eq(timeSavedSummary({ scribe: 2 }).totalMinutes, 24, 'a recorded session written
   eq(areaLabel('back:lower_back'), 'Lower back', 'area label: plain anatomy');
   const sg = sanitizeSuggestion({ name: '  Step-downs ', description: 'Slow.', dosage: 'x'.repeat(200), pain_rule: 'Up to 3/10.', why: 'Stairs.', harder: 'Higher step', easier: 'Lower step', junk: 1 });
   eq(sg.name + '|' + sg.dosage.length + '|' + sg.pain_rule + '|' + ('junk' in sg), 'Step-downs|120|Up to 3/10.|false', 'suggestion: trimmed, capped, extra keys dropped');
+}
+
+console.log('personalization — branding and page prefs');
+{
+  const b = sanitizeBrand({ clinic: '  Lee Physio  ', welcome: 'Hi!\u0007', accent: 'neon', junk: 1 }, { logo_v: 'abc' });
+  eq(b, { clinic: 'Lee Physio', welcome: 'Hi!', accent: '', logo_v: 'abc' }, 'brand: trimmed, control chars and unknown accent dropped, logo version kept');
+  const saved = { clinic: 'Lee Physio', welcome: 'Check in anytime.', accent: 'teal', logo_v: 'k1' };
+  eq(effectiveBrand('c1', saved, false), { welcome: 'Check in anytime.' }, 'brand: without Premium clients only get the welcome note');
+  eq(effectiveBrand('c1', saved, true), { welcome: 'Check in anytime.', clinic: 'Lee Physio', accent: 'teal', logo_url: '/api/brand-logo/c1?v=k1' }, 'brand: Premium shows clinic, accent and logo');
+  eq(effectiveBrand('c1', {}, true), null, 'brand: nothing saved → null');
+  eq(sanitizePrefs({ accent: 'plum', hide: ['streak', 'streak', 'evil'] }), { accent: 'plum', hide: ['streak'] }, 'prefs: known sections only, de-duplicated');
+  eq(sniffImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>')), null, 'logo: SVG refused');
+  eq(sniffImage(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0])), 'image/png', 'logo: PNG recognised by its bytes');
 }
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }

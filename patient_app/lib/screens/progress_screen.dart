@@ -264,11 +264,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
             style: const TextStyle(
                 fontSize: 15.5, height: 1.5, color: BtwColors.inkSoft)),
         const SizedBox(height: 20),
-        if (patient?.isPremium == true) ...[
+        if (patient?.isPremium == true &&
+            !patient!.hides('reflection')) ...[
           _reflectionCard(s),
           const SizedBox(height: 16),
         ],
-        if (soloIndividual) ...[
+        if (soloIndividual && !patient!.hides('goals')) ...[
           _goalsCard(s),
           const SizedBox(height: 16),
         ],

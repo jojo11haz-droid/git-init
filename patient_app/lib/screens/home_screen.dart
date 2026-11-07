@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../api.dart' show resolveApiUri;
 import '../app_state.dart';
 import '../body_map.dart';
 import '../discipline.dart';
@@ -327,6 +328,52 @@ class _HomeScreenState extends State<HomeScreen> {
       cur = cur.subtract(const Duration(days: 1));
     }
     return streak;
+  }
+
+  Widget _brandCard(Patient p) {
+    final who = p.brandClinic.isNotEmpty ? p.brandClinic : (p.clinicianName ?? '');
+    final logo = p.brandLogoUrl;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: BtwColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (logo != null || who.isNotEmpty)
+            Row(
+              children: [
+                if (logo != null) ...[
+                  ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxHeight: 40, maxWidth: 120),
+                    child: Image.network(
+                      resolveApiUri(logo).toString(),
+                      fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, st) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                if (who.isNotEmpty)
+                  Expanded(
+                    child: Text(who,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w700)),
+                  ),
+              ],
+            ),
+          if (p.brandWelcome.isNotEmpty) ...[
+            if (logo != null || who.isNotEmpty) const SizedBox(height: 10),
+            Text(p.brandWelcome,
+                style: const TextStyle(fontSize: 15, height: 1.5)),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _streakChip(S s) {
@@ -776,6 +823,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(28, 18, 28, 12),
                 children: [
+                  // Their professional's welcome card (clinic, logo, note).
+                  if (patient.hasBrand) ...[
+                    _brandCard(patient),
+                    const SizedBox(height: 18),
+                  ],
                   // The latest message from their professional, on top.
                   if (_messages.isNotEmpty) ...[
                     _messageCard(_messages.first, s),
@@ -800,7 +852,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(
                         fontSize: 13.5, color: BtwColors.inkSoft, height: 1.45),
                   ),
-                  if (_streak >= 1) ...[
+                  if (_streak >= 1 && !patient.hides('streak')) ...[
                     const SizedBox(height: 14),
                     _streakChip(s),
                   ],

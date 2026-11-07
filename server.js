@@ -33,7 +33,8 @@ import {
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs } from './db.js';
+import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
@@ -1447,7 +1448,7 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
 
     await startSession(res, req, clinician.id);
     const { password_hash, mfa_secret, ...publicClinician } = clinician;
-    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(publicClinician.email) });
+    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(publicClinician.email), brandPremium: clinicianIsPremium(publicClinician) });
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -1472,7 +1473,7 @@ app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
     await deleteMfaChallenge(challenge.token_hash);
     await startSession(res, req, challenge.clinician_id);
     const clinician = await getClinicianById(challenge.clinician_id);
-    res.json({ clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email) });
+    res.json({ clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email), brandPremium: clinicianIsPremium(clinician) });
   } catch (err) {
     console.error('Error in MFA login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -1539,7 +1540,7 @@ app.post('/api/auth/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
-  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email) });
+  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email), brandPremium: clinicianIsPremium(req.clinician) });
 });
 
 // --- Owner: clinician licence review ---
@@ -2639,6 +2640,69 @@ app.post('/api/clinician/needs-digest', requireDb, requireAuth, requireVerifiedC
   }
 });
 
+// --- Personalization: what a professional's clients see ---
+// The welcome note is free; clinic name, logo and accent need Premium (kept if
+// sent on a lower plan, but only shown once Premium is on).
+app.put('/api/clinician/brand', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const brand = sanitizeBrand(req.body, req.clinician.brand);
+    const premium = clinicianIsPremium(req.clinician);
+    if (!premium) { const prev = req.clinician.brand || {}; brand.clinic = clip80(prev.clinic); brand.accent = typeof prev.accent === 'string' ? prev.accent : ''; }
+    const updated = await setClinicianBrand(req.clinician.id, brand);
+    res.json({ clinician: updated, brandPremium: premium });
+  } catch (err) {
+    console.error('Brand save error:', err);
+    res.status(500).json({ error: 'Could not save that.' });
+  }
+});
+function clip80(v) { return typeof v === 'string' ? v.slice(0, 80) : ''; }
+
+app.put('/api/clinician/brand/logo', requireDb, requireAuth, requireVerifiedClinician,
+  (req, res, next) => express.raw({ type: () => true, limit: LOGO_MAX_BYTES })(req, res, err => err
+    ? res.status(err.type === 'entity.too.large' ? 413 : 400).json({ error: 'That image is too big. Keep it under 300 KB.' })
+    : next()), async (req, res) => {
+  try {
+    if (!clinicianIsPremium(req.clinician)) return res.status(403).json({ error: 'Your logo is part of Premium.', code: 'premium_required' });
+    const buf = Buffer.isBuffer(req.body) ? req.body : null;
+    const type = sniffImage(buf);
+    if (!type) return res.status(400).json({ error: 'Use a PNG, JPG or WebP image.' });
+    const updated = await setClinicianBrandLogo(req.clinician.id, buf, type);
+    res.json({ clinician: updated });
+  } catch (err) {
+    if (err && err.type === 'entity.too.large') return res.status(413).json({ error: 'That image is too big. Keep it under 300 KB.' });
+    console.error('Logo upload error:', err);
+    res.status(500).json({ error: 'Could not save the logo.' });
+  }
+});
+
+app.delete('/api/clinician/brand/logo', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    res.json({ clinician: await setClinicianBrandLogo(req.clinician.id, null, null) });
+  } catch (err) {
+    console.error('Logo remove error:', err);
+    res.status(500).json({ error: 'Could not remove the logo.' });
+  }
+});
+
+// The logo is a public image (it's shown on the client's page and in the app),
+// reached by the clinician's unguessable id. Never served as anything but the
+// sniffed raster type.
+app.get('/api/brand-logo/:id', requireDb, async (req, res) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.status(404).end();
+    const row = await getClinicianBrandLogo(req.params.id);
+    if (!row || !/^image\/(png|jpeg|webp)$/.test(row.brand_logo_type || '')) return res.status(404).end();
+    res.setHeader('Content-Type', row.brand_logo_type);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    res.send(row.brand_logo);
+  } catch (err) {
+    console.error('Logo fetch error:', err);
+    res.status(500).end();
+  }
+});
+
 // --- Home exercise program ---
 // The clinician assigns exercises (typed, or picked from AI suggestions with a
 // short how-to); the patient ticks them off in their check-in.
@@ -3300,12 +3364,12 @@ function patientWeeklyCap(p) {
 async function withClinicianInfo(p, base) {
   if (!p || p.clinician_account_type !== undefined) return p;
   if (base && base.clinician_account_type !== undefined && base.id === p.id) {
-    return { ...p, clinician_account_type: base.clinician_account_type, clinician_discipline: base.clinician_discipline, clinician_name: base.clinician_name };
+    return { ...p, clinician_account_type: base.clinician_account_type, clinician_discipline: base.clinician_discipline, clinician_name: base.clinician_name, clinician_brand: base.clinician_brand, clinician_plan: base.clinician_plan, clinician_email: base.clinician_email };
   }
   if (!p.clinician_id) return { ...p, clinician_account_type: null, clinician_discipline: null };
   try {
     const c = await getClinicianById(p.clinician_id);
-    return { ...p, clinician_account_type: c ? c.account_type : null, clinician_discipline: c ? c.discipline : null, clinician_name: c ? c.name : null };
+    return { ...p, clinician_account_type: c ? c.account_type : null, clinician_discipline: c ? c.discipline : null, clinician_name: c ? c.name : null, clinician_brand: c ? c.brand : null, clinician_plan: c ? c.plan : null, clinician_email: c ? c.email : null };
   } catch (e) { return p; }
 }
 
@@ -3331,7 +3395,12 @@ function publicPatient(p) {
     reminder_tz: p.reminder_tz || null,
     is_premium: patientIsPremium(p),
     weekly_checkin_cap: patientWeeklyCap(p),
-    goals: Array.isArray(p.goals) ? p.goals : []
+    goals: Array.isArray(p.goals) ? p.goals : [],
+    // Their professional's branding (welcome note always; clinic name, logo
+    // and accent on the professional's Premium plan).
+    clinician_brand: p.clinician_id ? effectiveBrand(p.clinician_id, p.clinician_brand, clinicianIsPremium({ plan: p.clinician_plan, account_type: p.clinician_account_type, email: p.clinician_email })) : null,
+    // Their own page preferences (Premium individuals).
+    prefs: patientIsPremium(p) ? sanitizePrefs(p.prefs) : null
   };
 }
 
@@ -3490,6 +3559,14 @@ function clinicianVerified(c) {
   if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition' && c.discipline !== 'neuropsych';
   return c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer';
 }
+// Premium professional plans (and the owner's free-access account) unlock
+// branding: clinic name, logo and accent on what their clients see.
+function clinicianIsPremium(c) {
+  if (!c) return false;
+  if (c.email && isFreeAccess(c.email)) return true;
+  return /premium/.test(effectivePlan(c));
+}
+
 function requireVerifiedClinician(req, res, next) {
   if (!clinicianVerified(req.clinician)) {
     return res.status(403).json({
@@ -3749,6 +3826,19 @@ app.put('/api/patient/body-sex', requireDb, requirePatientAuth, async (req, res)
     res.json({ patient: publicPatient(await withClinicianInfo(updated, req.patient)) });
   } catch (e) {
     console.error('set body sex failed', e);
+    res.status(500).json({ error: 'Could not save that.' });
+  }
+});
+
+// An individual's own page: accent and which sections show (Premium).
+app.put('/api/patient/prefs', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!patientIsPremium(req.patient)) return res.status(403).json({ error: 'Personalizing your page is part of Premium.', code: 'premium_required' });
+    const updated = await setPatientPrefs(req.patient.id, sanitizePrefs(req.body));
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.json({ patient: publicPatient(await withClinicianInfo(updated, req.patient)) });
+  } catch (e) {
+    console.error('set prefs failed', e);
     res.status(500).json({ error: 'Could not save that.' });
   }
 });
