@@ -8,8 +8,12 @@
 // production.
 
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
-const DEEPGRAM_URL = process.env.DEEPGRAM_URL
-  || 'https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&detect_language=true';
+// mip_opt_out=true opts every request out of Deepgram's Model Improvement
+// Program: client and session audio is health information and must never be
+// used to train their models. Added even when DEEPGRAM_URL is overridden.
+const withOptOut = u => /[?&]mip_opt_out=/.test(u) ? u : u + (u.includes('?') ? '&' : '?') + 'mip_opt_out=true';
+const DEEPGRAM_URL = withOptOut(process.env.DEEPGRAM_URL
+  || 'https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&detect_language=true');
 
 export function transcriptionConfigured() {
   return !!DEEPGRAM_API_KEY;
