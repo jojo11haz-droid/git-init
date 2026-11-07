@@ -4664,6 +4664,14 @@ app.get(FIELD_PATHS, (req, res) => {
 // Simple health check — useful for most hosting platforms' uptime checks
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+// The old web build of the patient app lived at /app. It was removed (the site
+// itself is the patient web app), so send any saved /app link to the homepage,
+// keeping an invite code if one was in the link.
+app.get(['/app', '/app/*'], (req, res) => {
+  const code = typeof req.query.invite === 'string' ? req.query.invite : '';
+  res.redirect(302, code ? '/?invite=' + encodeURIComponent(code) : '/');
+});
+
 // Startup sanity check for the self-serve (individual) plans: make sure each
 // one resolves to its own Stripe price, so an individual is charged the amount
 // their chosen plan advertises. Only meaningful once Stripe is configured —

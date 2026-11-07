@@ -2228,24 +2228,19 @@
     font-size:10.5px;
     color:var(--ink-soft);
   }
-  .btw-appsoon{
-    display:inline-flex;align-items:center;gap:7px;
-    margin-top:14px;padding:7px 13px;
-    background:var(--moss-light);border:1px solid var(--line);
-    border-radius:999px;
-    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.03em;
-    color:var(--moss);font-weight:600;
-  }
-  .btw-appsoon svg{flex-shrink:0;}
+  /* The app note rides on the small print line instead of being its own pill. */
+  .btw-appsoon{color:var(--moss);font-weight:600;white-space:nowrap;}
+  .btw-appsoon::before{content:"·";margin-right:6px;color:var(--ink-soft);font-weight:400;}
+  /* A quiet text link, not a second pill under the buttons. */
   .btw-hero-solo-link{
-    display:inline-flex;align-items:center;gap:8px;
-    margin-top:18px;padding:12px 20px;
-    background:var(--moss-light);border:1px solid transparent;border-radius:100px;cursor:pointer;
-    font-family:var(--font-body);font-size:15.5px;font-weight:600;
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:16px;padding:0;
+    background:none;border:0;cursor:pointer;
+    font-family:var(--font-body);font-size:14px;font-weight:600;
     color:var(--moss);line-height:1.35;text-align:left;
-    transition:background .2s ease, transform .2s ease;
+    text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
   }
-  .btw-hero-solo-link:hover{background:var(--moss-light);transform:translateY(-1px);}
+  .btw-hero-solo-link:hover{text-decoration-color:var(--moss);}
   .btw-hero-solo-link span{transition:transform .2s ease;}
   .btw-hero-solo-link:hover span{transform:translateX(3px);}
   /* Quiet entrance: copy rises, visual fades. Visual uses opacity only so it
@@ -3192,8 +3187,7 @@
             <button class="btw-hero-btn primary" id="btwHeroTrial">Start 14-day free trial</button>
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works</button>
           </div>
-          <div class="btw-hero-meta">Free for 14 days. Private, secure and consent-first. Not a crisis service.</div>
-          <div class="btw-appsoon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="10" y1="18" x2="14" y2="18"></line></svg>iPhone &amp; iPad app coming soon</div>
+          <div class="btw-hero-meta"><span>Free for 14 days. Private, secure and consent-first. Not a crisis service.</span> <span class="btw-appsoon">iPhone &amp; iPad app coming soon</span></div>
           <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-chooser-card[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
         </div>
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
@@ -4598,6 +4592,36 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwAddOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:420px;">
+      <button class="btw-modal-close" data-close="btwAddOverlay" type="button" aria-label="Close">✕</button>
+      <div id="btwAddStep1">
+        <div class="btw-modal-eyebrow">Add to your caseload</div>
+        <h2>Add a patient</h2>
+        <form id="btwAddForm" novalidate>
+          <div class="btw-form-field">
+            <label for="btwAddName">First name or initials</label>
+            <input type="text" id="btwAddName" maxlength="80" placeholder="e.g. Alex R." autocomplete="off">
+          </div>
+          <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:-4px 0 14px;">Only you see this name. Between gives you an invite code to share with them next.</div>
+          <div class="btw-form-error" id="btwAddError"></div>
+          <button type="button" class="btw-modal-continue" id="btwAddUpgrade" style="display:none;margin-bottom:8px;">Upgrade to Premium</button>
+          <button type="submit" class="btw-modal-continue" id="btwAddSubmit">Add</button>
+        </form>
+      </div>
+      <div id="btwAddStep2" style="display:none;">
+        <div class="btw-modal-eyebrow">Added</div>
+        <h2 id="btwAddDoneTitle"></h2>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Send them the invite message. Their code is built into the link, so they just tap it and create a password.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+          <span style="font-size:12px;color:var(--ink-soft);">Invite code</span>
+          <span id="btwAddCode" style="font-family:var(--font-mono);font-size:18px;letter-spacing:.08em;color:var(--moss);"></span>
+        </div>
+        <button type="button" class="btw-modal-continue" id="btwAddCopy">Copy invite message</button>
+        <button type="button" class="btw-nav-btn" data-close="btwAddOverlay" id="btwAddDone" style="width:100%;margin-top:8px;">Done</button>
+      </div>
+    </div>
+  </div>
   <div class="btw-modal-overlay" id="btwInviteOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:420px;">
       <button class="btw-modal-close" data-close="btwInviteOverlay" type="button" aria-label="Close">✕</button>
@@ -5838,7 +5862,17 @@
     "Invited by your therapist?":"Invité par votre thérapeute?","Redeem your invite code":"Utiliser votre code d'invitation",
     "Enter the invite code from your therapist.":"Entrez le code d'invitation de votre thérapeute.",
     "Invite this patient":"Invitez ce patient","Send them this link, their code is built in:":"Envoyez-lui ce lien, son code y est intégré :",
-    "Copy invite message":"Copier le message d'invitation","Copied!":"Copié!","code:":"code :",
+    "Copy invite message":"Copier le message d'invitation",
+    "Add to your caseload":"Ajouter à vos suivis",
+    "Add a patient":"Ajouter un patient",
+    "First name or initials":"Prénom ou initiales",
+    "Only you see this name. Between gives you an invite code to share with them next.":"Vous seul voyez ce nom. Between vous donne ensuite un code d'invitation à lui transmettre.",
+    "Upgrade to Premium":"Passer à Premium",
+    "Added":"Ajouté",
+    "Send them the invite message. Their code is built into the link, so they just tap it and create a password.":"Envoyez-lui le message d'invitation. Son code est intégré au lien : il suffit de toucher le lien et de créer un mot de passe.",
+    "Enter a first name or initials.":"Entrez un prénom ou des initiales.",
+    "{name} is on your caseload":"{name} fait partie de vos suivis",
+    "Could not add them just now.":"Impossible de l'ajouter pour le moment.","Copied!":"Copié!","code:":"code :",
     "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre patient :",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances.",
     "Tap to get started:":"Touchez pour commencer :","Your invite code is":"Votre code d'invitation est",
@@ -6096,6 +6130,9 @@
     return null;
   }
   function t(en){
+    return fieldNoun(tRaw(en));
+  }
+  function tRaw(en){
     const d = audDicts();
     if(d){
       if(curLang === 'fr' && d[1][en]) return d[1][en];
@@ -6103,6 +6140,37 @@
     }
     return curLang === 'fr' ? (FR[en] || en) : en;
   }
+  // One word for the people a professional works with, used everywhere on
+  // screen: physiotherapy says patient, sports player, recovery member,
+  // schools student, every other field client. The base copy mixes "patient"
+  // and "client", so a therapist used to read "Add patient" next to "your
+  // clients". Applied to t() and to the static page text, in EN and FR.
+  const FIELD_NOUN = { physio:'patient', therapy:'client', neuropsych:'client', kinesiology:'client', osteo:'client', occupational:'client',
+    nutrition:'client', fitness:'client', sports:'player', recovery:'member', schools:'student' };
+  // French: [masculine, feminine]. Swapping client <-> patient keeps gender and
+  // articles; élève needs the elided article (l'élève, cet élève).
+  const FIELD_NOUN_FR = { physio:['patient','patiente'], therapy:['client','cliente'], neuropsych:['client','cliente'], kinesiology:['client','cliente'],
+    osteo:['client','cliente'], occupational:['client','cliente'], nutrition:['client','cliente'], fitness:['client','cliente'],
+    sports:['joueur','joueuse'], recovery:['membre','membre'], schools:['élève','élève'] };
+  function fieldNoun(str){
+    if(typeof str !== 'string' || !/atient|lient/.test(str)) return str;
+    const aud = (typeof curAudience !== 'undefined') ? curAudience : '';
+    const cap = function(w, P){ return (P === 'P' || P === 'C') ? w.charAt(0).toUpperCase() + w.slice(1) : w; };
+    if(curLang === 'fr'){
+      const f = FIELD_NOUN_FR[aud]; if(!f) return str;
+      if(f[0] === 'élève'){
+        str = str.replace(/\b(ce|le|du|au|Ce|Le|Du|Au) (patient|client)(e?)\b/g, function(m, art){
+          const a = art.toLowerCase(), up = art.charAt(0) === art.charAt(0).toUpperCase();
+          const r = a === 'ce' ? 'cet élève' : a === 'le' ? "l'élève" : a === 'du' ? "de l'élève" : "à l'élève";
+          return up ? r.charAt(0).toUpperCase() + r.slice(1) : r;
+        });
+      }
+      return str.replace(/\b(P|p|C|c)(?:atient|lient)(e?)(s?)\b(?!-)/g, function(m, P, e, pl){ return cap(e ? f[1] : f[0], P) + pl; });
+    }
+    const n = FIELD_NOUN[aud]; if(!n) return str;
+    return str.replace(/\b(P|p|C|c)(?:atient|lient)(s?)\b(?!-)/g, function(m, P, pl){ return cap(n, P) + pl; });
+  }
+
 
   // --- audience: therapy (default) / sports ------------------------------
   // Sports mode swaps the marketing copy only. Each entry is keyed by the
@@ -7554,6 +7622,9 @@
     return out;
   }
   const OCC_EN = btwOccDict(PHYSIO_EN, false);
+  // "a physio" becomes "a osteopath" / "a occupational therapist" after the
+  // word swap; fix the article.
+  [OST_EN, OCC_EN].forEach(function(d){ for(const k in d) d[k] = d[k].replace(/\b([Aa]) (osteopath|occupational|Osteopath|Occupational)/g, '$1n $2'); });
   const OCC_FR = btwOccDict(PHYSIO_FR, true);
   // "sports physiotherapists" is a physio-only line; kine/osteo keep the plain form.
   KIN_EN["For therapists, counsellors & anyone on their own"] = "For kinesiologists & anyone on their own";
@@ -8317,7 +8388,8 @@
       const host = n.parentElement;
       const fixed = host && host.closest && host.closest('[data-aud-fixed]');
       const repl = fixed ? (curLang === 'fr' ? (FR[key] || null) : null) : pickCopy(key);
-      n.nodeValue = repl != null ? original.replace(key, repl) : original;
+      const out = repl != null ? original.replace(key, repl) : original;
+      n.nodeValue = fixed ? out : fieldNoun(out);
     }
     if(heroH1){
       heroH1.innerHTML = curAudience === 'individual'
@@ -15083,28 +15155,48 @@
         if(p) deletePatientFlow(p);
       });
     });
-    document.getElementById('btwAddPatient').addEventListener('click', async ()=>{
-      const name = prompt(t("Patient display name (as you'd like it to appear in your caseload):"));
-      if(!name || !name.trim()) return;
-      try{
-        const patient = await api('POST', '/api/patients', { displayName: name.trim() });
-        state.selectedPatientId = patient.id;
-        await loadPatients();
-        if(patient.invite_code){
-          alert(t('Patient added. Open their card and tap "View patient data & AI settings" → "Copy invite message" to send them a sign-up link.'));
-        }
-      }catch(err){
-        if(err && err.code === 'patient_limit_reached'){
-          // Upgrade to the premium plan of their own account type (a physio is
-          // a coach account → team_premium, not the therapist solo_premium).
-          const premFor = { therapist:'solo_premium', coach:'team_premium', school:'school_premium', trainer:'trainer_premium' }[(state.me && state.me.account_type) || 'therapist'];
-          if(!premFor) alert(err.message);
-          else if(confirm(err.message + '\n\n' + t('Upgrade to Premium now?'))) changePlan(premFor);
-        } else {
-          alert(err.message);
-        }
-      }
-    });
+    // Add someone: an in-page box (the browser's prompt()/alert() looked dated
+    // and couldn't show the invite code). Step 1 asks for a name; step 2 shows
+    // the invite code with a one-tap "Copy invite message".
+    (function(){
+      const ov = document.getElementById('btwAddOverlay');
+      const nameIn = document.getElementById('btwAddName');
+      const err = document.getElementById('btwAddError');
+      const submit = document.getElementById('btwAddSubmit');
+      const upgrade = document.getElementById('btwAddUpgrade');
+      const s1 = document.getElementById('btwAddStep1'), s2 = document.getElementById('btwAddStep2');
+      const premFor = function(){ return { therapist:'solo_premium', coach:'team_premium', school:'school_premium', trainer:'trainer_premium' }[(state.me && state.me.account_type) || 'therapist']; };
+      document.getElementById('btwAddPatient').addEventListener('click', ()=>{
+        s1.style.display = ''; s2.style.display = 'none';
+        nameIn.value = ''; err.textContent = ''; upgrade.style.display = 'none'; submit.disabled = false;
+        ov.style.display = 'flex';
+        setTimeout(()=>{ try{ nameIn.focus(); }catch(e){} }, 30);
+      });
+      upgrade.addEventListener('click', ()=>{ const pl = premFor(); if(pl){ ov.style.display = 'none'; changePlan(pl); } });
+      document.getElementById('btwAddDone').addEventListener('click', ()=>{ ov.style.display = 'none'; });
+      document.getElementById('btwAddForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const name = nameIn.value.trim();
+        if(!name){ err.textContent = t('Enter a first name or initials.'); nameIn.focus(); return; }
+        err.textContent = ''; upgrade.style.display = 'none'; submit.disabled = true;
+        try{
+          const patient = await api('POST', '/api/patients', { displayName: name });
+          state.selectedPatientId = patient.id;
+          await loadPatients();
+          document.getElementById('btwAddDoneTitle').textContent = t('{name} is on your caseload').replace('{name}', name);
+          document.getElementById('btwAddCode').textContent = patient.invite_code || '—';
+          const copyB = document.getElementById('btwAddCopy');
+          copyB.textContent = t('Copy invite message');
+          copyB.onclick = ()=> copyInvite(patient.invite_code || '', copyB);
+          copyB.style.display = patient.invite_code ? '' : 'none';
+          s1.style.display = 'none'; s2.style.display = '';
+        }catch(e2){
+          // Server messages are English: swap the noun in English only.
+          err.textContent = (curLang === 'fr' ? (e2.message || '') : fieldNoun(e2.message || '')) || t('Could not add them just now.');
+          if(e2 && e2.code === 'patient_limit_reached' && premFor()) upgrade.style.display = '';
+        }finally{ submit.disabled = false; }
+      });
+    })();
     // First visit after signup: offer the guided tour (self-guards so it only
     // auto-starts once, and only for a verified clinician on the dashboard).
     if(window.btwMaybeStartTour) window.btwMaybeStartTour();

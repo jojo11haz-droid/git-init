@@ -127,17 +127,6 @@ The frontend (`public/index.html`) is now wired to these endpoints: sign up or l
 
 The patient-facing app lives in `patient_app/` (Flutter) — see its README. Patients accept their therapist's invite code, record their own consent, and send check-ins that land on the therapist dashboard.
 
-**Hosted patient app (no install needed).** The Flutter app is also compiled to web and served by this same server at **`/app`** (e.g. `https://your-app.onrender.com/app`) — patients just open that link in their phone's browser, no App Store/Play Store required. The compiled web build is committed under `public/app/`; to update it after changing the Flutter app, rebuild and recopy:
-
-```bash
-cd patient_app
-flutter build web --base-href=/app/
-cd ..
-rm -rf public/app && cp -r patient_app/build/web public/app
-find public/app -name '*.symbols' -delete && find public/app -name '*.map' -delete
-rm -rf public/app/canvaskit/skwasm*   # we force the canvaskit renderer
-```
-
-The web build talks to whatever origin serves it (same-origin), so no API URL is baked in. Native mobile builds still take `--dart-define=API_BASE=...`.
+**In the browser, no install needed.** Patients use the website itself (`public/index.html`) on their phone: the invite link opens the patient check-in there. The old compiled Flutter web build that used to be served at `/app` was removed — it had fallen behind the app and the site's Content-Security-Policy blocks the WebAssembly it needs. Native mobile builds take `--dart-define=API_BASE=...`.
 
 This backend is meant as a working starting point to build the rest of `backend-spec.md` onto — not a finished product.
