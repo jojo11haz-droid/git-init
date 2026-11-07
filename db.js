@@ -288,6 +288,19 @@ CREATE TABLE IF NOT EXISTS clinician_events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS clinician_events_idx ON clinician_events(clinician_id, created_at);
+-- Messages a professional sends to a client in Between, optionally with
+-- exercises from the client's program attached. One-way; the client reads
+-- them on their check-in page (web and app).
+CREATE TABLE IF NOT EXISTS clinician_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  exercise_ids JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  read_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS clinician_messages_patient_idx ON clinician_messages(patient_id, created_at DESC);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS practice_owner_id UUID REFERENCES clinicians(id);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS reminders_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -947,7 +960,7 @@ export async function createPatientSession(tokenHash, patientId, ttlDays) {
 
 export async function getPatientBySession(tokenHash) {
   const { rows } = await pool.query(
-    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
+    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type, c.discipline AS clinician_discipline, c.name AS clinician_name
      FROM patient_sessions s JOIN patients p ON p.id = s.patient_id
      LEFT JOIN clinicians c ON c.id = p.clinician_id
      WHERE s.token_hash = $1 AND s.expires_at > now()`,
@@ -1916,4 +1929,26 @@ export async function updateExercise(patientId, exerciseId, { name, description,
     [exerciseId, patientId, name, description || null, dosage || null]
   );
   return rows[0] || null;
+}
+
+// --- Messages from the professional to a client ---
+export async function addClinicianMessage(patientId, clinicianId, body, exerciseIds) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinician_messages (patient_id, clinician_id, body, exercise_ids) VALUES ($1, $2, $3, $4)
+     RETURNING id, body, exercise_ids, created_at, read_at`,
+    [patientId, clinicianId, body, exerciseIds && exerciseIds.length ? JSON.stringify(exerciseIds) : null]
+  );
+  return rows[0];
+}
+export async function listClinicianMessages(patientId, limit = 30) {
+  const { rows } = await pool.query(
+    `SELECT id, body, exercise_ids, created_at, read_at FROM clinician_messages
+     WHERE patient_id = $1 ORDER BY created_at DESC LIMIT $2`,
+    [patientId, limit]
+  );
+  return rows;
+}
+// Marks the client's own messages read (only theirs; ids optional = all).
+export async function markClinicianMessagesRead(patientId) {
+  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND read_at IS NULL`, [patientId]);
 }

@@ -140,6 +140,21 @@ class HomeExercise {
   String? get dosage => raw['dosage'] as String?;
 }
 
+/// A message from the client's professional, sent from the website, with any
+/// exercises from their program attached.
+class ClinicianMessage {
+  ClinicianMessage(this.raw);
+  final Map<String, dynamic> raw;
+  String get id => raw['id'] as String;
+  String get body => (raw['body'] as String?) ?? '';
+  bool get isRead => raw['read_at'] != null;
+  DateTime? get createdAt =>
+      DateTime.tryParse((raw['created_at'] as String?) ?? '')?.toLocal();
+  List<HomeExercise> get exercises => ((raw['exercises'] as List?) ?? const [])
+      .map((e) => HomeExercise((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
 class PatientDocument {
   PatientDocument(this.raw);
 
@@ -408,6 +423,18 @@ class AppState extends ChangeNotifier {
     return list
         .map((e) => HomeExercise((e as Map).cast<String, dynamic>()))
         .toList();
+  }
+
+  Future<List<ClinicianMessage>> fetchMessages() async {
+    final data = await _api.get('/api/patient/messages');
+    final list = ((data as Map)['messages'] as List?) ?? const [];
+    return list
+        .map((m) => ClinicianMessage((m as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<void> markMessagesRead() async {
+    await _api.post('/api/patient/messages/read', <String, dynamic>{});
   }
 
   Future<List<PatientDocument>> fetchDocuments() async {
