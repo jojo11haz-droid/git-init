@@ -4667,9 +4667,15 @@
 (function(){
   // --- tiny same-origin API helper (session cookie rides along automatically) ---
   async function api(method, url, body){
+    const headers = {};
+    if(body !== undefined) headers['Content-Type'] = 'application/json';
+    // The owner previews every field: tell the server which one is on screen so
+    // the AI tools answer as that kind of clinician (ignored for everyone else).
+    const asField = ownerField();
+    if(asField) headers['X-Btw-Field'] = asField;
     const resp = await fetch(url, {
       method,
-      headers: body !== undefined ? {'Content-Type':'application/json'} : undefined,
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined
     });
     let data = null;
@@ -4710,6 +4716,21 @@
   // professional and the patient-facing side of the product from one login.
   // (free-access can cover several comp'd emails; this is strictly the owner.)
   const OWNER_EMAIL = 'jojo11haz@gmail.com';
+  // The field the owner is viewing on the clinician dashboard (they can switch
+  // fields to see each profession's full tools). null for everyone else, who
+  // always works as their own account type.
+  function ownerField(){
+    if(!ownerFreeAccess || !state.me || _ownerPreview) return null;
+    const a = (typeof curAudience !== 'undefined') ? curAudience : null;
+    return (a && PREVIEW_CLINICIAN[a]) ? a : null;
+  }
+  // The clinician's account type and discipline, as the dashboard should treat
+  // them: the owner gets the field on screen, everyone else their own.
+  function meAs(){
+    const f = ownerField();
+    if(f) return { at: PREVIEW_CLINICIAN[f].at, disc: PREVIEW_CLINICIAN[f].disc };
+    return { at: state.me && state.me.account_type, disc: state.me && state.me.discipline };
+  }
   function isOwnerAccount(){
     const e = (state.me && state.me.email) || (state.patient && state.patient.email) || '';
     return String(e).toLowerCase() === OWNER_EMAIL;
@@ -8494,6 +8515,9 @@
     // caseload wording and digest are rendered dynamically, so they need a
     // re-render to follow the audience, the same way setLang does.
     try { renderAll(); renderAuthState(); } catch(e){}
+    // The owner's dashboard answers as the field on screen, so refetch the
+    // field-dependent needs list for the new field.
+    try { if(ownerField() && isTherapist()){ loadNeeds().catch(function(){}); } } catch(e){}
   }
   document.querySelectorAll('.btw-aud-btn').forEach(b=>{
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
@@ -13628,7 +13652,7 @@
       if(curAudience === 'individual') return individualDiscipline();
       return (typeof curAudience !== 'undefined') ? curAudience : null;
     }
-    if(state.me) return state.me.discipline || null;
+    if(state.me) return meAs().disc || null;
     if(curAudience === 'individual') return individualDiscipline();
     return (typeof curAudience !== 'undefined') ? curAudience : null;
   }
@@ -14232,7 +14256,7 @@
   function hepWords(){
     var at, disc;
     if(isPatient()){ at = state.patient && state.patient.clinician_account_type; disc = state.patient && state.patient.clinician_discipline; }
-    else { at = state.me && state.me.account_type; disc = state.me && state.me.discipline; }
+    else { const m = meAs(); at = m.at; disc = m.disc; }
     return HEP_WORDS[hepKind(at, disc)];
   }
 
@@ -14533,7 +14557,7 @@
   var _ocFor = null, _ocData = null, _ocLoading = false;
   function ocSignature(){
     var ps = state.patients || [];
-    return ps.length + ':' + ps.reduce(function(s, p){ return s + (p.new_check_in_count || 0); }, 0);
+    return (ownerField() || '') + ':' + ps.length + ':' + ps.reduce(function(s, p){ return s + (p.new_check_in_count || 0); }, 0);
   }
   async function fetchOutcomes(){
     if(_ocLoading) return;
@@ -16339,7 +16363,7 @@
       const solo = (curAudience === 'individual') ? individualDiscipline() : ((typeof curAudience !== 'undefined') ? curAudience : 'therapy');
       return !!BODY_AUDIENCES[solo];
     }
-    return coachTypeHasBody(state.me && state.me.account_type, state.me && state.me.discipline);
+    const m = meAs(); return coachTypeHasBody(m.at, m.disc);
   }
   function updateComposePain(){
     const host = document.getElementById('btwComposePain'); if(host) host.style.display = painMapContext() ? '' : 'none';

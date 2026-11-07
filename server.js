@@ -2554,8 +2554,8 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
     const checkIns = await listCheckIns(patient.id);
     const result = await sessionPrepBrief({
       name: patient.display_name,
-      discipline: req.clinician.discipline,
-      accountType: req.clinician.account_type,
+      discipline: fieldOf(req).discipline,
+      accountType: fieldOf(req).account_type,
       checkIns
     });
     if (result && !result.needsData) countWork(req.clinician.id, 'prep');
@@ -2576,8 +2576,8 @@ app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedCl
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await signatureRead({
       name: patient.display_name,
-      discipline: req.clinician.discipline,
-      accountType: req.clinician.account_type,
+      discipline: fieldOf(req).discipline,
+      accountType: fieldOf(req).account_type,
       checkIns,
       lang
     });
@@ -2619,7 +2619,7 @@ async function needsListFor(clinician) {
 
 app.get('/api/caseload/needs', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
-    res.json({ items: await needsListFor(req.clinician), digestEnabled: !!req.clinician.needs_digest_enabled, emailReady: emailConfigured() });
+    res.json({ items: await needsListFor(fieldOf(req)), digestEnabled: !!req.clinician.needs_digest_enabled, emailReady: emailConfigured() });
   } catch (err) {
     console.error('Needs list error:', err);
     res.status(500).json({ error: 'Could not load the list just now.' });
@@ -2725,7 +2725,7 @@ app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireV
     const goal = req.body && typeof req.body.goal === 'string' ? req.body.goal.trim() : '';
     if (goal.length < 3) return res.status(400).json({ error: 'Describe the goal or area in a few words.' });
     const lang = (req.body && req.body.lang === 'fr') ? 'fr' : 'en';
-    res.json({ suggestions: await suggestExercises({ goal, discipline: req.clinician.discipline, accountType: req.clinician.account_type, lang }) });
+    res.json({ suggestions: await suggestExercises({ goal, discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type, lang }) });
   } catch (err) {
     console.error('Suggest exercises error:', err.message);
     res.status(502).json({ error: 'Could not suggest exercises just now. Please try again.' });
@@ -2820,7 +2820,7 @@ app.post('/api/patients/:id/report', requireDb, requireAuth, requireVerifiedClin
     const kind = REPORT_KINDS[b.kind] ? b.kind : 'progress';
     const recipient = typeof b.recipient === 'string' ? b.recipient.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
     const result = await draftReport({
-      name: patient.display_name, discipline: req.clinician.discipline, accountType: req.clinician.account_type,
+      name: patient.display_name, discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
       checkIns: await listCheckIns(patient.id), exercises: await listAllExercises(patient.id),
       kind, recipient, lang: b.lang === 'fr' ? 'fr' : 'en', clinicianName: req.clinician.name
     });
@@ -2883,7 +2883,7 @@ app.post('/api/patients/:id/exercises/review', requireDb, requireAuth, requireVe
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const exercises = await listExercises(patient.id);
     if (!exercises.length) return res.json({ suggestions: [], empty: true });
-    const suggestions = await reviewProgram({ discipline: req.clinician.discipline, accountType: req.clinician.account_type,
+    const suggestions = await reviewProgram({ discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
       checkIns: await listCheckIns(patient.id), exercises, lang: (req.body && req.body.lang === 'fr') ? 'fr' : 'en' });
     countWork(req.clinician.id, 'program_review');
     res.json({ suggestions });
@@ -2916,8 +2916,8 @@ app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician
     const patients = await listPatients(req.clinician.id);
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await caseloadDigest({
-      discipline: req.clinician.discipline,
-      accountType: req.clinician.account_type,
+      discipline: fieldOf(req).discipline,
+      accountType: fieldOf(req).account_type,
       patients,
       lang
     });
@@ -2935,7 +2935,7 @@ app.get('/api/caseload/digest', requireDb, requireAuth, requireVerifiedClinician
 // caseload-wide weekly average series for a trend line.
 app.get('/api/caseload/outcomes', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
-    const pain = ['physio', 'kinesiology', 'osteo', 'occupational'].includes(req.clinician.discipline || '');
+    const pain = ['physio', 'kinesiology', 'osteo', 'occupational'].includes(fieldOf(req).discipline || '');
     const data = await caseloadOutcomes(req.clinician.id);
     const MIN = 1.0; // points of movement that counts as a real change
     const summary = { improving: 0, steady: 0, declining: 0, tracking: 0, total: data.patients.length };
@@ -2969,8 +2969,8 @@ async function noteHandler(req, res) {
     const checkIns = await listCheckIns(patient.id);
     const result = await draftProgressNote({
       name: patient.display_name,
-      discipline: req.clinician.discipline,
-      accountType: req.clinician.account_type,
+      discipline: fieldOf(req).discipline,
+      accountType: fieldOf(req).account_type,
       checkIns,
       exercises: await listAllExercises(patient.id),
       findings: req.body && typeof req.body.findings === 'string' ? req.body.findings : ''
@@ -2996,8 +2996,8 @@ app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifi
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await encouragementDraft({
       name: patient.display_name,
-      discipline: req.clinician.discipline,
-      accountType: req.clinician.account_type,
+      discipline: fieldOf(req).discipline,
+      accountType: fieldOf(req).account_type,
       checkIns,
       lang
     });
@@ -3343,6 +3343,25 @@ function requireVerifiedClinician(req, res, next) {
 }
 // Owner-only routes (licence review). Gated to the free-access/comp list so a
 // regular clinician can never reach another clinician's account.
+// The owner previews every field from one account: the dashboard sends the
+// field being viewed (X-Btw-Field), and for the owner/comp account the AI
+// tools, needs list and outcomes answer as a clinician of that field (physio
+// gets SOAP notes, exercises and pain scores; a therapist gets DAP notes and
+// practices). Everyone else always gets their own account's field.
+const FIELD_AS = {
+  therapy: { account_type: 'therapist', discipline: null }, recovery: { account_type: 'mentor', discipline: null },
+  schools: { account_type: 'school', discipline: null }, fitness: { account_type: 'trainer', discipline: null },
+  sports: { account_type: 'coach', discipline: 'sports' }, physio: { account_type: 'coach', discipline: 'physio' },
+  kinesiology: { account_type: 'coach', discipline: 'kinesiology' }, osteo: { account_type: 'coach', discipline: 'osteo' },
+  occupational: { account_type: 'coach', discipline: 'occupational' }, neuropsych: { account_type: 'coach', discipline: 'neuropsych' },
+  nutrition: { account_type: 'coach', discipline: 'nutrition' }
+};
+function fieldOf(req) {
+  const c = req.clinician;
+  if (!c || !isFreeAccess(c.email)) return c;
+  const f = FIELD_AS[String(req.get('x-btw-field') || '')];
+  return f && Object.prototype.hasOwnProperty.call(FIELD_AS, String(req.get('x-btw-field'))) ? { ...c, ...f } : c;
+}
 function requireOwner(req, res, next) {
   if (!req.clinician || !isFreeAccess(req.clinician.email)) {
     return res.status(403).json({ error: 'Owner access required.' });
