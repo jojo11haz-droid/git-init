@@ -2488,6 +2488,23 @@
   .btw-viz-badge b{display:block;} .btw-viz-badge .d{font-size:11.5px;color:var(--ink-soft);}
   /* 5 quick to scan */
   .btw-viz-rows{display:flex;flex-direction:column;gap:9px;}
+  .btw-viz-note{display:flex;flex-direction:column;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:13.2px;line-height:1.45;}
+  .btw-viz-note div{display:grid;grid-template-columns:18px 1fr;gap:8px;}
+  .btw-viz-note b{color:var(--moss);font-family:var(--font-mono);}
+  .btw-viz-note .ph{color:var(--ink-soft);font-style:italic;}
+  .btw-viz-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
+  .btw-viz-btns span{font-size:12px;font-weight:600;border:1px solid var(--moss);color:var(--moss);border-radius:8px;padding:6px 11px;}
+  .btw-viz-btns span.pri{background:var(--moss);color:var(--panel);}
+  .btw-viz-row .chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--moss);flex:none;display:grid;place-items:center;}
+  .btw-viz-row .chk.on{background:var(--moss);}
+  .btw-viz-row .chk.on::after{content:"";width:7px;height:4px;border:2px solid var(--panel);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);}
+  .btw-viz-row .done{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);white-space:nowrap;}
+  .btw-viz-sug{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;background:var(--moss-light);border-radius:12px;padding:10px 12px;font-size:12.8px;}
+  .btw-viz-sug .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;color:var(--moss);}
+  .btw-viz-sug .t{flex:1;min-width:150px;}
+  .btw-viz-sug .ap{font-size:12px;font-weight:600;background:var(--moss);color:var(--panel);border-radius:8px;padding:5px 11px;}
+  .btw-viz-mail{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12.5px;color:var(--ink-soft);}
+  .btw-viz-mail svg{width:15px;height:15px;color:var(--moss);}
   .btw-viz-row{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 13px;}
   .btw-viz-row.flag{border-color:var(--amber);box-shadow:0 4px 14px rgba(184,112,31,.14);}
   .btw-viz-row .av{width:30px;height:30px;border-radius:50%;background:var(--moss-light);color:var(--moss);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11.5px;flex:none;}
@@ -3430,6 +3447,7 @@
               <li>Clients put it in Between the moment something happens</li>
               <li>A short summary you read before a session, with nothing to answer</li>
               <li>You start the session already knowing their week</li>
+              <li>Your chart note and home program are drafted for you to check</li>
             </ul>
           </div>
         </div>
@@ -3455,23 +3473,29 @@
           </div>
           <div class="btw-feature">
             <div class="btw-feat-copy">
-              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 6"></polyline><polyline points="15 6 21 6 21 12"></polyline></svg></div>
-              <h4>Trends &amp; advanced stats</h4>
-              <p>Real charts from real check-ins plus a deeper stats view: mood month by month, streaks and the themes that track with harder weeks.</p>
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg></div>
+              <h4>Charting done for you</h4>
+              <p>Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP or DAP. Reports and letters too. Save it as a PDF or copy it into your charting.</p>
             </div>
             <div class="btw-feat-viz">
-              <div class="btw-vc btw-viz-trend btw-viz-in" id="btwVizTrend">
-                <div class="btw-viz-stats">
-                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="128">0</span></div><div class="k">check-ins</div></div>
-                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="6">0</span></div><div class="k">week streak</div></div>
-                  <div class="btw-viz-tile"><div class="n"><span class="btw-count" data-to="92">0</span>%</div><div class="k">on time</div></div>
-                </div>
-                <div class="btw-vc-top" style="margin:2px 0 8px;" id="btwVizTrendLabel">MOOD · LAST 8 WEEKS</div>
-                <svg class="btw-viz-chart" viewBox="0 0 320 112" preserveAspectRatio="none" aria-hidden="true">
-                  <path class="ar" d=""></path>
-                  <path class="ln" d="M6,92 L50,84 L94,88 L138,66 L182,70 L226,46 L270,36 L314,20"></path>
-                  <circle class="dt" cx="314" cy="20" r="4.5"></circle>
-                </svg>
+              <div class="btw-vc btw-viz-in" id="btwVizNote">
+                <div class="btw-vc-top"><span class="btw-viz-rec"></span> <span id="btwVizNoteTop">DICTATED 0:38 · CHART NOTE (SOAP)</span></div>
+                <div class="btw-viz-note" id="btwVizNoteBody"></div>
+                <div class="btw-viz-btns"><span id="btwVizNotePdf">Save as PDF</span><span class="pri" id="btwVizNoteCopy">Copy to chart</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="btw-feature">
+            <div class="btw-feat-copy">
+              <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+              <h4>Programs that adapt</h4>
+              <p>Build a home program in a minute from AI suggestions, each with a short how-to. People tick off what they did, and Between suggests when to progress or ease off.</p>
+            </div>
+            <div class="btw-feat-viz">
+              <div class="btw-vc btw-viz-in" id="btwVizProg">
+                <div class="btw-vc-top" id="btwVizProgTop">HOME EXERCISE PROGRAM</div>
+                <div class="btw-viz-rows" id="btwVizProgRows"></div>
+                <div class="btw-viz-sug"><span class="k" id="btwVizProgK">AI SUGGESTS</span><span class="t" id="btwVizProgSug"></span><span class="ap" id="btwVizProgAp">Apply</span></div>
               </div>
             </div>
           </div>
@@ -3494,8 +3518,8 @@
           <div class="btw-feature">
             <div class="btw-feat-copy">
               <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-              <h4>Quick to scan</h4>
-              <p>Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.</p>
+              <h4>Needs you today</h4>
+              <p>Only the people who need you, with the reason: a safety flag, scores getting worse or gone quiet. The same list can land in your inbox each morning.</p>
             </div>
             <div class="btw-feat-viz">
               <div class="btw-vc btw-viz-in" id="btwVizScan">
@@ -3506,6 +3530,7 @@
                   <div class="btw-viz-row"><span class="av">AP</span><span class="nm">A. Patel<span class="s">Steady this week</span></span><span class="ago">1d</span></div>
                   <div class="btw-viz-row"><span class="av">DK</span><span class="nm">D. Kaur<span class="s">Steady this week</span></span><span class="ago">2d</span></div>
                 </div>
+                <div class="btw-viz-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22 6 12 13 2 6"></polyline></svg> <span id="btwVizMail">Also in your inbox at 7:30</span></div>
               </div>
             </div>
           </div>
@@ -5192,6 +5217,7 @@
     "Voicemails and phone tag between sessions":"Des messages vocaux et des appels manqués entre les séances",
     "The first ten minutes of each session spent catching up":"Les dix premières minutes de chaque séance à faire le point",
     "Clients put it in Between the moment something happens":"Les clients le notent dans Between dès que quelque chose survient",
+    "Your chart note and home program are drafted for you to check":"Votre note au dossier et le programme à domicile sont rédigés, vous n'avez qu'à les vérifier",
     "A short summary you read before a session, with nothing to answer":"Un court résumé que vous lisez avant une séance, sans rien à répondre",
     "You start the session already knowing their week":"Vous commencez la séance en connaissant déjà leur semaine",
     "On a busy week Between takes the place of the emails and calls that pile up between sessions. You spend less time on messages and more on the work that matters.":"Lors d'une semaine chargée, Between prend la place des courriels et des appels qui s'accumulent entre les séances. Vous passez moins de temps sur les messages et plus sur le travail qui compte.",
@@ -5230,6 +5256,11 @@
     "AI turns it into a short summary":"L'IA en fait un court résumé",
     "You see who needs you at a glance":"Vous voyez qui a besoin de vous d'un coup d'œil",
     "Quick to scan":"Rapide à parcourir",
+    "Charting done for you":"La note au dossier, déjà rédigée",
+    "Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP or DAP. Reports and letters too. Save it as a PDF or copy it into your charting.":"Dictez quelques mots après la visite et Between rédige la note au dossier à partir des suivis, en format SOAP ou DAP. Les rapports et les lettres aussi. Enregistrez-la en PDF ou copiez-la dans votre dossier.",
+    "Programs that adapt":"Des programmes qui s'ajustent",
+    "Build a home program in a minute from AI suggestions, each with a short how-to. People tick off what they did, and Between suggests when to progress or ease off.":"Créez un programme à domicile en une minute à partir de suggestions de l'IA, chacune avec une courte explication. Les gens cochent ce qu'ils ont fait, et Between suggère quand progresser ou alléger.",
+    "Only the people who need you, with the reason: a safety flag, scores getting worse or gone quiet. The same list can land in your inbox each morning.":"Seulement les personnes qui ont besoin de vous, avec la raison : un signalement, des scores qui empirent ou un silence. La même liste peut arriver dans votre boîte chaque matin.",
     "Flagged and new check-ins rise to the top so a big caseload is one glance. See who needs you in seconds instead of clicks.":
       "Les suivis signalés et nouveaux remontent en haut donc une grande clientèle tient en un coup d'œil. Voyez qui a besoin de vous en quelques secondes plutôt qu'en clics.",
     "Voice or text":"Voix ou texte",
@@ -8118,7 +8149,55 @@
     var badges = qa('#btwVizPrivD .btw-viz-badge');
     if(badges[0]){ var b0=badges[0].querySelector('b'), d0=badges[0].querySelector('.d'); if(b0)b0.textContent=F.pipeda; if(d0)d0.textContent=F.pipedaD; }
     if(badges[1]){ var b1=badges[1].querySelector('b'), d1=badges[1].querySelector('.d'); if(b1)b1.textContent=F.law25; if(d1)d1.textContent=F.law25D; }
-    // 5 quick to scan
+    // 2 charting done for you — the note format this field gets (DAP for
+    // therapy / recovery / neuropsychology, SOAP for everyone else) and lines
+    // in that field's own words.
+    var fk = featVizKey(), fr = (L === 'fr');
+    var dap = (fk === 'therapy' || fk === 'recovery' || fk === 'neuropsych');
+    var bodyF = (fk === 'physio' || fk === 'occupational' || fk === 'sports' || fk === 'fitness');
+    var NOTE = bodyF
+      ? (fr ? ['Genou douloureux dans les escaliers en début de semaine, mieux vendredi.', 'Douleur 6 → 3/10 sur 5 suivis · programme fait 5 jours sur 6.', 'Progresse comme prévu.', 'Passer aux montées de marche, 3 × 10.']
+            : ['Knee sore on stairs early in the week, easing by Friday.', 'Pain 6 → 3/10 over 5 check-ins · program done 5 of 6 days.', 'Improving as expected.', 'Progress to step-ups, 3 × 10.'])
+      : fk === 'nutrition'
+      ? (fr ? ["Baisse d'énergie l'après-midi, moins de fringales cette semaine.", 'Énergie 4 → 6/10 sur 5 suivis · habitudes faites 4 jours sur 7.', 'En amélioration.', 'Ajouter des protéines au dîner; revoir dans 2 semaines.']
+            : ['Energy dips mid-afternoon, fewer cravings this week.', 'Energy 4 → 6/10 over 5 check-ins · habits done 4 of 7 days.', 'Trending up.', 'Add protein at lunch; review in 2 weeks.'])
+      : (fr ? ['Semaine difficile au travail; sommeil léger lun–mer, mieux après la fin de semaine.', 'Humeur 4 → 6/10 sur 5 suivis; respiration utilisée 4 fois.', 'Mieux outillé face au stress.', 'Garder la routine du soir; revoir les limites au travail.']
+            : ['Hard week at work; poor sleep Mon–Wed, better after the weekend.', 'Mood 4 → 6/10 over 5 check-ins; breathing practice used 4 times.', 'Coping better with stress.', 'Keep the evening wind-down; revisit work boundaries.']);
+    var labs = dap ? ['D', 'A', 'P'] : ['S', 'O', 'A', 'P'];
+    var lines = dap ? [NOTE[0], NOTE[1] + ' ' + NOTE[2], NOTE[3]] : NOTE;
+    var nb = q('#btwVizNoteBody');
+    if(nb){ nb.innerHTML = ''; labs.forEach(function(lb, i){ var d = document.createElement('div'); var bb = document.createElement('b'); bb.textContent = lb; var sp = document.createElement('span'); sp.textContent = lines[i]; d.appendChild(bb); d.appendChild(sp); nb.appendChild(d); }); }
+    t('btwVizNoteTop', (fr ? 'DICTÉ 0:38 · NOTE AU DOSSIER (' : 'DICTATED 0:38 · CHART NOTE (') + (dap ? 'DAP' : 'SOAP') + ')');
+    t('btwVizNotePdf', fr ? 'Enregistrer en PDF' : 'Save as PDF');
+    t('btwVizNoteCopy', fr ? 'Copier dans le dossier' : 'Copy to chart');
+    // 3 programs that adapt — the program in this field's words.
+    var kind = bodyF ? 'exercise' : fk === 'nutrition' ? 'habit' : fk === 'recovery' ? 'recovery' : fk === 'schools' ? 'school' : 'practice';
+    var PROG = {
+      exercise: { en:['HOME EXERCISE PROGRAM', [['Wall squat','3 × 10','5/6',1],['Straight leg raise','3 × 12','4/6',1],['Calf raises','2 × 15','2/6',0]], 'Wall squat → 3 × 15 · done every check-in and pain is easing'],
+                  fr:["PROGRAMME D'EXERCICES À DOMICILE", [['Squat au mur','3 × 10','5/6',1],['Élévation jambe tendue','3 × 12','4/6',1],['Montées sur pointes','2 × 15','2/6',0]], 'Squat au mur → 3 × 15 · fait à chaque suivi, douleur en baisse'] },
+      practice: { en:['BETWEEN-SESSION PRACTICE', [['Box breathing','5 min, daily','5/6',1],['Thought record','after hard moments','3/6',1],['Evening wind-down','daily','2/6',0]], 'Box breathing → twice a day · it helped on the hardest days'],
+                  fr:['PRATIQUE ENTRE LES SÉANCES', [['Respiration carrée','5 min, chaque jour','5/6',1],['Journal des pensées','après les moments durs','3/6',1],['Routine du soir','chaque jour','2/6',0]], 'Respiration carrée → deux fois par jour · utile les jours difficiles'] },
+      habit: { en:['HABITS TO PRACTISE', [['Protein at breakfast','daily','5/7',1],['10-minute walk after lunch','daily','4/7',1],['Water bottle at your desk','workdays','2/5',0]], 'Walk → 15 minutes · energy is higher on walk days'],
+               fr:['HABITUDES À PRATIQUER', [['Protéines au déjeuner','chaque jour','5/7',1],['Marche de 10 min après le dîner','chaque jour','4/7',1],["Bouteille d'eau au bureau",'jours de travail','2/5',0]], "Marche → 15 minutes · plus d'énergie les jours de marche"] },
+      recovery: { en:['DAILY RECOVERY PRACTICES', [['Call your sponsor','daily','6/7',1],['Gratitude list','every evening','4/7',1],['Urge surfing','10 min when it hits','2/7',0]], 'Urge surfing → before evenings out · cravings peak then'],
+                  fr:['PRATIQUES QUOTIDIENNES', [['Appeler votre parrain','chaque jour','6/7',1],['Liste de gratitude','chaque soir','4/7',1],["Surfer sur l'envie",'10 min au besoin','2/7',0]], "Surfer sur l'envie → avant les sorties du soir · les envies culminent alors"] },
+      school: { en:['STRATEGIES TO PRACTISE', [['Homework in 25-minute blocks','school days','4/5',1],['Breathing before tests','before tests','2/3',1],['Check in with a teacher','weekly','0/1',0]], 'Breathing → also before class presentations'],
+                fr:['STRATÉGIES À PRATIQUER', [['Devoirs en blocs de 25 min','jours de classe','4/5',1],['Respirer avant les examens','avant les examens','2/3',1],['Parler à un enseignant','chaque semaine','0/1',0]], 'Respiration → aussi avant les exposés en classe'] }
+    }[kind][L];
+    t('btwVizProgTop', PROG[0]);
+    var pr = q('#btwVizProgRows');
+    if(pr){ pr.innerHTML = ''; PROG[1].forEach(function(it){
+      var row = document.createElement('div'); row.className = 'btw-viz-row';
+      var c = document.createElement('span'); c.className = 'chk' + (it[3] ? ' on' : ''); row.appendChild(c);
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = it[0];
+      var sub = document.createElement('span'); sub.className = 's'; sub.textContent = it[1]; nm.appendChild(sub); row.appendChild(nm);
+      var dn = document.createElement('span'); dn.className = 'done'; dn.textContent = (fr ? 'fait ' : 'done ') + it[2]; row.appendChild(dn);
+      pr.appendChild(row); }); }
+    t('btwVizProgK', fr ? "SUGGESTION DE L'IA" : 'AI SUGGESTS');
+    t('btwVizProgSug', PROG[2]);
+    t('btwVizProgAp', fr ? 'Appliquer' : 'Apply');
+    t('btwVizMail', fr ? 'Aussi dans votre boîte de réception à 7 h 30' : 'Also in your inbox at 7:30');
+    // 5 needs you today
     t('btwVizScanHead', A.scan);
     var reasons = qa('#btwVizScan .btw-viz-row .s');
     if(reasons[0]) reasons[0].textContent = A.r1;
