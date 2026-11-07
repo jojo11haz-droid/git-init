@@ -330,6 +330,14 @@ class S {
   String get betweenWillReadMood => _(
       'Between will read your mood from your check-in.',
       'Between estimera votre humeur à partir de votre suivi.');
+  // Smart follow-up question after a check-in — mirrors the website.
+  String get oneQuickQuestion => _('One quick question', 'Une petite question');
+  String get fewWordsOptional =>
+      _('A few words is plenty (optional)', 'Quelques mots suffisent (facultatif)');
+  String get sendAnswer => _('Send answer', 'Envoyer la réponse');
+  String get skip => _('Skip', 'Passer');
+  String get thanksAnswer => _('Thanks — added to your check-in.',
+      'Merci — ajouté à votre suivi.');
   // Home exercise program (assigned by the clinician) — mirrors the website.
   String get homeExercises =>
       _('Your home exercises', 'Vos exercices à domicile');

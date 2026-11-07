@@ -20,6 +20,42 @@ class SentScreen extends StatefulWidget {
 class _SentScreenState extends State<SentScreen> {
   bool _undoing = false;
   String? _futureNote; // a note they left themselves, surfaced on a low day
+  // The follow-up question Between asked (hidden once answered or skipped),
+  // and crisis resources if the answer raised a concern.
+  bool _fuDone = false;
+  bool _fuSending = false;
+  Map<String, dynamic>? _fuCrisis;
+  final _fuCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _fuCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendFollowup() async {
+    final app = context.read<AppState>();
+    final messenger = ScaffoldMessenger.of(context);
+    final text = _fuCtrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _fuSending = true);
+    try {
+      final crisis =
+          await app.answerFollowup(widget.result.checkIn.id, text);
+      if (!mounted) return;
+      setState(() {
+        _fuDone = true;
+        _fuCrisis = crisis;
+      });
+      if (crisis == null) {
+        messenger.showSnackBar(SnackBar(content: Text(app.s.thanksAnswer)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _fuSending = false);
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
 
   @override
   void initState() {
@@ -63,7 +99,8 @@ class _SentScreenState extends State<SentScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>().s;
-    final crisis = widget.result.crisis;
+    final crisis = widget.result.crisis ?? _fuCrisis;
+    final question = widget.result.checkIn.followupQuestion;
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -119,6 +156,67 @@ class _SentScreenState extends State<SentScreen> {
                           const SizedBox(height: 24),
                           _AiSummaryCard(
                               checkIn: widget.result.checkIn, s: s),
+                        ],
+                        // One short follow-up question, optional.
+                        if (question != null && !_fuDone) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: BtwColors.mossLight,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: BtwColors.moss),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(s.oneQuickQuestion.toUpperCase(),
+                                    style: const TextStyle(
+                                        fontSize: 10.5,
+                                        letterSpacing: 0.6,
+                                        fontWeight: FontWeight.w700,
+                                        color: BtwColors.moss)),
+                                const SizedBox(height: 6),
+                                Text(question,
+                                    style: const TextStyle(
+                                        fontSize: 15.5,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.4)),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  controller: _fuCtrl,
+                                  maxLength: 1000,
+                                  minLines: 2,
+                                  maxLines: 4,
+                                  decoration: InputDecoration(
+                                    hintText: s.fewWordsOptional,
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    counterText: '',
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    FilledButton(
+                                      onPressed:
+                                          _fuSending ? null : _sendFollowup,
+                                      child: Text(s.sendAnswer),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    TextButton(
+                                      onPressed: _fuSending
+                                          ? null
+                                          : () => setState(() => _fuDone = true),
+                                      child: Text(s.skip,
+                                          style: const TextStyle(
+                                              color: BtwColors.inkSoft)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                         if (_futureNote != null) ...[
                           const SizedBox(height: 20),

@@ -195,6 +195,8 @@ export const TIME_SAVED_MINUTES = {
   digest: 5,        // a caseload summary instead of opening each file
   needs_email: 5,   // the morning "who needs me" triage
   program_item: 2,  // writing up one exercise / practice with its how-to
+  program_review: 4, // reviewing a program against adherence and progress
+  report: 15,       // a progress report / letter drafted from the history
   summary: 1        // a check-in already condensed instead of read raw
 };
 
