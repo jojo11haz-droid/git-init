@@ -323,6 +323,13 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS next_session_at DATE;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS goals JSONB;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS billing_currency TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS billing_currency TEXT;
+-- Personalization: a professional's branding for their clients (clinic name,
+-- accent, welcome note; the logo bytes live in brand_logo) and an individual's
+-- own page preferences.
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS brand JSONB;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS brand_logo BYTEA;
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS brand_logo_type TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS prefs JSONB;
 ALTER TABLE future_notes ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'note';
 CREATE UNIQUE INDEX IF NOT EXISTS patients_email_key ON patients (lower(email)) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS patients_invite_code_key ON patients (invite_code) WHERE invite_code IS NOT NULL;
@@ -341,7 +348,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, needs_digest_enabled, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, needs_digest_enabled, brand, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -746,7 +753,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -962,7 +969,7 @@ export async function createPatientSession(tokenHash, patientId, ttlDays) {
 
 export async function getPatientBySession(tokenHash) {
   const { rows } = await pool.query(
-    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type, c.discipline AS clinician_discipline, c.name AS clinician_name
+    `SELECT ${PATIENT_ROW_COLS.split(', ').map(c => 'p.' + c).join(', ')}, c.account_type AS clinician_account_type, c.discipline AS clinician_discipline, c.name AS clinician_name, c.brand AS clinician_brand, c.plan AS clinician_plan, c.email AS clinician_email
      FROM patient_sessions s JOIN patients p ON p.id = s.patient_id
      LEFT JOIN clinicians c ON c.id = p.clinician_id
      WHERE s.token_hash = $1 AND s.expires_at > now()`,
@@ -1961,4 +1968,41 @@ export async function listClinicianMessages(patientId, limit = 30) {
 // Marks the client's own messages read (only theirs; ids optional = all).
 export async function markClinicianMessagesRead(patientId) {
   await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND read_at IS NULL`, [patientId]);
+}
+
+// --- Personalization ---
+export async function setClinicianBrand(clinicianId, brand) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians SET brand = $2 WHERE id = $1 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [clinicianId, JSON.stringify(brand)]
+  );
+  return rows[0] || null;
+}
+
+// Logo bytes + type; pass null to remove. The version stamp in brand.logo_v
+// changes with each upload so clients' cached copies refresh.
+export async function setClinicianBrandLogo(clinicianId, bytes, type) {
+  const { rows } = await pool.query(
+    `UPDATE clinicians SET brand_logo = $2, brand_logo_type = $3,
+       brand = jsonb_strip_nulls(COALESCE(brand, '{}'::jsonb) || jsonb_build_object('logo_v', $4::text))
+     WHERE id = $1 RETURNING ${CLINICIAN_PUBLIC_COLS}`,
+    [clinicianId, bytes, bytes ? type : null, bytes ? Date.now().toString(36) : null]
+  );
+  return rows[0] || null;
+}
+
+export async function getClinicianBrandLogo(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT brand_logo, brand_logo_type FROM clinicians WHERE id = $1 AND brand_logo IS NOT NULL`,
+    [clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function setPatientPrefs(patientId, prefs) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET prefs = $2 WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,
+    [patientId, JSON.stringify(prefs)]
+  );
+  return rows[0] || null;
 }

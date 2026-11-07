@@ -24,6 +24,29 @@ class Patient {
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
+  // Their professional's branding: a welcome note (any plan) and, on the
+  // professional's Premium plan, clinic name, logo and accent.
+  Map<String, dynamic> get _brand =>
+      ((raw['clinician_brand'] as Map?) ?? const {}).cast<String, dynamic>();
+  String get brandWelcome => (_brand['welcome'] as String?) ?? '';
+  String get brandClinic => (_brand['clinic'] as String?) ?? '';
+  String? get brandLogoUrl => _brand['logo_url'] as String?;
+  String? get clinicianName => raw['clinician_name'] as String?;
+  bool get hasBrand =>
+      brandWelcome.isNotEmpty || brandClinic.isNotEmpty || brandLogoUrl != null;
+  // A Premium individual's own page preferences.
+  Map<String, dynamic> get _prefs =>
+      ((raw['prefs'] as Map?) ?? const {}).cast<String, dynamic>();
+  String get ownAccent => (_prefs['accent'] as String?) ?? '';
+  List<String> get hiddenSections =>
+      ((_prefs['hide'] as List?) ?? const []).map((e) => e.toString()).toList();
+  bool hides(String section) => hiddenSections.contains(section);
+  // The accent in effect: the professional's, else their own.
+  String? get accentKey {
+    final b = _brand['accent'] as String?;
+    if (b != null && b.isNotEmpty) return b;
+    return ownAccent.isNotEmpty ? ownAccent : null;
+  }
   // A self-serve individual's own intentions (up to two short lines).
   List<String> get goals =>
       ((raw['goals'] as List?) ?? const []).map((e) => e.toString()).toList();
@@ -379,6 +402,17 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       // Offline: the device still remembers it; it syncs on the next change.
     }
+  }
+
+  // Save a Premium individual's accent and hidden sections.
+  Future<void> savePrefs(String accent, List<String> hide) async {
+    final data = await _api.put('/api/patient/prefs', {
+      'accent': accent == 'blue' ? '' : accent,
+      'hide': hide,
+    });
+    patient = Patient(
+        ((data as Map)['patient'] as Map).cast<String, dynamic>());
+    notifyListeners();
   }
 
   // Save the individual's own intentions/goals (up to two short lines).

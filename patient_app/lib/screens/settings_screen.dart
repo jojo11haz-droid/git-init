@@ -8,6 +8,7 @@ import 'about_screen.dart';
 import 'future_note_screen.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
+import 'personalize_screen.dart';
 import 'plans_screen.dart';
 import 'welcome_screen.dart';
 
@@ -191,6 +192,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+            // A solo individual styles their own page (an invited client
+            // gets their professional's branding instead).
+            if (!patient.hasClinician) ...[
+              const SizedBox(height: 12),
+              _Section(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.palette_outlined,
+                      color: BtwColors.moss),
+                  title: Text(s.personalize,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  trailing: const Icon(Icons.chevron_right_rounded,
+                      color: BtwColors.inkSoft),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const PersonalizeScreen()),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             _Section(
               child: ListTile(

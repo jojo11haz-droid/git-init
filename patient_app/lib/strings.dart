@@ -124,6 +124,35 @@ class S {
   String get seePlans => _('See Premium plans', 'Voir les forfaits Premium');
   String get goPremium => _('Go Premium', 'Passer à Premium');
   String get plansTitle => _('Plans', 'Forfaits');
+  // Personalize (Premium individuals)
+  String get personalize => _('Personalize', 'Personnaliser');
+  String get personalizeLede => _(
+      'Pick your colour and choose what shows on your page. This follows you to the website.',
+      'Choisissez votre couleur et ce qui s’affiche sur votre page. Ça vous suit sur le site web.');
+  String get personalizeLocked => _(
+      'With Premium you can pick your colour and choose what shows on your page.',
+      'Avec Premium, vous pouvez choisir votre couleur et ce qui s’affiche sur votre page.');
+  String get colourLabel => _('Colour', 'Couleur');
+  String get onMyPage => _('On my page', 'Sur ma page');
+  String get showStreak => _('Show my streak', 'Afficher ma série');
+  String get showReflection =>
+      _('Show the weekly reflection', 'Afficher le bilan de la semaine');
+  String get showGoals => _('Show my goals', 'Afficher mes objectifs');
+  String get seePremium => _('See Premium', 'Voir Premium');
+  String get saveBtn => _('Save', 'Enregistrer');
+  String get savedLabel => _('Saved', 'Enregistré');
+  String accentName(String k) {
+    switch (k) {
+      case 'teal': return _('Teal', 'Sarcelle');
+      case 'green': return _('Green', 'Vert');
+      case 'plum': return _('Plum', 'Prune');
+      case 'berry': return _('Berry', 'Petits fruits');
+      case 'clay': return _('Clay', 'Terre cuite');
+      case 'slate': return _('Slate', 'Ardoise');
+      case 'indigo': return _('Indigo', 'Indigo');
+      default: return _('Blue', 'Bleu');
+    }
+  }
   String get plansHeroTitle => _('Go deeper with Premium', 'Allez plus loin avec Premium');
   String get plansHeroBody => _(
       'Start free. Upgrade anytime for unlimited check-ins, guided journaling and the full picture of your patterns.',

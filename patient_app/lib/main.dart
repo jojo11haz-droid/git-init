@@ -30,7 +30,10 @@ class BetweenPatientApp extends StatelessWidget {
     return MaterialApp(
       title: 'Between',
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
+      // A professional's chosen accent (for their clients) or a Premium
+      // individual's own; the default brand blue otherwise.
+      theme: buildTheme(
+          accent: kAccents[context.watch<AppState>().patient?.accentKey]),
       home: const _Gate(),
     );
   }
