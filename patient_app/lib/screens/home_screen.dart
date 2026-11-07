@@ -61,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
   Map<String, String> _painSens = {}; // "view:region" -> sensation code
   List<HomeExercise> _exercises = []; // home program from the clinician
+  List<ClinicianMessage> _messages = []; // notes from the professional
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
@@ -102,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Check-in streak for the habit chip — best-effort, never blocks the screen.
     _loadStreak();
     _loadExercises();
+    _loadMessages();
     // First run (after the intro): show the spotlight tour once.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -205,6 +207,91 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       // No program (or offline): the checklist just stays hidden.
     }
+  }
+
+  Future<void> _loadMessages() async {
+    final app = context.read<AppState>();
+    try {
+      final list = await app.fetchMessages();
+      if (!mounted) return;
+      setState(() => _messages = list);
+      // Shown now, so mark them read (the professional sees "Read").
+      if (list.any((m) => !m.isRead)) {
+        await app.markMessagesRead();
+      }
+    } catch (_) {
+      // No messages (or offline): the card just stays hidden.
+    }
+  }
+
+  Widget _messageCard(ClinicianMessage m, S s) {
+    final when = m.createdAt;
+    final whenText = when == null
+        ? ''
+        : '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: m.isRead ? BtwColors.line : BtwColors.moss,
+            width: m.isRead ? 1 : 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                (m.isRead ? s.messageLabel : s.newMessage).toUpperCase(),
+                style: const TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 0.6,
+                    fontWeight: FontWeight.w600,
+                    color: BtwColors.moss),
+              ),
+              const Spacer(),
+              Text(whenText,
+                  style:
+                      const TextStyle(fontSize: 11.5, color: BtwColors.inkSoft)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(m.body, style: const TextStyle(fontSize: 15, height: 1.45)),
+          for (final e in m.exercises) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              decoration: BoxDecoration(
+                color: BtwColors.cream,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    e.dosage == null || e.dosage!.isEmpty
+                        ? e.name
+                        : '${e.name} · ${e.dosage}',
+                    style: const TextStyle(
+                        fontSize: 13.5, fontWeight: FontWeight.w600),
+                  ),
+                  if (e.description != null && e.description!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(e.description!,
+                          style: const TextStyle(
+                              fontSize: 12.5, color: BtwColors.inkSoft)),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Future<void> _loadStreak() async {
@@ -689,6 +776,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(28, 18, 28, 12),
                 children: [
+                  // The latest message from their professional, on top.
+                  if (_messages.isNotEmpty) ...[
+                    _messageCard(_messages.first, s),
+                    const SizedBox(height: 18),
+                  ],
                   Text(
                     s.hi(patient.firstName),
                     style: const TextStyle(

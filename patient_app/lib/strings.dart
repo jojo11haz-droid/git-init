@@ -351,6 +351,9 @@ class S {
       _('Your strategies to practise', 'Vos stratégies à pratiquer');
   String get tickWhatYouDid => _('Tick what you did since your last check-in.',
       'Cochez ce que vous avez fait depuis votre dernier suivi.');
+  // Messages from the professional (sent from the website).
+  String get newMessage => _('New message', 'Nouveau message');
+  String get messageLabel => _('Message', 'Message');
   // Pain scale (physio, kinesiology, osteopathy, OT) — mirrors the website.
   String get painRightNow => _('Pain right now', 'Douleur en ce moment');
   String get noPain => _('No pain', 'Aucune douleur');

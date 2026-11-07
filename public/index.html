@@ -1298,6 +1298,36 @@
   .btw-allfeat{text-align:center;margin:6px 0 30px;font-size:15px;}
   .btw-allfeat a{color:var(--moss);font-weight:600;text-decoration:none;border-bottom:1px solid var(--moss-light);padding-bottom:2px;}
   .btw-allfeat a:hover{border-bottom-color:var(--moss);}
+  .btw-msg-to{font-size:12.5px;color:var(--amber);margin:-2px 0 8px;}
+  .btw-msg-to:empty{display:none;}
+  .btw-msg-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-soft);}
+  .btw-msg-ex{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  .btw-msg-exl{flex-basis:100%;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:2px;}
+  .btw-msg-exnone{font-size:12px;color:var(--ink-soft);}
+  .btw-msg-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;background:var(--panel);}
+  .btw-msg-chip input{accent-color:var(--moss);margin:0;}
+  .btw-msg-chip.on{border-color:var(--moss);background:var(--moss-light);}
+  .btw-msg-send{background:var(--moss) !important;color:#fff !important;border-color:var(--moss) !important;}
+  .btw-msg-status{font-size:12px;color:var(--ink-soft);}
+  .btw-msg-hist{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+  .btw-msg-hist:empty{display:none;}
+  .btw-msg-item{border-top:1px dashed var(--line);padding-top:8px;}
+  .btw-msg-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  .btw-msg-body{font-size:13px;white-space:pre-wrap;margin-top:2px;}
+  .btw-msg-att{font-size:12px;color:var(--moss);margin-top:3px;}
+  /* Client side: messages from their professional */
+  .btw-inbox{display:flex;flex-direction:column;gap:10px;margin:0 0 16px;}
+  .btw-inbox-card{border:1px solid var(--line);border-radius:14px;padding:13px 15px;background:var(--panel);}
+  .btw-inbox-card.new{border-color:var(--moss);box-shadow:0 0 0 3px var(--moss-light);}
+  .btw-inbox-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+  .btw-inbox-h b{color:var(--moss);font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;}
+  .btw-inbox-body{font-size:14.5px;line-height:1.5;white-space:pre-wrap;}
+  .btw-inbox-ex{margin-top:9px;display:flex;flex-direction:column;gap:6px;}
+  .btw-inbox-exi{background:var(--paper);border-radius:10px;padding:8px 10px;font-size:13px;}
+  .btw-inbox-exi b{font-weight:600;}
+  .btw-inbox-exi .d{color:var(--moss);font-size:12px;margin-left:6px;}
+  .btw-inbox-exi .h{color:var(--ink-soft);font-size:12.5px;margin-top:2px;}
+  .btw-inbox-more{font-size:12.5px;background:none;border:0;color:var(--moss);cursor:pointer;padding:0;text-align:left;font-weight:600;}
   .btw-ai-notice{display:none;font-size:13.5px;line-height:1.5;color:var(--ink);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-top:4px;}
   .btw-ai-empty .btw-ai-notice{display:block;}
   .btw-ai-empty > .btw-ainote-text, .btw-ai-empty > .btw-ainote-foot{display:none !important;}
@@ -3752,6 +3782,7 @@
   <div class="btw-grid" id="btwDashGrid" style="display:none;">
     <!-- PATIENT PANE -->
     <div class="btw-pane">
+      <div class="btw-inbox" id="btwInbox" style="display:none;" aria-live="polite"></div>
       <div class="btw-eyebrow" id="btwPatientPaneEyebrow">Patient view</div>
       <h3 id="btwComposeHeading">How are things right now?</h3>
       <div class="btw-pane-desc" id="btwComposeDesc">Send a quick check-in. Your therapist will see a short summary, not the raw recording.</div>
@@ -4008,7 +4039,7 @@
         </button>
         <button type="button" id="btwEncourageBtn" class="btw-emr-btn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-          <span>Encouragement</span>
+          <span>Message</span>
         </button>
       </div>
       <div id="btwScribePanel" class="btw-ainote btw-scribe" style="display:none;">
@@ -4064,13 +4095,17 @@
           <span class="btw-ainote-btns"><button type="button" id="btwReportPdf" class="btw-emr-btn" style="display:none;"><span>Save as PDF</span></button><button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button></span>
         </div>
       </div>
-      <div id="btwEncouragePanel" class="btw-ainote" style="display:none;">
-        <div class="btw-ainote-label" id="btwEncourageLabel">A message to send between sessions — review and edit before sending</div>
-        <textarea id="btwEncourageText" class="btw-ainote-text" rows="5" spellcheck="true"></textarea>
+      <div id="btwEncouragePanel" class="btw-ainote btw-msg" style="display:none;">
+        <div class="btw-ainote-label" id="btwEncourageLabel">Message to your client — they read it in Between</div>
+        <div class="btw-msg-to" id="btwMsgTo"></div>
+        <textarea id="btwEncourageText" class="btw-ainote-text" rows="5" maxlength="1200" spellcheck="true" placeholder="A short note: how they're doing, what to focus on this week."></textarea>
+        <div class="btw-msg-tools"><button type="button" id="btwMsgDraft" class="btw-emr-btn"><span>Draft with AI</span></button><span id="btwEncourageMeta"></span></div>
+        <div class="btw-msg-ex" id="btwMsgEx"></div>
         <div class="btw-ainote-foot">
-          <span id="btwEncourageMeta"></span>
-          <button type="button" id="btwEncourageCopy" class="btw-emr-btn"><span>Copy message</span></button>
+          <span class="btw-msg-status" id="btwMsgStatus" role="status" aria-live="polite"></span>
+          <span class="btw-ainote-btns"><button type="button" id="btwEncourageCopy" class="btw-emr-btn"><span>Copy</span></button><button type="button" id="btwMsgSend" class="btw-emr-btn btw-msg-send"><span>Send</span></button></span>
         </div>
+        <div class="btw-msg-hist" id="btwMsgHist"></div>
       </div>
 
       <div class="btw-hep" id="btwHep" style="display:none;"></div>
@@ -5148,6 +5183,29 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Message":"Message",
+    "Message to your client — they read it in Between":"Message à votre client — il le lit dans Between",
+    "A short note: how they're doing, what to focus on this week.":"Un court mot : comment ça va, sur quoi se concentrer cette semaine.",
+    "Draft with AI":"Rédiger avec l'IA",
+    "Attach from their program":"Joindre de son programme",
+    "Add exercises to their program to attach them to a message.":"Ajoutez des exercices à son programme pour pouvoir les joindre à un message.",
+    "Send":"Envoyer",
+    "Sending…":"Envoi…",
+    "Read":"Lu",
+    "Not read yet":"Pas encore lu",
+    "Attached:":"Joint :",
+    "{name} hasn’t set up their account yet: they’ll see messages once they join.":"{name} n'a pas encore créé son compte : les messages s'afficheront une fois inscrit.",
+    "Drafted from":"Rédigé à partir de",
+    "edit it before sending.":"modifiez-le avant d'envoyer.",
+    "Write a message first.":"Écrivez d'abord un message.",
+    "Saved. They’ll see it once they set up their account.":"Enregistré. Il le verra une fois son compte créé.",
+    "Sent. They’ve been told there’s a new message.":"Envoyé. Il a été avisé qu'un nouveau message l'attend.",
+    "Sent. They’ll see it next time they open Between.":"Envoyé. Il le verra à sa prochaine visite dans Between.",
+    "Could not send the message.":"Impossible d'envoyer le message.",
+    "Your professional":"Votre professionnel",
+    "New message":"Nouveau message",
+    "Show only the latest":"Afficher seulement le plus récent",
+    "Earlier messages":"Messages précédents",
     "All features":"Toutes les fonctionnalités",
     "See everything Between does":"Voir tout ce que fait Between",
     "See every feature that's included":"Voir toutes les fonctionnalités incluses",
@@ -11458,6 +11516,8 @@
     state.checkIns = rows.map(mapCheckIn);
     try { const ex = await pApi('GET', '/api/patient/exercises'); state.exercises = (ex && ex.exercises) || []; }
     catch(e){ state.exercises = []; }
+    try { const mm = await pApi('GET', '/api/patient/messages'); state.messages = (mm && mm.messages) || []; }
+    catch(e){ state.messages = []; }
     // Drop ticks for exercises no longer in the program.
     if(state.hepDone){ const ids = new Set(state.exercises.map(e => e.id)); [...state.hepDone].forEach(id => { if(!ids.has(id)) state.hepDone.delete(id); }); }
     await loadFutureNotes();
@@ -15246,7 +15306,30 @@
   // --- Home exercise program (patient side) ---
   // A checklist in the check-in: tick what you did; it's sent with the check-in.
   state.hepDone = state.hepDone || new Set();
+  // Messages from the client's professional, newest first; the unread ones are
+  // highlighted, then marked read on the server once shown.
+  var _inboxAll = false, _inboxMarked = false;
+  function renderInbox(){
+    var box = document.getElementById('btwInbox'); if(!box) return;
+    var list = (isPatient() && !_ownerPreview) ? (state.messages || []) : [];
+    if(!list.length){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    var who = (state.patient && state.patient.clinician_name) || t('Your professional');
+    var shown = _inboxAll ? list.slice(0, 10) : list.slice(0, 1);
+    box.innerHTML = shown.map(function(m){
+      return '<div class="btw-inbox-card' + (m.read_at ? '' : ' new') + '"><div class="btw-inbox-h"><b>' + esc(m.read_at ? t('Message') : t('New message')) + ' · ' + esc(who) + '</b><span>' + esc(fmtWhen(m.created_at)) + '</span></div>'
+        + '<div class="btw-inbox-body">' + esc(m.body) + '</div>'
+        + (m.exercises && m.exercises.length ? '<div class="btw-inbox-ex">' + m.exercises.map(function(e){ return '<div class="btw-inbox-exi"><b>' + esc(e.name) + '</b>' + (e.dosage ? '<span class="d">' + esc(e.dosage) + '</span>' : '') + (e.description ? '<div class="h">' + esc(e.description) + '</div>' : '') + '</div>'; }).join('') + '</div>' : '')
+        + '</div>';
+    }).join('') + (list.length > 1 ? '<button type="button" class="btw-inbox-more">' + esc(_inboxAll ? t('Show only the latest') : t('Earlier messages') + ' (' + (list.length - 1) + ')') + '</button>' : '');
+    var more = box.querySelector('.btw-inbox-more'); if(more) more.addEventListener('click', function(){ _inboxAll = !_inboxAll; renderInbox(); });
+    if(!_inboxMarked && list.some(function(m){ return !m.read_at; })){
+      _inboxMarked = true;
+      pApi('POST', '/api/patient/messages/read', {}).then(function(){ list.forEach(function(m){ if(!m.read_at) m._seen = true; }); }).catch(function(){ _inboxMarked = false; });
+    }
+  }
   function renderComposeHep(){
+    try { renderInbox(); } catch(e){}
     var box = document.getElementById('btwComposeHep'); if(!box) return;
     var ex = isPatient() ? (state.exercises || []) : [];
     if(!ex.length){ box.style.display = 'none'; return; }
@@ -15795,7 +15878,8 @@
     // the bar shows for any selected client; the other tools need check-ins.
     if(emrBar){
       emrBar.style.display = patient ? '' : 'none';
-      [].forEach.call(emrBar.children, function(ch){ if(ch.id !== 'btwScribeBtn') ch.style.display = list.length ? '' : 'none'; });
+      // Recording a session and messaging work from day one; the rest need check-ins.
+      [].forEach.call(emrBar.children, function(ch){ if(ch.id !== 'btwScribeBtn' && ch.id !== 'btwEncourageBtn') ch.style.display = list.length ? '' : 'none'; });
     }
     if(!patient){
       el.innerHTML = ((state.patients||[]).length === 0) ? clinicianOnboardingHtml() : esc(t('No patients yet, add your first patient to start receiving check-ins.'));
@@ -16836,7 +16920,7 @@
     var panel = document.getElementById('btwAiNotePanel'); if(panel) panel.style.display = 'none';
     var nb = document.getElementById('btwAiNoteBtn'); if(nb){ nb.disabled = false; var s = nb.querySelector('span'); if(s) s.textContent = t('AI draft note'); }
     var ep = document.getElementById('btwEncouragePanel'); if(ep) ep.style.display = 'none';
-    var eb = document.getElementById('btwEncourageBtn'); if(eb){ eb.disabled = false; var es = eb.querySelector('span'); if(es) es.textContent = t('Encouragement'); }
+    var eb = document.getElementById('btwEncourageBtn'); if(eb){ eb.disabled = false; var es = eb.querySelector('span'); if(es) es.textContent = t('Message'); }
   }
   function renderPrep(){
     var card = document.getElementById('btwPrep'); if(!card) return;
@@ -16946,42 +17030,83 @@
     });
   })();
 
-  // Encouragement: an AI-drafted warm note to send the patient between
-  // sessions. On-demand, consent-safe, a draft the clinician edits and sends.
+  // Message to a client: written by the professional (or drafted with AI from
+  // their check-ins), with exercises from the program attached if wanted, sent
+  // into Between. The client reads it on their check-in page (web and app) and
+  // is nudged by email/text with no message content in it.
+  state.msgCache = state.msgCache || {};
+  function fmtWhen(ts){
+    var d = new Date(ts), loc = curLang === 'fr' ? 'fr-CA' : 'en-CA';
+    return d.toLocaleDateString(loc, { month:'short', day:'numeric' }) + ' · ' + d.toLocaleTimeString(loc, { hour:'numeric', minute:'2-digit' });
+  }
   (function(){
     var btn = document.getElementById('btwEncourageBtn'); if(!btn) return;
-    var span = btn.querySelector('span');
-    btn.addEventListener('click', async function(){
+    var panel = document.getElementById('btwEncouragePanel');
+    var ta = document.getElementById('btwEncourageText');
+    var meta = document.getElementById('btwEncourageMeta');
+    var status = document.getElementById('btwMsgStatus');
+    var exBox = document.getElementById('btwMsgEx');
+    var hist = document.getElementById('btwMsgHist');
+    var send = document.getElementById('btwMsgSend');
+    var draft = document.getElementById('btwMsgDraft');
+    var forPid = null, picked = new Set();
+    function drawEx(p){
+      var ex = ((state.hepCache[p.id] || {}).exercises) || [];
+      if(!ex.length){ exBox.innerHTML = '<div class="btw-msg-exnone">' + esc(t('Add exercises to their program to attach them to a message.')) + '</div>'; return; }
+      exBox.innerHTML = '<div class="btw-msg-exl">' + esc(t('Attach from their program')) + '</div>' + ex.map(function(e){
+        return '<label class="btw-msg-chip' + (picked.has(e.id) ? ' on' : '') + '"><input type="checkbox" value="' + esc(e.id) + '"' + (picked.has(e.id) ? ' checked' : '') + '><span>' + esc(e.name) + (e.dosage ? ' · ' + esc(e.dosage) : '') + '</span></label>';
+      }).join('');
+      exBox.querySelectorAll('input').forEach(function(cb){ cb.addEventListener('change', function(){ if(cb.checked) picked.add(cb.value); else picked.delete(cb.value); cb.parentNode.classList.toggle('on', cb.checked); }); });
+    }
+    function drawHist(list, connected){
+      var p = selectedPatient();
+      var to = document.getElementById('btwMsgTo');
+      if(to) to.textContent = (connected === false) ? t('{name} hasn’t set up their account yet: they’ll see messages once they join.').replace('{name}', (p && p.display_name) || '') : '';
+      if(!list || !list.length){ hist.innerHTML = ''; return; }
+      hist.innerHTML = '<div class="btw-msg-exl">' + esc(t('Sent')) + '</div>' + list.slice(0, 6).map(function(m){
+        return '<div class="btw-msg-item"><div class="btw-msg-meta">' + esc(fmtWhen(m.created_at)) + ' · ' + esc(m.read_at ? t('Read') : t('Not read yet')) + '</div><div class="btw-msg-body">' + esc(m.body) + '</div>'
+          + (m.exercises && m.exercises.length ? '<div class="btw-msg-att">' + esc(t('Attached:')) + ' ' + esc(m.exercises.map(function(e){ return e.name; }).join(', ')) + '</div>' : '') + '</div>';
+      }).join('');
+    }
+    async function load(p){
+      try { var d = await api('GET', '/api/patients/' + p.id + '/messages'); state.msgCache[p.id] = d; drawHist(d.messages, d.connected); } catch(e){ hist.innerHTML = ''; }
+      try { if(!state.hepCache[p.id]) await fetchHep(p.id); } catch(e){}
+      drawEx(p);
+    }
+    btn.addEventListener('click', function(){
       var p = selectedPatient(); if(!p) return;
-      var panel = document.getElementById('btwEncouragePanel');
-      var ta = document.getElementById('btwEncourageText');
-      var meta = document.getElementById('btwEncourageMeta');
-      var label = document.getElementById('btwEncourageLabel');
-      if(label) label.textContent = t('A message to send between sessions — review and edit before sending');
-      btn.disabled = true; if(span) span.textContent = t('Thinking…');
+      if(forPid !== p.id){ forPid = p.id; picked = new Set(); ta.value = ''; meta.textContent = ''; status.textContent = ''; }
+      var open = panel.style.display === 'none';
+      panel.style.display = open ? '' : 'none';
+      if(open){ var label = document.getElementById('btwEncourageLabel'); if(label) label.textContent = t('Message to your client — they read it in Between'); drawEx(p); load(p); setTimeout(function(){ try { ta.focus(); } catch(e){} }, 50); }
+    });
+    draft.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var sp = draft.querySelector('span'); draft.disabled = true; sp.textContent = t('Thinking…'); meta.textContent = '';
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/encouragement?lang=' + (curLang || 'en'));
-        if(d && d.needsData){
-          aiPanelNotice(panel, aiEmptyMsg(p));
-          if(meta) meta.textContent = '';
-        } else {
-          aiPanelNotice(panel, '');
-          if(ta) ta.value = (d && d.message) || '';
-          var n = (d && d.checkInsUsed) || 0;
-          if(meta) meta.textContent = t('From') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' · ' + t('A draft — your words, your send.');
-        }
-        if(panel) panel.style.display = '';
-      }catch(e){
-        aiPanelNotice(panel, (e && e.message) || t('Could not draft a message just now.'));
-        if(meta) meta.textContent = '';
-        if(panel) panel.style.display = '';
-      }finally{
-        btn.disabled = false; if(span) span.textContent = t('Refresh message');
-      }
+        if(d && d.needsData){ meta.textContent = aiEmptyMsg(p); }
+        else { ta.value = (d && d.message) || ''; var n = (d && d.checkInsUsed) || 0; meta.textContent = t('Drafted from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' · ' + t('edit it before sending.'); }
+      }catch(e){ meta.textContent = (e && e.message) || t('Could not draft a message just now.'); }
+      finally{ draft.disabled = false; sp.textContent = t('Draft with AI'); }
+    });
+    send.addEventListener('click', async function(){
+      var p = selectedPatient(); if(!p) return;
+      var body = ta.value.trim();
+      if(!body){ status.textContent = t('Write a message first.'); ta.focus(); return; }
+      var sp = send.querySelector('span'); send.disabled = true; sp.textContent = t('Sending…'); status.textContent = '';
+      try{
+        var r = await api('POST', '/api/patients/' + p.id + '/messages', { body: body, exerciseIds: Array.from(picked) });
+        ta.value = ''; picked = new Set(); meta.textContent = '';
+        status.textContent = r && r.connected === false ? t('Saved. They’ll see it once they set up their account.') : (r && r.notified ? t('Sent. They’ve been told there’s a new message.') : t('Sent. They’ll see it next time they open Between.'));
+        var c = state.msgCache[p.id] || { messages: [] }; c.messages = [r.message].concat(c.messages || []); state.msgCache[p.id] = c;
+        drawHist(c.messages, r.connected); drawEx(p);
+        if(typeof countWorkLocal === 'function') countWorkLocal();
+      }catch(e){ status.textContent = (e && e.message) || t('Could not send the message.'); }
+      finally{ send.disabled = false; sp.textContent = t('Send'); }
     });
     var copyBtn = document.getElementById('btwEncourageCopy');
     if(copyBtn) copyBtn.addEventListener('click', async function(){
-      var ta = document.getElementById('btwEncourageText'); if(!ta) return;
       var ok = await copyTextToClipboard(ta.value);
       var cs = copyBtn.querySelector('span') || copyBtn;
       if(ok){ var o = cs.textContent; cs.textContent = t('Copied ✓'); copyBtn.disabled = true; setTimeout(function(){ cs.textContent = o; copyBtn.disabled = false; }, 1600); }

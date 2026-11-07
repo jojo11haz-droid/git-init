@@ -33,7 +33,7 @@ import {
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
   storageStats, purgeOldMedia
-} from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
@@ -2785,6 +2785,74 @@ app.post('/api/patients/:id/dictate',
     }
   });
 
+// --- Messages to a client: a short note from the professional, optionally
+// with exercises from the client's own program attached (shown with their
+// how-to and dose). The client reads it on their check-in page; they get an
+// email (and a text if they gave a number) saying there's a new message, with
+// no message content in it.
+function messageExercises(ids, program) {
+  const byId = new Map((program || []).map(e => [e.id, e]));
+  return (Array.isArray(ids) ? ids : []).map(id => byId.get(id)).filter(Boolean)
+    .map(e => ({ id: e.id, name: e.name, dosage: e.dosage, description: e.description }));
+}
+function publicMessage(m, program) {
+  return { id: m.id, body: m.body, created_at: m.created_at, read_at: m.read_at, exercises: messageExercises(m.exercise_ids, program) };
+}
+const messageLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, message: 'Too many messages for now — try again in a little while.' });
+app.get('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const program = await listAllExercises(patient.id);
+    res.json({ messages: (await listClinicianMessages(patient.id)).map(m => publicMessage(m, program)), connected: patient.invite_status === 'accepted' });
+  } catch (err) {
+    console.error('List messages error:', err);
+    res.status(500).json({ error: 'Could not load messages.' });
+  }
+});
+app.post('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedClinician, messageLimiter, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const body = typeof (req.body && req.body.body) === 'string' ? req.body.body.replace(/\r/g, '').trim().slice(0, 1200) : '';
+    if (!body) return res.status(400).json({ error: 'Write a message first.' });
+    // Only exercises from this client's current program can be attached.
+    const program = await listExercises(patient.id);
+    const allowed = new Set(program.map(e => e.id));
+    const ids = (Array.isArray(req.body.exerciseIds) ? req.body.exerciseIds : []).filter(id => typeof id === 'string' && allowed.has(id)).slice(0, 10);
+    const msg = await addClinicianMessage(patient.id, req.clinician.id, body, ids);
+    // Nudge the client without putting health details in an email or text.
+    let notified = false;
+    const who = req.clinician.name || 'Your professional';
+    if (patient.email && emailConfigured()) {
+      const text = `Hi${patient.display_name ? ' ' + patient.display_name.split(' ')[0] : ''},\n\n${who} sent you a message in Between${ids.length ? ' with exercises attached' : ''}.\n\nRead it here: ${SITE_URL}/\n\nBetween is not a crisis service. If you are in danger, call 988 or 911.`;
+      sendEmail({ to: patient.email, subject: `New message from ${who}`, text }).catch(err => console.error('Message email failed:', err && err.message));
+      notified = true;
+    }
+    if (patient.phone && smsConfigured()) {
+      sendSms({ to: patient.phone, text: `${who} sent you a message in Between: ${SITE_URL}/` }).catch(() => {});
+      notified = true;
+    }
+    res.status(201).json({ message: publicMessage(msg, program), notified, connected: patient.invite_status === 'accepted' });
+  } catch (err) {
+    console.error('Send message error:', err);
+    res.status(500).json({ error: 'Could not send the message.' });
+  }
+});
+app.get('/api/patient/messages', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    const program = await listAllExercises(req.patient.id);
+    res.json({ messages: (await listClinicianMessages(req.patient.id)).map(m => publicMessage(m, program)) });
+  } catch (err) {
+    console.error('Patient messages error:', err);
+    res.status(500).json({ error: 'Could not load your messages.' });
+  }
+});
+app.post('/api/patient/messages/read', requireDb, requirePatientAuth, async (req, res) => {
+  try { await markClinicianMessagesRead(req.patient.id); res.json({ ok: true }); }
+  catch (err) { console.error('Mark read error:', err); res.status(500).json({ error: 'Could not update.' }); }
+});
+
 // --- Session scribe: record the appointment (with the client's consent), get
 // the chart note. The browser keeps the recording until it's sent; here it is
 // streamed to the speech-to-text service, turned into a speaker-separated
@@ -3232,12 +3300,12 @@ function patientWeeklyCap(p) {
 async function withClinicianInfo(p, base) {
   if (!p || p.clinician_account_type !== undefined) return p;
   if (base && base.clinician_account_type !== undefined && base.id === p.id) {
-    return { ...p, clinician_account_type: base.clinician_account_type, clinician_discipline: base.clinician_discipline };
+    return { ...p, clinician_account_type: base.clinician_account_type, clinician_discipline: base.clinician_discipline, clinician_name: base.clinician_name };
   }
   if (!p.clinician_id) return { ...p, clinician_account_type: null, clinician_discipline: null };
   try {
     const c = await getClinicianById(p.clinician_id);
-    return { ...p, clinician_account_type: c ? c.account_type : null, clinician_discipline: c ? c.discipline : null };
+    return { ...p, clinician_account_type: c ? c.account_type : null, clinician_discipline: c ? c.discipline : null, clinician_name: c ? c.name : null };
   } catch (e) { return p; }
 }
 
@@ -3253,6 +3321,7 @@ function publicPatient(p) {
     subscription_status: p.subscription_status,
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
+    clinician_name: p.clinician_name || null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
     reminders_enabled: !!p.reminders_enabled,
     phone: p.phone || null,
