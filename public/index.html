@@ -1269,6 +1269,19 @@
   .btw-ainote-text:focus{outline:none;border-color:var(--moss);}
   .btw-ainote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;}
   .btw-ainote-btns{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+  .btw-ai-notice{display:none;font-size:13.5px;line-height:1.5;color:var(--ink);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-top:4px;}
+  .btw-ai-empty .btw-ai-notice{display:block;}
+  .btw-ai-empty > .btw-ainote-text, .btw-ai-empty > .btw-ainote-foot{display:none !important;}
+  /* Session prep + the trajectory read: two compact tiles side by side; one
+     with a generated read spreads to the full width. */
+  .btw-prep-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;align-items:start;}
+  .btw-prep-pair > .btw-prep{margin-bottom:0;padding:12px 14px 13px;}
+  .btw-prep-pair > .btw-prep:has(.btw-prep-brief){grid-column:1 / -1;}
+  .btw-prep-pair .btw-prep-title{font-size:15px;}
+  .btw-prep-pair .btw-prep-hint{font-size:12.5px;line-height:1.45;}
+  .btw-prep-pair .btw-prep-gen{background:var(--panel);color:var(--moss);border:1px solid var(--moss);padding:6px 11px;font-size:12px;}
+  .btw-prep-pair .btw-prep-gen:hover{background:var(--moss);color:#fff;}
+  @media (max-width:720px){ .btw-prep-pair{grid-template-columns:1fr;} }
   .btw-scribe-who{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 8px;}
   .btw-scribe-who:empty{display:none;}
   .btw-scribe-consent{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;margin:4px 0 10px;cursor:pointer;}
@@ -4033,6 +4046,7 @@
       <div class="btw-hep" id="btwHep" style="display:none;"></div>
 
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
+      <div class="btw-prep-pair">
       <div class="btw-prep" id="btwPrep" style="display:none;">
         <div class="btw-prep-head">
           <div class="btw-prep-title">
@@ -4053,6 +4067,7 @@
           <button type="button" class="btw-prep-gen" id="btwSignatureGen">Generate read</button>
         </div>
         <div class="btw-prep-body" id="btwSignatureBody"></div>
+      </div>
       </div>
 
       <div class="btw-digest" id="btwDigest"></div>
@@ -5101,6 +5116,10 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "this client":"ce client",
+    "AI summaries are off for {name}, so there is nothing to draft from yet. Turn them on under “View patient data & AI settings” once they agree.":"Les résumés IA sont désactivés pour {name} : il n'y a donc rien à partir de quoi rédiger pour l'instant. Activez-les dans « Voir les données du patient et les réglages IA » une fois son accord obtenu.",
+    "No check-ins with an AI summary from {name} in the last 4 weeks yet.":"Aucun suivi avec résumé IA de {name} au cours des 4 dernières semaines pour l'instant.",
+    "You can still dictate or type your session notes above, or record the session.":"Vous pouvez quand même dicter ou taper vos notes de séance ci-dessus, ou enregistrer la séance.",
     "Record session":"Enregistrer la séance",
     "Record the session — Between writes the chart note from it":"Enregistrez la séance — Between en rédige la note au dossier",
     "The client agreed to this session being recorded.":"Le client a accepté que cette séance soit enregistrée.",
@@ -13855,6 +13874,26 @@
     return String(str || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'client';
   }
   // Build and download a PDF of a note/report for the selected client.
+  // Why an AI tool has nothing to draft from, and what to do about it — shown
+  // as a short notice instead of an error sitting in an empty, copyable box.
+  function aiEmptyMsg(p, extra){
+    var name = (p && p.display_name) || t('this client');
+    var msg = (p && p.ai_consent_enabled === false)
+      ? t('AI summaries are off for {name}, so there is nothing to draft from yet. Turn them on under “View patient data & AI settings” once they agree.').replace('{name}', name)
+      : t('No check-ins with an AI summary from {name} in the last 4 weeks yet.').replace('{name}', name);
+    return extra ? msg + ' ' + extra : msg;
+  }
+  // Put a draft panel into (or out of) its "nothing to show" state: the text
+  // box and its Copy / PDF buttons hide and a notice says why.
+  function aiPanelNotice(panel, msg){
+    if(!panel) return;
+    var n = panel.querySelector('.btw-ai-notice');
+    if(!n){ n = document.createElement('div'); n.className = 'btw-ai-notice'; n.setAttribute('role', 'status');
+      var lab = panel.querySelector('.btw-ainote-label'); if(lab && lab.nextSibling) panel.insertBefore(n, lab.nextSibling); else panel.appendChild(n); }
+    n.textContent = msg || '';
+    panel.classList.toggle('btw-ai-empty', !!msg);
+  }
+  window.__btwAiPanelNotice = aiPanelNotice;
   function savePdf(kindTitle, body, opts){
     var p = selectedPatient();
     var me = state.me || {};
@@ -14687,6 +14726,7 @@
         if(label) label.textContent = soap ? t('Chart note (SOAP) — from the recorded session; check it before it goes in the chart')
           : dap ? t('Chart note (DAP) — from the recorded session; check it before it goes in the chart')
           : t('Draft note — review and edit before using');
+        aiPanelNotice(np, '');
         if(ta){ ta.value = (d && d.note) || ''; ta.rows = 16; }
         var n = (d && d.checkInsUsed) || 0;
         if(meta) meta.textContent = t('From the recorded session') + (n ? ' + ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) : '') + ' · ' + t('Indicative, not a clinical record.');
@@ -14743,6 +14783,7 @@
         var d = await api('POST', '/api/patients/' + p.id + '/note', { findings: ta.value });
         if(d && d.needsData){ setMsg(t('Add your session notes or wait for a check-in first.')); }
         else {
+          aiPanelNotice(document.getElementById('btwAiNotePanel'), '');
           if(noteTa) noteTa.value = (d && d.note) || '';
           var n = (d && d.checkInsUsed) || 0;
           if(meta) meta.textContent = t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + (ta.value.trim() ? ' + ' + t('your session notes') : '') + ' · ' + t('Indicative, not a clinical record.');
@@ -14775,7 +14816,7 @@
       var sp = go.querySelector('span'); go.disabled = true; sp.textContent = t('Thinking…'); meta.textContent = '';
       try {
         var d = await api('POST', '/api/patients/' + p.id + '/report', { kind: document.getElementById('btwReportKind').value, recipient: document.getElementById('btwReportTo').value, lang: curLang === 'fr' ? 'fr' : 'en' });
-        if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; pdf.style.display = 'none'; meta.textContent = t('No check-ins yet to build a report from.'); }
+        if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; pdf.style.display = 'none'; meta.textContent = aiEmptyMsg(p); }
         else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; pdf.style.display = ''; meta.textContent = t('Draft — add your clinical input where marked, then copy.'); }
       } catch(e){ meta.textContent = (e && e.message) || t('Could not draft the report just now.'); }
       finally { go.disabled = false; sp.textContent = t('Draft it'); }
@@ -15294,7 +15335,7 @@
         var d = await api('GET', '/api/patients/' + state.selectedPatientId + '/signature?lang=' + (curLang || 'en'));
         // Title from the server's actual lens, so it always matches the read.
         if(d && d.lens && SIGNATURE_TITLES[d.lens]){ var ti = document.getElementById('btwSignatureTitle'); if(ti) ti.textContent = (curLang === 'fr') ? SIGNATURE_TITLES[d.lens][1] : SIGNATURE_TITLES[d.lens][0]; }
-        if(d && d.needsData){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Not enough check-ins with AI turned on yet for a read.')) + '</div>'; }
+        if(d && d.needsData){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(aiEmptyMsg(selectedPatient())) + '</div>'; }
         else if(body){ renderSignatureResult(body, d || {}); }
       }catch(e){ if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc((e && e.message) || t('Could not generate the read just now.')) + '</div>'; }
       finally{ gen.disabled = false; gen.textContent = t('Refresh'); }
@@ -16645,7 +16686,7 @@
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/prep');
         if(d && d.needsData){
-          if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(t('Not enough check-ins with AI turned on yet to build a brief.')) + '</div>';
+          if(body) body.innerHTML = '<div class="btw-prep-hint">' + esc(aiEmptyMsg(p)) + '</div>';
         } else if(body){
           renderPrepResult(body, d || {});
         }
@@ -16680,16 +16721,17 @@
         state.noteFormat = soap ? 'soap' : dap ? 'dap' : null;
         var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = (d && d.needsData) ? 'none' : '';
         if(d && d.needsData){
-          if(ta) ta.value = t('Not enough check-ins with AI turned on yet to draft a note.');
+          aiPanelNotice(panel, aiEmptyMsg(p, t('You can still dictate or type your session notes above, or record the session.')));
           if(meta) meta.textContent = '';
         } else {
+          aiPanelNotice(panel, '');
           if(ta) ta.value = (d && d.note) || '';
           var n = (d && d.checkInsUsed) || 0;
           if(meta) meta.textContent = t('Built from') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' · ' + t('Indicative, not a clinical record.');
         }
         if(panel) panel.style.display = '';
       }catch(e){
-        if(ta) ta.value = (e && e.message) || t('Could not draft a note just now.');
+        aiPanelNotice(panel, (e && e.message) || t('Could not draft a note just now.'));
         if(meta) meta.textContent = '';
         if(panel) panel.style.display = '';
       }finally{
@@ -16728,16 +16770,17 @@
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/encouragement?lang=' + (curLang || 'en'));
         if(d && d.needsData){
-          if(ta) ta.value = t('Not enough recent check-ins with AI turned on yet to draft a message.');
+          aiPanelNotice(panel, aiEmptyMsg(p));
           if(meta) meta.textContent = '';
         } else {
+          aiPanelNotice(panel, '');
           if(ta) ta.value = (d && d.message) || '';
           var n = (d && d.checkInsUsed) || 0;
           if(meta) meta.textContent = t('From') + ' ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) + ' · ' + t('A draft — your words, your send.');
         }
         if(panel) panel.style.display = '';
       }catch(e){
-        if(ta) ta.value = (e && e.message) || t('Could not draft a message just now.');
+        aiPanelNotice(panel, (e && e.message) || t('Could not draft a message just now.'));
         if(meta) meta.textContent = '';
         if(panel) panel.style.display = '';
       }finally{
