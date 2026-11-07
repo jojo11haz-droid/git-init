@@ -5189,6 +5189,22 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Messages from your clinician":"Messages de votre clinicien",
+    "Notes from your clinician show here, with any exercises they attached and how to do them.":"Les mots de votre clinicien s'affichent ici, avec les exercices joints et comment les faire.",
+    "Show where it hurts":"Montrez où ça fait mal",
+    "Tap the area, zoom in to the exact spot and say how it feels. Pick Man or Woman once; it stays that way.":"Touchez la zone, zoomez sur l'endroit exact et dites comment vous le ressentez. Choisissez Homme ou Femme une fois; ça reste ainsi.",
+    "Tick what you did":"Cochez ce que vous avez fait",
+    "Your program is here. Tick what you did since last time so your clinician can see how it is going.":"Votre programme est ici. Cochez ce que vous avez fait depuis la dernière fois pour que votre clinicien voie comment ça se passe.",
+    "A quick tour of your dashboard — about a minute. You can skip anytime.":"Un rapide tour de votre tableau de bord — environ une minute. Vous pouvez passer en tout temps.",
+    "Only the patients who need you, with the reason: a safety flag, scores getting worse, or gone quiet. Tick the box to get this list by email each morning.":"Seulement les patients qui ont besoin de vous, avec la raison : un signalement, des scores qui empirent ou un silence. Cochez la case pour recevoir cette liste par courriel chaque matin.",
+    "Your tools for each patient":"Vos outils pour chaque patient",
+    "AI draft note writes the chart note from their check-ins; type or dictate your findings into it. Record session turns an appointment into the note. Report / letter drafts progress reports and letters. Message sends them a note with exercises attached.":"Ébauche IA rédige la note au dossier à partir des suivis; tapez ou dictez-y vos constats. Enregistrer la séance transforme un rendez-vous en note. Rapport / lettre rédige rapports d'évolution et lettres. Message lui envoie un mot avec des exercices joints.",
+    "Their program":"Son programme",
+    "Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.":"Créez son programme avec des suggestions de l'IA tirées de ses suivis, chacune avec une dose et une règle claire sur l'inconfort. Il le coche lors de ses suivis.",
+    "Prep in seconds":"Préparé en quelques secondes",
+    "A short read on how they have been since last time and what to open with, plus the thread running through their weeks.":"Un court portrait depuis la dernière fois et par quoi commencer, plus le fil qui traverse ses semaines.",
+    "Time saved":"Temps gagné",
+    "Every note, brief and program Between drafts for you adds up here.":"Chaque note, résumé et programme que Between rédige pour vous s'additionne ici.",
     "Message":"Message",
     "Message to your client — they read it in Between":"Message à votre client — il le lit dans Between",
     "A short note: how they're doing, what to focus on this week.":"Un court mot : comment ça va, sur quoi se concentrer cette semaine.",
@@ -16755,6 +16771,8 @@
     function personNoun(){
       const EN = { sports:'player', fitness:'member', recovery:'client', schools:'student' };
       const FR = { sports:'joueur', fitness:'membre', recovery:'client', schools:'élève' };
+      // Same word as the rest of the site (fieldNoun): patient, client, player…
+      try { return fieldNoun('patient'); } catch(e){}
       const a = (typeof curAudience !== 'undefined') ? curAudience : 'therapy';
       return (curLang === 'fr') ? (FR[a] || 'patient') : (EN[a] || 'patient');
     }
@@ -16768,26 +16786,34 @@
           ? t('Private to you. Your data is yours — export or delete it anytime.')
           : t('Your clinician sees a short summary, not the raw recording — and only with your consent.');
         return [
-          { sel:null, title:t('Welcome to Between'), body: solo ? t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') : t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') },
+          { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') },
+          { sel:'#btwInbox', title:t('Messages from your clinician'), body:t('Notes from your clinician show here, with any exercises they attached and how to do them.') },
           { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it — by writing, a voice note, or a few guided questions.') },
           { sel:'#btwMoodSlider', title: pm ? t('Rate your pain') : t('Set how you are doing'), body: pm ? t('Slide to show your pain right now, or let Between estimate it from what you wrote.') : t('Slide to show how you are feeling, or let Between estimate it from what you wrote.') },
+          { sel:'#btwComposePain', title:t('Show where it hurts'), body:t('Tap the area, zoom in to the exact spot and say how it feels. Pick Man or Woman once; it stays that way.') },
+          { sel:'#btwComposeHep', title:t('Tick what you did'), body:t('Your program is here. Tick what you did since last time so your clinician can see how it is going.') },
           { sel:'#btwSend', title:t('Send it'), body:t('That is it — a check-in takes under a minute, whenever something happens.') },
-          { sel:'.btw-charts', title:t('Your trends'), body:scoreTrend },
-          { sel:'.btw-timeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
+          { sel:'#btwAccTrends', title:t('Your trends'), body:scoreTrend },
+          { sel:'#btwAccTimeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
           { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime from the Guide.') }
         ];
       }
       // Clinician tour.
       const noun = personNoun();
-      const addTitle = (curLang === 'fr' ? 'Ajoutez votre premier ' : 'Add your first ') + noun;
+      const hasPeople = !!(state.patients && state.patients.length);
+      const addTitle = hasPeople ? (curLang === 'fr' ? 'Ajoutez un ' : 'Add a ') + noun : (curLang === 'fr' ? 'Ajoutez votre premier ' : 'Add your first ') + noun;
       return [
-        { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard — about 30 seconds. You can skip anytime.') },
+        { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard — about a minute. You can skip anytime.') },
+        { sel:'#btwNeeds', title:t('Needs you today'), body:t('Only the patients who need you, with the reason: a safety flag, scores getting worse, or gone quiet. Tick the box to get this list by email each morning.') },
         { sel:'#btwPatientList', title:t('Your caseload'), body:t('Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.') },
         { sel:'#btwAddPatient', title:addTitle, body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.') },
-        { sel:'.btw-charts', title:t('Trends at a glance'), body: pm ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.') : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.') },
-        { sel:'.btw-timeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
-        { sel:'#btwDashGrid .btw-pane', title:t('Consent and private notes'), body:t('Pick someone and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.') },
-        { sel:null, title:t('You are all set'), body:t('Add your first person to start receiving check-ins.') + ' ' + t('You can replay this tour anytime from the Guide.') }
+        { sel:'#btwCopyEmrBar', title:t('Your tools for each patient'), body:t('AI draft note writes the chart note from their check-ins; type or dictate your findings into it. Record session turns an appointment into the note. Report / letter drafts progress reports and letters. Message sends them a note with exercises attached.') },
+        { sel:'#btwHep', title:t('Their program'), body:t('Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.') },
+        { sel:'.btw-prep-pair', title:t('Prep in seconds'), body:t('A short read on how they have been since last time and what to open with, plus the thread running through their weeks.') },
+        { sel:'#btwAccTrends', title:t('Trends at a glance'), body: pm ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.') : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.') },
+        { sel:'#btwAccTimeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
+        { sel:'#btwSaved', title:t('Time saved'), body:t('Every note, brief and program Between drafts for you adds up here.') },
+        { sel:null, title:t('You are all set'), body:(hasPeople ? '' : t('Add your first person to start receiving check-ins.') + ' ') + t('You can replay this tour anytime from the Guide.') }
       ];
     }
     function visible(el){ return !!(el && el.offsetParent !== null && el.getBoundingClientRect().width > 4); }
@@ -16830,7 +16856,20 @@
     }
     function go(n){ idx = Math.max(0, Math.min(steps.length-1, n)); render(); }
     function startSteps(s){ steps = s; idx = 0; active = true; overlay.classList.add('show'); render(); }
-    function start(){ startSteps(buildSteps()); }
+    // Only steps whose target is actually on screen (a therapist's client has no
+    // body map; nobody has messages on day one).
+    function shownSteps(list){ return list.filter(function(st){ return !st.sel || visible(document.querySelector(st.sel)); }); }
+    function start(){
+      // Clinician with clients but none open: open the first so the per-client
+      // tools (note, recording, program, prep) can be shown.
+      if(typeof isTherapist === 'function' && isTherapist() && !state.selectedPatientId && (state.patients || []).length){
+        state.selectedPatientId = state.patients[0].id;
+        try { renderAll(); } catch(e){}
+        setTimeout(function(){ startSteps(shownSteps(buildSteps())); }, 700);
+        return;
+      }
+      startSteps(shownSteps(buildSteps()));
+    }
     // The marketing "Try it live" walkthrough: the same spotlight engine, but
     // anchored to the two demo cards on the landing page so a visitor gets a
     // guided read of exactly what each side does. Bilingual inline so it needs
@@ -16855,7 +16894,7 @@
         { sel:null, title:L('That’s the loop','C’est la boucle'), body:L('Your ' + noun + ' checks in in seconds; you walk in already knowing their week. Try the cards yourself — they’re live.','Votre ' + noun + ' fait un suivi en quelques secondes ; vous arrivez en sachant déjà sa semaine. Essayez les cartes — elles sont actives.') }
       ];
     }
-    function end(){ active = false; overlay.classList.remove('show'); try{ localStorage.setItem('btw_tour_v1','done'); }catch(e){} }
+    function end(){ active = false; overlay.classList.remove('show'); try{ localStorage.setItem('btw_tour_v2','done'); }catch(e){} }
 
     btnNext.addEventListener('click', function(){ if(idx >= steps.length-1) end(); else go(idx+1); });
     btnBack.addEventListener('click', function(){ go(idx-1); });
@@ -16881,7 +16920,7 @@
       if(!signedIn) return;
       if(state.me && typeof needsVerification === 'function' && needsVerification()) return;
       if(!viewProduct || !viewProduct.classList.contains('active')) return;
-      let done = false; try{ done = localStorage.getItem('btw_tour_v1') === 'done'; }catch(e){}
+      let done = false; try{ done = localStorage.getItem('btw_tour_v2') === 'done'; }catch(e){}
       if(done) return;
       start();
     };
