@@ -38,3 +38,42 @@ export async function transcribeAudio(buffer, mime) {
     return null;
   }
 }
+
+// A whole appointment, with the speakers told apart (diarization), for the
+// session scribe. Returns { text, turns:[{speaker, text}] } or null. The audio
+// is only streamed through to Deepgram; nothing is kept.
+export async function transcribeConversation(buffer, mime) {
+  if (!DEEPGRAM_API_KEY) return null;
+  const url = DEEPGRAM_URL + (DEEPGRAM_URL.includes('?') ? '&' : '?') + 'diarize=true&utterances=true&punctuate=true';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Token ${DEEPGRAM_API_KEY}`, 'Content-Type': mime },
+      body: buffer
+    });
+    if (!response.ok) {
+      console.error('Session transcription failed:', response.status, await response.text());
+      return null;
+    }
+    const data = await response.json();
+    const utts = Array.isArray(data?.results?.utterances) ? data.results.utterances : [];
+    const turns = [];
+    for (const u of utts) {
+      const text = typeof u.transcript === 'string' ? u.transcript.trim() : '';
+      if (!text) continue;
+      const speaker = Number.isInteger(u.speaker) ? u.speaker : 0;
+      const last = turns[turns.length - 1];
+      if (last && last.speaker === speaker) last.text += ' ' + text;
+      else turns.push({ speaker, text });
+    }
+    if (!turns.length) {
+      const plain = data?.results?.channels?.[0]?.alternatives?.[0]?.transcript;
+      if (typeof plain === 'string' && plain.trim()) turns.push({ speaker: 0, text: plain.trim() });
+    }
+    if (!turns.length) return null;
+    return { turns, text: turns.map(t => `Speaker ${t.speaker + 1}: ${t.text}`).join('\n') };
+  } catch (err) {
+    console.error('Session transcription error:', err);
+    return null;
+  }
+}

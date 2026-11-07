@@ -36,7 +36,7 @@ import {
 } from './db.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
-import { transcribeAudio, transcriptionConfigured } from './transcribe.js';
+import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
 import {
   hashPassword, verifyPassword, generateSessionToken, hashSessionToken,
   readSessionCookie, sessionCookieHeader, SESSION_TTL_DAYS,
@@ -484,10 +484,10 @@ Rules:
 // into their EMR and then edit, synthesized from the between-session check-ins.
 // Consent-safe (only check-ins the patient let AI process), plain text, neutral,
 // never diagnostic — it documents what the patient reported, nothing more.
-async function draftProgressNote({ name, discipline, accountType, checkIns, exercises, findings }) {
+async function draftProgressNote({ name, discipline, accountType, checkIns, exercises, findings, transcript }) {
   if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
   // Every profession gets a structured chart note now (SOAP or DAP).
-  return draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings });
+  return draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript });
   const focus = documentFocusForProfession({ discipline, accountType });
   const who = name || 'the patient';
   const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000;
@@ -532,7 +532,7 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
 // patient said, their pain scores, body-map areas and how it feels, and home
 // exercise adherence. The AI only documents what was reported; Assessment
 // and the clinical part of the Plan are left for the clinician to write.
-async function draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings }) {
+async function draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript }) {
   const focus = documentFocusForProfession({ discipline, accountType });
   const pain = PAIN_DISCIPLINES.includes(discipline || '');
   const format = noteFormat({ accountType, discipline });
@@ -545,7 +545,9 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
     .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
     .slice(0, 20).reverse();
   const own = (typeof findings === 'string' && findings.trim()) ? findings.trim().slice(0, 3000) : '';
-  if (!recent.length && !own) return { note: '', checkInsUsed: 0, needsData: true, format };
+  // A recorded session (speaker-separated transcript), from the session scribe.
+  const session = (typeof transcript === 'string' && transcript.trim()) ? transcript.trim().slice(0, 90000) : '';
+  if (!recent.length && !own && !session) return { note: '', checkInsUsed: 0, needsData: true, format };
   const exById = {};
   for (const e of exercises || []) exById[e.id] = e;
   const active = (exercises || []).filter(e => !e.archived_at);
@@ -588,16 +590,16 @@ Rules:
 - Body-map keys look like "front:l_knee_cap" or "back:lower_back": write them as plain anatomy ("left knee, kneecap", "lower back"). l_ = left, r_ = right. Sensation codes: ache = aching, tight = tightness, stiff = stiffness/locking, sharp = sharp/shooting, numb = tingling/numbness, throb = throbbing/heat.
 - Same language as the check-ins. Plain text, no markdown, exactly these labelled lines/blocks:
 ${blocks}
-${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the findings/observations line, their assessment in A and their plan in P — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${own ? 300 : 220} words.`;
-  const user = `Check-ins (oldest first):\n${lines || '(none in the last 4 weeks)'}\n\n${progWord} completion: ${adherence}${own ? `\n\nClinician's session notes:\n${own}` : ''}`;
+${session ? `- A TRANSCRIPT of today's recorded session is given below, with speakers numbered (not named). Work out which speaker is the clinician (asks the questions, explains, assigns) and which is ${who}. Use it as the main source: what ${who} said goes in ${format === 'dap' ? 'D' : 'S'}; what was observed or done in session goes in the ${format === 'dap' ? 'D block ("In-session observations")' : 'findings/observations line'}; the clinician's OWN stated impressions go in A and the plan they stated (homework, ${progWord.toLowerCase()} changes, next visit) in P, in their words, tidied into clear clinical prose. Never add an assessment, diagnosis or plan the clinician did not say out loud; if they did not state one, keep the placeholder. Leave out small talk. The between-visit check-ins add context to ${format === 'dap' ? 'D' : 'S and O'}.\n` : ''}${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the findings/observations line, their assessment in A and their plan in P — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${session ? 420 : own ? 300 : 220} words.`;
+  const user = `Check-ins (oldest first):\n${lines || '(none in the last 4 weeks)'}\n\n${progWord} completion: ${adherence}${own ? `\n\nClinician's session notes:\n${own}` : ''}${session ? `\n\nSession transcript:\n${session}` : ''}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 800, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: session ? 1400 : 800, system, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
-  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 3000);
+  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, session ? 5000 : 3000);
   return { note, checkInsUsed: recent.length, needsData: false, format };
 }
 
@@ -2753,6 +2755,48 @@ app.post('/api/patients/:id/dictate',
     } catch (err) {
       console.error('Dictation error:', err);
       res.status(500).json({ error: 'Could not transcribe that just now.' });
+    }
+  });
+
+// --- Session scribe: record the appointment (with the client's consent), get
+// the chart note. The browser keeps the recording until it's sent; here it is
+// streamed to the speech-to-text service, turned into a speaker-separated
+// transcript and dropped from memory. Nothing of the audio is stored; the
+// transcript goes back to the clinician's screen only, never into the database.
+const SESSION_MAX_BYTES = 60 * 1024 * 1024;   // ~90 min at the browser's 24-48 kbps
+app.post('/api/patients/:id/session-scribe',
+  express.raw({ type: () => true, limit: SESSION_MAX_BYTES }),
+  requireDb, requireAuth, requireVerifiedClinician, prepLimiter,
+  async (req, res) => {
+    try {
+      if (req.query.consent !== '1') return res.status(400).json({ error: "Confirm the client agreed to the recording first." });
+      if (!transcriptionConfigured()) return res.status(503).json({ error: "Session recording isn't set up yet (speech-to-text is off)." });
+      if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
+      const patient = await getPatient(req.clinician.id, req.params.id);
+      if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+      const mime = (req.headers['content-type'] || '').split(';')[0].trim();
+      if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
+      if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
+      const conv = await transcribeConversation(req.body, mime);
+      req.body = null; // let the audio go as soon as it's transcribed
+      if (!conv) return res.status(502).json({ error: "Couldn't make out the recording. Check the microphone and try again." });
+      const checkIns = await listCheckIns(patient.id);
+      const result = await draftProgressNote({
+        name: patient.display_name,
+        discipline: fieldOf(req).discipline,
+        accountType: fieldOf(req).account_type,
+        checkIns,
+        exercises: await listAllExercises(patient.id),
+        findings: '',
+        transcript: conv.text
+      });
+      const minutes = Math.max(1, Math.min(180, Math.round(Number(req.query.minutes) || 1)));
+      countWork(req.clinician.id, 'scribe');
+      logClinicianEvent(req.clinician.id, 'session_recorded', minutes).catch(() => {});
+      res.json({ ...result, transcript: conv.turns.slice(0, 2000) });
+    } catch (err) {
+      console.error('Session scribe error:', err.message);
+      res.status(502).json({ error: 'Could not write up the session just now. Please try again.' });
     }
   });
 

@@ -40,6 +40,7 @@
     <li><strong>Account information:</strong> name, email, password (stored hashed), and for clinicians, a professional licence/order number and practice details.</li>
     <li><strong>Check-in content:</strong> the text and voice notes patients submit, mood ratings, and theme tags — this may include sensitive health-related information.</li>
     <li><strong>AI-generated content:</strong> if a patient opts in, summaries and theme tags derived from their check-ins.</li>
+    <li><strong>Session recordings (clinician feature):</strong> a clinician can record an appointment in Between to have the chart note drafted, only after confirming the client agreed to the recording. The audio is sent to our voice-transcription provider to make a transcript, and the transcript to our AI provider to draft the note. Neither the audio nor the transcript is stored by Between; only the note the clinician chooses to keep in their own records. A clinician's dictated session notes are handled the same way.</li>
     <li><strong>Payment information:</strong> handled by our payment processor, Stripe. We do not store full card numbers; we store a subscription status and identifiers from Stripe.</li>
     <li><strong>Technical data:</strong> session tokens and basic logs needed to operate and secure the service.</li>
   </ul>

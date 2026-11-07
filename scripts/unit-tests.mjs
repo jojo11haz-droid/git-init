@@ -139,6 +139,7 @@ eq(timeSavedSummary({ note: 10, program_item: 5 }).label, '1 h 10 min', 'hours +
 eq(timeSavedSummary({ note: 10 }).label, '1 h', 'whole hours label');
 eq(timeSavedSummary({}).totalMinutes, 0, 'nothing yet → 0');
 eq(Object.values(TIME_SAVED_MINUTES).every(m => m > 0 && m <= 15), true, 'every estimate is conservative (1–15 min)');
+eq(timeSavedSummary({ scribe: 2 }).totalMinutes, 24, 'a recorded session written up counts 12 min');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

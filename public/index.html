@@ -1269,6 +1269,25 @@
   .btw-ainote-text:focus{outline:none;border-color:var(--moss);}
   .btw-ainote-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;}
   .btw-ainote-btns{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+  .btw-scribe-who{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 8px;}
+  .btw-scribe-who:empty{display:none;}
+  .btw-scribe-consent{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;margin:4px 0 10px;cursor:pointer;}
+  .btw-scribe-consent input{margin-top:2px;accent-color:var(--moss);}
+  .btw-scribe-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .btw-scribe-dot{width:11px;height:11px;border-radius:50%;background:var(--line);flex:none;}
+  .btw-scribe.rec .btw-scribe-dot{background:var(--clay);box-shadow:0 0 0 5px rgba(192,57,43,.14);animation:btwScribePulse 1.4s ease-in-out infinite;}
+  .btw-scribe.paused .btw-scribe-dot{background:var(--amber);}
+  @keyframes btwScribePulse{50%{box-shadow:0 0 0 9px rgba(192,57,43,.05);}}
+  @media (prefers-reduced-motion:reduce){ .btw-scribe.rec .btw-scribe-dot{animation:none;} }
+  .btw-scribe-time{font-family:var(--font-mono);font-size:15px;min-width:52px;font-variant-numeric:tabular-nums;}
+  .btw-scribe-main:disabled{opacity:.5;cursor:not-allowed;}
+  .btw-scribe-msg{font-size:12.5px;color:var(--ink);margin-top:9px;min-height:1px;}
+  .btw-scribe-msg:empty{display:none;}
+  .btw-scribe-fine{font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin-top:9px;}
+  .btw-scribe-tx{margin-top:10px;font-size:12.5px;}
+  .btw-scribe-tx summary{cursor:pointer;color:var(--moss);font-weight:600;}
+  .btw-scribe-tx #btwScribeTxBody{max-height:260px;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:6px;line-height:1.45;}
+  .btw-scribe-tx b{font-family:var(--font-mono);font-size:11px;color:var(--moss);margin-right:6px;}
   .btw-ainote-foot #btwAiNoteMeta{font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.4;}
   /* "In clinic today" roster + the per-patient next-session date setter. */
   .btw-nextsess{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:12.5px;color:var(--ink-soft);}
@@ -3936,6 +3955,10 @@
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path></svg>
           <span>AI draft note</span>
         </button>
+        <button type="button" id="btwScribeBtn" class="btw-emr-btn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+          <span>Record session</span>
+        </button>
         <button type="button" id="btwReportBtn" class="btw-emr-btn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
           <span>Report / letter</span>
@@ -3944,6 +3967,23 @@
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
           <span>Encouragement</span>
         </button>
+      </div>
+      <div id="btwScribePanel" class="btw-ainote btw-scribe" style="display:none;">
+        <div class="btw-ainote-label" id="btwScribeLabel">Record the session — Between writes the chart note from it</div>
+        <div class="btw-scribe-who" id="btwScribeWho"></div>
+        <label class="btw-scribe-consent"><input type="checkbox" id="btwScribeConsent"> <span>The client agreed to this session being recorded.</span></label>
+        <div class="btw-scribe-ctrl">
+          <span class="btw-scribe-dot" id="btwScribeDot" aria-hidden="true"></span>
+          <span class="btw-scribe-time" id="btwScribeTime">0:00</span>
+          <button type="button" id="btwScribeStart" class="btw-emr-btn btw-scribe-main"><span>Start recording</span></button>
+          <button type="button" id="btwScribePause" class="btw-emr-btn" style="display:none;"><span>Pause</span></button>
+          <button type="button" id="btwScribeStop" class="btw-emr-btn" style="display:none;"><span>Stop and write the note</span></button>
+          <button type="button" id="btwScribeRetry" class="btw-emr-btn" style="display:none;"><span>Try again</span></button>
+          <button type="button" id="btwScribeDiscard" class="btw-emr-btn" style="display:none;"><span>Discard</span></button>
+        </div>
+        <div class="btw-scribe-msg" id="btwScribeMsg" role="status" aria-live="polite"></div>
+        <div class="btw-scribe-fine">Keep this page open while you record. The recording stays on this device until you stop; it is then turned into text and deleted. Only the note you keep is saved.</div>
+        <details class="btw-scribe-tx" id="btwScribeTx" style="display:none;"><summary>Transcript (not saved)</summary><div id="btwScribeTxBody"></div></details>
       </div>
       <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
         <div class="btw-ainote-own">
@@ -5061,6 +5101,35 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Record session":"Enregistrer la séance",
+    "Record the session — Between writes the chart note from it":"Enregistrez la séance — Between en rédige la note au dossier",
+    "The client agreed to this session being recorded.":"Le client a accepté que cette séance soit enregistrée.",
+    "Start recording":"Commencer l'enregistrement",
+    "Pause":"Pause",
+    "Resume":"Reprendre",
+    "Stop and write the note":"Arrêter et rédiger la note",
+    "Try again":"Réessayer",
+    "Discard":"Supprimer",
+    "Keep this page open while you record. The recording stays on this device until you stop; it is then turned into text and deleted. Only the note you keep is saved.":"Gardez cette page ouverte pendant l'enregistrement. L'enregistrement reste sur cet appareil jusqu'à l'arrêt; il est ensuite transcrit puis supprimé. Seule la note que vous gardez est conservée.",
+    "Transcript (not saved)":"Transcription (non conservée)",
+    "Recording for":"Enregistrement pour",
+    "Recording is not supported in this browser.":"L'enregistrement n'est pas pris en charge par ce navigateur.",
+    "Microphone access was blocked. Allow the microphone for this site and try again.":"L'accès au micro a été bloqué. Autorisez le micro pour ce site et réessayez.",
+    "Nothing was recorded. Check the microphone and try again.":"Rien n'a été enregistré. Vérifiez le micro et réessayez.",
+    "Stopped at 90 minutes.":"Arrêté à 90 minutes.",
+    "Recording. Put the device where it can hear you both.":"Enregistrement en cours. Placez l'appareil là où il vous entend tous les deux.",
+    "Paused.":"En pause.",
+    "Writing up the session. This takes about a minute for a 50-minute session; keep this page open.":"Rédaction de la note en cours. Comptez environ une minute pour une séance de 50 minutes; gardez cette page ouverte.",
+    "Could not write up the session just now.":"Impossible de rédiger la note de séance pour le moment.",
+    "The recording is still here, so you can try again.":"L'enregistrement est toujours là : vous pouvez réessayer.",
+    "Recording discarded.":"Enregistrement supprimé.",
+    "Speaker":"Interlocuteur",
+    "Done. The note is below: check it, add anything missing, then save it as a PDF or copy it into your chart.":"C'est fait. La note est ci-dessous : vérifiez-la, ajoutez ce qui manque, puis enregistrez-la en PDF ou copiez-la dans votre dossier.",
+    "Chart note (SOAP) — from the recorded session; check it before it goes in the chart":"Note au dossier (SOAP) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "Chart note (DAP) — from the recorded session; check it before it goes in the chart":"Note au dossier (DAP) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "From the recorded session":"Tirée de la séance enregistrée",
+    "session recorded":"séance enregistrée",
+    "sessions recorded":"séances enregistrées",
     "Saved ✓":"Enregistré ✓",
     "Chart note (SOAP)":"Note au dossier (SOAP)",
     "Chart note (DAP)":"Note au dossier (DAP)",
@@ -14419,6 +14488,7 @@
   // charting, prep and program writing Between took off their plate.
   const SAVED_WORDS = {
     note:{ en:['chart note','chart notes'], fr:['note de dossier','notes de dossier'] },
+    scribe:{ en:['session written up','sessions written up'], fr:['séance rédigée','séances rédigées'] },
     prep:{ en:['session brief','session briefs'], fr:['résumé de séance','résumés de séance'] },
     encourage:{ en:['message drafted','messages drafted'], fr:['message rédigé','messages rédigés'] },
     digest:{ en:['caseload summary','caseload summaries'], fr:['résumé de clientèle','résumés de clientèle'] },
@@ -14491,6 +14561,144 @@
 
   // --- Dictated / typed session notes → chart note ---
   (function(){
+    // --- Session scribe ------------------------------------------------------
+    // Record a whole appointment (client consent ticked first), then the
+    // server transcribes it with the speakers told apart and drafts the chart
+    // note. The recording is held in this tab only until it's sent, and is
+    // kept for a retry if the upload fails; nothing of it is stored.
+    (function(){
+      var btn = document.getElementById('btwScribeBtn'), panel = document.getElementById('btwScribePanel');
+      if(!btn || !panel) return;
+      var consent = document.getElementById('btwScribeConsent'), who = document.getElementById('btwScribeWho');
+      var bStart = document.getElementById('btwScribeStart'), bPause = document.getElementById('btwScribePause'), bStop = document.getElementById('btwScribeStop');
+      var bRetry = document.getElementById('btwScribeRetry'), bDiscard = document.getElementById('btwScribeDiscard');
+      var timeEl = document.getElementById('btwScribeTime'), msg = document.getElementById('btwScribeMsg');
+      var tx = document.getElementById('btwScribeTx'), txBody = document.getElementById('btwScribeTxBody');
+      var MAX_MS = 90 * 60 * 1000;
+      var rec = null, stream = null, chunks = [], blob = null, pid = null, pname = '';
+      var elapsed = 0, startedAt = 0, tick = null, wake = null, busy = false;
+      function setMsg(m){ msg.textContent = m || ''; }
+      function ms(){ return elapsed + (rec && rec.state === 'recording' ? Date.now() - startedAt : 0); }
+      function fmt(x){ var sec = Math.floor(x / 1000), m = Math.floor(sec / 60), ss = sec % 60; return m + ':' + (ss < 10 ? '0' : '') + ss; }
+      function active(){ return !!(rec && rec.state !== 'inactive') || busy || !!blob; }
+      function show(el, on){ el.style.display = on ? '' : 'none'; }
+      function sync(){
+        var r = rec && rec.state === 'recording', pz = rec && rec.state === 'paused';
+        panel.classList.toggle('rec', !!r); panel.classList.toggle('paused', !!pz);
+        show(bStart, !r && !pz && !blob && !busy); bStart.disabled = !consent.checked;
+        show(bPause, r || pz); bPause.querySelector('span').textContent = pz ? t('Resume') : t('Pause');
+        show(bStop, r || pz);
+        show(bRetry, !!blob && !busy); show(bDiscard, !!blob && !busy);
+        consent.disabled = !!(r || pz || busy || blob);
+        who.textContent = (r || pz || busy || blob) && pname ? t('Recording for') + ' ' + pname : '';
+        timeEl.textContent = fmt(ms());
+      }
+      async function lockScreen(on){
+        try{
+          if(on && navigator.wakeLock && !wake){ wake = await navigator.wakeLock.request('screen'); }
+          if(!on && wake){ await wake.release(); wake = null; }
+        }catch(e){ wake = null; }
+      }
+      function stopTracks(){ if(stream){ stream.getTracks().forEach(function(tr){ tr.stop(); }); stream = null; } }
+      function reset(){
+        rec = null; chunks = []; blob = null; elapsed = 0; busy = false;
+        clearInterval(tick); tick = null; lockScreen(false); stopTracks(); sync();
+      }
+      btn.addEventListener('click', function(){
+        var open = panel.style.display === 'none';
+        if(!open && active()){ panel.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+        panel.style.display = open ? '' : 'none';
+        if(open){ setMsg(''); sync(); }
+      });
+      consent.addEventListener('change', sync);
+      bStart.addEventListener('click', async function(){
+        var p = selectedPatient(); if(!p || !consent.checked) return;
+        if(!window.MediaRecorder || !navigator.mediaDevices){ setMsg(t('Recording is not supported in this browser.')); return; }
+        try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+        catch(e){ setMsg(t('Microphone access was blocked. Allow the microphone for this site and try again.')); return; }
+        pid = p.id; pname = p.display_name || '';
+        chunks = []; elapsed = 0; tx.style.display = 'none'; txBody.innerHTML = '';
+        var opts = {};
+        try { if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) opts.mimeType = 'audio/webm;codecs=opus'; } catch(e){}
+        opts.audioBitsPerSecond = 32000;
+        try { rec = new MediaRecorder(stream, opts); } catch(e){ rec = new MediaRecorder(stream); }
+        rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = function(){
+          stopTracks(); lockScreen(false); clearInterval(tick); tick = null;
+          blob = new Blob(chunks, { type: (rec.mimeType || 'audio/webm').split(';')[0] }); chunks = [];
+          if(!blob.size){ blob = null; setMsg(t('Nothing was recorded. Check the microphone and try again.')); sync(); return; }
+          send();
+        };
+        rec.start(10000); // a chunk every 10 s, so a long session never sits in one buffer
+        startedAt = Date.now();
+        tick = setInterval(function(){ timeEl.textContent = fmt(ms()); if(ms() >= MAX_MS && rec && rec.state === 'recording'){ setMsg(t('Stopped at 90 minutes.')); finish(); } }, 500);
+        lockScreen(true);
+        setMsg(t('Recording. Put the device where it can hear you both.'));
+        sync();
+      });
+      bPause.addEventListener('click', function(){
+        if(!rec) return;
+        if(rec.state === 'recording'){ elapsed += Date.now() - startedAt; rec.pause(); setMsg(t('Paused.')); }
+        else if(rec.state === 'paused'){ startedAt = Date.now(); rec.resume(); setMsg(t('Recording. Put the device where it can hear you both.')); }
+        sync();
+      });
+      function finish(){
+        if(!rec || rec.state === 'inactive') return;
+        if(rec.state === 'recording') elapsed += Date.now() - startedAt;
+        rec.stop();
+      }
+      bStop.addEventListener('click', finish);
+      async function send(){
+        if(!blob || !pid) return;
+        busy = true; sync();
+        setMsg(t('Writing up the session. This takes about a minute for a 50-minute session; keep this page open.'));
+        var minutes = Math.max(1, Math.round(elapsed / 60000));
+        try {
+          var resp = await fetch('/api/patients/' + encodeURIComponent(pid) + '/session-scribe?consent=1&minutes=' + minutes, { method: 'POST', headers: { 'Content-Type': blob.type || 'audio/webm' }, body: blob });
+          var d = null; try { d = await resp.json(); } catch(_){}
+          if(!resp.ok) throw new Error((d && d.error) || t('Could not write up the session just now.'));
+          blob = null; busy = false;
+          // Back to that client if the clinician moved to another card meanwhile.
+          if(state.selectedPatientId !== pid){ state.selectedPatientId = pid; try { renderAll(); } catch(e){} }
+          showNote(d);
+          if(Array.isArray(d.transcript) && d.transcript.length){
+            txBody.innerHTML = '';
+            d.transcript.forEach(function(tn){ var row = document.createElement('div'); var b = document.createElement('b'); b.textContent = t('Speaker') + ' ' + (tn.speaker + 1); row.appendChild(b); row.appendChild(document.createTextNode(tn.text)); txBody.appendChild(row); });
+            tx.style.display = ''; tx.open = false;
+          }
+          consent.checked = false; elapsed = 0;
+          setMsg(t('Done. The note is below: check it, add anything missing, then save it as a PDF or copy it into your chart.'));
+          if(typeof loadTimeSaved === 'function') loadTimeSaved().catch(function(){});
+        } catch(e){
+          busy = false;
+          setMsg(((e && e.message) || t('Could not write up the session just now.')) + ' ' + t('The recording is still here, so you can try again.'));
+        }
+        sync();
+      }
+      bRetry.addEventListener('click', send);
+      bDiscard.addEventListener('click', function(){ reset(); setMsg(t('Recording discarded.')); });
+      function showNote(d){
+        var np = document.getElementById('btwAiNotePanel');
+        var ta = document.getElementById('btwAiNoteText');
+        var meta = document.getElementById('btwAiNoteMeta');
+        var label = document.getElementById('btwAiNoteLabel');
+        var soap = d && d.format === 'soap', dap = d && d.format === 'dap';
+        state.noteFormat = soap ? 'soap' : dap ? 'dap' : null;
+        if(label) label.textContent = soap ? t('Chart note (SOAP) — from the recorded session; check it before it goes in the chart')
+          : dap ? t('Chart note (DAP) — from the recorded session; check it before it goes in the chart')
+          : t('Draft note — review and edit before using');
+        if(ta){ ta.value = (d && d.note) || ''; ta.rows = 16; }
+        var n = (d && d.checkInsUsed) || 0;
+        if(meta) meta.textContent = t('From the recorded session') + (n ? ' + ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) : '') + ' · ' + t('Indicative, not a clinical record.');
+        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap) ? t('Copy to chart') : t('Copy note');
+        var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = '';
+        if(np){ np.style.display = ''; setTimeout(function(){ try { np.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(e){} }, 60); }
+      }
+      // Don't lose a session by closing the tab mid-recording or before it's sent.
+      addEventListener('beforeunload', function(e){ if(active()){ e.preventDefault(); e.returnValue = ''; return ''; } });
+      window.__btwScribeActive = active;
+    })();
+
     var dict = document.getElementById('btwDictateBtn');
     var upd = document.getElementById('btwAiNoteUpdate');
     var ta = document.getElementById('btwAiFindings');
@@ -15365,7 +15573,12 @@
     // patient who has check-ins (and only for clinicians — CSS hides it for
     // patients). Shown last in this function when both are true.
     const emrBar = document.getElementById('btwCopyEmrBar');
-    if(emrBar) emrBar.style.display = (patient && list.length) ? '' : 'none';
+    // Recording a session works from the first visit (no check-ins needed), so
+    // the bar shows for any selected client; the other tools need check-ins.
+    if(emrBar){
+      emrBar.style.display = patient ? '' : 'none';
+      [].forEach.call(emrBar.children, function(ch){ if(ch.id !== 'btwScribeBtn') ch.style.display = list.length ? '' : 'none'; });
+    }
     if(!patient){
       el.innerHTML = ((state.patients||[]).length === 0) ? clinicianOnboardingHtml() : esc(t('No patients yet, add your first patient to start receiving check-ins.'));
       const ob = document.getElementById('btwOnboardAdd');

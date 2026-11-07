@@ -197,6 +197,7 @@ export const TIME_SAVED_MINUTES = {
   program_item: 2,  // writing up one exercise / practice with its how-to
   program_review: 4, // reviewing a program against adherence and progress
   report: 15,       // a progress report / letter drafted from the history
+  scribe: 12,       // a full session written up from the recording
   summary: 1        // a check-in already condensed instead of read raw
 };
 
