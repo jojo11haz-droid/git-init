@@ -1878,6 +1878,17 @@
   .btw-chat-send:disabled{opacity:.5;cursor:default;}
   .btw-chat-note{font-size:10.5px;color:var(--ink-soft);text-align:center;padding:0 12px 9px;background:var(--panel);}
   @media (max-width:560px){ #btwChat{bottom:22px;} .btw-chat-panel{right:12px;bottom:74px;} }
+  /* Phones: a smaller bubble tucked into the corner (clear of the home bar),
+     fading back while the page scrolls so it never sits on top of what you're
+     reading, plus room at the end of the page so the last lines clear it. */
+  @media (max-width:560px){
+    #btwChat{right:10px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));transition:opacity .25s ease;}
+    #btwChat .btw-chat-launch{width:40px;height:40px;}
+    #btwChat .btw-chat-launch svg{width:18px;height:18px;}
+    #btwChat.btw-chat-scrolling:not(.open){opacity:.25;}
+    #btwChat.btw-chat-scrolling:not(.open) .btw-chat-launch{pointer-events:none;}
+    .btw-root{padding-bottom:64px;}
+  }
   .btw-faq-item h4{
     font-family:var(--font-body);
     font-size:13px;
@@ -4622,6 +4633,16 @@
       </div>
     </div>
   </div>
+  <div class="btw-modal-overlay" id="btwCopyOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:460px;">
+      <button class="btw-modal-close" data-close="btwCopyOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Invite message</div>
+      <h2 id="btwCopyTitle">Copy this message and send it to your patient:</h2>
+      <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;">This browser blocked automatic copying. The message is selected below: press Ctrl+C (or ⌘C), or long-press and choose Copy.</div>
+      <textarea id="btwCopyText" readonly rows="8" style="width:100%;box-sizing:border-box;font:13px/1.5 var(--font-body);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;"></textarea>
+      <button type="button" class="btw-modal-continue" id="btwCopyDone" style="margin-top:12px;">Done</button>
+    </div>
+  </div>
   <div class="btw-modal-overlay" id="btwInviteOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:420px;">
       <button class="btw-modal-close" data-close="btwInviteOverlay" type="button" aria-label="Close">✕</button>
@@ -5874,6 +5895,8 @@
     "{name} is on your caseload":"{name} fait partie de vos suivis",
     "Could not add them just now.":"Impossible de l'ajouter pour le moment.","Copied!":"Copié!","code:":"code :",
     "Copy this message and send it to your patient:":"Copiez ce message et envoyez-le à votre patient :",
+    "Invite message":"Message d'invitation",
+    "This browser blocked automatic copying. The message is selected below: press Ctrl+C (or ⌘C), or long-press and choose Copy.":"Ce navigateur a bloqué la copie automatique. Le message est sélectionné ci-dessous : appuyez sur Ctrl+C (ou ⌘C), ou maintenez le doigt dessus et choisissez Copier.",
     "Hi, I set up Between so we can check in between our sessions.":"Bonjour, j'ai configuré Between pour qu'on puisse faire des suivis entre nos séances.",
     "Tap to get started:":"Touchez pour commencer :","Your invite code is":"Votre code d'invitation est",
     "(it's already in the link). You'll create your own password and your check-ins stay private to you.":"(il est déjà dans le lien). Vous créerez votre propre mot de passe, et vos suivis vous restent privés.",
@@ -10743,6 +10766,14 @@
     const sendBtn = document.getElementById('btwChatSend');
     if(!root || !launch || !panel || !bodyEl) return;
     let busy = false, greeted = false;
+    // Fade the bubble back while the page is scrolling (phones; CSS scopes it).
+    (function(){
+      let tmr = null;
+      addEventListener('scroll', function(){
+        root.classList.add('btw-chat-scrolling');
+        clearTimeout(tmr); tmr = setTimeout(function(){ root.classList.remove('btw-chat-scrolling'); }, 700);
+      }, { passive:true });
+    })();
     const CHAT_QS = ['How does it work?', 'How much does it cost?', 'Do my patients pay?', 'Is my data private?'];
     function scrollDown(){ bodyEl.scrollTop = bodyEl.scrollHeight; }
     function addMsg(who, text){
@@ -12722,13 +12753,23 @@
       + t('Your invite code is') + ' ' + code + ' ' + t("(it's already in the link). You'll create your own password and your check-ins stay private to you.") + '\n\n'
       + t("Between isn't a crisis service, in an emergency, call 988 or 911.");
   }
+  function showCopyBox(title, text){
+    const ov = document.getElementById('btwCopyOverlay'); if(!ov) return;
+    document.getElementById('btwCopyTitle').textContent = title;
+    const ta = document.getElementById('btwCopyText'); ta.value = text;
+    const done = document.getElementById('btwCopyDone'); done.onclick = function(){ ov.style.display = 'none'; };
+    ov.style.display = 'flex';
+    setTimeout(function(){ try{ ta.focus(); ta.select(); ta.setSelectionRange(0, text.length); }catch(e){} }, 30);
+  }
   async function copyInvite(code, btn){
     const msg = composeInviteMessage(code);
     try{
       await navigator.clipboard.writeText(msg);
       if(btn){ const o = btn.textContent; btn.textContent = t('Copied!'); setTimeout(()=>{ btn.textContent = o; }, 1500); }
     }catch(e){
-      prompt(t('Copy this message and send it to your patient:'), msg);
+      // Clipboard blocked (older browser, insecure context, denied permission):
+      // show the message in a box with the text selected, ready to copy.
+      showCopyBox(t('Copy this message and send it to your patient:'), msg);
     }
   }
   // Renders the invite/connection status inside the therapist's data modal.
