@@ -10066,6 +10066,31 @@
   let btwBodySex = 'm';
   try { if(localStorage.getItem('btw_body_sex') === 'f') btwBodySex = 'f'; } catch(e){}
   function btwSetBodySex(v){ btwBodySex = (v === 'f') ? 'f' : 'm'; try { localStorage.setItem('btw_body_sex', btwBodySex); } catch(e){} }
+  // A signed-in client's choice lives on their account too, so it's the same
+  // on every device and in the app (and survives private browsing).
+  function btwSaveBodySexToAccount(v){
+    try {
+      if(typeof isPatient !== 'function' || !isPatient() || (typeof _ownerPreview !== 'undefined' && _ownerPreview) || !state.patient) return;
+      if(state.patient.body_sex === v) return;
+      state.patient.body_sex = v;
+      pApi('PUT', '/api/patient/body-sex', { sex: v }).catch(function(){});
+    } catch(e){}
+  }
+  // On sign-in: the account's choice wins over this browser's.
+  var _bodySexAppliedFor = null;
+  function btwApplyAccountBodySex(){
+    try {
+      if(typeof isPatient !== 'function' || !isPatient() || !state.patient) return;
+      var v = state.patient.body_sex;
+      if(_bodySexAppliedFor === state.patient.id) return;
+      _bodySexAppliedFor = state.patient.id;
+      if(v !== 'm' && v !== 'f'){ btwSaveBodySexToAccount(btwBodySex); return; } // first time: keep what they had here
+      if(v === btwBodySex) return;
+      btwSetBodySex(v);
+      document.querySelectorAll('.btw-pz-sex').forEach(function(b){ var on = b.getAttribute('data-sex') === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+      try { if(composeBodyMap && composeBodyMap.setSex) composeBodyMap.setSex(null); } catch(e2){} // re-draw the figure
+    } catch(e){}
+  }
   // Smooth front/back body outline in the 100x198 map space, a man's and a
   // woman's, shared by every figure (check-in map, demo, recovery figures)
   // and by the app (patient_app/lib/body_map.dart, kept identical by
@@ -10700,7 +10725,7 @@
       [['m', 'Man', 'Homme'], ['f', 'Woman', 'Femme']].forEach(function(o){
         const b = document.createElement('button'); b.type = 'button'; b.className = 'btw-pz-sex'; b.setAttribute('data-sex', o[0]);
         b.textContent = frL() ? o[2] : o[1];
-        b.addEventListener('click', function(){ btwSetBodySex(o[0]); syncSex(); render(); });
+        b.addEventListener('click', function(){ btwSetBodySex(o[0]); syncSex(); render(); btwSaveBodySexToAccount(o[0]); });
         sexes.appendChild(b);
       });
       top.appendChild(sexes);
@@ -16869,6 +16894,7 @@
   }
 
   function renderAll(){
+    btwApplyAccountBodySex();
     if(isPatient()){
       document.getElementById('btwPatientPaneEyebrow').textContent = t('Your check-in');
       document.getElementById('btwSend').disabled = false;
