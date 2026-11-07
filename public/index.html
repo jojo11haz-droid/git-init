@@ -1453,7 +1453,13 @@
   .btw-role-patient #btwClinNote,
   .btw-role-patient #btwComposeServerNote,
   .btw-role-patient #btwPrep,
-  .btw-role-patient #btwAlertFeed{display:none !important;}
+  .btw-role-patient #btwAlertFeed,
+  /* Clinician tools added later: never on the patient side (incl. the owner's patient preview). */
+  .btw-role-patient #btwSaved,
+  .btw-role-patient #btwNeeds,
+  .btw-role-patient #btwHep,
+  .btw-role-patient #btwScribePanel,
+  .btw-role-patient #btwReportPanel{display:none !important;}
   /* Therapist dashboard: hide the patient check-in composer, a therapist
      reviews, they don't type check-ins. The left pane becomes a compact
      per-patient control card; the caseload pane gets more room. */
@@ -16170,7 +16176,8 @@
     const el = document.getElementById('btwCapNote'); if(!el) return;
     const info = capInfo();
     const sendBtn = document.getElementById('btwSend');
-    if(!info){ el.style.display = 'none'; el.innerHTML = ''; el.classList.remove('full'); return; }
+    // No real weekly limit (e.g. the owner's preview account): show nothing.
+    if(!info || info.cap >= 999){ el.style.display = 'none'; el.innerHTML = ''; el.classList.remove('full'); return; }
     const up = ' <button type="button" id="btwCapUpgrade">' + esc(t('Upgrade for unlimited')) + '</button>';
     if(info.left <= 0){
       el.classList.add('full');
