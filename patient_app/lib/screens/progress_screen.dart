@@ -269,7 +269,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _reflectionCard(s),
           const SizedBox(height: 16),
         ],
-        if (soloIndividual && !patient!.hides('goals')) ...[
+        if (soloIndividual && !patient.hides('goals')) ...[
           _goalsCard(s),
           const SizedBox(height: 16),
         ],

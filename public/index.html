@@ -15616,6 +15616,22 @@
       pApi('POST', '/api/patient/messages/read', {}).then(function(){ list.forEach(function(m){ if(!m.read_at) m._seen = true; }); }).catch(function(){ _inboxMarked = false; });
     }
   }
+  // Pick up a professional's new message without a reload: when the tab comes
+  // back into view, and every minute while it's open.
+  async function refreshPatientMessages(){
+    if(!isPatient() || _ownerPreview || !state.patient) return;
+    try{
+      const mm = await pApi('GET', '/api/patient/messages');
+      const list = (mm && mm.messages) || [];
+      const sig = function(l){ return l.map(function(m){ return m.id; }).join(','); };
+      if(sig(list) === sig(state.messages || [])) return;
+      state.messages = list;
+      if(list.some(function(m){ return !m.read_at; })) _inboxMarked = false; // mark the new ones read too
+      renderInbox();
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) refreshPatientMessages(); });
+  setInterval(function(){ if(!document.hidden) refreshPatientMessages(); }, 60000);
   function renderComposeHep(){
     try { renderInbox(); } catch(e){}
     var box = document.getElementById('btwComposeHep'); if(!box) return;

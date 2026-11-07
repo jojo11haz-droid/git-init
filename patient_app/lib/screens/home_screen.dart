@@ -56,13 +56,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver {
   final _text = TextEditingController();
   final Set<String> _tags = {};
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
   Map<String, String> _painSens = {}; // "view:region" -> sensation code
   List<HomeExercise> _exercises = []; // home program from the clinician
   List<ClinicianMessage> _messages = []; // notes from the professional
+  bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
@@ -105,6 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadStreak();
     _loadExercises();
     _loadMessages();
+    // New messages from their professional show up when the app comes back
+    // to the foreground (and on pull-to-refresh), not only on a fresh start.
+    WidgetsBinding.instance.addObserver(this);
     // First run (after the intro): show the spotlight tour once.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -537,7 +542,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadMessages();
+      _loadExercises();
+    }
+  }
+
+  Future<void> _refresh() async {
+    await Future.wait([_loadMessages(), _loadExercises()]);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _recordTimer?.cancel();
     _recorder.dispose();
     for (final c in _answerCtrls) {
@@ -820,7 +838,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Expanded(
-              child: ListView(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(28, 18, 28, 12),
                 children: [
                   // Their professional's welcome card (clinic, logo, note).
@@ -830,8 +851,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                   // The latest message from their professional, on top.
                   if (_messages.isNotEmpty) ...[
-                    _messageCard(_messages.first, s),
-                    const SizedBox(height: 18),
+                    for (final m in (_allMessages
+                        ? _messages.take(10)
+                        : _messages.take(1))) ...[
+                      _messageCard(m, s),
+                      const SizedBox(height: 10),
+                    ],
+                    if (_messages.length > 1)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () =>
+                              setState(() => _allMessages = !_allMessages),
+                          child: Text(_allMessages
+                              ? s.showOnlyLatest
+                              : s.earlierMessages(_messages.length - 1)),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
                   ],
                   Text(
                     s.hi(patient.firstName),
@@ -1215,6 +1252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         : s.sendToProvider(profile.providerKey)),
                   ),
                 ],
+              ),
               ),
             ),
             const CrisisFooter(),

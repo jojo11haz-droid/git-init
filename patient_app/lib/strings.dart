@@ -388,6 +388,10 @@ class S {
       'Cochez ce que vous avez fait depuis votre dernier suivi.');
   // Messages from the professional (sent from the website).
   String get newMessage => _('New message', 'Nouveau message');
+  String earlierMessages(int n) =>
+      _('Earlier messages ($n)', 'Messages précédents ($n)');
+  String get showOnlyLatest =>
+      _('Show only the latest', 'Afficher seulement le dernier');
   String get messageLabel => _('Message', 'Message');
   // Pain scale (physio, kinesiology, osteopathy, OT) — mirrors the website.
   String get painRightNow => _('Pain right now', 'Douleur en ce moment');
