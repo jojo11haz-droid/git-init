@@ -2142,6 +2142,17 @@
   .btw-cap-sumtext{font-family:var(--font-display);font-size:17px;line-height:1.42;color:var(--ink);}
   .btw-cap-sumfoot{margin-top:12px;font-family:var(--font-mono);font-size:11px;color:var(--amber);}
   @media (max-width:1000px){.btw-hero-top{display:block;} .btw-hero-aside{display:none;width:auto;}}
+  /* Field illustration: above the voice card on desktop (the card overlaps its
+     foot), and a small one over the eyebrow on narrower screens. */
+  .btw-hero-art{display:flex;justify-content:center;margin:0 0 -46px;position:relative;z-index:0;pointer-events:none;}
+  .btw-hero-art img{width:236px;height:236px;object-fit:contain;animation:btwArtIn .7s ease both;}
+  #btwHeroAside .btw-cap{position:relative;z-index:1;}
+  .btw-hero-art-sm{display:none;}
+  @media (max-width:1000px){
+    .btw-hero-art-sm[src]{display:block;width:132px;height:132px;object-fit:contain;margin:0 0 6px -8px;animation:btwArtIn .7s ease both;}
+  }
+  @keyframes btwArtIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){ .btw-hero-art img,.btw-hero-art-sm{animation:none;} }
   /* ---- hero: session-to-session thread ---- */
   .btw-hero-thread{margin:36px 0 0;}
   .btw-ht-rail{position:relative;display:flex;align-items:stretch;justify-content:space-between;gap:10px;padding:0 8px;}
@@ -3191,6 +3202,7 @@
       <section class="btw-hero">
         <div class="btw-hero-top">
         <div class="btw-hero-copy">
+          <img class="btw-hero-art-sm" id="btwHeroArtSm" alt="" width="560" height="560" decoding="async" aria-hidden="true">
           <div class="btw-hero-eyebrow">For therapists, counsellors &amp; anyone on their own</div>
           <h1 id="btwHeroH1">What happens<br><em>between</em> sessions<br>doesn't have to<br>stay a mystery.</h1>
           <p class="btw-hero-sub">Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.</p>
@@ -8104,11 +8116,18 @@
         cards+
         '<div class="btw-ht-blk end"><span class="btw-ht-nd"></span><span class="btw-ht-lab"><span class="t">'+esc(d.next)+'</span><span class="d">'+esc(d.day2||d.day)+'</span></span></div>'+
       '</div>';
+    // The field's own illustration (same art as the "Who's it for?" cards), so a
+    // physio, coach or school sees their own work at the top of the page.
+    var _artKey = ['therapy','physio','kinesiology','osteo','occupational','neuropsych','nutrition','sports','fitness','recovery','schools','individual'].indexOf(curAudience) >= 0 ? curAudience : 'therapy';
+    var _artSrc = '/assets/fields/hero/' + _artKey + '.webp';
+    var _artSm = document.getElementById('btwHeroArtSm');
+    if(_artSm && _artSm.getAttribute('src') !== _artSrc) _artSm.setAttribute('src', _artSrc);
     var _aside = document.getElementById('btwHeroAside');
     if(_aside){
       var _v = d.checkins.filter(function(c){return c.voice;})[0] || d.checkins[0];
       var _bars = [8,16,28,12,38,20,48,18,34,10,26,42,14,32,10,24,40,12,30,10,22,38,16,30,12,26,44,14,28,8,20,36,12,22].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('');
       _aside.innerHTML =
+        '<div class="btw-hero-art"><img src="'+_artSrc+'" alt="" width="560" height="560" decoding="async"></div>'+
         '<div class="btw-cap">'+
           '<div class="btw-cap-top"><span class="btw-cap-rec"></span>REC · 0:12</div>'+
           '<div class="btw-cap-wave" aria-hidden="true">'+_bars+'</div>'+
