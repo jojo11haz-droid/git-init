@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>All features — Between</title>
+<meta name="description" content="Everything Between does: check-ins by voice or text, a needs-you-today list, chart notes from check-ins, dictation or a recorded session, home programs with AI, reports and letters, trends, safety alerts and privacy by default.">
+<link rel="canonical" href="https://betweenpsych.com/features">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1E4C86">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Between">
+<meta property="og:title" content="All features — Between">
+<meta property="og:description" content="Everything Between does for professionals, their clients and their clinic.">
+<meta property="og:url" content="https://betweenpsych.com/features">
+<meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F4F1; --panel:#FFFFFF; --ink:#1A1E1C; --ink-soft:#5A6169;
+    --moss:#1E4C86; --moss-light:#DCE6F3; --line:#E4E3DD; --amber:#9A6A1F; --amber-bg:#FBEEDD;
+    --font-display:'Newsreader', Georgia, serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; --amber:#E0A85E; --amber-bg:#3A2D1A; } }
+  :root[data-theme="dark"]{ --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; --amber:#E0A85E; --amber-bg:#3A2D1A; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:34px max(18px, env(safe-area-inset-right, 0px)) 80px max(18px, env(safe-area-inset-left, 0px));}
+  a{color:var(--moss);}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+  .back{font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .back:hover{text-decoration:underline;}
+  .langs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel);}
+  .langs button{border:0;background:none;font:600 12px var(--font-body);color:var(--ink-soft);padding:5px 11px;border-radius:999px;cursor:pointer;}
+  .langs button.on{background:var(--moss);color:var(--panel);}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--moss);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.12;letter-spacing:-.01em;margin:10px 0 10px;text-wrap:balance;}
+  .lede{font-size:17px;color:var(--ink-soft);margin:0 0 20px;max-width:62ch;}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 28px;}
+  .controls label{font-size:13px;color:var(--ink-soft);}
+  .controls select{font:500 14px var(--font-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;font:600 13px var(--font-body);border-radius:10px;padding:9px 14px;text-decoration:none;cursor:pointer;border:1px solid var(--moss);}
+  .btn.pri{background:var(--moss);color:var(--panel);}
+  .btn.sec{background:var(--panel);color:var(--moss);}
+  .btn:focus-visible,.langs button:focus-visible,select:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 30px;}
+  .toc a{font-size:13px;text-decoration:none;background:var(--moss-light);color:var(--moss);border-radius:999px;padding:5px 12px;font-weight:600;}
+  section{margin:0 0 34px;}
+  section h2{font-family:var(--font-display);font-weight:600;font-size:26px;margin:0 0 4px;letter-spacing:-.01em;}
+  section .sub{color:var(--ink-soft);margin:0 0 14px;font-size:15px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+  .f{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 17px;min-width:0;}
+  .f h3{font-size:15px;margin:0 0 4px;font-weight:600;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .f p{margin:0;font-size:14px;color:var(--ink-soft);line-height:1.5;}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:1px 6px;font-weight:500;}
+  .tag.prem{background:var(--amber-bg);color:var(--amber);}
+  .tag.ai{background:var(--moss-light);color:var(--moss);}
+  .cta{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;}
+  .cta h2{font-family:var(--font-display);font-size:24px;margin:0;}
+  .cta p{margin:4px 0 0;color:var(--ink-soft);font-size:14px;}
+  .note{font-size:12.5px;color:var(--ink-soft);margin-top:26px;}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px 16px;}
+  footer a{text-decoration:none;}
+  .print-only{display:none;}
+  /* Print / PDF: one compact document. */
+  @media print{
+    :root{ --paper:#fff; --panel:#fff; --ink:#1A1E1C; --ink-soft:#4A5159; --moss:#1E4C86; --moss-light:#E6EDF6; --line:#DADCD6; }
+    @page{ size: Letter; margin: 13mm 12mm; }
+    body{font-size:11px;background:#fff;}
+    .wrap{max-width:none;padding:0;}
+    .no-print,.top,.controls,.toc,footer,.cta .btn{display:none !important;}
+    .print-only{display:block;}
+    h1{font-size:26px;margin:2px 0 4px;}
+    .lede{font-size:12.5px;margin-bottom:10px;}
+    section{margin:0 0 10px;break-inside:auto;}
+    section h2{font-size:16px;margin:0;}
+    section .sub{font-size:11px;margin:0 0 6px;}
+    .grid{grid-template-columns:1fr 1fr 1fr;gap:5px;}
+    .f{padding:6px 8px;border-radius:7px;break-inside:avoid;}
+    .f h3{font-size:10.5px;margin:0 0 1px;}
+    .f p{font-size:9.4px;line-height:1.35;}
+    .tag{font-size:7.5px;padding:0 4px;}
+    .cta{padding:9px 12px;border-radius:9px;}
+    .cta h2{font-size:14px;}
+    .cta p{font-size:10px;}
+    .note{font-size:9px;margin-top:6px;}
+    .purl{font:600 13px var(--font-body);color:var(--moss);}
+    .pfoot{font-size:9.5px;color:var(--ink-soft);margin-top:8px;display:flex;justify-content:space-between;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top no-print">
+    <a class="back" href="/"><svg width="18" height="18" viewBox="0 0 64 64" style="border-radius:5px;" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg><span id="backTxt">← Between</span></a>
+    <div class="langs" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button></div>
+  </div>
+  <div class="print-only eyebrow" id="pEyebrow">betweenpsych.com</div>
+  <div class="eyebrow no-print" id="eyebrow">All features</div>
+  <h1 id="h1">Everything Between does</h1>
+  <p class="lede" id="lede"></p>
+  <div class="controls no-print">
+    <label for="field" id="fieldLbl">Show it for</label>
+    <select id="field"></select>
+    <button type="button" class="btn sec" id="printBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span id="printTxt">Save as PDF</span></button>
+  </div>
+  <nav class="toc no-print" id="toc" aria-label="Sections"></nav>
+  <div id="sections"></div>
+  <div class="cta">
+    <div><h2 id="ctaH">Try it free for 14 days</h2><p id="ctaP"></p></div>
+    <a class="btn pri" id="ctaBtn" href="/">Start free trial</a>
+    <div class="print-only purl" id="pUrl"></div>
+  </div>
+  <p class="note" id="note"></p>
+  <div class="print-only pfoot"><span id="pfootL">Between · betweenpsych.com · owner@betweenpsych.com</span><span id="pfootR"></span></div>
+  <footer class="no-print">
+    <span>© 2026 Between</span><a href="/privacy.html" id="fPriv">Privacy</a><a href="/terms.html" id="fTerms">Terms</a><a href="/subprocessors.html" id="fSub">Subprocessors</a><a href="/guides/" id="fGuides">Guides</a>
+  </footer>
+</div>
+<script>
+(function(){
+  // Each field's words: who the professional works with, what the program is
+  // called, the chart-note format and what the score tracks. Mirrors the app.
+  var FIELDS = {
+    therapy:      { en:['Psychotherapy','client','clients','between-session practice','DAP','mood','therapist','clinic'], fr:['Psychothérapie','client','clients','pratique entre les séances','DAP','humeur','thérapeute','clinique'], body:false },
+    physio:       { en:['Physiotherapy','patient','patients','home exercise program','SOAP','pain','physio','clinic'], fr:['Physiothérapie','patient','patients',"programme d'exercices à domicile",'SOAP','douleur','physio','clinique'], body:true },
+    kinesiology:  { en:['Kinesiology','client','clients','home exercise program','SOAP','pain','kinesiologist','clinic'], fr:['Kinésiologie','client','clients',"programme d'exercices à domicile",'SOAP','douleur','kinésiologue','clinique'], body:true },
+    osteo:        { en:['Osteopathy','client','clients','home exercise program','SOAP','pain','osteopath','clinic'], fr:['Ostéopathie','client','clients',"programme d'exercices à domicile",'SOAP','douleur','ostéopathe','clinique'], body:true },
+    occupational: { en:['Occupational therapy','client','clients','home exercise program','SOAP','pain','occupational therapist','clinic'], fr:['Ergothérapie','client','clients',"programme d'exercices à domicile",'SOAP','douleur','ergothérapeute','clinique'], body:true },
+    neuropsych:   { en:['Neuropsychology','client','clients','between-session practice','DAP','mood','neuropsychologist','clinic'], fr:['Neuropsychologie','client','clients','pratique entre les séances','DAP','humeur','neuropsychologue','clinique'], body:false },
+    nutrition:    { en:['Nutrition','client','clients','habits to practise','SOAP','mood','nutritionist','clinic'], fr:['Nutrition','client','clients','habitudes à pratiquer','SOAP','humeur','nutritionniste','clinique'], body:false },
+    sports:       { en:['Sports','player','players','home exercise program','SOAP','mood','coach','team'], fr:['Sport','joueur','joueurs',"programme d'exercices à domicile",'SOAP','humeur','entraîneur','équipe'], body:true },
+    fitness:      { en:['Fitness','client','clients','home exercise program','SOAP','mood','trainer','clinic'], fr:['Mise en forme','client','clients',"programme d'exercices à domicile",'SOAP','humeur','entraîneur','clinique'], body:true },
+    recovery:     { en:['Addiction & recovery','member','members','daily recovery practices','DAP','mood','mentor','program'], fr:['Dépendances et rétablissement','membre','membres','pratiques quotidiennes','DAP','humeur','mentor','programme'], body:false },
+    schools:      { en:['Schools','student','students','strategies to practise','SOAP','mood','school staff','school'], fr:['Écoles','élève','élèves','stratégies à pratiquer','SOAP','humeur','personnel scolaire','école'], body:false }
+  };
+  // Field slugs used by the site's own URLs.
+  var SLUG = { therapy:'therapy', physio:'physio', kinesiology:'kinesiology', osteo:'osteopathy', occupational:'occupational-therapy', neuropsych:'neuropsychology', nutrition:'nutrition', sports:'sports', fitness:'fitness', recovery:'addiction', schools:'schools' };
+  var ALIAS = { osteopathy:'osteo', 'occupational-therapy':'occupational', neuropsychology:'neuropsych', addiction:'recovery', individual:'therapy' };
+
+  // {c} client, {cs} clients, {prog} program, {note} format, {score} score, {pro} professional
+  var S = {
+    en: {
+      title:'Everything Between does', eyebrow:'All features', back:'← Between', fieldLbl:'Show it for', print:'Save as PDF',
+      lede:'Between captures what happens between appointments and turns it into what you need for the next one: who needs you, a chart note, a program that adapts. Here is the full list, in your field’s words.',
+      ctaH:'Try it free for 14 days', ctaP:'Your {cs} check in by voice or text and you see the pattern before you walk in.', ctaB:'Start free trial',
+      note:'Features marked AI use AI only for {cs} who have turned AI summaries on. Voice check-ins, dictation and session recording need speech-to-text to be switched on for your account.',
+      ai:'AI', prem:'Personal Premium',
+      sections:[
+        { id:'pro', h:'For you, the professional', sub:'Less charting and fewer loose ends between appointments.', items:[
+          ['Needs you today','Only the {cs} who need you, with the reason: a safety flag, scores getting worse, or gone quiet.'],
+          ['Morning email','The same short list in your inbox each morning, only on days when someone needs you.'],
+          ['Session prep','A short read on how they have been since last time, and what to open with.','ai'],
+          ['Pattern read','The one thread running through their weeks, and how it has shifted.','ai'],
+          ['{note} chart notes','Drafted from their check-ins, with blanks left for your own findings. Check, edit, done.','ai'],
+          ['Dictated notes','Say your findings, assessment and plan; Between writes them into the note in your words.','ai'],
+          ['Session recording','Record the appointment with the {c}’s agreement and get the chart note. The audio is never kept.','ai'],
+          ['Save as PDF or copy to chart','One tap to attach the note to any charting system.'],
+          ['Reports and letters','Progress reports, discharge summaries and letters to a doctor, insurer, school or workplace, drafted from the history.','ai'],
+          ['{Prog} with AI','Suggestions built from their check-ins: precise doses, a clear rule for discomfort, and why each one fits.','ai'],
+          ['Safety hold','When check-ins show tingling, severe or worsening sharp pain, suggestions stay gentle and flag an in-person check first.','body'],
+          ['Program review','What to progress, ease off, add or drop, based on what they actually did. One tap to apply.','ai'],
+          ['Encouragement message','A short, warm note to send between appointments, grounded in what they told you.','ai'],
+          ['Trends at a glance','{Score} trend on a 1–10 scale, range, check-in rhythm and recurring themes.'],
+          ['Where it hurts','A body-map overview of the sore spots over time, with the most affected areas.','body'],
+          ['Safety alerts','Risk language is flagged for you, and the {c} sees crisis resources right away.'],
+          ['Time saved','A running count of the minutes Between saved you this month.'],
+          ['Add {cs} from a photo or list','Snap a list or upload a file; Between reads the first names. Or fill today from your schedule.','ai'],
+          ['Documents','Upload intake forms, referrals and assessments, with a short summary of each.','ai'],
+          ['Next session date','Set it per {c}; check-ins are counted since the last one.']
+        ]},
+        { id:'client', h:'For your {cs}', sub:'A check-in takes under a minute, whenever something happens.', items:[
+          ['Voice or text','Talk or type, whichever is easier in the moment.'],
+          ['{Score} scale or let Between estimate','Set the score, or let Between read it from what they wrote.'],
+          ['Body map with close-ups','Tap the area, zoom in to the exact spot, say how it feels. Man or woman figure.','body'],
+          ['Photo of the sore area','Add a picture when it helps.','body'],
+          ['Quick topics','Tap what it was about: sleep, work, a flare-up, a win.'],
+          ['A smart follow-up question','One short question when something is worth clarifying. Never about safety.','ai'],
+          ['{Prog} checklist','Tick what they did since the last check-in, with the how-to and dose.'],
+          ['Daily text reminders','A gentle nudge to check in, at the time they choose.'],
+          ['Notes to a future self','Words for a harder day, shown back when they need them. Private to them.'],
+          ['Their own trends','Their history and pattern, building up check-in by check-in.'],
+          ['Crisis resources, always','Shown instantly if a check-in sounds like a crisis. Never waits on anyone.'],
+          ['Any phone, no install','Works in the browser on any phone; iPhone and iPad app coming soon.']
+        ]},
+        { id:'clinic', h:'For your {org}', sub:'From one professional to a full team.', items:[
+          ['One plan for the team','One bill for everyone; add professionals as you grow.'],
+          ['Private caseloads','Each professional has their own login and their own {cs}. Nobody sees anyone else’s.'],
+          ['Licence verification','Regulated professions are checked against their order’s public registry before they see any data.'],
+          ['Data agreement','A written agreement on how {c} data is handled, ready to sign.'],
+          ['French and English','The whole product, for professionals and {cs}, in both languages.']
+        ]},
+        { id:'privacy', h:'Privacy and safety', sub:'Built for health information from the start.', items:[
+          ['AI off by default','Each {c} chooses whether AI summaries run. Without it, nothing they write goes to an AI.'],
+          ['Quebec Law 25 and PIPEDA','Designed around Canadian privacy law, with a public list of every provider we use.'],
+          ['Export or delete anytime','{Cs} and professionals can download or erase their data.'],
+          ['No recordings kept','Dictation and session recordings are turned into text and deleted. Audio is never used to train AI.'],
+          ['Two-step login','An authenticator-app code on top of the password.'],
+          ['Not a crisis service','Clear about what it is: crisis lines are always one tap away.']
+        ]},
+        { id:'own', h:'Using Between on your own', sub:'For people tracking how they are doing, with no professional involved.', items:[
+          ['Private check-ins','Mind, body, sport or eating: track what matters to you.'],
+          ['Goals','Up to two short intentions you keep in view.'],
+          ['Bring-to-a-pro summary','A clean summary to share if you start seeing someone.'],
+          ['Advanced stats','Month-by-month views, streaks and what tracks with harder days.','prem'],
+          ['Question packs','Guided check-ins for gratitude, stress, sleep and wins.','prem'],
+          ['Weekly reflection','A warm read on your week, from your own check-ins.','prem']
+        ]}
+      ]
+    },
+    fr: {
+      title:'Tout ce que fait Between', eyebrow:'Toutes les fonctionnalités', back:'← Between', fieldLbl:'Afficher pour', print:'Enregistrer en PDF',
+      lede:'Between capte ce qui se passe entre les rendez-vous et le transforme en ce qu’il vous faut pour le prochain : qui a besoin de vous, une note au dossier, un programme qui s’ajuste. Voici la liste complète, dans les mots de votre domaine.',
+      ctaH:'Essayez gratuitement pendant 14 jours', ctaP:'Vos {cs} font leurs suivis par la voix ou par écrit, et vous voyez la tendance avant d’entrer.', ctaB:'Commencer l’essai gratuit',
+      note:'Les fonctionnalités marquées IA n’utilisent l’IA que pour les {cs} qui ont activé les résumés IA. Les suivis vocaux, la dictée et l’enregistrement de séance demandent que la transcription soit activée pour votre compte.',
+      ai:'IA', prem:'Personnel Premium',
+      sections:[
+        { id:'pro', h:'Pour vous, le professionnel', sub:'Moins de rédaction et moins d’oublis entre les rendez-vous.', items:[
+          ['À voir aujourd’hui','Seulement les {cs} qui ont besoin de vous, avec la raison : un signalement, des scores qui empirent ou un silence.'],
+          ['Courriel du matin','La même courte liste dans votre boîte chaque matin, seulement les jours où quelqu’un a besoin de vous.'],
+          ['Préparation de séance','Un court portrait depuis la dernière fois, et par quoi commencer.','ai'],
+          ['Lecture de fond','Le fil qui traverse leurs semaines, et comment il évolue.','ai'],
+          ['Notes au dossier {note}','Rédigées à partir des suivis, avec des espaces pour vos propres constats. Vérifiez, ajustez, c’est fait.','ai'],
+          ['Notes dictées','Dites vos constats, votre évaluation et le plan; Between les intègre à la note, dans vos mots.','ai'],
+          ['Enregistrement de séance','Enregistrez le rendez-vous avec l’accord du {c} et obtenez la note. L’audio n’est jamais conservé.','ai'],
+          ['PDF ou copie au dossier','Un geste pour joindre la note à n’importe quel logiciel de dossiers.'],
+          ['Rapports et lettres','Rapports d’évolution, résumés de fin de suivi et lettres à un médecin, un assureur, une école ou un employeur, rédigés à partir de l’historique.','ai'],
+          ['{Prog} avec l’IA','Des suggestions tirées des suivis : doses précises, règle claire sur l’inconfort, et pourquoi chacune convient.','ai'],
+          ['Prudence automatique','Si les suivis montrent des picotements, une douleur forte ou une douleur vive qui s’aggrave, les suggestions restent douces et proposent d’abord une vérification en personne.','body'],
+          ['Révision du programme','Quoi faire progresser, alléger, ajouter ou retirer, selon ce qui a vraiment été fait. Un geste pour appliquer.','ai'],
+          ['Message d’encouragement','Un court mot chaleureux à envoyer entre les rendez-vous, fondé sur ce qu’on vous a dit.','ai'],
+          ['Tendances en un coup d’œil','Tendance de {score} sur une échelle de 1 à 10, écart, rythme des suivis et thèmes récurrents.'],
+          ['Où ça fait mal','Une vue de la carte du corps des zones douloureuses au fil du temps, avec les zones les plus touchées.','body'],
+          ['Alertes de sécurité','Les propos à risque vous sont signalés, et le {c} voit aussitôt les ressources de crise.'],
+          ['Temps gagné','Le décompte des minutes que Between vous a fait gagner ce mois-ci.'],
+          ['Ajouter des {cs} par photo ou liste','Prenez une liste en photo ou téléversez un fichier; Between lit les prénoms. Ou remplissez la journée à partir de votre horaire.','ai'],
+          ['Documents','Téléversez formulaires d’accueil, références et évaluations, avec un court résumé de chacun.','ai'],
+          ['Date de la prochaine séance','Réglez-la pour chaque {c}; les suivis sont comptés depuis la dernière.']
+        ]},
+        { id:'client', h:'Pour vos {cs}', sub:'Un suivi prend moins d’une minute, dès que quelque chose survient.', items:[
+          ['Voix ou texte','Parler ou écrire, selon ce qui est le plus simple sur le moment.'],
+          ['Échelle de {score} ou estimation par Between','Donner un score, ou laisser Between l’estimer à partir de ce qui est écrit.'],
+          ['Carte du corps avec gros plans','Touchez la zone, zoomez sur l’endroit exact, dites comment vous le ressentez. Silhouette homme ou femme.','body'],
+          ['Photo de la zone douloureuse','Ajoutez une photo quand c’est utile.','body'],
+          ['Sujets rapides','Touchez ce dont il s’agit : sommeil, travail, poussée, réussite.'],
+          ['Une question de suivi','Une seule courte question quand quelque chose mérite d’être précisé. Jamais sur la sécurité.','ai'],
+          ['Liste du {prog}','Cocher ce qui a été fait depuis le dernier suivi, avec la marche à suivre et la dose.'],
+          ['Rappels par texto','Un petit rappel pour faire son suivi, à l’heure choisie.'],
+          ['Mots pour plus tard','Des mots pour un jour difficile, montrés au bon moment. Privés.'],
+          ['Leurs propres tendances','Leur historique et leur tendance, qui se construisent suivi après suivi.'],
+          ['Ressources de crise, toujours','Affichées aussitôt si un suivi évoque une crise. N’attendent jamais personne.'],
+          ['Tout téléphone, sans installation','Fonctionne dans le navigateur de n’importe quel téléphone; application iPhone et iPad bientôt.']
+        ]},
+        { id:'clinic', h:'Pour votre {org}', sub:'D’un seul professionnel à l’équipe complète.', items:[
+          ['Un forfait pour l’équipe','Une seule facture pour tous; ajoutez des professionnels à mesure que vous grandissez.'],
+          ['Suivis privés','Chaque professionnel a son accès et ses propres {cs}. Personne ne voit ceux des autres.'],
+          ['Vérification des permis','Les professions réglementées sont vérifiées dans le registre public de leur ordre avant tout accès aux données.'],
+          ['Entente sur les données','Une entente écrite sur le traitement des données, prête à signer.'],
+          ['Français et anglais','Tout le produit, pour les professionnels et les {cs}, dans les deux langues.']
+        ]},
+        { id:'privacy', h:'Confidentialité et sécurité', sub:'Conçu dès le départ pour des renseignements de santé.', items:[
+          ['IA désactivée par défaut','Chaque {c} choisit si les résumés IA sont activés. Sinon, rien de ce qu’il écrit ne va à une IA.'],
+          ['Loi 25 et LPRPDE','Conçu autour des lois canadiennes sur la vie privée, avec la liste publique de chaque fournisseur.'],
+          ['Exporter ou supprimer en tout temps','{Cs} et professionnels peuvent télécharger ou effacer leurs données.'],
+          ['Aucun enregistrement conservé','Les dictées et enregistrements de séance sont transcrits puis supprimés. L’audio ne sert jamais à entraîner une IA.'],
+          ['Connexion en deux étapes','Un code d’application d’authentification en plus du mot de passe.'],
+          ['Pas un service de crise','Clair sur ce qu’il est : les lignes de crise sont toujours à un geste.']
+        ]},
+        { id:'own', h:'Utiliser Between par vous-même', sub:'Pour suivre comment vous allez, sans professionnel.', items:[
+          ['Suivis privés','Esprit, corps, sport ou alimentation : suivez ce qui compte pour vous.'],
+          ['Objectifs','Jusqu’à deux courtes intentions gardées en vue.'],
+          ['Résumé à apporter à un professionnel','Un résumé clair à partager si vous consultez un jour.'],
+          ['Statistiques avancées','Vues mois par mois, séries et ce qui accompagne les jours difficiles.','prem'],
+          ['Ensembles de questions','Des suivis guidés : gratitude, stress, sommeil et réussites.','prem'],
+          ['Réflexion de la semaine','Une lecture chaleureuse de votre semaine, à partir de vos suivis.','prem']
+        ]}
+      ]
+    }
+  };
+
+  var qs = new URLSearchParams(location.search);
+  var lang = qs.get('lang') || (function(){ try { return localStorage.getItem('btw_lang'); } catch(e){ return null; } })() || ((navigator.language||'').slice(0,2) === 'fr' ? 'fr' : 'en');
+  if(lang !== 'fr') lang = 'en';
+  var fk = qs.get('field') || ''; fk = ALIAS[fk] || fk; if(!FIELDS[fk]) fk = 'therapy';
+  var sel = document.getElementById('field');
+  function esc(x){ return String(x).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function cap(x){ return x.charAt(0).toUpperCase() + x.slice(1); }
+  function fill(str, w){
+    return String(str).replace(/\{(c|cs|Cs|prog|Prog|note|score|Score|pro|org)\}/g, function(m, k){
+      return { c:w[1], cs:w[2], Cs:cap(w[2]), prog:w[3], Prog:cap(w[3]), note:w[4], score:w[5], Score:cap(w[5]), pro:w[6], org:w[7] }[k];
+    });
+  }
+  function render(){
+    var L = S[lang], F = FIELDS[fk], w = F[lang];
+    document.documentElement.lang = lang;
+    document.title = (lang === 'fr' ? 'Toutes les fonctionnalités' : 'All features') + ' — Between';
+    document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+    var set = function(id, v){ var e = document.getElementById(id); if(e) e.textContent = v; };
+    set('h1', L.title); set('eyebrow', L.eyebrow); set('backTxt', L.back); set('fieldLbl', L.fieldLbl); set('printTxt', L.print);
+    set('lede', fill(L.lede, w)); set('ctaH', L.ctaH); set('ctaP', fill(L.ctaP, w)); set('note', fill(L.note, w));
+    set('pfootR', w[0]);
+    set('pEyebrow', 'betweenpsych.com · ' + w[0]);
+    set('pUrl', 'betweenpsych.com/' + SLUG[fk]);
+    var cta = document.getElementById('ctaBtn'); cta.textContent = L.ctaB; cta.href = '/' + SLUG[fk];
+    document.querySelectorAll('footer a').forEach(function(a){
+      var t = { fPriv:['Privacy','Confidentialité'], fTerms:['Terms','Conditions'], fSub:['Subprocessors','Sous-traitants'], fGuides:['Guides','Guides'] }[a.id];
+      if(t) a.textContent = t[lang === 'fr' ? 1 : 0];
+    });
+    sel.innerHTML = Object.keys(FIELDS).map(function(k){ return '<option value="' + k + '"' + (k === fk ? ' selected' : '') + '>' + esc(FIELDS[k][lang][0]) + '</option>'; }).join('');
+    var html = '', toc = '';
+    L.sections.forEach(function(sec){
+      var items = sec.items.filter(function(it){ return it[2] !== 'body' || F.body; });
+      toc += '<a href="#' + sec.id + '">' + esc(fill(sec.h, w)) + '</a>';
+      html += '<section id="' + sec.id + '"><h2>' + esc(fill(sec.h, w)) + '</h2><p class="sub">' + esc(fill(sec.sub, w)) + '</p><div class="grid">'
+        + items.map(function(it){
+            var tag = it[2] === 'ai' ? '<span class="tag ai">' + esc(L.ai) + '</span>' : it[2] === 'prem' ? '<span class="tag prem">' + esc(L.prem) + '</span>' : '';
+            return '<div class="f"><h3>' + esc(fill(it[0], w)) + tag + '</h3><p>' + esc(fill(it[1], w)) + '</p></div>';
+          }).join('') + '</div></section>';
+    });
+    document.getElementById('sections').innerHTML = html;
+    document.getElementById('toc').innerHTML = toc;
+  }
+  function syncUrl(){
+    var u = new URL(location.href); u.searchParams.set('field', SLUG[fk]); u.searchParams.set('lang', lang);
+    try { history.replaceState(null, '', u.pathname + '?' + u.searchParams.toString() + location.hash); } catch(e){}
+  }
+  sel.addEventListener('change', function(){ fk = sel.value; render(); syncUrl(); });
+  document.querySelectorAll('.langs button').forEach(function(b){ b.addEventListener('click', function(){ lang = b.dataset.lang; try { localStorage.setItem('btw_lang', lang); } catch(e){} render(); syncUrl(); }); });
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -4735,6 +4735,9 @@ app.get(FIELD_PATHS, (req, res) => {
 // Simple health check — useful for most hosting platforms' uptime checks
 app.get('/health', (req, res) => res.json({ ok: true }));
 
+// The full feature list, at a clean address (the file is public/features.html).
+app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', 'features.html')));
+
 // The old web build of the patient app lived at /app. It was removed (the site
 // itself is the patient web app), so send any saved /app link to the homepage,
 // keeping an invite code if one was in the link.
