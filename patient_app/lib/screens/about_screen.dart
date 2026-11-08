@@ -30,7 +30,7 @@ class AboutScreen extends StatelessWidget {
     final faqs = fr
         ? const [
             [
-              'Ai-je besoin d\'un thérapeute?',
+              'Ai-je besoin d\'un professionnel?',
               'Non. Vous pouvez utiliser Between seul comme journal privé. Si vous avez un professionnel, il peut vous inviter et voir un court résumé — seulement avec votre consentement.'
             ],
             [
@@ -56,7 +56,7 @@ class AboutScreen extends StatelessWidget {
           ]
         : const [
             [
-              'Do I need a therapist?',
+              'Do I need a professional?',
               'No. You can use Between on your own as a private journal. If you do have a professional, they can invite you and see a short summary — only with your consent.'
             ],
             [

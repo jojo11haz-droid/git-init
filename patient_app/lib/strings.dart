@@ -86,8 +86,9 @@ class S {
   String get stepShareBody => _(
       'Keep it private, or share it with a professional who\'s helping you.',
       'Garde-le privé, ou partage-le avec un professionnel qui t\'accompagne.');
+  // Before sign-in the field isn't known yet, so these stay neutral.
   String get haveInvite =>
-      _('I have an invite from my therapist', 'J\'ai une invitation de mon thérapeute');
+      _('I have an invite code', 'J\'ai un code d\'invitation');
 
   // Feature highlights (mirrors betweenpsych.com)
   String get featuresHead => _('What you get', 'Ce que vous obtenez');
@@ -232,8 +233,8 @@ class S {
   String get signingIn => _('Signing in…', 'Connexion…');
   String get forgotPassword => _('Forgot your password?', 'Mot de passe oublié?');
   String get forgotPasswordBody => _(
-      'Ask your therapist to reset your app access — they can do it from their dashboard in a few seconds. You\'ll get a new invite code, and setting up again keeps all your history.',
-      'Demande à ton thérapeute de réinitialiser ton accès — il peut le faire depuis son tableau de bord en quelques secondes. Tu recevras un nouveau code d\'invitation, et tout ton historique est conservé.');
+      'Ask the professional who invited you to reset your app access — they can do it from their dashboard in a few seconds. You\'ll get a new invite code, and setting up again keeps all your history.',
+      'Demande au professionnel qui t\'a invité de réinitialiser ton accès — il peut le faire depuis son tableau de bord en quelques secondes. Tu recevras un nouveau code d\'invitation, et tout ton historique est conservé.');
   String get gotIt => _('Got it', 'Compris');
   String get enterEmailPassword =>
       _('Enter your email and password.', 'Entre ton courriel et ton mot de passe.');
@@ -241,8 +242,8 @@ class S {
   // Invite / set up account
   String get setUpAccount => _('Set up your account', 'Crée ton compte');
   String get inviteIntro => _(
-      'Your therapist gave you a short invite code. Enter it here with the email and password you\'d like to use.',
-      'Ton thérapeute t\'a donné un court code d\'invitation. Entre-le ici avec le courriel et le mot de passe que tu veux utiliser.');
+      'The professional who invited you gave you a short invite code. Enter it here with the email and password you\'d like to use.',
+      'Le professionnel qui t\'a invité t\'a donné un court code d\'invitation. Entre-le ici avec le courriel et le mot de passe que tu veux utiliser.');
   String get inviteCode => _('Invite code', 'Code d\'invitation');
   String get choosePassword => _('Choose a password', 'Choisis un mot de passe');
   String get atLeast10 => _('At least 10 characters', 'Au moins 10 caractères');
@@ -257,15 +258,20 @@ class S {
   String consentTitle(String name) => _(
       'Before you start, $name — how Between uses your check-ins.',
       'Avant de commencer, $name — comment Between utilise tes nouvelles.');
-  String get consentBullet1 => _(
-      'Your check-ins are shared with your therapist as short summaries — not always the raw recording.',
-      'Tes nouvelles sont partagées avec ton thérapeute sous forme de courts résumés — pas toujours l\'enregistrement brut.');
+  // providerKey: who reads the check-ins (null = on their own).
+  String consentBullet1(String? providerKey) => providerKey == null
+      ? _('Your check-ins stay private to you. No one else sees them.',
+          'Tes nouvelles restent privées. Personne d\'autre ne les voit.')
+      : _('Your check-ins are shared with your ${_providerEn[providerKey] ?? 'provider'} as short summaries — not always the raw recording.',
+          'Tes nouvelles sont partagées avec ton ${_providerFr[providerKey] ?? 'intervenant'} sous forme de courts résumés — pas toujours l\'enregistrement brut.');
   String get consentBullet2 => _(
       'If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). Under Quebec\'s privacy law (Law 25), this counts as "profiling" of your health information.',
       'Si tu actives les résumés par IA ci-dessous, un modèle d\'IA analyse ce que tu envoies pour rédiger le résumé et repérer des tendances dans le temps (humeur, thèmes, moments). Selon la loi québécoise sur la vie privée (loi 25), cela constitue du « profilage » de tes renseignements de santé.');
-  String get consentBullet3 => _(
-      'You can leave it off and still send check-ins — they\'ll go to your therapist exactly as you wrote them, with no AI analysis.',
-      'Tu peux le laisser désactivé et envoyer quand même tes nouvelles — elles iront à ton thérapeute exactement comme tu les as écrites, sans analyse par IA.');
+  String consentBullet3(String? providerKey) => providerKey == null
+      ? _('You can leave it off and still check in — your entries are saved exactly as you wrote them, with no AI analysis.',
+          'Tu peux le laisser désactivé et faire quand même tes suivis — ils sont enregistrés exactement comme tu les as écrits, sans analyse par IA.')
+      : _('You can leave it off and still send check-ins — they\'ll go to your ${_providerEn[providerKey] ?? 'provider'} exactly as you wrote them, with no AI analysis.',
+          'Tu peux le laisser désactivé et envoyer quand même tes nouvelles — elles iront à ton ${_providerFr[providerKey] ?? 'intervenant'} exactement comme tu les as écrites, sans analyse par IA.');
   String get consentBullet4 => _(
       'You can see everything the app has on file about you at any time, change this choice, and ask for your history to be deleted.',
       'Tu peux voir en tout temps tout ce que l\'application conserve à ton sujet, changer ce choix et demander la suppression de ton historique.');
@@ -429,7 +435,6 @@ class S {
   String get low => _('Low', 'Bas');
   String get high => _('High', 'Élevé');
   String get anythingFits => _('Anything that fits (optional)', 'Ce qui te correspond (facultatif)');
-  String get sendToTherapist => _('Send to my therapist', 'Envoyer à mon thérapeute');
   // Who a check-in goes to, per providerKey (null = a solo account).
   static const Map<String, String> _providerEn = {
     'therapist': 'therapist',
@@ -520,12 +525,16 @@ class S {
 
   // Sent
   String get sent => _('Sent.', 'Envoyé.');
-  String get sentReassure => _(
-      'Your therapist will see this before your next session. That\'s it — nothing else you need to do.',
-      'Ton thérapeute le verra avant ta prochaine séance. C\'est tout — tu n\'as rien d\'autre à faire.');
-  String get sentCrisisNote => _(
-      'Your check-in was sent and your therapist has been notified — but please don\'t wait on anyone if you\'re in danger right now.',
-      'Tes nouvelles ont été envoyées et ton thérapeute a été avisé — mais n\'attends après personne si tu es en danger maintenant.');
+  String sentReassure(String? providerKey) => providerKey == null
+      ? _('Saved. It\'s in your history whenever you want to look back.',
+          'Enregistré. C\'est dans ton historique quand tu veux y revenir.')
+      : _('Your ${_providerEn[providerKey] ?? 'provider'} will see this before your next session. That\'s it — nothing else you need to do.',
+          'Ton ${_providerFr[providerKey] ?? 'intervenant'} le verra avant ta prochaine séance. C\'est tout — tu n\'as rien d\'autre à faire.');
+  String sentCrisisNote(String? providerKey) => providerKey == null
+      ? _('Your check-in was saved — but please don\'t wait on anyone if you\'re in danger right now.',
+          'Ton suivi a été enregistré — mais n\'attends après personne si tu es en danger maintenant.')
+      : _('Your check-in was sent and your ${_providerEn[providerKey] ?? 'provider'} has been notified — but please don\'t wait on anyone if you\'re in danger right now.',
+          'Tes nouvelles ont été envoyées et ton ${_providerFr[providerKey] ?? 'intervenant'} a été avisé — mais n\'attends après personne si tu es en danger maintenant.');
   String get undo => _('Didn\'t mean to send it? Undo (15 min)', 'Envoyé par erreur? Annuler (15 min)');
   // My progress / recovery-over-time view
   String get myProgress => _('My progress', 'Mes progrès');
@@ -696,15 +705,18 @@ class S {
   String get notAccurate => _('This isn\'t accurate', 'Ce n\'est pas exact');
   String get flaggedInaccurate =>
       _('Flagged as not accurate', 'Signalé comme non exact');
-  String get flaggedSnack => _(
-      'Flagged. Your therapist will see this summary is marked as not accurate.',
-      'Signalé. Ton thérapeute verra que ce résumé est marqué comme non exact.');
+  String flaggedSnack(String? providerKey) => providerKey == null
+      ? _('Flagged as not accurate.', 'Signalé comme non exact.')
+      : _('Flagged. Your ${_providerEn[providerKey] ?? 'provider'} will see this summary is marked as not accurate.',
+          'Signalé. Ton ${_providerFr[providerKey] ?? 'intervenant'} verra que ce résumé est marqué comme non exact.');
   String get voiceMemo => _('Voice memo', 'Note vocale');
 
   // Settings
-  String get aiSummariesDesc => _(
-      'When on, an AI model summarizes your check-ins for your therapist. When off, they see exactly what you wrote.',
-      'Quand c\'est activé, un modèle d\'IA résume tes nouvelles pour ton thérapeute. Quand c\'est désactivé, il voit exactement ce que tu as écrit.');
+  String aiSummariesDesc(String? providerKey) => providerKey == null
+      ? _('When on, an AI model summarizes your check-ins and finds patterns for you. When off, they\'re saved exactly as you wrote them.',
+          'Quand c\'est activé, un modèle d\'IA résume tes nouvelles et repère des tendances pour toi. Quand c\'est désactivé, elles sont enregistrées exactement comme tu les as écrites.')
+      : _('When on, an AI model summarizes your check-ins for your ${_providerEn[providerKey] ?? 'provider'}. When off, they see exactly what you wrote.',
+          'Quand c\'est activé, un modèle d\'IA résume tes nouvelles pour ton ${_providerFr[providerKey] ?? 'intervenant'}. Quand c\'est désactivé, il voit exactement ce que tu as écrit.');
   String get visitWebsite => _('betweenpsych.com', 'betweenpsych.com');
   String get previewCategory =>
       _('Preview a category', 'Aperçu d\'une catégorie');
@@ -729,24 +741,29 @@ class S {
       'Apple Health isn\'t available or access was declined.',
       'Apple Santé n\'est pas disponible ou l\'accès a été refusé.');
   String get turnOnAiTitle => _('Turn on AI summaries?', 'Activer les résumés par IA?');
-  String get turnOnAiBody => _(
-      'An AI model will analyze your check-ins to write summaries for your therapist and find patterns over time. This counts as profiling of your health information, and you can turn it off again at any time.',
-      'Un modèle d\'IA analysera tes nouvelles pour rédiger des résumés destinés à ton thérapeute et repérer des tendances dans le temps. Cela constitue du profilage de tes renseignements de santé, et tu peux le désactiver en tout temps.');
+  String turnOnAiBody(String? providerKey) => providerKey == null
+      ? _('An AI model will analyze your check-ins to write summaries and find patterns over time. This counts as profiling of your health information, and you can turn it off again at any time.',
+          'Un modèle d\'IA analysera tes nouvelles pour rédiger des résumés et repérer des tendances dans le temps. Cela constitue du profilage de tes renseignements de santé, et tu peux le désactiver en tout temps.')
+      : _('An AI model will analyze your check-ins to write summaries for your ${_providerEn[providerKey] ?? 'provider'} and find patterns over time. This counts as profiling of your health information, and you can turn it off again at any time.',
+          'Un modèle d\'IA analysera tes nouvelles pour rédiger des résumés destinés à ton ${_providerFr[providerKey] ?? 'intervenant'} et repérer des tendances dans le temps. Cela constitue du profilage de tes renseignements de santé, et tu peux le désactiver en tout temps.');
   String get notNow => _('Not now', 'Pas maintenant');
   String get iConsent => _('I consent', 'Je consens');
   String get whatsOnFile => _('What\'s on file about me', 'Ce qui est conservé à mon sujet');
-  String get whatsOnFileDesc => _(
-      'Every check-in and summary your therapist can see.',
-      'Chaque nouvelle et résumé que ton thérapeute peut voir.');
+  String whatsOnFileDesc(String? providerKey) => providerKey == null
+      ? _('Every check-in and summary on file.', 'Chaque nouvelle et résumé conservé.')
+      : _('Every check-in and summary your ${_providerEn[providerKey] ?? 'provider'} can see.',
+          'Chaque nouvelle et résumé que ton ${_providerFr[providerKey] ?? 'intervenant'} peut voir.');
   String get requestDeletion => _('Request deletion of my history', 'Demander la suppression de mon historique');
   String get requestDeletionDesc => _(
       'Removes all your check-ins and summaries. Your right, anytime.',
       'Supprime toutes tes nouvelles et résumés. Ton droit, en tout temps.');
   String get deleteHistoryTitle =>
       _('Delete my check-in history?', 'Supprimer mon historique de nouvelles?');
-  String get deleteHistoryBody => _(
-      'This removes all of your check-ins and summaries from your therapist\'s view and from the app. This can\'t be undone.',
-      'Cela supprime toutes tes nouvelles et résumés de la vue de ton thérapeute et de l\'application. Cette action est irréversible.');
+  String deleteHistoryBody(String? providerKey) => providerKey == null
+      ? _('This removes all of your check-ins and summaries from the app. This can\'t be undone.',
+          'Cela supprime toutes tes nouvelles et résumés de l\'application. Cette action est irréversible.')
+      : _('This removes all of your check-ins and summaries from your ${_providerEn[providerKey] ?? 'provider'}\'s view and from the app. This can\'t be undone.',
+          'Cela supprime toutes tes nouvelles et résumés de la vue de ton ${_providerFr[providerKey] ?? 'intervenant'} et de l\'application. Cette action est irréversible.');
   String get keepIt => _('Keep it', 'Garder');
   String get deleteEverything => _('Delete everything', 'Tout supprimer');
   String get historyDeleted => _(

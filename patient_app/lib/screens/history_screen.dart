@@ -29,7 +29,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       await context.read<AppState>().flagInaccurate(checkIn.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.read<AppState>().s.flaggedSnack)));
+          SnackBar(content: Text(context.read<AppState>().s.flaggedSnack(
+              context.read<AppState>().providerKey))));
       setState(() => _future = context.read<AppState>().fetchHistory());
     } catch (e) {
       if (mounted) {

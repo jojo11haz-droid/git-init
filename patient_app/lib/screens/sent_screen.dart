@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../strings.dart';
 import '../theme.dart';
 
@@ -98,7 +99,11 @@ class _SentScreenState extends State<SentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = context.watch<AppState>().s;
+    final app = context.watch<AppState>();
+    final s = app.s;
+    // Who reads the check-in (null when they're using Between on their own).
+    final provider =
+        app.patient == null ? null : profileFor(app.patient!).providerKey;
     final crisis = widget.result.crisis ?? _fuCrisis;
     final question = widget.result.checkIn.followupQuestion;
     return Scaffold(
@@ -118,7 +123,7 @@ class _SentScreenState extends State<SentScreen> {
                         CrisisCard(crisis: crisis),
                         const SizedBox(height: 24),
                         Text(
-                          s.sentCrisisNote,
+                          s.sentCrisisNote(provider),
                           style: const TextStyle(
                               fontSize: 15,
                               height: 1.6,
@@ -142,7 +147,7 @@ class _SentScreenState extends State<SentScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          s.sentReassure,
+                          s.sentReassure(provider),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               fontSize: 15.5,
