@@ -951,6 +951,7 @@ class _BodyMapState extends State<BodyMap> {
                   scale: _w / 100.0,
                   female: _female,
                   view: _view,
+                  isFr: widget.isFr,
                 ),
               ),
             ),
@@ -1002,12 +1003,17 @@ String bodyMapSex() => _BodyMapState._female ? 'f' : 'm';
 
 class BodyMapView extends StatelessWidget {
   const BodyMapView(
-      {super.key, required this.map, this.width = 108, this.sex});
+      {super.key,
+      required this.map,
+      this.width = 108,
+      this.sex,
+      this.isFr = false});
 
   final Map<String, int> map; // "view:region" -> level
   final double width;
   // The figure a check-in was drawn on ('m' | 'f'); null = current choice.
   final String? sex;
+  final bool isFr; // G / D instead of L / R beside the figure
 
   Widget _figure(String view, List<_Region> regions) {
     final h = width * 198 / 100;
@@ -1021,6 +1027,9 @@ class BodyMapView extends StatelessWidget {
           scale: width / 100.0,
           female: sex != null ? sex == 'f' : _BodyMapState._female,
           view: view,
+          // Tiny decorative figures skip the side markers.
+          sideMarks: width >= 60,
+          isFr: isFr,
         ),
       ),
     );
@@ -1063,12 +1072,32 @@ class _BodyPainter extends CustomPainter {
       required this.levels,
       required this.scale,
       this.female = false,
-      this.view = 'front'});
+      this.view = 'front',
+      this.sideMarks = true,
+      this.isFr = false});
   final List<_Region> regions;
   final Map<String, int> levels; // region id -> level, for the current view
   final double scale;
   final bool female; // a woman's outline instead of a man's
   final String view; // 'front' | 'back' — which way the hair falls
+  // L / R beside the figure. Both views put the person's left on the
+  // viewer's left (the front reads like a mirror), so it's marked rather
+  // than left to be guessed from the drawing. Same as the website.
+  final bool sideMarks;
+  final bool isFr;
+
+  void _mark(Canvas canvas, String t, double x, bool alignRight) {
+    final tp = TextPainter(
+      text: TextSpan(
+          text: t,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: BtwColors.inkSoft)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(alignRight ? x - tp.width : x, 2));
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1085,6 +1114,10 @@ class _BodyPainter extends CustomPainter {
       canvas.drawPath(
           _hair(view == 'back' ? 'back' : 'front'),
           Paint()..color = const Color(0xFF9AA1AD));
+    }
+    if (sideMarks) {
+      _mark(canvas, isFr ? 'G' : 'L', 3, false);
+      _mark(canvas, isFr ? 'D' : 'R', 97, true);
     }
     // Pain colours are trimmed to the body so they read as body areas.
     canvas.clipPath(body);
@@ -1106,5 +1139,7 @@ class _BodyPainter extends CustomPainter {
       old.levels != levels ||
       old.regions != regions ||
       old.female != female ||
-      old.view != view;
+      old.view != view ||
+      old.isFr != isFr ||
+      old.sideMarks != sideMarks;
 }
