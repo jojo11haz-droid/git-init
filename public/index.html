@@ -5029,7 +5029,9 @@
           const h = { 'Content-Type': type };
           const tk = opts.token ? opts.token() : null; if(tk) h['Authorization'] = 'Bearer ' + tk;
           const r = await fetch(opts.url, { method:'POST', headers:h, body: blob, credentials:'same-origin' });
-          const d = await r.json().catch(function(){ return {}; });
+          // JSON normally; a rate-limit reply is plain text — show it as is.
+          const raw = await r.text().catch(function(){ return ''; });
+          let d = {}; try { d = JSON.parse(raw); } catch(e){ if(raw && raw.length < 200 && !/</.test(raw)) d = { error: raw }; }
           if(r.status === 503 && SR){ serverOk = false; opts.onState('idle'); opts.onError(fr() ? 'Touchez le micro de nouveau et parlez.' : 'Tap the mic again and speak.'); return; }
           if(!r.ok || !d.text){ opts.onState('idle'); opts.onError(d.error || (fr() ? "Impossible de comprendre l'enregistrement. Réessayez ou écrivez." : "Couldn't make out the recording. Try again, or type it.")); return; }
           opts.onState('idle'); opts.onText(d.text);
@@ -9647,8 +9649,24 @@
     return null;
   }
   window.__btwViewFromHash = viewFromHash;
+  // The address changed only after the # (a link to #guide, typing it in):
+  // the browser doesn't reload, so follow it here.
+  window.addEventListener('hashchange', function(){
+    const rv = viewFromHash();
+    if(rv){ if(!rv[1].classList.contains('active')) goToView(rv[0], rv[1]); }
+    else if(!location.hash && !viewHome.classList.contains('active') && !(state.me || state.patient)) goToView(navHome, viewHome);
+  });
+  // Never fights a real scroll: skipped while the page is moving (the visitor
+  // flicking, a smooth scroll, the walkthrough) or once they've touched it.
+  let _btwLastScrollAt = 0, _btwTouchedAt = 0;
+  addEventListener('scroll', function(){ _btwLastScrollAt = performance.now(); }, { passive:true });
+  ['touchstart', 'pointerdown', 'wheel', 'keydown'].forEach(function(ev){ addEventListener(ev, function(){ _btwTouchedAt = performance.now(); }, { passive:true }); });
   function btwNudgePaint(){
+    const t0 = performance.now();
     [60, 900].forEach(function(ms){ setTimeout(function(){
+      const now = performance.now();
+      if(_btwTouchedAt > t0 || now - _btwLastScrollAt < 250) return;
+      if(document.querySelector('#btwTour.show')) return;
       try { const y = window.pageYOffset || 0; window.scrollTo(0, y + 1); window.scrollTo(0, y); } catch(e){}
     }, ms); });
   }
@@ -17633,9 +17651,12 @@
       let last = null, still = 0; const t0 = performance.now();
       (function frame(now){
         if(!active || curTarget !== target){ raf = null; return; }
-        const r = target.getBoundingClientRect();
-        placeSpot(r, padFor(target));
-        const same = last && Math.abs(r.top - last.top) < .5 && Math.abs(r.left - last.left) < .5 && Math.abs(r.width - last.width) < .5 && Math.abs(r.height - last.height) < .5;
+        const r = target.getBoundingClientRect(), pd = padFor(target);
+        placeSpot(r, pd);
+        // Settled = the part has stopped moving AND the highlight has caught up.
+        const sr = spot.getBoundingClientRect();
+        const caught = Math.abs(sr.top - (r.top - pd)) < 1.5 && Math.abs(sr.height - (r.height + pd*2)) < 1.5 && Math.abs(sr.left - (r.left - pd)) < 1.5;
+        const same = caught && last && Math.abs(r.top - last.top) < .5 && Math.abs(r.left - last.left) < .5 && Math.abs(r.width - last.width) < .5 && Math.abs(r.height - last.height) < .5;
         still = same ? still + 1 : 0; last = r;
         if((still >= 6 && now - t0 > 280) || now - t0 > 2000){ raf = null; spot.classList.remove('tracking'); onSettle(); return; }
         raf = requestAnimationFrame(frame);
@@ -17664,7 +17685,12 @@
         const wait = Math.max(0, 190 - (performance.now() - t0));
         setTimeout(function(){
           if(my !== idx || !active) return;
+          // It's invisible right now: jump it into place (no slide across the
+          // highlighted part), then fade it in.
+          card.style.transition = 'none';
+          if(!curTarget) spot.style.transition = 'none'; // a centred step: the highlight just goes
           if(curTarget) positionTo(curTarget); else positionCenter();
+          void card.offsetWidth; card.style.transition = ''; spot.style.transition = '';
           card.classList.remove('btw-tour-moving'); overlay.classList.add('btw-tour-ready');
           if(step.act) actTimer = setTimeout(function(){ runAct(step.act); }, 250);
         }, wait);
@@ -17752,7 +17778,7 @@
     document.addEventListener('keydown', function(e){
       if(!active) return;
       if(e.key === 'Escape') end();
-      else if(e.key === 'ArrowRight'){ if(idx < steps.length-1) go(idx+1); }
+      else if(e.key === 'ArrowRight' || (e.key === 'Enter' && !(e.target && /^(BUTTON|A|TEXTAREA|INPUT)$/.test(e.target.tagName)))){ if(idx < steps.length-1) go(idx+1); else end(); }
       else if(e.key === 'ArrowLeft') go(idx-1);
     });
 
