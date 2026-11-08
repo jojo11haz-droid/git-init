@@ -576,12 +576,13 @@
   /* Collapsible detail sections: slide open only what you need. */
   .btw-acc{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:0 0 10px;overflow:hidden;}
   .btw-acc-head{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:13px 15px;cursor:pointer;text-align:left;font-family:var(--font-body);}
-  .btw-acc-head:hover{background:var(--paper);}
+  @media (hover:hover){ .btw-acc-head:hover{background:var(--paper);} }
   .btw-acc-head .btw-acc-t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--ink);}
   .btw-acc-head .btw-acc-t svg{width:15px;height:15px;stroke:var(--moss);flex:none;}
   .btw-acc-head .btw-acc-prev{flex:1;font-size:11.5px;color:var(--ink-soft);text-align:right;margin-right:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .btw-acc-head .btw-acc-chev{width:16px;height:16px;stroke:var(--ink-soft);flex:none;transition:transform .2s ease;}
   .btw-acc.btw-open .btw-acc-chev{transform:rotate(180deg);}
+  .btw-acc-head .btw-acc-chev{margin-left:auto;}
   .btw-acc-body{padding:2px 15px 15px;}
   .btw-acc:not(.btw-open) .btw-acc-body{display:none;}
   .btw-acc.btw-open .btw-acc-head .btw-acc-prev{display:none;}
@@ -774,6 +775,19 @@
     margin-bottom:26px;
   }
   @media (max-width:520px){.btw-charts{grid-template-columns:1fr;}}
+  /* Inside the Trends section: no boxes inside boxes. The stats read as one
+     strip with thin dividers; the chart and themes are outlined, each only as
+     tall as its content. */
+  #btwAccTrends .btw-acc-body{padding:6px 18px 18px;}
+  #btwAccTrends .btw-insights{gap:0;margin:0 0 18px;padding:2px 0 16px;border-bottom:1px solid var(--line);grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  #btwAccTrends .btw-insight{background:none;border:none;border-left:1px solid var(--line);border-radius:0;padding:4px 16px;}
+  #btwAccTrends .btw-insight:first-child{border-left:none;padding-left:0;}
+  #btwAccTrends .btw-charts{align-items:start;margin-bottom:0;gap:14px;}
+  #btwAccTrends .btw-chart-box{background:none;border:1px solid var(--line);}
+  @media (max-width:520px){
+    #btwAccTrends .btw-insights{grid-template-columns:1fr 1fr;row-gap:12px;}
+    #btwAccTrends .btw-insight:nth-child(odd){border-left:none;padding-left:0;}
+  }
   .btw-chart-box{
     border:1px solid transparent;
     border-radius:13px;
@@ -16807,8 +16821,12 @@
       dots += `<circle class="${cls}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${last ? 4.5 : 3}"><title>${esc(day(c.time))}: ${c.mood}/10${c.moodInferred ? ' (' + t('estimated') + ')' : ''}</title></circle>`;
       if(few || last) dots += `<text class="btw-ch-val${last ? ' last' : ''}" x="${p[0].toFixed(1)}" y="${(p[1] - 8).toFixed(1)}" text-anchor="middle">${c.mood}</text>`;
     });
-    const xl = `<text class="btw-ch-ax" x="${pts[0][0].toFixed(1)}" y="${H - 6}" text-anchor="${n === 1 ? 'middle' : 'start'}">${esc(day(t0))}</text>`
-      + (n > 1 ? `<text class="btw-ch-ax" x="${pts[n - 1][0].toFixed(1)}" y="${H - 6}" text-anchor="end">${esc(day(t1))}</text>` : '');
+    // All on one day: label the ends with times, and the day once, rather than
+    // the same date twice.
+    const sameDay = n > 1 && day(t0) === day(t1);
+    const hm = ts => new Date(ts).toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' });
+    const xl = `<text class="btw-ch-ax" x="${pts[0][0].toFixed(1)}" y="${H - 6}" text-anchor="${n === 1 ? 'middle' : 'start'}">${esc(sameDay ? day(t0) + ' · ' + hm(t0) : day(t0))}</text>`
+      + (n > 1 ? `<text class="btw-ch-ax" x="${pts[n - 1][0].toFixed(1)}" y="${H - 6}" text-anchor="end">${esc(sameDay ? hm(t1) : day(t1))}</text>` : '');
     const key = `<text class="btw-ch-ax" x="${W - R}" y="${T - 2}" text-anchor="end">${esc(pm ? t('10 = worst pain') : t('10 = best'))}</text>`;
     svg.innerHTML = g + key + (area ? `<path class="btw-ch-area" d="${area}"/>` : '') + (n > 1 ? `<path class="btw-ch-line" d="${line}"/>` : '') + dots + xl;
   }
