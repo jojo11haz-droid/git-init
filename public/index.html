@@ -1543,13 +1543,19 @@
   /* Section reveal: each section slides up into view, one at a time, as you
      scroll down to it — a rise (not a soft fade). Driven by a keyframe
      animation so an element's own transitions can't override it. */
-  .btw-reveal{opacity:0;will-change:opacity,transform;}
+  /* No will-change here: on Safari (iPad/iPhone) a will-change layer that was
+     hidden can stay unpainted when its page is shown again — the page looks
+     empty until the first scroll or tap. The animation makes its own layer. */
+  .btw-reveal{opacity:0;}
+  #btwViewHome .btw-hero, #btwViewHome .btw-chooser{animation:btwSectionIn .8s cubic-bezier(.22,.9,.3,1) both;}
+  @media (max-width:760px){ #btwViewHome .btw-hero, #btwViewHome .btw-chooser{animation-name:btwSectionInM;animation-duration:.6s;} }
+  @media (prefers-reduced-motion:reduce){ #btwViewHome .btw-hero, #btwViewHome .btw-chooser{animation:none;} }
   .btw-reveal.in{animation:btwSectionIn .8s cubic-bezier(.22,.9,.3,1) both;}
   @keyframes btwSectionIn{0%{opacity:0;transform:translateY(54px);}40%{opacity:1;}100%{opacity:1;transform:translateY(0);}}
   @keyframes btwSectionInM{0%{opacity:0;transform:translateY(32px);}40%{opacity:1;}100%{opacity:1;transform:none;}}
   @media (max-width:760px){ .btw-reveal.in{animation-name:btwSectionInM;animation-duration:.6s;} }
   @media (prefers-reduced-motion:reduce){ .btw-reveal{opacity:1;transform:none;} .btw-reveal.in{animation:none;} }
-  .btw-hero-visual{transition:transform .1s linear;will-change:transform;}
+  .btw-hero-visual{transition:transform .1s linear;}
   .btw-feature,.btw-price-card,.btw-shot{transition:transform .22s ease,box-shadow .22s ease;}
   .btw-feature:hover,.btw-price-card:hover,.btw-shot:hover{transform:translateY(-5px);box-shadow:0 16px 34px rgba(30,76,134,0.16);}
   .btw-hero-btn,.btw-nav-btn,.btw-role-btn,.btw-tag,.btw-mk-send,.btw-send,.btw-price-cta,.btw-modal-continue{transition:background .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease;}
@@ -2643,7 +2649,7 @@
   @media (max-width:640px){.btw-feature-grid > .btw-feature{min-height:82vh;}}
   /* Features cross-dissolve into each other as you scroll (driven in JS below);
      start visible so they never get stuck hidden if scripting is off. */
-  .btw-feature-grid > .btw-feature{opacity:1;will-change:opacity;}
+  .btw-feature-grid > .btw-feature{opacity:1;}
 
   /* ---- Feature mockups (coded, animated — the "video" feel without an mp4) ---- */
   .btw-vc{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(15,23,32,.14);padding:20px;}
@@ -9641,6 +9647,12 @@
     return null;
   }
   window.__btwViewFromHash = viewFromHash;
+  function btwNudgePaint(){
+    [60, 900].forEach(function(ms){ setTimeout(function(){
+      try { const y = window.pageYOffset || 0; window.scrollTo(0, y + 1); window.scrollTo(0, y); } catch(e){}
+    }, ms); });
+  }
+  window.btwNudgePaint = btwNudgePaint;
   function goToView(nav, view){
     // Leaving the dashboard drops the owner's patient-preview so the rest of the
     // app isn't left in the synthetic-patient state.
@@ -9663,6 +9675,10 @@
     // Re-run the scroll reveal for the tab we just opened: its top sections
     // should fade in immediately rather than waiting for the first scroll.
     if(window.btwRevealKick) window.btwRevealKick();
+    // Safari sometimes doesn't repaint a page that was just switched on until
+    // the first scroll or tap: do that scroll for it (1 px and back, unseen),
+    // once now and once when the entrance animations have finished.
+    btwNudgePaint();
     // Landing on the dashboard is the moment to offer the first-run tour (it
     // self-guards: clinician only, once, and only when not pending verification).
     if(view === viewProduct && window.btwMaybeStartTour) setTimeout(window.btwMaybeStartTour, 350);
@@ -18561,7 +18577,11 @@
     const ROOTS = ['#btwViewHome', '#btwViewLearn', '#btwViewPricing', '#btwViewGuide'];
     // Whole sections (not individual tiles): each reveals as one block as it
     // scrolls into view, so you see one section, scroll, then the next.
-    const SUFFIX = ['.btw-chooser', '.btw-hero', '.btw-demo',
+    // The top of a page (the chooser, the hero) is NOT in this list: it must
+    // show the moment the page opens, even when Safari pre-loaded the page in
+    // the background (no frames run there, so a JS reveal would wait for the
+    // first scroll or tap). It gets a CSS-only entrance instead.
+    const SUFFIX = ['.btw-demo',
       '.btw-howitworks .btw-section-label', '.btw-step',
       '.btw-features .btw-section-label',
       '.btw-savetime .btw-section-label', '.btw-savetime .btw-demo-lead', '.btw-savetime-card',
@@ -18599,6 +18619,11 @@
     function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', onScroll);
+    // Pre-loaded in the background, restored from the back/forward cache, or
+    // the tab brought to the front: look again at what's on screen.
+    function onShown(){ if(document.hidden) return; onScroll(); setTimeout(frame, 120); setTimeout(typeHeroSummary, 700); if(window.btwNudgePaint) window.btwNudgePaint(); }
+    ['pageshow', 'load', 'focus', 'orientationchange'].forEach(function(ev){ window.addEventListener(ev, onShown); });
+    document.addEventListener('visibilitychange', onShown);
     // Hero AI summary types itself in once — only on screen and when motion is OK.
     var _heroTyped = false;
     function typeHeroSummary(){
@@ -18747,6 +18772,10 @@
       }
       window.addEventListener('scroll', function(){ if(!fTick){ fTick=true; requestAnimationFrame(fade); } }, {passive:true});
       window.addEventListener('resize', fade);
+      window.addEventListener('pageshow', fade);
+      // Coming back to Home from another tab: set the features right away.
+      try{ new MutationObserver(function(){ setTimeout(fade, 30); }).observe(document.documentElement, { attributes:true, attributeFilter:['data-bg'] }); }catch(e){}
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden) setTimeout(fade, 60); });
       requestAnimationFrame(fade); setTimeout(fade,250); setTimeout(fade,700);
     }
   })();
