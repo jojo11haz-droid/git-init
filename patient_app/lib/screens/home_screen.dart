@@ -66,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen>
   List<ClinicianMessage> _messages = []; // notes from the professional
   bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
+  String? _exStatus; // program in another app: 'yes' | 'some' | 'no'
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
   bool _detailsOpen = false;
@@ -696,6 +697,7 @@ class _HomeScreenState extends State<HomeScreen>
         recording == null &&
         _painMap.isEmpty &&
         _exDone.isEmpty &&
+        _exStatus == null &&
         _photoBytes == null) {
       messenger.showSnackBar(SnackBar(content: Text(s.saySomething)));
       return;
@@ -726,6 +728,8 @@ class _HomeScreenState extends State<HomeScreen>
             painScale: _painScale,
             bodySex: _painMap.isEmpty ? null : bodyMapSex(),
             exercisesDone: _exDone.isEmpty ? null : _exDone.toList(),
+            exerciseStatus:
+                (app.patient?.exercisesExternal ?? false) ? _exStatus : null,
           );
       if (!mounted) return;
       _text.clear();
@@ -737,6 +741,7 @@ class _HomeScreenState extends State<HomeScreen>
         _painMap = {};
         _painSens = {};
         _exDone.clear();
+        _exStatus = null;
         _photoBytes = null;
         _mood = 5;
         _moodEstimate = false;
@@ -1043,7 +1048,35 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(height: 16),
                   // Between-session program from the clinician (exercises,
                   // practices, habits…): tick what you did. Every profession.
-                  if (_exercises.isNotEmpty) ...[
+                  // Program kept in another app: one yes / some / no question.
+                  if (patient.exercisesExternal) ...[
+                    Text(s.didYourExercises,
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(s.exercisesInApp(patient.exercisesApp),
+                        style: const TextStyle(
+                            fontSize: 12.5, color: BtwColors.inkSoft)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final o in [
+                          ['yes', s.exYes],
+                          ['some', s.exSome],
+                          ['no', s.exNo],
+                        ])
+                          ChoiceChip(
+                            label: Text(o[1]),
+                            selected: _exStatus == o[0],
+                            onSelected: (on) =>
+                                setState(() => _exStatus = on ? o[0] : null),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ] else if (_exercises.isNotEmpty) ...[
                     Text(_programTitle(s, profile),
                         style: const TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w600)),

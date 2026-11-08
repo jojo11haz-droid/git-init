@@ -33,7 +33,7 @@ import {
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
@@ -54,7 +54,7 @@ import {
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion , sanitizeExerciseStatus, sanitizeAppName } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -565,6 +565,7 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
       }).join(', ');
       if (areas) parts.push(`areas: ${areas}`);
     }
+    if (c.exercise_status) parts.push('did their exercises (other app): ' + c.exercise_status);
     if (Array.isArray(c.exercises_done) && c.exercises_done.length) {
       parts.push('did: ' + c.exercises_done.map(id => exById[id] ? exById[id].name : null).filter(Boolean).join(', '));
     }
@@ -572,9 +573,14 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
     const said = c.summary_text ? String(c.summary_text).trim().slice(0, 300) : '';
     return `- ${d} (${parts.join('; ') || 'no score'})${said ? ': ' + said : ''}`;
   }).join('\n');
-  const adherence = active.length
+  // Program kept in another app: only "did you do your exercises?" answers.
+  const ext = recent.filter(c => c.exercise_status);
+  const extLine = ext.length
+    ? `program in another app: did it in ${ext.filter(c => c.exercise_status === 'yes').length} of ${ext.length} check-ins, partly in ${ext.filter(c => c.exercise_status === 'some').length}, not in ${ext.filter(c => c.exercise_status === 'no').length}`
+    : '';
+  const adherence = [active.length
     ? active.map(e => `${e.name}: ticked in ${recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length} of ${recent.length} check-ins`).join('; ')
-    : 'nothing assigned in Between yet';
+    : '', extLine].filter(Boolean).join('; ') || 'nothing assigned in Between yet';
   const first = recent.length ? new Date(recent[0].submitted_at).toISOString().slice(0, 10) : 'n/a';
   const last = recent.length ? new Date(recent[recent.length - 1].submitted_at).toISOString().slice(0, 10) : 'n/a';
   const blocks = format === 'dap'
@@ -2291,6 +2297,7 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         pain_sensations: c.pain_sensations || null,
         body_sex: c.body_sex || null,
         exercises_done: c.exercises_done || null,
+        exercise_status: c.exercise_status || null,
         followup_q: c.followup_q || null,
         followup_a: c.followup_a || null
       }))
@@ -2427,7 +2434,7 @@ function painMapPeak(pm) {
 // Which body figure the patient drew on: 'm' | 'f', else null.
 function sanitizeBodySex(v) { return v === 'm' || v === 'f' ? v : null; }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone }) {
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null, followupQ = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -2480,7 +2487,9 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
     exercisesDone: Array.isArray(exercisesDone) && exercisesDone.length
       ? sanitizeExercisesDone(exercisesDone, (await listExercises(patient.id)).map(e => e.id)) : null,
     inputMode: inputMode === 'questions' ? 'questions' : null,
-    followupQ
+    followupQ,
+    // Program in another app: just whether they did it (yes / some / no).
+    exerciseStatus: patient.hep_external ? sanitizeExerciseStatus(exerciseStatus) : null
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
   return checkIn;
@@ -2488,12 +2497,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -2700,6 +2709,20 @@ app.get('/api/brand-logo/:id', requireDb, async (req, res) => {
   } catch (err) {
     console.error('Logo fetch error:', err);
     res.status(500).end();
+  }
+});
+
+// The client's program lives in another exercise app (Wibbi, Physitrack…):
+// their check-in asks whether they did it instead of listing exercises.
+app.put('/api/patients/:id/exercise-source', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const external = !!(req.body && req.body.external);
+    const updated = await setPatientExerciseSource(req.clinician.id, req.params.id, external, external ? sanitizeAppName(req.body.app) : '');
+    if (!updated) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ external: !!updated.hep_external, app: updated.hep_app || null });
+  } catch (err) {
+    console.error('Exercise source error:', err);
+    res.status(500).json({ error: 'Could not save that.' });
   }
 });
 
@@ -3396,6 +3419,9 @@ function publicPatient(p) {
     is_premium: patientIsPremium(p),
     weekly_checkin_cap: patientWeeklyCap(p),
     goals: Array.isArray(p.goals) ? p.goals : [],
+    // Program kept in another exercise app: the check-in asks yes/some/no.
+    exercises_external: !!p.hep_external,
+    exercises_app: p.hep_external ? (p.hep_app || null) : null,
     // Their professional's branding (welcome note always; clinic name, logo
     // and accent on the professional's Premium plan).
     clinician_brand: p.clinician_id ? effectiveBrand(p.clinician_id, p.clinician_brand, clinicianIsPremium({ plan: p.clinician_plan, account_type: p.clinician_account_type, email: p.clinician_email })) : null,
@@ -4470,7 +4496,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -4531,7 +4557,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.

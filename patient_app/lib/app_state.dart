@@ -25,6 +25,10 @@ class Patient {
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
+  // Their program lives in another exercise app (Wibbi, Physitrack…): the
+  // check-in asks "did you do your exercises?" instead of listing them.
+  bool get exercisesExternal => raw['exercises_external'] == true;
+  String? get exercisesApp => raw['exercises_app'] as String?;
   // Their professional's branding: a welcome note (any plan) and, on the
   // professional's Premium plan, clinic name, logo and accent.
   Map<String, dynamic> get _brand =>
@@ -97,6 +101,8 @@ class CheckIn {
   // One short follow-up question Between asked after this check-in, and the
   // patient's answer (both null when there was none).
   String? get followupQuestion => raw['followup_q'] as String?;
+  // Program in another app: did they do their exercises ('yes'/'some'/'no').
+  String? get exerciseStatus => raw['exercise_status'] as String?;
   String? get followupAnswer => raw['followup_a'] as String?;
   bool get moodInferred => raw['mood_inferred'] == true;
   List<String> get tags {
@@ -548,6 +554,7 @@ class AppState extends ChangeNotifier {
     bool painScale = false, // the score is pain (physical rehab), not mood
     String? bodySex, // 'm' | 'f': the figure the pain map was drawn on
     List<String>? exercisesDone, // home-program exercise ids ticked off
+    String? exerciseStatus, // 'yes' | 'some' | 'no' (program in another app)
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       // Tells the server which scale a skipped score should be estimated on.
@@ -564,6 +571,7 @@ class AppState extends ChangeNotifier {
         'bodySex': bodySex,
       if (exercisesDone != null && exercisesDone.isNotEmpty)
         'exercisesDone': exercisesDone,
+      if (exerciseStatus != null) 'exerciseStatus': exerciseStatus,
       if (inputMode != null) 'inputMode': inputMode,
     });
     final map = (data as Map).cast<String, dynamic>();

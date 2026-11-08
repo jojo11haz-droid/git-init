@@ -388,6 +388,22 @@ class S {
       'Cochez ce que vous avez fait depuis votre dernier suivi.');
   // Messages from the professional (sent from the website).
   String get newMessage => _('New message', 'Nouveau message');
+  // Program in another exercise app
+  String get didYourExercises =>
+      _('Did you do your exercises?', 'Avez-vous fait vos exercices?');
+  String exercisesInApp(String? app) => app == null || app.isEmpty
+      ? _('Since your last check-in.', 'Depuis votre dernier suivi.')
+      : _('The ones in $app, since your last check-in.',
+          'Ceux dans $app, depuis votre dernier suivi.');
+  String get exYes => _('Yes', 'Oui');
+  String get exSome => _('Some', 'En partie');
+  String get exNo => _('Not this time', 'Pas cette fois');
+  String get exercisesLabel => _('Exercises', 'Exercices');
+  String exerciseStatusLabel(String st) => st == 'yes'
+      ? _('Did them', 'Faits')
+      : st == 'some'
+          ? _('Did some', 'Faits en partie')
+          : _('Not this time', 'Pas cette fois');
   String earlierMessages(int n) =>
       _('Earlier messages ($n)', 'Messages précédents ($n)');
   String get showOnlyLatest =>
