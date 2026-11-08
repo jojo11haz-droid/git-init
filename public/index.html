@@ -1765,6 +1765,11 @@
   .btw-tour-back:hover{color:var(--ink);}
   .btw-tour-next{background:var(--moss);color:#fff;border:none;border-radius:100px;padding:9px 18px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;}
   .btw-tour-next:hover{background:var(--ink);color:var(--paper);}
+  /* Close-ups: during the walkthrough the part being explained lifts out of
+     the demo card and grows, like a magnifier, so it stays whole and readable. */
+  .btw-shot.btw-shot-open{overflow:visible;}
+  .btw-tour-pop{position:relative;z-index:6;background:var(--panel);border-radius:12px;box-shadow:0 0 0 10px var(--panel),0 22px 48px rgba(0,0,0,.30);transition:transform .5s cubic-bezier(.34,1.3,.5,1);}
+  @media (prefers-reduced-motion: reduce){.btw-tour-pop{transition:none;}}
   .btw-tour-skip{position:absolute;top:12px;right:13px;background:none;border:none;color:var(--ink-soft);font-size:20px;line-height:1;cursor:pointer;padding:2px 4px;}
   .btw-tour-skip:hover{color:var(--ink);}
   .btw-tour-start{display:inline-flex;align-items:center;gap:7px;margin-top:12px;background:transparent;color:var(--moss);border:1px solid var(--line);border-radius:100px;padding:8px 15px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;}
@@ -9627,12 +9632,11 @@
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
   const guideTourBtn = document.getElementById('btwGuideTour');
   // Signed in: the dashboard tour. A visitor has no dashboard, so they get the
-  // homepage walkthrough of the live demo cards instead.
+  // walkthrough of the live demo cards instead.
   if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{
     const signedIn = typeof state !== 'undefined' && !!state.role;
     if(signedIn){ if(window.btwStartTour) window.btwStartTour(); return; }
-    goToView(navHome, viewHome);
-    setTimeout(()=>{ if(window.btwStartDemoTour) window.btwStartDemoTour(); }, 450);
+    if(window.btwStartDemoTour) window.btwStartDemoTour();
   });
   const dashTourBtn = document.getElementById('btwDashTourBtn');
   if(dashTourBtn) dashTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
@@ -17391,8 +17395,50 @@
       ];
     }
     function visible(el){ return !!(el && el.offsetParent !== null && el.getBoundingClientRect().width > 4); }
+    // Close-ups for the homepage demo: the part being explained lifts out of
+    // its card and grows (as big as the screen allows), like a magnifier.
+    let popped = null, curTarget = null, actTimer = null;
+    function resetZoom(){
+      if(popped){
+        popped.el.style.transform = '';
+        const el = popped.el, fr = popped.frame;
+        setTimeout(function(){ if(!popped || popped.el !== el){ el.classList.remove('btw-tour-pop'); if(!popped || popped.frame !== fr) fr.classList.remove('btw-shot-open'); } }, 520);
+        popped = null;
+      }
+    }
+    function zoomTo(frame, target){
+      target.style.transform = '';
+      const r = target.getBoundingClientRect();
+      const s = Math.min(1.7, (window.innerWidth - 40) / r.width, (window.innerHeight * 0.42) / r.height);
+      frame.classList.add('btw-shot-open');
+      target.classList.add('btw-tour-pop');
+      popped = { el: target, frame: frame };
+      if(!(s > 1.05)) return;
+      // Keep the enlarged part on screen sideways.
+      const cx = r.left + r.width/2, half = r.width * s / 2;
+      let dx = 0;
+      if(cx - half < 20) dx = 20 - (cx - half);
+      else if(cx + half > window.innerWidth - 20) dx = (window.innerWidth - 20) - (cx + half);
+      target.style.transform = 'translateX(' + dx.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')';
+    }
+    // Small live moments so the demo visibly moves while it's explained.
+    function runAct(act){
+      if(act === 'slider'){
+        const range = document.getElementById('btwMkMood'); if(!range) return;
+        const pm = (typeof painMode === 'function') && painMode();
+        const from = parseFloat(range.value) || 5, to = pm ? 3 : 7.5, t0 = performance.now(), dur = 1100;
+        (function tick(now){
+          if(!active) return;
+          const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+          range.value = String(from + (to - from) * e);
+          range.dispatchEvent(new Event('input', { bubbles:true }));
+          if(k < 1) requestAnimationFrame(tick);
+        })(t0);
+      }
+    }
     function positionTo(target){
-      const r = target.getBoundingClientRect(), pad = 8;
+      const r = target.getBoundingClientRect();
+      const pad = target.classList.contains('btw-tour-pop') ? 14 : 8;
       spot.style.top = (r.top - pad) + 'px';
       spot.style.left = (r.left - pad) + 'px';
       spot.style.width = (r.width + pad*2) + 'px';
@@ -17416,14 +17462,27 @@
       const step = steps[idx]; if(!step) return;
       elTitle.textContent = step.title;
       elBody.textContent = step.body;
+      const eyebrow = document.getElementById('btwTourEyebrow');
+      if(eyebrow) eyebrow.textContent = t('Quick tour') + ' · ' + (idx+1) + '/' + steps.length;
       elDots.innerHTML = steps.map(function(_,i){ return '<span class="btw-tour-dot'+(i===idx?' on':'')+'"></span>'; }).join('');
       btnBack.style.visibility = (idx === 0) ? 'hidden' : 'visible';
       btnNext.textContent = (idx === steps.length-1) ? t('Done') : t('Next');
       const target = step.sel ? document.querySelector(step.sel) : null;
       if(posTimer){ clearTimeout(posTimer); posTimer = null; }
-      if(target && visible(target)){
+      if(actTimer){ clearTimeout(actTimer); actTimer = null; }
+      resetZoom(); curTarget = null;
+      const frame = target && visible(target) ? target.closest('.btw-shot') : null;
+      if(frame){
+        // Homepage demo: bring the part into view, then magnify it.
+        curTarget = target;
         try { target.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){ target.scrollIntoView(); }
-        posTimer = setTimeout(function(){ positionTo(target); }, 300);
+        setTimeout(function(){ if(curTarget === target) zoomTo(frame, target); }, 380);
+        posTimer = setTimeout(function(){ posTimer = null; positionTo(target); }, 950);
+        if(step.act) actTimer = setTimeout(function(){ runAct(step.act); }, 1000);
+      } else if(target && visible(target)){
+        curTarget = target;
+        try { target.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){ target.scrollIntoView(); }
+        posTimer = setTimeout(function(){ posTimer = null; positionTo(target); }, 300);
       } else {
         positionCenter();
       }
@@ -17455,9 +17514,10 @@
       const noun = personNoun();
       return [
         { sel:null, title:L('A quick walkthrough','Visite guidée rapide'), body:L('Thirty seconds, both sides: what your ' + noun + ' does, and what you see. Skip anytime.','Trente secondes, les deux côtés : ce que fait votre ' + noun + ' et ce que vous voyez. Passez quand vous voulez.') },
-        { sel:'#btwMkSlider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste — ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste — ou laisse Between l’estimer.') },
+        { sel:'#btwMkSlider', act:'slider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste — ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste — ou laisse Between l’estimer.') },
         { sel:'.btw-mk-airead', title:L('Between reads it back','Between le relit'), body:L('From a sentence or a voice note, Between reads the feeling and the themes — no forms to fill.','À partir d’une phrase ou d’un mémo vocal, Between dégage le ressenti et les thèmes — aucun formulaire.') },
         { sel:'#btwMkChips', title:L('What’s going on','Ce qui se passe'), body:L('They tap what fits, or let Between pick up the themes from their words.','Il choisit ce qui colle, ou laisse Between repérer les thèmes dans ses mots.') },
+        { sel:'#btwMkBody', title:L('Exactly where it hurts','Exactement où ça fait mal'), body:L('They tap the spot on a body map (front, back or side) and how bad it is. You see the exact spot, left or right, not just “my knee”.','Il touche l’endroit sur une carte du corps (devant, derrière ou de côté) et indique l’intensité. Vous voyez l’endroit exact, gauche ou droite, pas seulement « mon genou ».') },
         { sel:'#btwMkInput', title:L('In their own words','Dans ses propres mots'), body:L('A few words or a voice memo — the whole check-in takes under a minute, whenever something comes up.','Quelques mots ou un mémo vocal — le suivi complet prend moins d’une minute, dès que quelque chose survient.') },
         { sel:'#btwMkSend', title:L('They send it','Il l’envoie'), body:L('No appointment, no one waiting. It just lands in your dashboard for the next session.','Sans rendez-vous, sans personne à l’autre bout. Cela arrive dans votre tableau de bord pour la prochaine séance.') },
         { sel:'.btw-mk-row.flag', title:L('Your caseload','Votre liste'), body:L('Everyone shows here. Anyone flagged or with new check-ins rises to the top, so a big list is one glance.','Tout le monde est ici. Les personnes signalées ou avec de nouveaux suivis remontent en haut : une grande liste se lit d’un coup d’œil.') },
@@ -17468,13 +17528,15 @@
         { sel:null, title:L('That’s the loop','C’est la boucle'), body:L('Your ' + noun + ' checks in in seconds; you walk in already knowing their week. Try the cards yourself — they’re live.','Votre ' + noun + ' fait un suivi en quelques secondes ; vous arrivez en sachant déjà sa semaine. Essayez les cartes — elles sont actives.') }
       ];
     }
-    function end(){ active = false; overlay.classList.remove('show'); try{ localStorage.setItem('btw_tour_v2','done'); }catch(e){} }
+    function end(){ active = false; overlay.classList.remove('show'); resetZoom(); curTarget = null; if(actTimer){ clearTimeout(actTimer); actTimer = null; } try{ localStorage.setItem('btw_tour_v2','done'); }catch(e){} }
 
     btnNext.addEventListener('click', function(){ if(idx >= steps.length-1) end(); else go(idx+1); });
     btnBack.addEventListener('click', function(){ go(idx-1); });
     btnSkip.addEventListener('click', end);
     block.addEventListener('click', end);
     window.addEventListener('resize', function(){ if(active) render(); });
+    // Keep the spotlight on its target if the visitor scrolls during the tour.
+    window.addEventListener('scroll', function(){ if(active && curTarget && !posTimer) positionTo(curTarget); }, { passive:true });
     document.addEventListener('keydown', function(e){
       if(!active) return;
       if(e.key === 'Escape') end();
@@ -17483,7 +17545,19 @@
     });
 
     window.btwStartTour = start;
-    window.btwStartDemoTour = function(){ startSteps(buildDemoSteps()); };
+    // The demo cards live on the "How it works" page: go there first if needed.
+    window.btwStartDemoTour = function(){
+      const shots = document.querySelector('.btw-shots');
+      const begin = function(){
+        if(shots) try { shots.scrollIntoView({ block:'start', behavior:'smooth' }); } catch(e){}
+        setTimeout(function(){ startSteps(shownSteps(buildDemoSteps())); }, 350);
+      };
+      if(shots && !visible(shots)){
+        const nav = document.getElementById('btwNavLearn');
+        if(nav) nav.click();
+        setTimeout(begin, 400);
+      } else begin();
+    };
     const demoTourBtn = document.getElementById('btwDemoTourBtn');
     if(demoTourBtn) demoTourBtn.addEventListener('click', function(){ window.btwStartDemoTour(); });
     // Auto-start once for a signed-in clinician or patient sitting on the
