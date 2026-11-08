@@ -1529,7 +1529,7 @@
   .btw-demo-inputrow{display:flex;align-items:center;gap:8px;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;}
   .btw-demo-mic{width:9px;height:9px;border-radius:50%;background:var(--clay);flex:none;}
   .btw-demo-inputhint{color:var(--ink-soft);font-size:13px;}
-  .btw-demo-card{width:300px;background:#DCE6F3;border:1px solid var(--moss);border-radius:16px;padding:16px 18px;text-align:left;}
+  .btw-demo-card{width:300px;background:var(--moss-light);border:1px solid var(--moss);border-radius:16px;padding:16px 18px;text-align:left;}
   .btw-demo-cardlabel{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--moss);margin-bottom:10px;}
   .btw-demo-line{height:8px;border-radius:4px;background:rgba(30,76,134,0.35);margin-bottom:9px;}
   .btw-demo-tags{margin-top:12px;display:flex;gap:6px;}
@@ -1545,6 +1545,14 @@
   .btw-demo-name{font-weight:600;font-size:14px;flex:1;}
   .btw-demo-badge{background:var(--moss);color:#fff;border-radius:9px;padding:2px 9px;font-size:11.5px;}
   .btw-demo-muted{color:var(--ink-soft);font-size:12px;}
+  .btw-demo-sumtext{font-size:14px;line-height:1.5;color:var(--ink);}
+  .btw-demo-needs-h{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--moss);text-align:left;margin:0 0 2px 2px;}
+  .btw-demo-reason{font-size:12px;color:var(--clay);font-weight:600;text-align:right;}
+  .btw-demo-reason.soft{color:var(--ink-soft);font-weight:500;}
+  .btw-demo-dot-quiet{width:9px;height:9px;border-radius:50%;background:var(--line);flex-shrink:0;}
+  .btw-demo-dot-ok{width:9px;height:9px;border-radius:50%;background:#3E8E5A;flex-shrink:0;}
+  .btw-demo-notelines div{font-size:12.5px;line-height:1.45;color:var(--ink);margin-top:5px;}
+  .btw-demo-notelines b{color:var(--moss);margin-right:7px;font-family:var(--font-mono);font-size:11.5px;}
   .btw-demo-caption{margin:16px auto 4px;font-size:14px;font-weight:600;color:var(--ink);min-height:20px;}
   .btw-demo-dots{display:flex;gap:8px;justify-content:center;margin-top:8px;}
   .btw-demo-dot{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;transition:background .3s;}
@@ -3431,9 +3439,7 @@
           <div class="btw-demo-frame" data-frame="1">
             <div class="btw-demo-card">
               <div class="btw-demo-cardlabel">AI summary</div>
-              <div class="btw-demo-line" style="width:90%;"></div>
-              <div class="btw-demo-line" style="width:75%;"></div>
-              <div class="btw-demo-line" style="width:60%;"></div>
+              <div class="btw-demo-sumtext" id="btwDemoSummary">Work stress keeping them up; third poor night this week.</div>
               <div class="btw-demo-tags"><span>Work</span><span>Sleep</span></div>
             </div>
           </div>
@@ -3441,14 +3447,22 @@
                someone using Between for themselves sees their own week. -->
           <div class="btw-demo-frame" data-frame="2">
             <div class="btw-demo-caseload" data-demo-pro>
-              <div class="btw-demo-row flagged"><span class="btw-demo-dot-flag"></span><span class="btw-demo-name">Amy</span><span class="btw-demo-badge">2 new</span></div>
-              <div class="btw-demo-row"><span class="btw-demo-name">Ben</span><span class="btw-demo-badge">1 new</span></div>
-              <div class="btw-demo-row quiet"><span class="btw-demo-name">Cara</span><span class="btw-demo-muted">quiet</span></div>
+              <div class="btw-demo-needs-h">Needs you today</div>
+              <div class="btw-demo-row flagged"><span class="btw-demo-dot-flag"></span><span class="btw-demo-name">Amy</span><span class="btw-demo-reason" id="btwDemoReason">Mood dipping 3 days</span></div>
+              <div class="btw-demo-row"><span class="btw-demo-dot-quiet"></span><span class="btw-demo-name">Ben</span><span class="btw-demo-reason soft">Quiet for 9 days</span></div>
+              <div class="btw-demo-row quiet"><span class="btw-demo-dot-ok"></span><span class="btw-demo-name">Cara</span><span class="btw-demo-muted">On track</span></div>
             </div>
             <div class="btw-demo-card btw-demo-self" data-demo-solo hidden>
               <div class="btw-demo-cardlabel">This week</div>
               <svg class="btw-demo-selfspark" viewBox="0 0 260 46" preserveAspectRatio="none" aria-hidden="true"><polyline points="6,34 58,38 110,24 162,26 214,12 254,9" fill="none" stroke="#1E4C86" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="58" cy="38" r="3.4" fill="#C0392B"/><circle cx="254" cy="9" r="3.4" fill="#1E4C86"/></svg>
               <div class="btw-demo-selfnote">Mood mostly okay and climbing. Sleep came up most.</div>
+            </div>
+          </div>
+          <!-- Frame 4 (professionals): the chart note, drafted in their format. -->
+          <div class="btw-demo-frame" data-frame="3" data-demo-pro>
+            <div class="btw-demo-card">
+              <div class="btw-demo-cardlabel" id="btwDemoNoteLbl">DAP note · draft</div>
+              <div class="btw-demo-notelines" id="btwDemoNoteLines"></div>
             </div>
           </div>
         </div>
@@ -3457,6 +3471,7 @@
           <button class="btw-demo-dot active" data-go="0" aria-label="Step 1"></button>
           <button class="btw-demo-dot" data-go="1" aria-label="Step 2"></button>
           <button class="btw-demo-dot" data-go="2" aria-label="Step 3"></button>
+          <button class="btw-demo-dot" data-go="3" aria-label="Step 4" data-demo-pro></button>
         </div>
       </section>
 
@@ -5226,6 +5241,11 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "You see who needs you, and why":"Vous voyez qui a besoin de vous, et pourquoi",
+    "A chart note, drafted for you":"Une note au dossier, rédigée pour vous",
+    "Quiet for 9 days":"Silence depuis 9 jours",
+    "On track":"Sur la bonne voie",
+    "DAP note · draft":"Note DAP · ébauche",
     "Personalize":"Personnaliser",
     "Make it yours":"À votre image",
     "What your clients see":"Ce que voient vos clients",
@@ -11324,7 +11344,8 @@
     const caps = [
       ()=> solo() ? t('You check in within seconds') : t('A patient checks in within seconds'),
       ()=> t('AI turns it into a short summary'),
-      ()=> solo() ? t('You watch your own pattern build') : t('You see who needs you at a glance')
+      ()=> solo() ? t('You watch your own pattern build') : t('You see who needs you, and why'),
+      ()=> t('A chart note, drafted for you')
     ];
     // The check-in line and the theme tags in the demo are specific to each
     // field, so a sports page shows a player's check-in, a physio page a
@@ -11345,6 +11366,10 @@
       ind_sport: { en:{ bubble:"Legs still heavy after training.", tags:["Fatigue","Sleep"], note:"Training landing well, energy climbing. Legs came up most." },  fr:{ bubble:"Les jambes encore lourdes après l'entraînement.", tags:["Fatigue","Sommeil"], note:"L'entraînement va bien, l'énergie monte. Les jambes sont revenues le plus souvent." } },
       ind_eating:{ en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"], note:"Energy steadier this week. Meals came up most." },      fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"], note:"Énergie plus stable cette semaine. Les repas sont revenus le plus souvent." } }
     };
+    // Per field: the AI summary line, why the person shows in "Needs you
+    // today", and a short chart note in that field's format.
+    const DEMO_MORE = {"therapy": {"en": {"summary": "Work stress keeping them up; third poor night this week.", "reason": "Mood dipping 3 days", "fmt": "DAP", "chart": [["D", "Reports work stress and poor sleep, 3 nights this week."], ["A", "Stress tied to sleep loss; mood 4/10, down from 6."], ["P", "Review wind-down routine; check in on workload."]]}, "fr": {"summary": "Le stress du travail l'empêche de dormir; troisième mauvaise nuit cette semaine.", "reason": "Humeur en baisse depuis 3 jours", "fmt": "DAP", "chart": [["D", "Rapporte du stress au travail et un mauvais sommeil, 3 nuits cette semaine."], ["A", "Stress lié au manque de sommeil; humeur 4/10, en baisse de 6."], ["P", "Revoir la routine du soir; faire le point sur la charge de travail."]]}}, "physio": {"en": {"summary": "Knee pain 6/10, worse after stairs, third morning in a row.", "reason": "Pain getting worse", "fmt": "SOAP", "chart": [["S", "Knee sore on waking, 6/10, worse on stairs."], ["O", "Did 2 of 3 home exercises."], ["A", "Flare after more walking; no red flags."], ["P", "Ease step-downs; recheck next visit."]]}, "fr": {"summary": "Douleur au genou 6/10, pire après les escaliers, troisième matin de suite.", "reason": "Douleur qui empire", "fmt": "SOAP", "chart": [["S", "Genou douloureux au réveil, 6/10, pire dans les escaliers."], ["O", "2 exercices sur 3 faits à domicile."], ["A", "Poussée après plus de marche; aucun signal d'alarme."], ["P", "Alléger les descentes de marche; réévaluer à la prochaine visite."]]}}, "sports": {"en": {"summary": "Legs heavy after the game; slept 6 hours.", "reason": "Energy down 3 days", "fmt": "SOAP", "chart": [["S", "Legs heavy after Saturday's game."], ["O", "Slept 6 h; skipped the recovery session."], ["A", "Under-recovered, not injured."], ["P", "Lighter practice; prioritise sleep."]]}, "fr": {"summary": "Jambes lourdes après le match; 6 heures de sommeil.", "reason": "Énergie en baisse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Jambes lourdes après le match de samedi."], ["O", "6 h de sommeil; séance de récupération sautée."], ["A", "Récupération insuffisante, pas de blessure."], ["P", "Entraînement plus léger; priorité au sommeil."]]}}, "fitness": {"en": {"summary": "Skipped a workout; energy low most of the week.", "reason": "Missed 2 sessions", "fmt": "SOAP", "chart": [["S", "Felt sluggish, skipped Tuesday's workout."], ["O", "2 of 4 sessions done."], ["A", "Low energy, likely sleep-related."], ["P", "Shorter sessions this week; recheck energy."]]}, "fr": {"summary": "Entraînement sauté; énergie basse presque toute la semaine.", "reason": "2 séances manquées", "fmt": "SOAP", "chart": [["S", "Se sentait amorphe, entraînement de mardi sauté."], ["O", "2 séances sur 4 faites."], ["A", "Énergie basse, probablement liée au sommeil."], ["P", "Séances plus courtes cette semaine; revoir l'énergie."]]}}, "nutrition": {"en": {"summary": "Skipped lunch twice; energy crashed mid-afternoon.", "reason": "Meals skipped 3 days", "fmt": "SOAP", "chart": [["S", "Skipping lunch on workdays; 3 pm crashes."], ["O", "Two meals a day on 4 of 7 days."], ["A", "Long gaps between meals driving the dips."], ["P", "Plan a portable lunch; add a 2 pm snack."]]}, "fr": {"summary": "Dîner sauté deux fois; panne d'énergie en après-midi.", "reason": "Repas sautés 3 jours", "fmt": "SOAP", "chart": [["S", "Dîner sauté les jours de travail; coups de barre vers 15 h."], ["O", "Deux repas par jour, 4 jours sur 7."], ["A", "Longs intervalles entre les repas, d'où les baisses."], ["P", "Prévoir un dîner à emporter; collation vers 14 h."]]}}, "recovery": {"en": {"summary": "Strong craving tonight; used a coping skill and stayed with it.", "reason": "Cravings up this week", "fmt": "DAP", "chart": [["D", "Strong evening craving; called a support person."], ["A", "Coping held; cravings up since Friday."], ["P", "Plan for evenings; check in Monday."]]}, "fr": {"summary": "Forte envie ce soir; a utilisé une stratégie et a tenu bon.", "reason": "Envies en hausse cette semaine", "fmt": "DAP", "chart": [["D", "Forte envie en soirée; a appelé une personne de soutien."], ["A", "Les stratégies ont tenu; envies en hausse depuis vendredi."], ["P", "Prévoir un plan pour les soirées; suivi lundi."]]}}, "occupational": {"en": {"summary": "Dressing slow and tiring; fatigue by mid-morning.", "reason": "Fatigue up 4 days", "fmt": "SOAP", "chart": [["S", "Dressing slow and tiring this morning."], ["O", "Used the reacher; rested twice."], ["A", "Fatigue limiting the morning routine."], ["P", "Pace tasks; sit to dress."]]}, "fr": {"summary": "S'habiller était lent et fatigant; fatigue dès le milieu de matinée.", "reason": "Fatigue en hausse depuis 4 jours", "fmt": "SOAP", "chart": [["S", "S'habiller était lent et fatigant ce matin."], ["O", "A utilisé la pince; deux pauses."], ["A", "La fatigue limite la routine du matin."], ["P", "Fractionner les tâches; s'habiller assis."]]}}, "neuropsych": {"en": {"summary": "Lost focus often; foggy by afternoon after a short night.", "reason": "Focus slipping", "fmt": "DAP", "chart": [["D", "Frequent lapses in focus; foggy by afternoon."], ["A", "Worse after short sleep; mood steady."], ["P", "Demanding tasks in the morning; track sleep."]]}, "fr": {"summary": "Perte de concentration fréquente; brouillard en après-midi après une courte nuit.", "reason": "Concentration en baisse", "fmt": "DAP", "chart": [["D", "Pertes de concentration fréquentes; brouillard en après-midi."], ["A", "Pire après une courte nuit; humeur stable."], ["P", "Tâches exigeantes le matin; suivre le sommeil."]]}}, "schools": {"en": {"summary": "Hard day; couldn't focus in class, worried about a test.", "reason": "Stress up 3 days", "fmt": "SOAP", "chart": [["S", "Couldn't focus in class; worried about a test."], ["O", "Checked in 3 days running."], ["A", "Test stress affecting focus."], ["P", "Quick check-in Thursday; share a study plan."]]}, "fr": {"summary": "Journée difficile; impossible de se concentrer, inquiet pour un examen.", "reason": "Stress en hausse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Difficile de se concentrer en classe; inquiet pour un examen."], ["O", "Suivi 3 jours de suite."], ["A", "Le stress de l'examen nuit à la concentration."], ["P", "Court suivi jeudi; partager un plan d'étude."]]}}, "ind_mind": {"en": {"summary": "Hard to switch off after work; sleep came up again."}, "fr": {"summary": "Difficile de décrocher après le travail; le sommeil revient encore."}}, "ind_body": {"en": {"summary": "Knee sore this morning, 6/10, easing since Monday."}, "fr": {"summary": "Genou douloureux ce matin, 6/10, en baisse depuis lundi."}}, "ind_sport": {"en": {"summary": "Legs heavy after training; slept 6 hours."}, "fr": {"summary": "Jambes lourdes après l'entraînement; 6 heures de sommeil."}}, "ind_eating": {"en": {"summary": "Skipped lunch; energy crashed mid-afternoon."}, "fr": {"summary": "Dîner sauté; panne d'énergie en après-midi."}}};
+    Object.keys(DEMO_MORE).forEach(function(k){ if(DEMO_COPY[k]){ ['en','fr'].forEach(function(l){ Object.assign(DEMO_COPY[k][l], DEMO_MORE[k][l]); }); } });
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
       if(curAudience === 'kinesiology' || curAudience === 'osteo') return 'physio';
@@ -11359,6 +11384,13 @@
       const tagsEl = stage.querySelector('.btw-demo-tags'); if(tagsEl) tagsEl.innerHTML = d.tags.map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
       // The individual field's this-week summary follows the tracking mode.
       if(d.note){ const note = stage.querySelector('.btw-demo-selfnote'); if(note) note.textContent = d.note; }
+      const sum = document.getElementById('btwDemoSummary'); if(sum && d.summary) sum.textContent = d.summary;
+      const rs = document.getElementById('btwDemoReason'); if(rs && d.reason) rs.textContent = d.reason;
+      const nl = document.getElementById('btwDemoNoteLbl'), lines = document.getElementById('btwDemoNoteLines');
+      if(nl && lines && d.chart){
+        nl.textContent = curLang === 'fr' ? ('Note ' + d.fmt + ' · ébauche') : (d.fmt + ' note · draft');
+        lines.innerHTML = d.chart.map(function(r){ return '<div><b>' + esc(r[0]) + '</b>' + esc(r[1]) + '</div>'; }).join('');
+      }
       // The photo attachment shows only where check-ins are pain based: physio,
       // kinesiology, osteopathy and the individual Body mode (not sports).
       const k = demoKey();
@@ -11372,11 +11404,13 @@
       // Drop the initial hidden attribute so an empty display falls back to the
       // stylesheet (flex for the caseload, block for the self card).
       stage.querySelectorAll('[data-demo-pro]').forEach(el=>{ el.removeAttribute('hidden'); el.style.display = s ? 'none' : ''; });
+      document.querySelectorAll('#btwDemoDots [data-demo-pro]').forEach(el=>{ el.style.display = s ? 'none' : ''; });
       stage.querySelectorAll('[data-demo-solo]').forEach(el=>{ el.removeAttribute('hidden'); el.style.display = s ? '' : 'none'; });
     }
     let i = 0, timer = null;
     function show(n){
-      i = (n + frames.length) % frames.length;
+      const count = solo() ? 3 : frames.length;
+      i = (n + count) % count;
       frames.forEach((f,idx)=>f.classList.toggle('active', idx===i));
       dots.forEach((d,idx)=>d.classList.toggle('active', idx===i));
       if(caption) caption.textContent = caps[i]();
@@ -11386,7 +11420,7 @@
     dots.forEach(d=> d.addEventListener('click', ()=>{ show(parseInt(d.dataset.go,10)); start(); }));
     // Re-render the caption, the field-specific content and swap the last frame
     // when the audience, tracking mode, or language changes.
-    window.__btwDemoRefresh = ()=>{ applyDemoAudience(); renderDemoContent(); if(caption) caption.textContent = caps[i](); };
+    window.__btwDemoRefresh = ()=>{ applyDemoAudience(); renderDemoContent(); if(solo() && i > 2) show(0); else if(caption) caption.textContent = caps[i](); };
     applyDemoAudience(); renderDemoContent();
     show(0); start();
   })();
