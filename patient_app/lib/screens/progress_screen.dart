@@ -435,7 +435,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
       final avg =
           moods.map((c) => c.mood!).reduce((a, b2) => a + b2) / moods.length;
       final label = f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ';
-      b.writeln('$label${avg.toStringAsFixed(1)}/10');
+      // French writes decimals with a comma (5,3/10).
+      final avgTxt = f
+          ? avg.toStringAsFixed(1).replaceAll('.', ',')
+          : avg.toStringAsFixed(1);
+      b.writeln('$label$avgTxt/10');
       final now = DateTime.now();
       final tw = moods
           .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 7))))

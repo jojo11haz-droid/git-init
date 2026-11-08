@@ -3676,7 +3676,7 @@
             <div class="btw-feat-copy">
               <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg></div>
               <h4>Charting done for you</h4>
-              <p>Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP or DAP. Reports and letters too. Save it as a PDF or copy it into your charting.</p>
+              <p>Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP, DAP or ADIME. Reports and letters too. Save it as a PDF or copy it into your charting.</p>
             </div>
             <div class="btw-feat-viz">
               <div class="btw-vc btw-viz-in" id="btwVizNote">
@@ -5157,6 +5157,8 @@
   }
   // Everything rendered below comes from the server (i.e. from stored patient
   // text), so it must be escaped before touching innerHTML.
+  // A number as text: "5.3" in English, "5,3" in French (Quebec style).
+  function nf(x, d){ const v = Number(x).toFixed(d == null ? 1 : d); return (typeof curLang !== 'undefined' && curLang === 'fr') ? v.replace('.', ',') : v; }
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
@@ -5286,6 +5288,9 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Chart note (ADIME) — from the recorded session; check it before it goes in the chart":"Note au dossier (ADIME) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "Chart note (ADIME) — add your findings, nutrition diagnosis and plan, then copy it into your chart":"Note au dossier (ADIME) — ajoutez vos constats, votre diagnostic nutritionnel et le plan, puis copiez-la dans votre dossier",
+    "Chart note (ADIME)":"Note au dossier (ADIME)",
     "or review the program":"ou réviser le programme",
     "from their check-ins":"à partir de ses suivis",
     "Preview as":"Aperçu",
@@ -5778,7 +5783,7 @@
     "You see who needs you at a glance":"Vous voyez qui a besoin de vous d'un coup d'œil",
     "Quick to scan":"Rapide à parcourir",
     "Charting done for you":"La note au dossier, déjà rédigée",
-    "Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP or DAP. Reports and letters too. Save it as a PDF or copy it into your charting.":"Dictez quelques mots après la visite et Between rédige la note au dossier à partir des suivis, en format SOAP ou DAP. Les rapports et les lettres aussi. Enregistrez-la en PDF ou copiez-la dans votre dossier.",
+    "Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP, DAP or ADIME. Reports and letters too. Save it as a PDF or copy it into your charting.":"Dictez quelques mots après la visite et Between rédige la note au dossier à partir des suivis, en format SOAP, DAP ou ADIME. Les rapports et les lettres aussi. Enregistrez-la en PDF ou copiez-la dans votre dossier.",
     "Programs that adapt":"Des programmes qui s'ajustent",
     "Build a home program in a minute from AI suggestions, each with a short how-to. People tick off what they did, and Between suggests when to progress or ease off.":"Créez un programme à domicile en une minute à partir de suggestions de l'IA, chacune avec une courte explication. Les gens cochent ce qu'ils ont fait, et Between suggère quand progresser ou alléger.",
     "Only the people who need you, with the reason: a safety flag, scores getting worse or gone quiet. The same list can land in your inbox each morning.":"Seulement les personnes qui ont besoin de vous, avec la raison : un signalement, des scores qui empirent ou un silence. La même liste peut arriver dans votre boîte chaque matin.",
@@ -8754,15 +8759,16 @@
       ? (fr ? ['Genou douloureux dans les escaliers en début de semaine, mieux vendredi.', 'Douleur 6 → 3/10 sur 5 suivis · programme fait 5 jours sur 6.', 'Progresse comme prévu.', 'Passer aux montées de marche, 3 × 10.']
             : ['Knee sore on stairs early in the week, easing by Friday.', 'Pain 6 → 3/10 over 5 check-ins · program done 5 of 6 days.', 'Improving as expected.', 'Progress to step-ups, 3 × 10.'])
       : fk === 'nutrition'
-      ? (fr ? ["Baisse d'énergie l'après-midi, moins de fringales cette semaine.", 'Énergie 4 → 6/10 sur 5 suivis · habitudes faites 4 jours sur 7.', 'En amélioration.', 'Ajouter des protéines au dîner; revoir dans 2 semaines.']
-            : ['Energy dips mid-afternoon, fewer cravings this week.', 'Energy 4 → 6/10 over 5 check-ins · habits done 4 of 7 days.', 'Trending up.', 'Add protein at lunch; review in 2 weeks.'])
+      ? (fr ? ["Baisses d'énergie l'après-midi, moins de fringales; énergie 4 → 6/10 sur 5 suivis · habitudes faites 4 jours sur 7.", 'Apport en protéines insuffisant le midi, lié aux baisses d’énergie.', 'Ajouter des protéines au dîner.', 'Énergie et fringales dans 2 semaines.']
+            : ['Energy dips mid-afternoon, fewer cravings; energy 4 → 6/10 over 5 check-ins · habits done 4 of 7 days.', 'Low protein at lunch, related to afternoon energy dips.', 'Add protein at lunch.', 'Energy and cravings in 2 weeks.'])
       : (fr ? ['Semaine difficile au travail; sommeil léger lun–mer, mieux après la fin de semaine.', 'Humeur 4 → 6/10 sur 5 suivis; respiration utilisée 4 fois.', 'Mieux outillé face au stress.', 'Garder la routine du soir; revoir les limites au travail.']
             : ['Hard week at work; poor sleep Mon–Wed, better after the weekend.', 'Mood 4 → 6/10 over 5 check-ins; breathing practice used 4 times.', 'Coping better with stress.', 'Keep the evening wind-down; revisit work boundaries.']);
-    var labs = dap ? ['D', 'A', 'P'] : ['S', 'O', 'A', 'P'];
+    var adime = (fk === 'nutrition');
+    var labs = dap ? ['D', 'A', 'P'] : adime ? ['A', 'D', 'I', 'M/E'] : ['S', 'O', 'A', 'P'];
     var lines = dap ? [NOTE[0], NOTE[1] + ' ' + NOTE[2], NOTE[3]] : NOTE;
     var nb = q('#btwVizNoteBody');
     if(nb){ nb.innerHTML = ''; labs.forEach(function(lb, i){ var d = document.createElement('div'); var bb = document.createElement('b'); bb.textContent = lb; var sp = document.createElement('span'); sp.textContent = lines[i]; d.appendChild(bb); d.appendChild(sp); nb.appendChild(d); }); }
-    t('btwVizNoteTop', (fr ? 'DICTÉ 0:38 · NOTE AU DOSSIER (' : 'DICTATED 0:38 · CHART NOTE (') + (dap ? 'DAP' : 'SOAP') + ')');
+    t('btwVizNoteTop', (fr ? 'DICTÉ 0:38 · NOTE AU DOSSIER (' : 'DICTATED 0:38 · CHART NOTE (') + (dap ? 'DAP' : adime ? 'ADIME' : 'SOAP') + ')');
     t('btwVizNotePdf', fr ? 'Enregistrer en PDF' : 'Save as PDF');
     t('btwVizNoteCopy', fr ? 'Copier dans le dossier' : 'Copy to chart');
     // 3 programs that adapt — the program in this field's words.
@@ -11475,7 +11481,7 @@
     };
     // Per field: the AI summary line, why the person shows in "Needs you
     // today", and a short chart note in that field's format.
-    const DEMO_MORE = {"therapy": {"en": {"summary": "Work stress keeping them up; third poor night this week.", "reason": "Mood dipping 3 days", "fmt": "DAP", "chart": [["D", "Reports work stress and poor sleep, 3 nights this week."], ["A", "Stress tied to sleep loss; mood 4/10, down from 6."], ["P", "Review wind-down routine; check in on workload."]]}, "fr": {"summary": "Le stress du travail l'empêche de dormir; troisième mauvaise nuit cette semaine.", "reason": "Humeur en baisse depuis 3 jours", "fmt": "DAP", "chart": [["D", "Rapporte du stress au travail et un mauvais sommeil, 3 nuits cette semaine."], ["A", "Stress lié au manque de sommeil; humeur 4/10, en baisse de 6."], ["P", "Revoir la routine du soir; faire le point sur la charge de travail."]]}}, "physio": {"en": {"summary": "Knee pain 6/10, worse after stairs, third morning in a row.", "reason": "Pain getting worse", "fmt": "SOAP", "chart": [["S", "Knee sore on waking, 6/10, worse on stairs."], ["O", "Did 2 of 3 home exercises."], ["A", "Flare after more walking; no red flags."], ["P", "Ease step-downs; recheck next visit."]]}, "fr": {"summary": "Douleur au genou 6/10, pire après les escaliers, troisième matin de suite.", "reason": "Douleur qui empire", "fmt": "SOAP", "chart": [["S", "Genou douloureux au réveil, 6/10, pire dans les escaliers."], ["O", "2 exercices sur 3 faits à domicile."], ["A", "Poussée après plus de marche; aucun signal d'alarme."], ["P", "Alléger les descentes de marche; réévaluer à la prochaine visite."]]}}, "sports": {"en": {"summary": "Legs heavy after the game; slept 6 hours.", "reason": "Energy down 3 days", "fmt": "SOAP", "chart": [["S", "Legs heavy after Saturday's game."], ["O", "Slept 6 h; skipped the recovery session."], ["A", "Under-recovered, not injured."], ["P", "Lighter practice; prioritise sleep."]]}, "fr": {"summary": "Jambes lourdes après le match; 6 heures de sommeil.", "reason": "Énergie en baisse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Jambes lourdes après le match de samedi."], ["O", "6 h de sommeil; séance de récupération sautée."], ["A", "Récupération insuffisante, pas de blessure."], ["P", "Entraînement plus léger; priorité au sommeil."]]}}, "fitness": {"en": {"summary": "Skipped a workout; energy low most of the week.", "reason": "Missed 2 sessions", "fmt": "SOAP", "chart": [["S", "Felt sluggish, skipped Tuesday's workout."], ["O", "2 of 4 sessions done."], ["A", "Low energy, likely sleep-related."], ["P", "Shorter sessions this week; recheck energy."]]}, "fr": {"summary": "Entraînement sauté; énergie basse presque toute la semaine.", "reason": "2 séances manquées", "fmt": "SOAP", "chart": [["S", "Se sentait amorphe, entraînement de mardi sauté."], ["O", "2 séances sur 4 faites."], ["A", "Énergie basse, probablement liée au sommeil."], ["P", "Séances plus courtes cette semaine; revoir l'énergie."]]}}, "nutrition": {"en": {"summary": "Skipped lunch twice; energy crashed mid-afternoon.", "reason": "Meals skipped 3 days", "fmt": "SOAP", "chart": [["S", "Skipping lunch on workdays; 3 pm crashes."], ["O", "Two meals a day on 4 of 7 days."], ["A", "Long gaps between meals driving the dips."], ["P", "Plan a portable lunch; add a 2 pm snack."]]}, "fr": {"summary": "Dîner sauté deux fois; panne d'énergie en après-midi.", "reason": "Repas sautés 3 jours", "fmt": "SOAP", "chart": [["S", "Dîner sauté les jours de travail; coups de barre vers 15 h."], ["O", "Deux repas par jour, 4 jours sur 7."], ["A", "Longs intervalles entre les repas, d'où les baisses."], ["P", "Prévoir un dîner à emporter; collation vers 14 h."]]}}, "recovery": {"en": {"summary": "Strong craving tonight; used a coping skill and stayed with it.", "reason": "Cravings up this week", "fmt": "DAP", "chart": [["D", "Strong evening craving; called a support person."], ["A", "Coping held; cravings up since Friday."], ["P", "Plan for evenings; check in Monday."]]}, "fr": {"summary": "Forte envie ce soir; a utilisé une stratégie et a tenu bon.", "reason": "Envies en hausse cette semaine", "fmt": "DAP", "chart": [["D", "Forte envie en soirée; a appelé une personne de soutien."], ["A", "Les stratégies ont tenu; envies en hausse depuis vendredi."], ["P", "Prévoir un plan pour les soirées; suivi lundi."]]}}, "occupational": {"en": {"summary": "Dressing slow and tiring; fatigue by mid-morning.", "reason": "Fatigue up 4 days", "fmt": "SOAP", "chart": [["S", "Dressing slow and tiring this morning."], ["O", "Used the reacher; rested twice."], ["A", "Fatigue limiting the morning routine."], ["P", "Pace tasks; sit to dress."]]}, "fr": {"summary": "S'habiller était lent et fatigant; fatigue dès le milieu de matinée.", "reason": "Fatigue en hausse depuis 4 jours", "fmt": "SOAP", "chart": [["S", "S'habiller était lent et fatigant ce matin."], ["O", "A utilisé la pince; deux pauses."], ["A", "La fatigue limite la routine du matin."], ["P", "Fractionner les tâches; s'habiller assis."]]}}, "neuropsych": {"en": {"summary": "Lost focus often; foggy by afternoon after a short night.", "reason": "Focus slipping", "fmt": "DAP", "chart": [["D", "Frequent lapses in focus; foggy by afternoon."], ["A", "Worse after short sleep; mood steady."], ["P", "Demanding tasks in the morning; track sleep."]]}, "fr": {"summary": "Perte de concentration fréquente; brouillard en après-midi après une courte nuit.", "reason": "Concentration en baisse", "fmt": "DAP", "chart": [["D", "Pertes de concentration fréquentes; brouillard en après-midi."], ["A", "Pire après une courte nuit; humeur stable."], ["P", "Tâches exigeantes le matin; suivre le sommeil."]]}}, "schools": {"en": {"summary": "Hard day; couldn't focus in class, worried about a test.", "reason": "Stress up 3 days", "fmt": "SOAP", "chart": [["S", "Couldn't focus in class; worried about a test."], ["O", "Checked in 3 days running."], ["A", "Test stress affecting focus."], ["P", "Quick check-in Thursday; share a study plan."]]}, "fr": {"summary": "Journée difficile; impossible de se concentrer, inquiet pour un examen.", "reason": "Stress en hausse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Difficile de se concentrer en classe; inquiet pour un examen."], ["O", "Suivi 3 jours de suite."], ["A", "Le stress de l'examen nuit à la concentration."], ["P", "Court suivi jeudi; partager un plan d'étude."]]}}, "ind_mind": {"en": {"summary": "Hard to switch off after work; sleep came up again."}, "fr": {"summary": "Difficile de décrocher après le travail; le sommeil revient encore."}}, "ind_body": {"en": {"summary": "Knee sore this morning, 6/10, easing since Monday."}, "fr": {"summary": "Genou douloureux ce matin, 6/10, en baisse depuis lundi."}}, "ind_sport": {"en": {"summary": "Legs heavy after training; slept 6 hours."}, "fr": {"summary": "Jambes lourdes après l'entraînement; 6 heures de sommeil."}}, "ind_eating": {"en": {"summary": "Skipped lunch; energy crashed mid-afternoon."}, "fr": {"summary": "Dîner sauté; panne d'énergie en après-midi."}}};
+    const DEMO_MORE = {"therapy": {"en": {"summary": "Work stress keeping them up; third poor night this week.", "reason": "Mood dipping 3 days", "fmt": "DAP", "chart": [["D", "Reports work stress and poor sleep, 3 nights this week."], ["A", "Stress tied to sleep loss; mood 4/10, down from 6."], ["P", "Review wind-down routine; check in on workload."]]}, "fr": {"summary": "Le stress du travail l'empêche de dormir; troisième mauvaise nuit cette semaine.", "reason": "Humeur en baisse depuis 3 jours", "fmt": "DAP", "chart": [["D", "Rapporte du stress au travail et un mauvais sommeil, 3 nuits cette semaine."], ["A", "Stress lié au manque de sommeil; humeur 4/10, en baisse de 6."], ["P", "Revoir la routine du soir; faire le point sur la charge de travail."]]}}, "physio": {"en": {"summary": "Knee pain 6/10, worse after stairs, third morning in a row.", "reason": "Pain getting worse", "fmt": "SOAP", "chart": [["S", "Knee sore on waking, 6/10, worse on stairs."], ["O", "Did 2 of 3 home exercises."], ["A", "Flare after more walking; no red flags."], ["P", "Ease step-downs; recheck next visit."]]}, "fr": {"summary": "Douleur au genou 6/10, pire après les escaliers, troisième matin de suite.", "reason": "Douleur qui empire", "fmt": "SOAP", "chart": [["S", "Genou douloureux au réveil, 6/10, pire dans les escaliers."], ["O", "2 exercices sur 3 faits à domicile."], ["A", "Poussée après plus de marche; aucun signal d'alarme."], ["P", "Alléger les descentes de marche; réévaluer à la prochaine visite."]]}}, "sports": {"en": {"summary": "Legs heavy after the game; slept 6 hours.", "reason": "Energy down 3 days", "fmt": "SOAP", "chart": [["S", "Legs heavy after Saturday's game."], ["O", "Slept 6 h; skipped the recovery session."], ["A", "Under-recovered, not injured."], ["P", "Lighter practice; prioritise sleep."]]}, "fr": {"summary": "Jambes lourdes après le match; 6 heures de sommeil.", "reason": "Énergie en baisse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Jambes lourdes après le match de samedi."], ["O", "6 h de sommeil; séance de récupération sautée."], ["A", "Récupération insuffisante, pas de blessure."], ["P", "Entraînement plus léger; priorité au sommeil."]]}}, "fitness": {"en": {"summary": "Skipped a workout; energy low most of the week.", "reason": "Missed 2 sessions", "fmt": "SOAP", "chart": [["S", "Felt sluggish, skipped Tuesday's workout."], ["O", "2 of 4 sessions done."], ["A", "Low energy, likely sleep-related."], ["P", "Shorter sessions this week; recheck energy."]]}, "fr": {"summary": "Entraînement sauté; énergie basse presque toute la semaine.", "reason": "2 séances manquées", "fmt": "SOAP", "chart": [["S", "Se sentait amorphe, entraînement de mardi sauté."], ["O", "2 séances sur 4 faites."], ["A", "Énergie basse, probablement liée au sommeil."], ["P", "Séances plus courtes cette semaine; revoir l'énergie."]]}}, "nutrition": {"en": {"summary": "Skipped lunch twice; energy crashed mid-afternoon.", "reason": "Meals skipped 3 days", "fmt": "ADIME", "chart": [["A", "Skipping lunch on workdays; 3 pm crashes; 2 meals a day on 4 of 7 days."], ["D", "Irregular meals related to the work schedule."], ["I", "Plan a portable lunch; add a 2 pm snack."], ["M/E", "Energy and meals at the next visit."]]}, "fr": {"summary": "Dîner sauté deux fois; panne d'énergie en après-midi.", "reason": "Repas sautés 3 jours", "fmt": "ADIME", "chart": [["A", "Dîner sauté les jours de travail; coups de barre vers 15 h; 2 repas par jour, 4 jours sur 7."], ["D", "Repas irréguliers liés à l’horaire de travail."], ["I", "Prévoir un dîner à emporter; collation vers 14 h."], ["M/E", "Énergie et repas à la prochaine visite."]]}}, "recovery": {"en": {"summary": "Strong craving tonight; used a coping skill and stayed with it.", "reason": "Cravings up this week", "fmt": "DAP", "chart": [["D", "Strong evening craving; called a support person."], ["A", "Coping held; cravings up since Friday."], ["P", "Plan for evenings; check in Monday."]]}, "fr": {"summary": "Forte envie ce soir; a utilisé une stratégie et a tenu bon.", "reason": "Envies en hausse cette semaine", "fmt": "DAP", "chart": [["D", "Forte envie en soirée; a appelé une personne de soutien."], ["A", "Les stratégies ont tenu; envies en hausse depuis vendredi."], ["P", "Prévoir un plan pour les soirées; suivi lundi."]]}}, "occupational": {"en": {"summary": "Dressing slow and tiring; fatigue by mid-morning.", "reason": "Fatigue up 4 days", "fmt": "SOAP", "chart": [["S", "Dressing slow and tiring this morning."], ["O", "Used the reacher; rested twice."], ["A", "Fatigue limiting the morning routine."], ["P", "Pace tasks; sit to dress."]]}, "fr": {"summary": "S'habiller était lent et fatigant; fatigue dès le milieu de matinée.", "reason": "Fatigue en hausse depuis 4 jours", "fmt": "SOAP", "chart": [["S", "S'habiller était lent et fatigant ce matin."], ["O", "A utilisé la pince; deux pauses."], ["A", "La fatigue limite la routine du matin."], ["P", "Fractionner les tâches; s'habiller assis."]]}}, "neuropsych": {"en": {"summary": "Lost focus often; foggy by afternoon after a short night.", "reason": "Focus slipping", "fmt": "DAP", "chart": [["D", "Frequent lapses in focus; foggy by afternoon."], ["A", "Worse after short sleep; mood steady."], ["P", "Demanding tasks in the morning; track sleep."]]}, "fr": {"summary": "Perte de concentration fréquente; brouillard en après-midi après une courte nuit.", "reason": "Concentration en baisse", "fmt": "DAP", "chart": [["D", "Pertes de concentration fréquentes; brouillard en après-midi."], ["A", "Pire après une courte nuit; humeur stable."], ["P", "Tâches exigeantes le matin; suivre le sommeil."]]}}, "schools": {"en": {"summary": "Hard day; couldn't focus in class, worried about a test.", "reason": "Stress up 3 days", "fmt": "SOAP", "chart": [["S", "Couldn't focus in class; worried about a test."], ["O", "Checked in 3 days running."], ["A", "Test stress affecting focus."], ["P", "Quick check-in Thursday; share a study plan."]]}, "fr": {"summary": "Journée difficile; impossible de se concentrer, inquiet pour un examen.", "reason": "Stress en hausse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Difficile de se concentrer en classe; inquiet pour un examen."], ["O", "Suivi 3 jours de suite."], ["A", "Le stress de l'examen nuit à la concentration."], ["P", "Court suivi jeudi; partager un plan d'étude."]]}}, "ind_mind": {"en": {"summary": "Hard to switch off after work; sleep came up again."}, "fr": {"summary": "Difficile de décrocher après le travail; le sommeil revient encore."}}, "ind_body": {"en": {"summary": "Knee sore this morning, 6/10, easing since Monday."}, "fr": {"summary": "Genou douloureux ce matin, 6/10, en baisse depuis lundi."}}, "ind_sport": {"en": {"summary": "Legs heavy after training; slept 6 hours."}, "fr": {"summary": "Jambes lourdes après l'entraînement; 6 heures de sommeil."}}, "ind_eating": {"en": {"summary": "Skipped lunch; energy crashed mid-afternoon."}, "fr": {"summary": "Dîner sauté; panne d'énergie en après-midi."}}};
     Object.keys(DEMO_MORE).forEach(function(k){ if(DEMO_COPY[k]){ ['en','fr'].forEach(function(l){ Object.assign(DEMO_COPY[k][l], DEMO_MORE[k][l]); }); } });
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
@@ -14210,7 +14216,7 @@
     lines.push(t('Between — between-session check-in summary'));
     lines.push(t('Patient:') + ' ' + p.display_name);
     if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + ' – ' + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
-    if(avg!=null) lines.push(scoreLblCap + ': ' + scoreWord(avg) + ' (' + avg.toFixed(1) + '/10)');
+    if(avg!=null) lines.push(scoreLblCap + ': ' + scoreWord(avg) + ' (' + nf(avg) + '/10)');
     if(topTags.length) lines.push(t('Top themes:') + ' ' + topTags.join(', '));
     if(riskN>0) lines.push(t('Flagged:') + ' ' + riskN + ' ' + (riskN===1?t('check-in'):t('check-ins')) + ' ' + t('with a possible safety concern'));
     lines.push('');
@@ -15200,16 +15206,17 @@
         var ta = document.getElementById('btwAiNoteText');
         var meta = document.getElementById('btwAiNoteMeta');
         var label = document.getElementById('btwAiNoteLabel');
-        var soap = d && d.format === 'soap', dap = d && d.format === 'dap';
-        state.noteFormat = soap ? 'soap' : dap ? 'dap' : null;
+        var soap = d && d.format === 'soap', dap = d && d.format === 'dap', adime = d && d.format === 'adime';
+        state.noteFormat = soap ? 'soap' : dap ? 'dap' : adime ? 'adime' : null;
         if(label) label.textContent = soap ? t('Chart note (SOAP) — from the recorded session; check it before it goes in the chart')
           : dap ? t('Chart note (DAP) — from the recorded session; check it before it goes in the chart')
+          : adime ? t('Chart note (ADIME) — from the recorded session; check it before it goes in the chart')
           : t('Draft note — review and edit before using');
         aiPanelNotice(np, '');
         if(ta){ ta.value = (d && d.note) || ''; ta.rows = 16; }
         var n = (d && d.checkInsUsed) || 0;
         if(meta) meta.textContent = t('From the recorded session') + (n ? ' + ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) : '') + ' · ' + t('Indicative, not a clinical record.');
-        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap) ? t('Copy to chart') : t('Copy note');
+        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap || adime) ? t('Copy to chart') : t('Copy note');
         var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = '';
         if(np){ np.style.display = ''; setTimeout(function(){ try { np.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(e){} }, 60); }
       }
@@ -16474,7 +16481,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('since last session'))}` +
-      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
+      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${nf(avgMood)}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 
@@ -16671,7 +16678,7 @@
     out.push(L('Check-ins: ', 'Suivis : ') + ci.length);
     if(moods.length){
       var avg = moods.reduce(function(s,c){ return s + c.mood; }, 0) / moods.length;
-      out.push(L('Average self-rated mood: ', 'Humeur moyenne autoévaluée : ') + avg.toFixed(1) + '/10');
+      out.push(L('Average self-rated mood: ', 'Humeur moyenne autoévaluée : ') + nf(avg) + '/10');
       var now = Date.now();
       var tw = moods.filter(function(c){ return c.time >= now - 7*864e5; });
       var lw = moods.filter(function(c){ return c.time < now - 7*864e5 && c.time >= now - 14*864e5; });
@@ -17003,20 +17010,20 @@
     if(ins.avg != null){
       let value, sub;
       if(ins.delta == null){
-        value = esc(scoreWord(ins.avg)) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.avg.toFixed(1) + '/10)</span>';
+        value = esc(scoreWord(ins.avg)) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + nf(ins.avg) + '/10)</span>';
         sub = t('avg so far, more check-ins reveal the trend');
       } else {
         // For pain, less is better, so improving/declining flip direction.
         const better = pm ? (ins.delta < -0.5) : (ins.delta > 0.5);
         const worse  = pm ? (ins.delta > 0.5)  : (ins.delta < -0.5);
-        const signed = (ins.delta > 0 ? '+' : '') + ins.delta.toFixed(1) + ' ' + t('vs earlier check-ins');
+        const signed = (ins.delta > 0 ? '+' : '') + nf(ins.delta) + ' ' + t('vs earlier check-ins');
         if(better){
           value = '<span class="up">' + (pm ? '↓ ' + esc(t('easing')) : '↑ ' + esc(t('improving'))) + '</span>'; sub = signed;
         } else if(worse){
           value = '<span class="down">' + (pm ? '↑ ' + esc(t('worsening')) : '↓ ' + esc(t('declining'))) + '</span>'; sub = signed;
         } else {
           value = esc(t('holding steady'));
-          sub = (pm ? t('avg pain') : t('avg mood')) + ' ' + scoreWord(ins.avg) + ' (' + ins.avg.toFixed(1) + '/10)';
+          sub = (pm ? t('avg pain') : t('avg mood')) + ' ' + scoreWord(ins.avg) + ' (' + nf(ins.avg) + '/10)';
         }
       }
       cards.push(card(ins.delta == null ? (pm ? t('Average pain') : t('Average mood')) : (pm ? t('Pain trend') : t('Mood direction')), value, sub));
@@ -17032,7 +17039,7 @@
     if(ins.spanDays != null && ins.spanDays >= 3 && ins.avgGapDays != null){
       let rhythm;
       if(ins.avgGapDays < 1) rhythm = t('several a day');
-      else if(ins.avgGapDays <= 7) rhythm = (Math.round(ins.perWeek*10)/10) + '×/' + t('week');
+      else if(ins.avgGapDays <= 7) rhythm = nf(Math.round(ins.perWeek*10)/10).replace(/[.,]0$/, '') + '×/' + t('week');
       else rhythm = '~' + Math.round(ins.avgGapDays) + ' ' + t('days apart');
       cards.push(card(t('Check-in rhythm'), rhythm, ins.lastTime ? t('last') + ' ' + agoLabel(ins.lastTime) : ''));
     } else if(ins.lastTime){
@@ -17204,7 +17211,7 @@
       + '</div></div>');
     // Mood by month.
     if(s.months.length){
-      const rows = s.months.map(mo=>'<div class="btw-stats-row"><span class="k">'+esc(monthName(mo.m))+(String(mo.y).slice(2))+'</span>'+statBar(mo.avg/10)+'<span class="val">'+esc(scoreWord(mo.avg))+' ('+mo.avg.toFixed(1)+')</span></div>').join('');
+      const rows = s.months.map(mo=>'<div class="btw-stats-row"><span class="k">'+esc(monthName(mo.m))+(String(mo.y).slice(2))+'</span>'+statBar(mo.avg/10)+'<span class="val">'+esc(scoreWord(mo.avg))+' ('+nf(mo.avg)+')</span></div>').join('');
       out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(pm?t('Pain by month'):t('Mood by month'))+'</div>'+rows+'</div>');
     }
     // Mood distribution.
@@ -17216,7 +17223,7 @@
     // By day of week.
     const activeWd = s.weekdays.filter(w=>w.n>0);
     if(activeWd.length){
-      const rows = s.weekdays.map(w=>{ if(!w.n) return ''; const cls = (s.bestWd&&w.i===s.bestWd.i)?' best':((s.worstWd&&w.i===s.worstWd.i&&s.bestWd.i!==s.worstWd.i)?' worst':''); return '<div class="btw-stats-row'+cls+'"><span class="k">'+esc(wdayName(w.i))+'</span>'+statBar(w.avg/10)+'<span class="val">'+esc(scoreWord(w.avg))+' ('+w.avg.toFixed(1)+') · '+w.n+'</span></div>'; }).join('');
+      const rows = s.weekdays.map(w=>{ if(!w.n) return ''; const cls = (s.bestWd&&w.i===s.bestWd.i)?' best':((s.worstWd&&w.i===s.worstWd.i&&s.bestWd.i!==s.worstWd.i)?' worst':''); return '<div class="btw-stats-row'+cls+'"><span class="k">'+esc(wdayName(w.i))+'</span>'+statBar(w.avg/10)+'<span class="val">'+esc(scoreWord(w.avg))+' ('+nf(w.avg)+') · '+w.n+'</span></div>'; }).join('');
       out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(pm?t('Pain by day of week'):t('Mood by day of week'))+'</div>'+rows+'</div>');
     }
     // Themes in depth.
@@ -17228,7 +17235,7 @@
           if(d>=0.5) delta = pm ? '<span class="down">↑ '+esc(t('more pain'))+'</span>' : '<span class="up">↑ '+esc(t('better'))+'</span>';
           else if(d<=-0.5) delta = pm ? '<span class="up">↓ '+esc(t('less pain'))+'</span>' : '<span class="down">↓ '+esc(t('lower'))+'</span>';
           else delta='<span style="color:var(--ink-soft)">'+esc(t('typical'))+'</span>'; }
-        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(scoreWord(th.avg))+' ('+th.avg.toFixed(1)+')':'—')+'</td><td>'+delta+'</td></tr>';
+        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(scoreWord(th.avg))+' ('+nf(th.avg)+')':'—')+'</td><td>'+delta+'</td></tr>';
       }).join('');
       out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Themes in depth'))+'</div><table class="btw-stats-table"><thead><tr><th>'+esc(t('Theme'))+'</th><th>'+esc(t('Count'))+'</th><th>'+esc(t('Share'))+'</th><th>'+esc(pm?t('Avg pain'):t('Avg mood'))+'</th><th>'+esc(t('vs overall'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
     }
@@ -17615,12 +17622,14 @@
         var d = await api('GET', '/api/patients/' + p.id + '/note');
         var soap = !!(d && d.format === 'soap');
         var dap = !!(d && d.format === 'dap');
+        var adime = !!(d && d.format === 'adime');
         if(label) label.textContent = soap ? t('Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart')
           : dap ? t('Chart note (DAP) — add your assessment and plan, then copy it into your chart')
+          : adime ? t('Chart note (ADIME) — add your findings, nutrition diagnosis and plan, then copy it into your chart')
           : t('Draft note — review and edit before using');
-        if(ta) ta.rows = (soap || dap) ? 12 : 7;
-        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap) ? t('Copy to chart') : t('Copy note');
-        state.noteFormat = soap ? 'soap' : dap ? 'dap' : null;
+        if(ta) ta.rows = (soap || dap || adime) ? 12 : 7;
+        var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap || adime) ? t('Copy to chart') : t('Copy note');
+        state.noteFormat = soap ? 'soap' : dap ? 'dap' : adime ? 'adime' : null;
         var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = (d && d.needsData) ? 'none' : '';
         if(d && d.needsData){
           aiPanelNotice(panel, aiEmptyMsg(p, t('You can still dictate or type your session notes above, or record the session.')));
@@ -17643,7 +17652,7 @@
     var notePdf = document.getElementById('btwAiNotePdf');
     if(notePdf) notePdf.addEventListener('click', function(){
       var ta = document.getElementById('btwAiNoteText'); if(!ta || !ta.value.trim()) return;
-      var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : t('Session note');
+      var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : state.noteFormat === 'adime' ? t('Chart note (ADIME)') : t('Session note');
       savePdf(title, ta.value, { signature: true });
       flashBtn(notePdf, t('Saved ✓'));
     });
@@ -17755,7 +17764,7 @@
     const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
     const n = list.length;
     el.innerHTML = `<strong>${n} ${esc(n===1?t('check-in'):t('check-ins'))}</strong> ${esc(t('so far'))}` +
-      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${avgMood}/10)</strong>` : '') +
+      (avgMood ? ` · ${esc(painMode()?t('avg pain'):t('avg mood'))} <strong>${esc(scoreWord(parseFloat(avgMood)))} (${nf(avgMood)}/10)</strong>` : '') +
       (topTag ? ` · ${esc(t('most common theme:'))} <strong>${esc(curLang==='fr'?(FR[topTag[0]]||topTag[0]):topTag[0])}</strong> (${topTag[1]}×)` : '');
   }
 

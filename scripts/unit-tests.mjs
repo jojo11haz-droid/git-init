@@ -132,7 +132,7 @@ eq(noteFormat({ accountType: 'therapist' }), 'dap', 'psychotherapist → DAP not
 eq(noteFormat({ accountType: 'mentor' }), 'dap', 'recovery → DAP note');
 eq(noteFormat({ accountType: 'coach', discipline: 'neuropsych' }), 'dap', 'neuropsych → DAP note');
 eq(noteFormat({ accountType: 'coach', discipline: 'physio' }), 'soap', 'physio → SOAP note');
-eq(noteFormat({ accountType: 'coach', discipline: 'nutrition' }), 'soap', 'nutrition → SOAP note');
+eq(noteFormat({ accountType: 'coach', discipline: 'nutrition' }), 'adime', 'nutrition → ADIME note');
 eq(noteFormat({ accountType: 'trainer' }), 'soap', 'trainer → SOAP note');
 
 console.log('timeSavedSummary — the time-saved counter');
