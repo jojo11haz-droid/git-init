@@ -8,6 +8,7 @@ import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTag
 import { readFileSync } from 'fs';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage } from '../brand.js';
 import { sanitizeExerciseStatus, sanitizeAppName } from '../clinical.js';
+import { normalizePhone } from '../sms.js';
 
 let failures = 0;
 function eq(actual, expected, msg) {
@@ -189,5 +190,8 @@ eq([sanitizeExerciseStatus('yes'), sanitizeExerciseStatus('some'), sanitizeExerc
 eq(sanitizeAppName('  Wibbi<script>  '), 'Wibbiscript', 'app name: trimmed, no angle brackets');
 eq(sanitizeAppName('x'.repeat(60)).length, 40, 'app name: capped at 40');
 
+console.log('phone numbers for texting (E.164)');
+eq([normalizePhone('514-555-0122'), normalizePhone('(514) 555 0122'), normalizePhone('1 514 555 0122'), normalizePhone('+1 514 555 0122'), normalizePhone('+44 20 7946 0958'), normalizePhone('123')],
+   ['+15145550122', '+15145550122', '+15145550122', '+15145550122', '+442079460958', null], 'phone: North American numbers get +1; international kept; too short refused');
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

@@ -17,7 +17,9 @@ export async function sendSms({ to, text }) {
     console.log(`📱 [sms not configured — would send]\nTo: ${to}\n${text}\n`);
     return { delivered: false, error: 'SMS not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM).' };
   }
-  const body = new URLSearchParams({ From: TWILIO_FROM, To: to, Body: text });
+  // Numbers saved before the +1 fix (e.g. "5145550122") are put in full
+  // international form here, so Twilio accepts them.
+  const body = new URLSearchParams({ From: TWILIO_FROM, To: normalizePhone(to) || to, Body: text });
   const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
   const response = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
@@ -45,11 +47,18 @@ export async function sendSms({ to, text }) {
 // Light E.164-ish normalization + sanity check. Keeps a leading +, strips the
 // usual separators, and accepts 8–15 digits. Returns the cleaned number, or
 // null if it doesn't look like a phone number.
+// Full international (E.164) form, which Twilio requires: "+15145550122".
+// A 10-digit number typed without a country code is North American (Canada /
+// US), so it gets +1; 11 digits starting with 1 get the +. Anything already
+// starting with + is kept as typed.
 export function normalizePhone(raw) {
   if (!raw) return null;
   let s = String(raw).trim().replace(/[\s().-]/g, '');
   const plus = s.startsWith('+');
   s = s.replace(/[^\d]/g, '');
   if (s.length < 8 || s.length > 15) return null;
-  return (plus ? '+' : '') + s;
+  if (plus) return '+' + s;
+  if (s.length === 10) return '+1' + s;
+  if (s.length === 11 && s.startsWith('1')) return '+' + s;
+  return '+' + s;
 }
