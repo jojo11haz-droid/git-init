@@ -487,7 +487,7 @@ Rules:
 // never diagnostic — it documents what the patient reported, nothing more.
 async function draftProgressNote({ name, discipline, accountType, checkIns, exercises, findings, transcript }) {
   if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
-  // Every profession gets a structured chart note now (SOAP or DAP).
+  // Every profession gets a structured chart note now (SOAP, DAP, or ADIME for nutrition).
   return draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript });
   const focus = documentFocusForProfession({ discipline, accountType });
   const who = name || 'the patient';
@@ -583,7 +583,18 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
     : '', extLine].filter(Boolean).join('; ') || 'nothing assigned in Between yet';
   const first = recent.length ? new Date(recent[0].submitted_at).toISOString().slice(0, 10) : 'n/a';
   const last = recent.length ? new Date(recent[recent.length - 1].submitted_at).toISOString().slice(0, 10) : 'n/a';
-  const blocks = format === 'dap'
+  // Where each kind of content goes, per note format.
+  const F = format === 'dap'
+    ? { name: 'DAP', said: 'D', obs: 'D block ("In-session observations")', ctx: 'D', assess: 'A', plan: 'P' }
+    : format === 'adime'
+      ? { name: 'ADIME', said: 'A', obs: 'A block ("In-session findings")', ctx: 'A', assess: 'D (only a nutrition diagnosis / PES statement they actually stated)', plan: 'I, with any monitoring they stated in M/E' }
+      : { name: 'SOAP', said: 'S', obs: 'findings/observations line', ctx: 'S and O', assess: 'A', plan: 'P' };
+  const blocks = format === 'adime'
+    ? `A: Assessment — what ${who} reported between sessions (eating patterns, energy, cravings, what got in the way, what helped, in 2-4 sentences, close to their words), the ${scoreWord} scores (range and trend with numbers), recurring themes, and completion of the ${progWord.toLowerCase()}. End with "In-session findings (intake, measurements, labs): [to add]".
+D: Nutrition diagnosis: [Clinician to complete]
+I: Intervention — ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add intervention]".
+M/E: Monitoring and evaluation: [Clinician to add what to monitor and when]`
+    : format === 'dap'
     ? `D: Data — what ${who} reported between sessions (in 2-4 sentences, close to their words), the ${scoreWord} scores (range and trend with numbers), recurring themes, and completion of the between-session work. End with "In-session observations: [to add]".
 A: [Clinician to complete]
 P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`
@@ -591,13 +602,13 @@ P: ${progWord}: list what was assigned with how often it was ticked off. Then "[
 O: Patient-reported between visits — ${scoreWord} scores (range and trend with numbers)${pain ? ', body areas marked' : ''}, and completion of the ${progWord.toLowerCase()}. End with "${pain ? 'In-clinic findings' : 'Session observations'}: [to add]".
 A: [Clinician to complete]
 P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`;
-  const system = `You draft a ${focus.role}'s chart note in ${format === 'dap' ? 'DAP' : 'SOAP'} format for ${who}, from what ${who} reported between ${pain ? 'visits' : 'sessions'} (${first} to ${last}), for the clinician to paste into their charting software and edit.
+  const system = `You draft a ${focus.role}'s chart note in ${F.name} format for ${who}, from what ${who} reported between ${pain ? 'visits' : 'sessions'} (${first} to ${last}), for the clinician to paste into their charting software and edit.
 Rules:
 - Document ONLY what is in the data. Never diagnose, never assess, never recommend treatment, never invent findings.
 - Body-map keys look like "front:l_knee_cap" or "back:lower_back": write them as plain anatomy ("left knee, kneecap", "lower back"). l_ = left, r_ = right. Sensation codes: ache = aching, tight = tightness, stiff = stiffness/locking, sharp = sharp/shooting, numb = tingling/numbness, throb = throbbing/heat.
 - Same language as the check-ins. Plain text, no markdown, exactly these labelled lines/blocks:
 ${blocks}
-${session ? `- A TRANSCRIPT of today's recorded session is given below, with speakers numbered (not named). Work out which speaker is the clinician (asks the questions, explains, assigns) and which is ${who}. Use it as the main source: what ${who} said goes in ${format === 'dap' ? 'D' : 'S'}; what was observed or done in session goes in the ${format === 'dap' ? 'D block ("In-session observations")' : 'findings/observations line'}; the clinician's OWN stated impressions go in A and the plan they stated (homework, ${progWord.toLowerCase()} changes, next visit) in P, in their words, tidied into clear clinical prose. Never add an assessment, diagnosis or plan the clinician did not say out loud; if they did not state one, keep the placeholder. Leave out small talk. The between-visit check-ins add context to ${format === 'dap' ? 'D' : 'S and O'}.\n` : ''}${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the findings/observations line, their assessment in A and their plan in P — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${session ? 420 : own ? 300 : 220} words.`;
+${session ? `- A TRANSCRIPT of today's recorded session is given below, with speakers numbered (not named). Work out which speaker is the clinician (asks the questions, explains, assigns) and which is ${who}. Use it as the main source: what ${who} said goes in ${F.said}; what was observed or done in session goes in the ${F.obs}; the clinician's OWN stated impressions go in ${F.assess} and the plan they stated (homework, ${progWord.toLowerCase()} changes, next visit) in ${F.plan}, in their words, tidied into clear clinical prose. Never add an assessment, diagnosis or plan the clinician did not say out loud; if they did not state one, keep the placeholder. Leave out small talk. The between-visit check-ins add context to ${F.ctx}.\n` : ''}${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the ${F.obs}, their assessment in ${F.assess} and their plan in ${F.plan} — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${session ? 420 : own ? 300 : 220} words.`;
   const user = `Check-ins (oldest first):\n${lines || '(none in the last 4 weeks)'}\n\n${progWord} completion: ${adherence}${own ? `\n\nClinician's session notes:\n${own}` : ''}${session ? `\n\nSession transcript:\n${session}` : ''}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

@@ -189,6 +189,8 @@ export function programKind({ accountType, discipline } = {}) {
 export function noteFormat({ accountType, discipline } = {}) {
   const d = discipline || '', a = accountType || '';
   if (a === 'therapist' || a === 'mentor' || d === 'neuropsych' || (a === '' && d === '')) return 'dap';
+  // Dietitians chart in ADIME (the Nutrition Care Process).
+  if (d === 'nutrition') return 'adime';
   return 'soap';
 }
 
