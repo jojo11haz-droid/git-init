@@ -2018,7 +2018,6 @@
   .btw-guide-note{margin-top:22px;border-radius:14px;background:var(--paper);padding:16px 18px;font-size:13px;line-height:1.65;color:var(--ink-soft);}
   .btw-guide-note strong{color:var(--ink);}
   .btw-guide-note .crisis{color:var(--clay,#C0392B);font-weight:600;}
-  .btw-guide-actions{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px;}
   .btw-guide-contact{margin-top:18px;font-size:13px;color:var(--ink-soft);}
   .btw-guide-contact a{color:var(--moss);}
   /* Floating AI chat widget */
@@ -4566,12 +4565,6 @@
       <div class="btw-guide-note">
         <strong>Good to know.</strong> <span>AI summaries are optional, and nothing runs without your say-so. Between isn't a crisis service. If it's an emergency, call 988 or 911. You can use Between on your own, or alongside a professional.</span>
       </div>
-      <div class="btw-guide-actions">
-        <button type="button" class="btw-tour-start" id="btwGuideTour">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          Take the quick tour
-        </button>
-      </div>
       <p class="btw-guide-contact">Questions, or want Between for your clinic? Email <a href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>.</p>
     </div>
   </div>
@@ -6297,7 +6290,7 @@
     "Private to you. Your data is yours — export or delete it anytime.":"Privé pour vous. Vos données vous appartiennent — exportez-les ou supprimez-les à tout moment.",
     "Your clinician sees a short summary, not the raw recording — and only with your consent.":"Votre clinicien voit un court résumé, pas l'enregistrement brut — et seulement avec votre consentement.",
     "You can replay this tour anytime from your check-in screen.":"Vous pouvez revoir cette visite à tout moment depuis votre écran de suivi.",
-    "You can replay this tour anytime from the Guide.":"Vous pouvez revoir cette visite à tout moment depuis le Guide.",
+    "You can replay this tour anytime: tap “Walk me through it” on your dashboard.":"Vous pouvez revoir cette visite à tout moment : touchez « Visite guidée » dans votre tableau de bord.",
     "Add your first person to start receiving check-ins.":"Ajoutez votre première personne pour commencer à recevoir des suivis.",
     "Guide":"Guide",
     "How to use Between":"Comment utiliser Between",
@@ -6318,7 +6311,6 @@
     "Send it. The whole thing takes under a minute.":"Envoyez. Le tout prend moins d'une minute.",
     "Over time your history fills in, so you can see your trends and the themes that keep coming back.":"Au fil du temps, votre historique se remplit : vous voyez vos tendances et les thèmes qui reviennent.",
     "Your data is yours. Export it or delete it whenever you want. If you're seeing a clinician, they only get a short summary, and only if you say it's okay.":"Vos données vous appartiennent. Exportez-les ou supprimez-les quand vous voulez. Si vous consultez un clinicien, il ne reçoit qu'un court résumé, et seulement si vous êtes d'accord.",
-    "Take the quick tour":"Faire la visite rapide",
     "Questions, or want Between for your clinic? Email":"Des questions, ou Between pour votre clinique ? Écrivez à",
     "Contact":"Contact",
     "Questions, or Between for your clinic?":"Des questions, ou Between pour votre clinique ?",
@@ -9725,14 +9717,6 @@
   navProduct.addEventListener('click', ()=> goToView(navProduct, viewProduct));
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
-  const guideTourBtn = document.getElementById('btwGuideTour');
-  // Signed in: the dashboard tour. A visitor has no dashboard, so they get the
-  // walkthrough of the live demo cards instead.
-  if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{
-    const signedIn = typeof state !== 'undefined' && !!state.role;
-    if(signedIn){ if(window.btwStartTour) window.btwStartTour(); return; }
-    if(window.btwStartDemoTour) window.btwStartDemoTour();
-  });
   const dashTourBtn = document.getElementById('btwDashTourBtn');
   if(dashTourBtn) dashTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
 
@@ -17524,7 +17508,7 @@
           { sel:'#btwSend', title:t('Send it'), body:t('That is it — a check-in takes under a minute, whenever something happens.') },
           { sel:'#btwAccTrends', title:t('Your trends'), body:scoreTrend },
           { sel:'#btwAccTimeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
-          { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime from the Guide.') }
+          { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime: tap “Walk me through it” on your dashboard.') }
         ];
       }
       // Clinician tour.
@@ -17542,7 +17526,7 @@
         { sel:'#btwAccTrends', title:t('Trends at a glance'), body: pm ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.') : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.') },
         { sel:'#btwAccTimeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
         { sel:'#btwSaved', title:t('Time saved'), body:t('Every note, brief and program Between drafts for you adds up here.') },
-        { sel:null, title:t('You are all set'), body:(hasPeople ? '' : t('Add your first person to start receiving check-ins.') + ' ') + t('You can replay this tour anytime from the Guide.') }
+        { sel:null, title:t('You are all set'), body:(hasPeople ? '' : t('Add your first person to start receiving check-ins.') + ' ') + t('You can replay this tour anytime: tap “Walk me through it” on your dashboard.') }
       ];
     }
     function visible(el){ return !!(el && el.offsetParent !== null && el.getBoundingClientRect().width > 4); }
