@@ -48,6 +48,12 @@ class S {
       'Between is not a crisis or medical service. If you\'re in severe pain, injured, or it\'s a medical emergency, call 911 or seek urgent care. If you\'re in distress or thinking about harming yourself, call or text 988.',
       'Between n\'est pas un service de crise ni médical. Si tu as une douleur intense, une blessure ou une urgence médicale, compose le 911 ou consulte sans tarder. Si tu es en détresse ou que tu penses à te faire du mal, appelle ou texte le 988.');
 
+  // Nutrition: physical-style emergency copy, but about feeling unwell
+  // rather than pain or injury.
+  String get crisisFooterNutrition => _(
+      'Between is not a crisis or medical service. If you feel unwell or it\'s a medical emergency, call 911 or seek urgent care. If you\'re in distress or thinking about harming yourself, call or text 988.',
+      'Between n\'est pas un service de crise ni médical. Si tu te sens mal ou en cas d\'urgence médicale, compose le 911 ou consulte sans tarder. Si tu es en détresse ou que tu penses à te faire du mal, appelle ou texte le 988.');
+
   // Documents (intake paperwork the patient shares, reviewed by AI)
   String get documentsTitle => _('Documents', 'Documents');
   String get documentsTooltip => _('My documents', 'Mes documents');

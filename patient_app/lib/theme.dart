@@ -205,7 +205,11 @@ class CrisisFooter extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: Text(
-        physical ? s.crisisFooterPhysical : s.crisisFooter,
+        physical
+            ? (profile.kind == CheckInKind.nutrition
+                ? s.crisisFooterNutrition
+                : s.crisisFooterPhysical)
+            : s.crisisFooter,
         textAlign: TextAlign.center,
         style: const TextStyle(
             fontSize: 12.5, color: BtwColors.inkSoft, height: 1.5),
