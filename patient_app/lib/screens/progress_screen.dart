@@ -762,7 +762,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
               ],
             )
           else ...[
-            BodyMapView(map: latest),
+            BodyMapView(map: latest, isFr: s.isFr),
             const SizedBox(height: 10),
             Text(painSummary(latest, _latestSens, s.isFr),
                 textAlign: TextAlign.center,
