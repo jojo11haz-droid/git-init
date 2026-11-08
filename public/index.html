@@ -4560,7 +4560,7 @@
       <div class="btw-guide-actions">
         <button type="button" class="btw-tour-start" id="btwGuideTour">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          Replay the app tour
+          Take the quick tour
         </button>
       </div>
       <p class="btw-guide-contact">Questions, or want Between for your clinic? Email <a href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>.</p>
@@ -6238,7 +6238,7 @@
     "Send it. The whole thing takes under a minute.":"Envoyez. Le tout prend moins d'une minute.",
     "Over time your history fills in, so you can see your trends and the themes that keep coming back.":"Au fil du temps, votre historique se remplit : vous voyez vos tendances et les thèmes qui reviennent.",
     "Your data is yours. Export it or delete it whenever you want. If you're seeing a clinician, they only get a short summary, and only if you say it's okay.":"Vos données vous appartiennent. Exportez-les ou supprimez-les quand vous voulez. Si vous consultez un clinicien, il ne reçoit qu'un court résumé, et seulement si vous êtes d'accord.",
-    "Replay the app tour":"Revoir la visite de l'application",
+    "Take the quick tour":"Faire la visite rapide",
     "Questions, or want Between for your clinic? Email":"Des questions, ou Between pour votre clinique ? Écrivez à",
     "Contact":"Contact",
     "Questions, or Between for your clinic?":"Des questions, ou Between pour votre clinique ?",
@@ -9626,7 +9626,14 @@
   navPricing.addEventListener('click', ()=> goToView(navPricing, viewPricing));
   if(navGuide) navGuide.addEventListener('click', ()=> goToView(navGuide, viewGuide));
   const guideTourBtn = document.getElementById('btwGuideTour');
-  if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
+  // Signed in: the dashboard tour. A visitor has no dashboard, so they get the
+  // homepage walkthrough of the live demo cards instead.
+  if(guideTourBtn) guideTourBtn.addEventListener('click', ()=>{
+    const signedIn = typeof state !== 'undefined' && !!state.role;
+    if(signedIn){ if(window.btwStartTour) window.btwStartTour(); return; }
+    goToView(navHome, viewHome);
+    setTimeout(()=>{ if(window.btwStartDemoTour) window.btwStartDemoTour(); }, 450);
+  });
   const dashTourBtn = document.getElementById('btwDashTourBtn');
   if(dashTourBtn) dashTourBtn.addEventListener('click', ()=>{ if(window.btwStartTour) window.btwStartTour(); });
 
