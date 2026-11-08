@@ -1448,6 +1448,13 @@
   .btw-hep input,.btw-hep textarea{font-family:var(--font-body);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:var(--ink);width:100%;box-sizing:border-box;}
   .btw-hep-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .btw-hep-ai{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);}
+  .btw-hep-aifold{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .btw-hep-aifold > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:600;color:var(--moss);}
+  .btw-hep-aifold > summary::-webkit-details-marker{display:none;}
+  .btw-hep-aifold > summary::after{content:'▾';margin-left:auto;color:var(--ink-soft);transition:transform .2s;}
+  .btw-hep-aifold[open] > summary::after{transform:rotate(180deg);}
+  .btw-hep-aifold > summary .btw-hep-meta{font-weight:400;}
+  .btw-hep-aifold > .btw-hep-ai{border-top:none;margin-top:8px;padding-top:0;}
   .btw-hep-ai-l{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;}
   .btw-hep-sug{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);}
   .btw-hep-msg{font-size:12px;color:var(--ink-soft);margin-top:6px;}
@@ -5244,6 +5251,9 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "AI suggestions":"Suggestions de l'IA",
+    "Suggest exercises or review the program":"Suggérer des exercices ou réviser le programme",
+    "Suggest exercises from their check-ins":"Suggérer des exercices à partir de ses suivis",
     "Adding several people?":"Plusieurs personnes à ajouter?",
     "stats, trends & themes":"stats, tendances et thèmes",
     "pain & themes":"douleur et thèmes",
@@ -15309,7 +15319,7 @@
       ['btwAiNotePanel','btwReportPanel'].forEach(function(id){ var el = document.getElementById(id); if(el) el.style.display = 'none'; });
       var om = document.getElementById('btwAiOwnMsg'); if(om) om.textContent = '';
     }
-    if(host._pid !== pid){ host._pid = pid; host._sug = null; host._rev = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
+    if(host._pid !== pid){ host._pid = pid; host._sug = null; host._rev = null; host._aiOpen = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
     fetchHep(pid).then(function(d){ if(host._pid === pid) drawHep(host, pid, d); }).catch(function(){ if(host._pid === pid) host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Could not load exercises.')) + '</div>'; });
   }
   function drawHep(host, pid, d){
@@ -15331,21 +15341,30 @@
     var ctx = (d && d.context) || {};
     var caution = ctx.caution && ctx.caution.reasons && ctx.caution.reasons.length ? ctx.caution : null;
     var CR = { 'tingling or numbness':t('tingling or numbness'), 'pain at 8/10 or more this week':t('pain at 8/10 or more this week'), 'sharp pain that is getting worse':t('sharp pain that is getting worse') };
-    h += '<div class="btw-hep-ai"><div class="btw-hep-ai-l">' + esc(t('Suggest with AI')) + '</div>'
-      + (caution ? '<div class="btw-hep-caution" role="note"><b>' + esc(t('Check in person before loading')) + (caution.areas && caution.areas.length ? ' · ' + esc(caution.areas.join(', ')) : '') + '</b> '
-          + esc(t('Their check-ins show') + ' ' + caution.reasons.map(function(r){ return CR[r] || r; }).join(t(' and ')) + '. ' + t('Suggestions stay gentle and avoid loading that area.')) + '</div>' : '')
+    // The AI tools fold away under one toggle. Open by default only when there
+    // is no program yet (that's how most start one) or results are showing; it
+    // then remembers how the professional left it. A safety caution always
+    // stays visible outside the fold.
+    var aiOpen = host._aiOpen != null ? host._aiOpen : (!ex.length || !!host._sug || !!host._rev);
+    h += (caution ? '<div class="btw-hep-caution" role="note" style="margin-top:14px;"><b>' + esc(t('Check in person before loading')) + (caution.areas && caution.areas.length ? ' · ' + esc(caution.areas.join(', ')) : '') + '</b> '
+          + esc(t('Their check-ins show') + ' ' + caution.reasons.map(function(r){ return CR[r] || r; }).join(t(' and ')) + '. ' + t('Suggestions stay gentle and avoid loading that area.')) + '</div>' : '');
+    h += '<details class="btw-hep-aifold"' + (aiOpen ? ' open' : '') + '><summary><span class="ic" aria-hidden="true">✦</span>' + esc(t('AI suggestions')) + '<span class="btw-hep-meta">' + esc(ex.length ? t('Suggest exercises or review the program') : t('Suggest exercises from their check-ins')) + '</span></summary>';
+    h += '<div class="btw-hep-ai">'
       + '<div class="btw-hep-add" style="margin-top:0;"><input type="text" class="hep-goal" maxlength="300" placeholder="' + esc(t(W.goal)) + '" value="' + esc(ctx.hint || '') + '"><button type="button" class="btw-emr-btn hep-sug-btn"><span>' + esc(t(W.sug)) + '</span></button></div>'
       + (ctx.checkIns ? '<div class="btw-hep-from">' + esc(ctx.aiConsent
           ? (ctx.hint ? t('Filled in from their check-ins. Suggestions also use where it hurts, how it is trending and what they already do.') : t('Suggestions use their recent check-ins: what they reported and what they already do.'))
           : t('AI summaries are off for this client, so nothing from their check-ins goes to the AI: suggestions use only the goal you type.')) + '</div>' : '')
       + '<div class="hep-sugs"></div></div>'
       + (ex.length ? '<div class="btw-hep-rev"><div class="btw-hep-btns" style="margin-top:0;"><button type="button" class="btw-emr-btn hep-rev-btn"><span>' + esc(t('Review program with AI')) + '</span></button><span class="btw-hep-meta">' + esc(t('Suggests what to progress, ease off, add or drop — you approve each change.')) + '</span></div><div class="hep-revs"></div></div>' : '')
+      + '</details>'
       + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
       + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
       + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
       + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t(W.add)) + '</span></button></div></details>'
       + '<div class="btw-hep-msg hep-msg"></div>';
     host.innerHTML = h;
+    var aiFold = host.querySelector('.btw-hep-aifold');
+    if(aiFold) aiFold.addEventListener('toggle', function(){ host._aiOpen = aiFold.open; });
     var msg = host.querySelector('.hep-msg');
     function setList(list){ state.hepCache[pid] = Object.assign({}, state.hepCache[pid] || {}, { exercises: list }); drawHep(host, pid, state.hepCache[pid]); }
     host.querySelectorAll('[data-del]').forEach(function(b){
