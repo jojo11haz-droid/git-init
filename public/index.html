@@ -9210,17 +9210,19 @@
     if(window.__btwRenderAudMenu) window.__btwRenderAudMenu();
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
-  const AUD_TO_PATH = { therapy:'/', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
+  const AUD_TO_PATH = { therapy:'/therapy', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
   const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/occupational-therapy':'occupational', '/neuropsychology':'neuropsych', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
   function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
   // Keep the address bar on the current field. push=true adds a history entry
   // (a real navigation the visitor did); otherwise it just corrects the URL.
   function syncUrlForAudience(push){
+    // On the chooser landing no field has been picked yet: leave the URL alone.
+    if(typeof _homeGated !== 'undefined' && _homeGated) return;
     const want = AUD_TO_PATH[curAudience] || '/';
     let search = location.search;
     try { const sp = new URLSearchParams(location.search); sp.delete('for'); const s = sp.toString(); search = s ? ('?' + s) : ''; } catch(e){}
     if(location.pathname === want && search === location.search) return;
-    try { history[push ? 'pushState' : 'replaceState']({ aud: curAudience }, '', want + search); } catch(e){}
+    try { history[push ? 'pushState' : 'replaceState']({ aud: curAudience }, '', want + search + location.hash); } catch(e){}
   }
   // Per-field <title>/description/canonical, matching what the server injects,
   // so in-app field switches keep the tab title and meta in step. (Same English
@@ -9249,10 +9251,10 @@
       const oa = document.querySelector('meta[property="og:image:alt"]'); if(oa) oa.setAttribute('content', m.title);
       document.title = m.title;
       const d = document.querySelector('meta[name="description"]'); if(d) d.setAttribute('content', m.desc);
-      const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', SITE_ORIGIN + (AUD_TO_PATH[curAudience] || '/'));
+      const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', SITE_ORIGIN + (curAudience === 'therapy' ? '/' : (AUD_TO_PATH[curAudience] || '/')));
       const ot = document.querySelector('meta[property="og:title"]'); if(ot) ot.setAttribute('content', m.title);
       const od = document.querySelector('meta[property="og:description"]'); if(od) od.setAttribute('content', m.desc);
-      const ou = document.querySelector('meta[property="og:url"]'); if(ou) ou.setAttribute('content', SITE_ORIGIN + (AUD_TO_PATH[curAudience] || '/'));
+      const ou = document.querySelector('meta[property="og:url"]'); if(ou) ou.setAttribute('content', SITE_ORIGIN + (curAudience === 'therapy' ? '/' : (AUD_TO_PATH[curAudience] || '/')));
       const tt = document.querySelector('meta[name="twitter:title"]'); if(tt) tt.setAttribute('content', m.title);
       const td = document.querySelector('meta[name="twitter:description"]'); if(td) td.setAttribute('content', m.desc);
     } catch(e){}
@@ -9635,6 +9637,18 @@
     });
   }
   const btwRoot = document.querySelector('.btw-root');
+  const VIEW_HASH = { btwViewHome:'', btwViewLearn:'#how-it-works', btwViewProduct:'#dashboard', btwViewPricing:'#pricing', btwViewGuide:'#guide' };
+  // The page named in the address, as [nav, view], or null for Home / none.
+  function viewFromHash(){
+    const h = (location.hash || '').toLowerCase();
+    if(h === '#home') return [navHome, viewHome];
+    if(h === '#how-it-works' && navLearn) return [navLearn, viewLearn];
+    if(h === '#dashboard') return [navProduct, viewProduct];
+    if(h === '#pricing') return [navPricing, viewPricing];
+    if(h === '#guide' && navGuide) return [navGuide, viewGuide];
+    return null;
+  }
+  window.__btwViewFromHash = viewFromHash;
   function goToView(nav, view){
     // Leaving the dashboard drops the owner's patient-preview so the rest of the
     // app isn't left in the synthetic-patient state.
@@ -9645,6 +9659,12 @@
     allViews.forEach(v=>v.classList.remove('active'));
     nav.classList.add('active');
     view.classList.add('active');
+    // Remember the page in the address (#pricing, #guide…) so a refresh stays here.
+    try {
+      // Signed in, Home needs a name too (otherwise a refresh opens the dashboard).
+      const h = (view === viewHome && (state.me || state.patient)) ? '#home' : (VIEW_HASH[view.id] || '');
+      if(location.hash !== h) history.replaceState(history.state, '', location.pathname + location.search + h);
+    } catch(e){}
     // Widen the layout on the dashboard; keep marketing pages comfortably narrow.
     if(btwRoot) btwRoot.classList.toggle('btw-dash-wide', view === viewProduct);
     window.scrollTo({top:0, behavior:'instant'});
@@ -11890,7 +11910,7 @@
         billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
         renderAuthState();
         await loadPatientCheckIns();
-        goToView(navProduct, viewProduct); // land a signed-in user in their dashboard
+        { const rv = viewFromHash(); goToView(rv ? rv[0] : navProduct, rv ? rv[1] : viewProduct); } // the page they were on, else their dashboard
         try { document.body.classList.remove('btw-resolving'); } catch(e){}
         return;
       }catch(err){
@@ -11909,7 +11929,7 @@
       // A pending (unverified) clinician can't load patient data yet, just land
       // them on the dashboard view, where the pending-verification box shows.
       if(!needsVerification()){ await loadPatients(); }
-      goToView(navProduct, viewProduct);
+      { const rv = viewFromHash(); goToView(rv ? rv[0] : navProduct, rv ? rv[1] : viewProduct); }
     }
     // Session resolved: drop the "resolving" veil. If there's no session after
     // all (e.g. an expired cookie), show the chooser landing instead.
@@ -18621,7 +18641,26 @@
 
   loadSession()
     .catch(err=>console.error('Failed to load session:', err))
-    .finally(async ()=>{ await handleCheckoutReturn().catch(()=>{}); handleDeepLinks(); });
+    .finally(async ()=>{
+      await handleCheckoutReturn().catch(()=>{}); handleDeepLinks();
+      // Signed-out visitor refreshing on How it works / Pricing / Guide / Dashboard: stay there.
+      if(!state.me && !state.patient && !_homeGated){
+        const rv = viewFromHash();
+        if(rv && !rv[1].classList.contains('active')) goToView(rv[0], rv[1]);
+      }
+      // …and back to where they were scrolled.
+      try {
+        const sv = JSON.parse(sessionStorage.getItem('btw_scroll') || 'null');
+        if(sv && sv.u === location.pathname + location.search + location.hash && sv.y > 0){
+          setTimeout(function(){ window.scrollTo({ top: sv.y, behavior:'instant' }); }, 120);
+        }
+      } catch(e){}
+    });
+  // Remember the scroll position for a refresh (this tab only).
+  try { history.scrollRestoration = 'manual'; } catch(e){}
+  addEventListener('pagehide', function(){
+    try { sessionStorage.setItem('btw_scroll', JSON.stringify({ u: location.pathname + location.search + location.hash, y: Math.round(scrollY) })); } catch(e){}
+  });
 })();
 </script>
 <script>
