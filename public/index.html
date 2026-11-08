@@ -9072,6 +9072,12 @@
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
     if(window.__btwTherapistRefresh) window.__btwTherapistRefresh();
+    // A client with reminders on: their texts follow the language they switch to.
+    try {
+      if(!(opts && opts.initial) && typeof isPatient === 'function' && isPatient() && !_ownerPreview && state.patient && state.patient.reminders_enabled){
+        pApi('POST', '/api/patient/reminders', { enabled: true, lang: curLang === 'fr' ? 'fr' : 'en' }).catch(function(){});
+      }
+    } catch(e){}
     if(window.__btwBodyRefresh) window.__btwBodyRefresh();
     try { if(composeBodyMap && composeBodyMap.refresh) composeBodyMap.refresh(); } catch(e){}
     if(window.__btwScoreMode) window.__btwScoreMode();
@@ -13579,7 +13585,8 @@
   }
   // Build the request body from the form. phone passed only when present.
   async function saveReminders(enabled, includeSchedule){
-    const body = { enabled };
+    // Reminder texts and emails go out in the language they're using now.
+    const body = { enabled, lang: curLang === 'fr' ? 'fr' : 'en' };
     if(includeSchedule){
       const phone = remindersPhone ? remindersPhone.value.trim() : '';
       if(phone) body.phone = phone;

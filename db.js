@@ -277,6 +277,8 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_q TEXT;
 -- the check-in asks "did you do your exercises?" (yes / some / no) instead of
 -- listing exercises.
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_external BOOLEAN NOT NULL DEFAULT false;
+-- The language reminders (texts and emails) go out in: 'en' or 'fr'.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS lang TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_app TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercise_status TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_a TEXT;
@@ -1066,7 +1068,7 @@ export async function purgeExpiredPatients(graceDays = 14) {
 // without signing in. The token is minted the first time reminders are turned
 // on and kept thereafter so old links keep working. Null phone/time/days/tz
 // leave the stored value as-is (so toggling off doesn't wipe the schedule).
-export async function setPatientReminders(patientId, enabled, token, { phone, time, days, tz } = {}) {
+export async function setPatientReminders(patientId, enabled, token, { phone, time, days, tz, lang } = {}) {
   const { rows } = await pool.query(
     `UPDATE patients SET
        reminders_enabled = $1,
@@ -1074,9 +1076,10 @@ export async function setPatientReminders(patientId, enabled, token, { phone, ti
        phone = COALESCE($4, phone),
        reminder_time = COALESCE($5, reminder_time),
        reminder_days = COALESCE($6, reminder_days),
-       reminder_tz = COALESCE($7, reminder_tz)
+       reminder_tz = COALESCE($7, reminder_tz),
+       lang = COALESCE($8, lang)
      WHERE id = $3 RETURNING ${PATIENT_ROW_COLS}`,
-    [!!enabled, token || null, patientId, phone || null, time || null, days == null ? null : days, tz || null]
+    [!!enabled, token || null, patientId, phone || null, time || null, days == null ? null : days, tz || null, lang === 'fr' || lang === 'en' ? lang : null]
   );
   return rows[0] || null;
 }
@@ -1118,7 +1121,7 @@ export async function disableRemindersByToken(token) {
 // needs.
 export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
   const { rows } = await pool.query(
-    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token,
+    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token, p.lang,
             cl.account_type AS clinician_account_type, cl.discipline AS clinician_discipline
      FROM patients p
      LEFT JOIN clinicians cl ON cl.id = p.clinician_id
@@ -1148,7 +1151,7 @@ export async function findPatientsNeedingReminder(quietDays, cooldownDays) {
 // were last reminded, so the sweep can decide who's due right now.
 export async function findScheduledReminderCandidates() {
   const { rows } = await pool.query(
-    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token,
+    `SELECT p.id, p.email, p.phone, p.display_name, p.reminder_token, p.lang,
             p.reminder_time, p.reminder_days, p.reminder_tz, p.last_reminded_at,
             c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
      FROM patients p

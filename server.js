@@ -3936,7 +3936,7 @@ function validTimeZone(s) {
 }
 app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, res) => {
   try {
-    const { enabled, phone, time, days, tz } = req.body || {};
+    const { enabled, phone, time, days, tz, lang } = req.body || {};
     let normalizedPhone = null;
     if (enabled) {
       const candidate = phone != null && String(phone).trim() !== '' ? phone : req.patient.phone;
@@ -3964,7 +3964,9 @@ app.post('/api/patient/reminders', requireDb, requirePatientAuth, async (req, re
       phone: normalizedPhone,
       time: normalizedTime,
       days: normalizedDays,
-      tz: normalizedTz
+      tz: normalizedTz,
+      // Reminders go out in the language they were using when they turned them on.
+      lang: lang === 'fr' ? 'fr' : lang === 'en' ? 'en' : null
     });
     res.json({ patient: publicPatient(await withClinicianInfo(patient, req.patient)), smsConfigured: smsConfigured() });
   } catch (err) {
@@ -5028,14 +5030,14 @@ function tzDateOf(ts, tz) {
 // What a patient reports on, phrased for their field, so the reminder speaks to
 // what they actually check in about (body/pain for physical fields, eating for
 // nutrition, etc.). Falls back to the general phrasing.
-function reminderCheckinPhrase(p) {
+function reminderCheckinPhrase(p, fr) {
   const d = p.clinician_discipline;
   const acct = p.clinician_account_type;
-  if (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational') return "how your body's feeling";
-  if (d === 'nutrition') return 'how eating and energy are going';
-  if (d === 'neuropsych') return 'how your focus and mood are';
-  if (acct === 'coach' || acct === 'trainer') return "how training's going";
-  return "how you're doing"; // therapy, recovery, schools, self-serve
+  if (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational') return fr ? 'votre corps' : "how your body's feeling";
+  if (d === 'nutrition') return fr ? 'votre alimentation et votre énergie' : 'how eating and energy are going';
+  if (d === 'neuropsych') return fr ? 'votre concentration et votre humeur' : 'how your focus and mood are';
+  if (acct === 'coach' || acct === 'trainer') return fr ? "l'entraînement" : "how training's going";
+  return fr ? 'votre journée' : "how you're doing"; // therapy, recovery, schools, self-serve
 }
 
 // Send one reminder to a patient over the best available channel (text if they
@@ -5047,24 +5049,37 @@ async function deliverReminder(p, base) {
   let claimed = false;
   try { claimed = await markPatientReminded(p.id); } catch (err) { console.error('markPatientReminded failed:', err); }
   if (!claimed) return false;
-  const name = p.display_name || 'there';
-  const phrase = reminderCheckinPhrase(p);
+  const fr = p.lang === 'fr';
+  const name = p.display_name || (fr ? '' : 'there');
+  const phrase = reminderCheckinPhrase(p, fr);
   const unsub = `${base}/api/reminders/unsubscribe?token=${encodeURIComponent(p.reminder_token)}`;
   let channel = null;
   try {
     if (p.phone && smsConfigured()) {
       await sendSms({
         to: p.phone,
-        text: `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
-          `Not for emergencies — if you need help now, call or text 988, or call 911.\n` +
-          `Turn off reminders: ${unsub}`
+        text: fr
+          ? `Bonjour${name ? ' ' + name : ''} — un petit rappel pour faire votre suivi dans Between. Aucune pression : quand vous aurez un moment, même quelques mots sur ${phrase} aident. ${base}/\n` +
+            `Pas pour les urgences — si vous avez besoin d'aide maintenant, appelez ou textez le 988, ou composez le 911.\n` +
+            `Arrêter les rappels : ${unsub}`
+          : `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
+            `Not for emergencies — if you need help now, call or text 988, or call 911.\n` +
+            `Turn off reminders: ${unsub}`
       });
       channel = 'text';
     } else if (p.email) {
       await sendEmail({
         to: p.email,
-        subject: 'Your Between check-in reminder',
-        text: `Hi ${name},\n\n` +
+        subject: fr ? 'Votre rappel de suivi Between' : 'Your Between check-in reminder',
+        text: fr
+          ? `Bonjour${name ? ' ' + name : ''},\n\n` +
+            `Voici votre rappel de suivi de Between. Aucune pression — quand vous aurez un moment, ` +
+            `même une courte note sur ${phrase} donne un point de départ à votre prochain rendez-vous.\n\n` +
+            `Ouvrir Between : ${base}/\n\n` +
+            `Between n'est pas fait pour les problèmes urgents. Si vous avez besoin d'aide maintenant, composez le 988 ou le 911.\n\n` +
+            `— Between\n\n` +
+            `Vous ne voulez plus ces rappels? Désabonnez-vous ici : ${unsub}`
+          : `Hi ${name},\n\n` +
           `This is your check-in reminder from Between. No pressure at all — whenever you have a ` +
           `moment, even a short note about ${phrase} gives your next appointment something ` +
           `to start from.\n\n` +
