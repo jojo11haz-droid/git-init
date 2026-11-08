@@ -393,6 +393,7 @@
     color:var(--ink-soft);
   }
   .btw-mic.recording{background:var(--clay);border-color:var(--clay);color:#fff;}
+  .btw-mic-msg{font-size:12.5px;color:var(--ink-soft);margin:6px 2px 0;}
   .btw-mic[disabled]{opacity:.35;cursor:not-allowed;}
   .btw-send{
     flex:1;
@@ -4978,6 +4979,74 @@
 
 <script>
 (function(){
+  // --- Voice capture shared by the check-in mic and the homepage demo mic ---
+  // Records with the microphone and sends the audio to `url`, where Deepgram
+  // turns it into text (nothing is kept). Works in Safari, Chrome and Firefox.
+  // If the server can't transcribe (speech-to-text off), falls back to the
+  // browser's own speech recognition where there is one.
+  // opts: { url, lang(), onText(text), onState('rec'|'busy'|'idle', info), onError(msg), maxSecs }
+  function btwVoiceCapture(opts){
+    let rec = null, stream = null, chunks = [], timer = null, secs = 0, recog = null, mode = null;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const canRecord = !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    let serverOk = true;
+    function fr(){ return opts.lang && opts.lang() === 'fr'; }
+    function stopTimer(){ if(timer){ clearInterval(timer); timer = null; } }
+    function startBrowser(){
+      if(!SR){ opts.onError(fr() ? "La voix n'est pas prise en charge ici. Écrivez plutôt." : "Voice isn't supported on this browser. Type instead."); return; }
+      try { recog = new SR(); } catch(e){ opts.onError(fr() ? 'Micro indisponible.' : 'Microphone unavailable.'); return; }
+      mode = 'sr'; recog.lang = fr() ? 'fr-CA' : 'en-US'; recog.interimResults = false; recog.continuous = true;
+      let txt = '';
+      recog.onresult = function(e){ txt = ''; for(let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript; };
+      recog.onerror = function(){ opts.onError(fr() ? 'Micro indisponible. Autorisez le micro ou écrivez.' : 'Mic unavailable. Allow the mic or type instead.'); };
+      recog.onend = function(){ stopTimer(); mode = null; opts.onState('idle'); if(txt.trim()) opts.onText(txt.trim()); };
+      secs = 0; opts.onState('rec', 0);
+      timer = setInterval(function(){ secs++; opts.onState('rec', secs); if(secs >= (opts.maxSecs || 60)) stop(); }, 1000);
+      try { recog.start(); } catch(e){}
+    }
+    async function start(){
+      if(!canRecord || !serverOk){ startBrowser(); return; }
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch(e){ opts.onError(fr() ? 'Le micro est bloqué. Autorisez-le ou écrivez plutôt.' : 'The microphone is blocked. Allow it, or type instead.'); return; }
+      chunks = []; mode = 'rec';
+      const o = {};
+      try {
+        if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) o.mimeType = 'audio/webm;codecs=opus';
+        else if(MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/mp4')) o.mimeType = 'audio/mp4';
+      } catch(e){}
+      try { rec = new MediaRecorder(stream, o); } catch(e){ rec = new MediaRecorder(stream); }
+      rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = async function(){
+        stopTimer(); mode = null;
+        if(stream) stream.getTracks().forEach(function(tr){ tr.stop(); });
+        const type = (rec.mimeType || 'audio/webm').split(';')[0];
+        const blob = new Blob(chunks, { type: type });
+        if(!blob.size || secs < 1){ opts.onState('idle'); return; }
+        opts.onState('busy');
+        try {
+          const h = { 'Content-Type': type };
+          const tk = opts.token ? opts.token() : null; if(tk) h['Authorization'] = 'Bearer ' + tk;
+          const r = await fetch(opts.url, { method:'POST', headers:h, body: blob, credentials:'same-origin' });
+          const d = await r.json().catch(function(){ return {}; });
+          if(r.status === 503 && SR){ serverOk = false; opts.onState('idle'); opts.onError(fr() ? 'Touchez le micro de nouveau et parlez.' : 'Tap the mic again and speak.'); return; }
+          if(!r.ok || !d.text){ opts.onState('idle'); opts.onError(d.error || (fr() ? "Impossible de comprendre l'enregistrement. Réessayez ou écrivez." : "Couldn't make out the recording. Try again, or type it.")); return; }
+          opts.onState('idle'); opts.onText(d.text);
+        } catch(e){ opts.onState('idle'); opts.onError(fr() ? 'Problème de connexion. Réessayez.' : 'Connection problem. Try again.'); }
+      };
+      secs = 0; rec.start(); opts.onState('rec', 0);
+      timer = setInterval(function(){ secs++; opts.onState('rec', secs); if(secs >= (opts.maxSecs || 60)) stop(); }, 1000);
+    }
+    function stop(){
+      if(mode === 'rec' && rec && rec.state === 'recording') rec.stop();
+      else if(mode === 'sr' && recog) recog.stop();
+    }
+    return {
+      toggle: function(){ if(mode) stop(); else start(); },
+      active: function(){ return !!mode; },
+      supported: canRecord || !!SR
+    };
+  }
+
   // --- tiny same-origin API helper (session cookie rides along automatically) ---
   async function api(method, url, body){
     const headers = {};
@@ -5293,6 +5362,9 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Recording":"Enregistrement","tap the mic to stop":"touchez le micro pour arrêter",
+    "Turning your voice into text…":"Transcription de votre voix…",
+    "Added. Edit it if you like, then send. Between will summarize it.":"Ajouté. Modifiez-le au besoin, puis envoyez. Between en fera le résumé.",
     "Chart note (ADIME) — from the recorded session; check it before it goes in the chart":"Note au dossier (ADIME) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
     "Chart note (ADIME) — add your findings, nutrition diagnosis and plan, then copy it into your chart":"Note au dossier (ADIME) — ajoutez vos constats, votre diagnostic nutritionnel et le plan, puis copiez-la dans votre dossier",
     "Chart note (ADIME)":"Note au dossier (ADIME)",
@@ -9877,40 +9949,32 @@
     }
     if(dSend) dSend.addEventListener('click', tryDemo);
 
-    // Voice memo: on-device speech-to-text (Web Speech API) types the transcript
-    // into the check-in field. No audio is sent to our server; the interpret step
-    // still goes through the guarded endpoint. Falls back to a message if unsupported.
+    // Voice memo: record, Deepgram turns it into text on our server (nothing
+    // kept), then Between summarizes it right away, like a real check-in.
     const mic = document.getElementById('btwMkMic');
     const durEl = document.getElementById('btwMkDur');
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recog = null, listening = false, voiceTimer = null;
     function fmtDur(s){ return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
     function idleDur(){ if(durEl) durEl.textContent = (typeof curLang !== 'undefined' && curLang === 'fr') ? 'Touchez pour enregistrer' : 'Tap to record'; }
-    function stopTimer(){ if(voiceTimer){ clearInterval(voiceTimer); voiceTimer = null; } }
-    function toggleVoice(){
-      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
-      if(!SR){ dShowStatus(fr ? "La voix n'est pas prise en charge ici. Écrivez plutôt." : "Voice isn't supported on this browser — type instead."); return; }
-      if(listening && recog){ recog.stop(); return; }
-      try{ recog = new SR(); }catch(e){ dShowStatus(fr ? 'Micro indisponible.' : 'Microphone unavailable.'); return; }
-      recog.lang = fr ? 'fr-CA' : 'en-US';
-      recog.interimResults = true;
-      recog.continuous = false;
-      const base = (dInput && dInput.value || '').trim();
-      recog.onstart = function(){
-        listening = true; if(mic) mic.classList.add('rec');
-        dShowStatus(fr ? 'À l’écoute… touchez le micro pour arrêter.' : 'Listening… tap the mic to stop.');
-        let secs = 0; if(durEl) durEl.textContent = fmtDur(0);
-        stopTimer(); voiceTimer = setInterval(function(){ secs++; if(durEl) durEl.textContent = fmtDur(secs); }, 1000);
-      };
-      recog.onresult = function(e){ let txt = ''; for(let i=0;i<e.results.length;i++){ txt += e.results[i][0].transcript; } if(dInput) dInput.value = (base ? base + ' ' : '') + txt; };
-      recog.onerror = function(){ stopTimer(); dShowStatus(fr ? 'Micro indisponible. Autorisez le micro ou écrivez.' : 'Mic unavailable. Allow the mic or type instead.'); };
-      recog.onend = function(){ listening = false; if(mic) mic.classList.remove('rec'); stopTimer(); idleDur(); if(dStatus && /list|écout/i.test(dStatus.textContent || '')) dShowStatus(''); };
-      try{ recog.start(); }catch(e){}
-    }
+    const demoVoice = btwVoiceCapture({
+      url: '/api/demo/transcribe', maxSecs: 30,
+      lang: function(){ return (typeof curLang !== 'undefined' && curLang === 'fr') ? 'fr' : 'en'; },
+      onState: function(st, secs){
+        const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+        if(mic) mic.classList.toggle('rec', st === 'rec');
+        if(st === 'rec'){ if(durEl) durEl.textContent = fmtDur(secs || 0); if(!secs) dShowStatus(fr ? 'À l’écoute… touchez le micro pour arrêter.' : 'Listening… tap the mic to stop.'); }
+        else if(st === 'busy'){ if(durEl) durEl.textContent = fr ? 'Transcription…' : 'Transcribing…'; dShowStatus(fr ? 'Between écoute votre mémo…' : 'Between is listening to your memo…'); }
+        else { idleDur(); if(dStatus && /list|écout|transcri/i.test(dStatus.textContent || '')) dShowStatus(''); }
+      },
+      onText: function(txt){
+        if(dInput){ dInput.value = txt.slice(0, 400); }
+        tryDemo(); // summarize what was said
+      },
+      onError: function(m){ dShowStatus(m); }
+    });
     idleDur();
     if(mic){
-      mic.addEventListener('click', toggleVoice);
-      mic.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleVoice(); } });
+      mic.addEventListener('click', demoVoice.toggle);
+      mic.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); demoVoice.toggle(); } });
     }
     // --- Guided "answer questions" mode for the demo composer ---------------
     function syncMkAnswers(){
@@ -10655,14 +10719,74 @@
         else { el.style.stroke = 'none'; }
       }); });
     }
-    function render(){ fig.innerHTML = svg(view, 'p'); if(figT) figT.innerHTML = svg(view, 't'); paint(); }
+    // Close-up, as in the real check-in: tap a knee, shoulder, ankle or hand and
+    // a zoomed photo of it opens so the exact spot can be picked.
+    const zoomBox = document.createElement('div'); zoomBox.className = 'btw-pain-zoom btw-mk-zoom'; zoomBox.hidden = true;
+    const bodyRow = wrap ? wrap.querySelector('.btw-mk-bodyrow') : null;
+    if(bodyRow) bodyRow.insertAdjacentElement('afterend', zoomBox);
+    let zoomPart = null;  // zone id whose close-up is open, in the current view
+    const sub = {};       // (view + ':' + id) -> exact spot id picked in the close-up
+    function spotName(v, id, sid){ const d = btwDetailFor(v, id); const sp = d && d.spots.find(function(x){ return x.id === sid; }); return sp ? (fr() ? sp.fr : sp.en) : ''; }
+    function setSub(sid){
+      if(!zoomPart) return;
+      const key = view + ':' + zoomPart;
+      if(sid) sub[key] = sid; else delete sub[key];
+      if(!state[key]) state[key] = brush;
+      selected = key; if(levelEl) levelEl.value = state[key];
+      paint(); updateSummary(); renderMkSens(); renderZoom();
+    }
+    function renderZoom(){
+      const d = zoomPart && btwDetailFor(view, zoomPart);
+      if(!d){ zoomBox.hidden = true; zoomBox.innerHTML = ''; return; }
+      zoomBox.hidden = false;
+      const key = view + ':' + zoomPart, lv = state[key] || 0;
+      const z = zonesFor(view).find(function(x){ return x.id === zoomPart; });
+      const dots = d.spots.map(function(sp){
+        const on = sub[key] === sp.id;
+        return '<button type="button" class="btw-pz-dot' + (on ? ' sel on' : '') + '" data-sub="' + sp.id + '" style="left:' + sp.x + '%;top:' + sp.y + '%' + (on && lv ? ';--dc:' + FILL[lv] : '') + '" aria-label="' + esc(fr() ? sp.fr : sp.en) + '" title="' + esc(fr() ? sp.fr : sp.en) + '"></button>';
+      }).join('');
+      const name = z ? (fr() ? z.fr : z.en) : '';
+      zoomBox.innerHTML = '<div class="btw-pain-zoom-t">' + esc(name.charAt(0).toUpperCase() + name.slice(1)) + '</div><div class="btw-pain-zoom-s">' + (fr() ? 'Touchez le point exact (facultatif).' : 'Tap the exact point (optional).') + '</div>'
+        + '<div class="btw-pain-zoom-fig"><div class="btw-pz-pic' + (d.flip ? ' flip' : '') + '"><img src="' + d.img + '" alt="" draggable="false">' + dots + '</div></div><div class="btw-pain-sens-chips"></div>';
+      const chips = zoomBox.querySelector('.btw-pain-sens-chips');
+      [{ id:null, en:'Whole area', fr:'Toute la zone' }].concat(d.spots).forEach(function(sp){
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = 'btw-pain-sens-chip' + ((sub[key] || null) === sp.id ? ' active' : '');
+        b.textContent = fr() ? sp.fr : sp.en;
+        b.addEventListener('click', function(){ setSub(sp.id); });
+        chips.appendChild(b);
+      });
+      const pic = zoomBox.querySelector('.btw-pz-pic');
+      pic.addEventListener('click', function(e){
+        const dot = e.target.closest && e.target.closest('.btw-pz-dot');
+        if(dot){ setSub(dot.getAttribute('data-sub')); return; }
+        const r = pic.getBoundingClientRect(); if(!r.width) return;
+        let px = (e.clientX - r.left) / r.width * 100; const py = (e.clientY - r.top) / r.height * 100;
+        if(d.flip) px = 100 - px;
+        let best = null, bd = 18 * 18;
+        d.spots.forEach(function(sp){ const dd = (sp.x - px) * (sp.x - px) + (sp.y - py) * (sp.y - py); if(dd < bd){ bd = dd; best = sp; } });
+        if(best) setSub(best.id);
+      });
+    }
+    // Lets the walkthrough open a close-up (e.g. the left knee, inner side).
+    window.__btwDemoBodyZoom = function(v, id, sid, lvl){
+      if(!wrap || wrap.hidden) return false;
+      if(view !== v){ view = v; viewBtns.forEach(function(x){ x.classList.toggle('active', x.dataset.view === v); }); render(); }
+      const key = v + ':' + id;
+      state[key] = lvl || state[key] || 6; selected = key; zoomPart = id;
+      if(sid) sub[key] = sid;
+      if(levelEl){ levelEl.value = state[key]; updBrush(); }
+      paint(); updateSummary(); renderMkSens(); renderZoom();
+      return true;
+    };
+    function render(){ fig.innerHTML = svg(view, 'p'); if(figT) figT.innerHTML = svg(view, 't'); paint(); renderZoom(); }
     function updateSummary(){
       if(!sumEl) return;
       const hurts = [];
       ['front','back','left','right'].forEach(function(v){ zonesFor(v).forEach(function(z){ const vk = v + ':' + z.id; const lv = state[vk] || 0; if(lv > 0) hurts.push({ z:z, lv:lv, vk:vk }); }); });
       hurts.sort(function(a,b){ return b.lv - a.lv; });
       if(!hurts.length){ sumEl.textContent = fr() ? 'Aucune zone douloureuse signalée.' : 'No sore spots reported.'; return; }
-      const parts = hurts.map(function(h){ const sc = sens[h.vk]; const sl = sc ? ', ' + btwSensLabel(sc).toLowerCase() : ''; return (fr() ? h.z.fr : h.z.en) + ' (' + h.lv + '/10' + sl + ')'; });
+      const parts = hurts.map(function(h){ const sc = sens[h.vk]; const sl = sc ? ', ' + btwSensLabel(sc).toLowerCase() : ''; const sp = sub[h.vk] ? spotName(h.vk.split(':')[0], h.z.id, sub[h.vk]) : ''; return (fr() ? h.z.fr : h.z.en) + (sp ? ' · ' + sp : '') + ' (' + h.lv + '/10' + sl + ')'; });
       sumEl.textContent = (fr() ? 'Zones sensibles : ' : 'Sore spots: ') + parts.join(', ') + '.';
     }
     function updBrush(){
@@ -10678,18 +10802,18 @@
     fig.addEventListener('click', function(e){
       const z = btwPickZone(fig.querySelector('svg'), zonesFor(view), view === 'right', e.clientX, e.clientY); if(!z) return;
       const key = view + ':' + z.id;
-      if(selected === key){ delete state[key]; delete sens[key]; selected = null; } // tap the active spot again to clear it
-      else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); }
-      paint(); updateSummary(); renderMkSens();
+      if(selected === key){ delete state[key]; delete sens[key]; delete sub[key]; selected = null; zoomPart = null; } // tap the active spot again to clear it
+      else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); zoomPart = btwDetailFor(view, z.id) ? z.id : null; }
+      paint(); updateSummary(); renderMkSens(); renderZoom();
     });
     const VIEWS = { front:1, back:1, left:1, right:1 };
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
       view = VIEWS[b.dataset.view] ? b.dataset.view : 'front';
-      selected = null;
+      selected = null; zoomPart = null;
       viewBtns.forEach(function(x){ x.classList.toggle('active', x === b); });
       render(); renderMkSens();
     }); });
-    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; for(var sk in sens) delete sens[sk]; selected = null; paint(); updateSummary(); renderMkSens(); });
+    if(clearBtn) clearBtn.addEventListener('click', function(){ for(var k in state) delete state[k]; for(var sk in sens) delete sens[sk]; for(var uk in sub) delete sub[uk]; selected = null; zoomPart = null; paint(); updateSummary(); renderMkSens(); renderZoom(); });
     const PHYS = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1, occupational:1 };
     const photoEl = document.getElementById('btwMkPhoto');
     function refresh(){
@@ -14707,33 +14831,37 @@
   });
   tagInput.addEventListener('blur', ()=>{ if(!tagInput.value.trim()) showTagInput(false); });
 
-  // --- voice input via Web Speech API (best-effort, Chrome-only) ---
+  // --- voice memo: record, Deepgram transcribes it (not stored), and the words
+  // are added to the check-in, so they're summarized when it's sent ---
   const micBtn = document.getElementById('btwMic');
   const textEl = document.getElementById('btwText');
-  let recognizing = false, recognition = null;
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRec){
+  const micMsg = (function(){ const m = document.createElement('div'); m.className = 'btw-mic-msg'; m.setAttribute('aria-live','polite'); m.hidden = true; const box = textEl.parentNode; box.parentNode.insertBefore(m, box.nextSibling); return m; })();
+  function setMicMsg(x){ micMsg.textContent = x || ''; micMsg.hidden = !x; }
+  const checkinVoice = btwVoiceCapture({
+    url: '/api/patient/transcribe', maxSecs: 120,
+    token: function(){ try { return localStorage.getItem(PTOKEN_KEY); } catch(e){ return null; } },
+    lang: function(){ return curLang === 'fr' ? 'fr' : 'en'; },
+    onState: function(st, secs){
+      micBtn.classList.toggle('recording', st === 'rec');
+      micBtn.disabled = (st === 'busy');
+      if(st === 'rec') setMicMsg(t('Recording') + ' ' + Math.floor((secs||0)/60) + ':' + String((secs||0)%60).padStart(2,'0') + ' · ' + t('tap the mic to stop'));
+      else if(st === 'busy') setMicMsg(t('Turning your voice into text…'));
+      else setMicMsg('');
+    },
+    onText: function(txt){
+      const cur = textEl.value.trim();
+      textEl.value = cur ? cur + ' ' + txt : txt;
+      composeBodyFromText();
+      setMicMsg(t('Added. Edit it if you like, then send. Between will summarize it.'));
+      setTimeout(function(){ if(/summari/i.test(micMsg.textContent) || /résum/i.test(micMsg.textContent)) setMicMsg(''); }, 6000);
+    },
+    onError: function(m){ setMicMsg(m); }
+  });
+  if(!checkinVoice.supported){
     micBtn.disabled = true;
     micBtn.title = 'Voice recording not supported in this browser, type instead';
   } else {
-    recognition = new SpeechRec();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.onresult = (e)=>{
-      let transcript = '';
-      for(let i=0;i<e.results.length;i++){ transcript += e.results[i][0].transcript; }
-      textEl.value = transcript;
-      composeBodyFromText();
-    };
-    recognition.onend = ()=>{ recognizing = false; micBtn.classList.remove('recording'); };
-    micBtn.addEventListener('click', ()=>{
-      if(recognizing){ recognition.stop(); recognizing=false; micBtn.classList.remove('recording'); }
-      else {
-        // Transcribe in whichever language the EN/FR slider is set to.
-        recognition.lang = (curLang === 'fr') ? 'fr-CA' : 'en-US';
-        textEl.value=''; recognition.start(); recognizing=true; micBtn.classList.add('recording');
-      }
-    });
+    micBtn.addEventListener('click', function(){ checkinVoice.toggle(); });
   }
   // Live body map from the typed check-in, like the demo: as the person writes
   // "sore left knee" or "tight lower back", that region lights up on the map.
@@ -17406,10 +17534,12 @@
         popped = null;
       }
     }
-    function zoomTo(frame, target){
+    function zoomTo(frame, target, room){
       target.style.transform = '';
       const r = target.getBoundingClientRect();
-      const s = Math.min(1.7, (window.innerWidth - 40) / r.width, (window.innerHeight * 0.42) / r.height);
+      let maxH = window.innerHeight * (room || 0.42);
+      if(window.innerWidth < 700) maxH = Math.min(maxH, window.innerHeight - (card.offsetHeight || 210) - 60);
+      const s = Math.min(1.7, (window.innerWidth - 40) / r.width, maxH / r.height);
       frame.classList.add('btw-shot-open');
       target.classList.add('btw-tour-pop');
       popped = { el: target, frame: frame };
@@ -17423,6 +17553,7 @@
     }
     // Small live moments so the demo visibly moves while it's explained.
     function runAct(act){
+      if(act === 'knee'){ if(window.__btwDemoBodyZoom) window.__btwDemoBodyZoom('front', 'l_knee', 'inner', 6); return; }
       if(act === 'slider'){
         const range = document.getElementById('btwMkMood'); if(!range) return;
         const pm = (typeof painMode === 'function') && painMode();
@@ -17445,8 +17576,14 @@
       spot.style.height = (r.height + pad*2) + 'px';
       const cardH = card.offsetHeight || 190, cardW = card.offsetWidth || 320;
       let top = r.bottom + 14;
-      if(top + cardH > window.innerHeight - 12) top = Math.max(12, r.top - cardH - 14);
       let left = r.left + r.width/2 - cardW/2;
+      if(top + cardH > window.innerHeight - 12){
+        if(r.top - cardH - 14 >= 12) top = r.top - cardH - 14;
+        else if(window.innerWidth - r.right - pad > cardW + 34){ left = r.right + pad + 18; top = r.top + r.height/2 - cardH/2; }   // beside, right
+        else if(r.left - pad > cardW + 34){ left = r.left - pad - 18 - cardW; top = r.top + r.height/2 - cardH/2; }                // beside, left
+        else top = Math.max(12, r.top - cardH - 14);
+        top = Math.max(12, Math.min(top, window.innerHeight - cardH - 12));
+      }
       left = Math.max(16, Math.min(left, window.innerWidth - cardW - 16));
       card.style.top = top + 'px';
       card.style.left = left + 'px';
@@ -17467,6 +17604,7 @@
       elDots.innerHTML = steps.map(function(_,i){ return '<span class="btw-tour-dot'+(i===idx?' on':'')+'"></span>'; }).join('');
       btnBack.style.visibility = (idx === 0) ? 'hidden' : 'visible';
       btnNext.textContent = (idx === steps.length-1) ? t('Done') : t('Next');
+      if(step.pre) runAct(step.pre); // set the scene first (e.g. open a close-up)
       const target = step.sel ? document.querySelector(step.sel) : null;
       if(posTimer){ clearTimeout(posTimer); posTimer = null; }
       if(actTimer){ clearTimeout(actTimer); actTimer = null; }
@@ -17476,8 +17614,18 @@
         // Homepage demo: bring the part into view, then magnify it.
         curTarget = target;
         try { target.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){ target.scrollIntoView(); }
-        setTimeout(function(){ if(curTarget === target) zoomTo(frame, target); }, 380);
-        posTimer = setTimeout(function(){ posTimer = null; positionTo(target); }, 950);
+        setTimeout(function(){ if(curTarget === target) zoomTo(frame, target, step.room); }, 380);
+        posTimer = setTimeout(function(){
+          posTimer = null;
+          // Phone: if the card can't sit above or below, scroll so it fits above.
+          const r = target.getBoundingClientRect(), ch = card.offsetHeight || 210;
+          const roomBelow = window.innerHeight - r.bottom - 26 >= ch, roomAbove = r.top - 26 >= ch;
+          const roomSide = window.innerWidth - r.right > card.offsetWidth + 40 || r.left > card.offsetWidth + 40;
+          if(!roomBelow && !roomAbove && !roomSide && r.height + ch + 40 <= window.innerHeight){
+            window.scrollBy({ top: r.top - ch - 28, behavior:'smooth' });
+            posTimer = setTimeout(function(){ posTimer = null; positionTo(target); }, 450);
+          } else positionTo(target);
+        }, 950);
         if(step.act) actTimer = setTimeout(function(){ runAct(step.act); }, 1000);
       } else if(target && visible(target)){
         curTarget = target;
@@ -17491,7 +17639,7 @@
     function startSteps(s){ steps = s; idx = 0; active = true; overlay.classList.add('show'); render(); }
     // Only steps whose target is actually on screen (a therapist's client has no
     // body map; nobody has messages on day one).
-    function shownSteps(list){ return list.filter(function(st){ return !st.sel || visible(document.querySelector(st.sel)); }); }
+    function shownSteps(list){ return list.filter(function(st){ return !st.sel || visible(document.querySelector(st.keepIf || st.sel)); }); }
     function start(){
       // Clinician with clients but none open: open the first so the per-client
       // tools (note, recording, program, prep) can be shown.
@@ -17517,7 +17665,8 @@
         { sel:'#btwMkSlider', act:'slider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste — ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste — ou laisse Between l’estimer.') },
         { sel:'.btw-mk-airead', title:L('Between reads it back','Between le relit'), body:L('From a sentence or a voice note, Between reads the feeling and the themes — no forms to fill.','À partir d’une phrase ou d’un mémo vocal, Between dégage le ressenti et les thèmes — aucun formulaire.') },
         { sel:'#btwMkChips', title:L('What’s going on','Ce qui se passe'), body:L('They tap what fits, or let Between pick up the themes from their words.','Il choisit ce qui colle, ou laisse Between repérer les thèmes dans ses mots.') },
-        { sel:'#btwMkBody', title:L('Exactly where it hurts','Exactement où ça fait mal'), body:L('They tap the spot on a body map (front, back or side) and how bad it is. You see the exact spot, left or right, not just “my knee”.','Il touche l’endroit sur une carte du corps (devant, derrière ou de côté) et indique l’intensité. Vous voyez l’endroit exact, gauche ou droite, pas seulement « mon genou ».') },
+        { sel:'.btw-mk-bodyrow', title:L('Where it hurts','Où ça fait mal'), body:L('They tap the spot on a body map (front, back, left or right side) and slide how bad it is.','Il touche l’endroit sur une carte du corps (devant, derrière, côté gauche ou droit) et glisse le curseur selon l’intensité.') },
+        { sel:'.btw-mk-zoom', pre:'knee', keepIf:'#btwMkBody', room:0.66, title:L('A close-up of the joint','Un gros plan de l’articulation'), body:L('Tap a knee, shoulder, ankle or hand and it zooms in, so they point to the exact spot: the inner side of the left knee, not just “my knee”. That exact spot is what you see.','Touchez un genou, une épaule, une cheville ou une main et ça zoome : il pointe l’endroit exact, le côté interne du genou gauche, pas seulement « mon genou ». C’est cet endroit précis que vous voyez.') },
         { sel:'#btwMkInput', title:L('In their own words','Dans ses propres mots'), body:L('A few words or a voice memo — the whole check-in takes under a minute, whenever something comes up.','Quelques mots ou un mémo vocal — le suivi complet prend moins d’une minute, dès que quelque chose survient.') },
         { sel:'#btwMkSend', title:L('They send it','Il l’envoie'), body:L('No appointment, no one waiting. It just lands in your dashboard for the next session.','Sans rendez-vous, sans personne à l’autre bout. Cela arrive dans votre tableau de bord pour la prochaine séance.') },
         { sel:'.btw-mk-row.flag', title:L('Your caseload','Votre liste'), body:L('Everyone shows here. Anyone flagged or with new check-ins rises to the top, so a big list is one glance.','Tout le monde est ici. Les personnes signalées ou avec de nouveaux suivis remontent en haut : une grande liste se lit d’un coup d’œil.') },

@@ -965,6 +965,32 @@ app.post('/api/demo/interpret', demoLimiter, async (req, res) => {
   }
 });
 
+// Landing-page demo mic: turn a short voice memo (30 s max) into text so the
+// visitor's own words can be summarized. Same guardrails as the demo: its own
+// per-IP window and the shared daily ceiling. Nothing is stored or logged.
+const demoVoiceLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, max: 6,
+  message: 'You have tried the voice demo a few times — start a free trial to keep going.'
+});
+app.post('/api/demo/transcribe',
+  express.raw({ type: () => true, limit: 2 * 1024 * 1024 }),
+  demoVoiceLimiter,
+  async (req, res) => {
+    try {
+      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice is unavailable right now — type instead.' });
+      const mime = (req.headers['content-type'] || '').split(';')[0].trim();
+      if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
+      if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
+      if (!demoBudgetOk()) return res.status(429).json({ error: 'The live demo is busy today. Start a free trial to use it for real.' });
+      const text = await transcribeAudio(req.body, mime);
+      if (!text) return res.status(422).json({ error: "Couldn't make that out — try again, or type it." });
+      res.json({ text: text.slice(0, 400) });
+    } catch (err) {
+      console.error('Demo transcribe error:', err.message);
+      res.status(502).json({ error: 'Could not transcribe that just now.' });
+    }
+  });
+
 // Website Q&A: answer a visitor's question about Between from grounded facts,
 // so they get an instant answer instead of having to reach out. No account, no
 // storage; the question is never logged.
@@ -4008,6 +4034,28 @@ const AUDIO_TOKEN_TTL_MINUTES = 10;
 const AUDIO_MAX_BYTES = 15 * 1024 * 1024;
 const AUDIO_MIMES = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/aac', 'audio/x-m4a'];
 
+// The website check-in mic: the memo is turned into text (Deepgram, not
+// stored) and the words go into the check-in box, so they're summarized and
+// safety-screened like typed text when it's sent.
+const patientVoiceLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, message: 'Too many recordings at once — wait a minute and try again.' });
+app.post('/api/patient/transcribe',
+  express.raw({ type: () => true, limit: 10 * 1024 * 1024 }),
+  requireDb, requirePatientAuth, patientVoiceLimiter,
+  async (req, res) => {
+    try {
+      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice-to-text is off right now — type instead.' });
+      const mime = (req.headers['content-type'] || '').split(';')[0].trim();
+      if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
+      if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
+      const text = await transcribeAudio(req.body, mime);
+      if (!text) return res.status(422).json({ error: "Couldn't make out the recording — try again, or type it." });
+      res.json({ text: text.slice(0, 4000) });
+    } catch (err) {
+      console.error('Check-in transcribe error:', err.message);
+      res.status(500).json({ error: 'Could not transcribe that just now.' });
+    }
+  });
+
 app.post('/api/patient/check-ins/audio-upload-url', requireDb, requirePatientAuth, async (req, res) => {
   try {
     const token = generateSessionToken();
@@ -4564,9 +4612,12 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       // risk screening as typed ones. If transcription is unconfigured or
       // fails, the memo is stored playable-but-untranscribed (and therefore
       // not risk-screened — documented in the README).
-      if (!effectiveText || !effectiveText.trim()) {
-        const transcript = await transcribeAudio(audio.data, audio.mime);
-        if (transcript) effectiveText = transcript.slice(0, 4000);
+      // Typed words and the memo are both kept, so nothing they said is
+      // left out of the summary.
+      const transcript = await transcribeAudio(audio.data, audio.mime);
+      if (transcript) {
+        const typed = (effectiveText || '').trim();
+        effectiveText = (typed ? typed + '\n\n' + transcript : transcript).slice(0, 4000);
       }
     }
 
