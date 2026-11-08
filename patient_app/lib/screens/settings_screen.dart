@@ -37,7 +37,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(s.turnOnAiTitle),
-          content: Text(s.turnOnAiBody, style: const TextStyle(height: 1.5)),
+          content: Text(s.turnOnAiBody(app.providerKey),
+              style: const TextStyle(height: 1.5)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
@@ -95,7 +96,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: BtwColors.cream,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(s.deleteHistoryTitle),
-        content: Text(s.deleteHistoryBody, style: const TextStyle(height: 1.5)),
+        content: Text(s.deleteHistoryBody(app.providerKey),
+            style: const TextStyle(height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -263,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 fontSize: 16, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
                         Text(
-                          s.aiSummariesDesc,
+                          s.aiSummariesDesc(state.providerKey),
                           style: const TextStyle(
                               fontSize: 13,
                               color: BtwColors.inkSoft,
@@ -337,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w600)),
                 subtitle: Text(
-                  s.whatsOnFileDesc,
+                  s.whatsOnFileDesc(state.providerKey),
                   style:
                       const TextStyle(fontSize: 13, color: BtwColors.inkSoft),
                 ),

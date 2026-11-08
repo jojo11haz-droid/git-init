@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'api.dart';
+import 'discipline.dart';
 import 'health_service.dart';
 import 'strings.dart';
 
@@ -241,6 +242,10 @@ class AppState extends ChangeNotifier {
   final HealthService _health = HealthService();
 
   Patient? patient;
+  // Who reads this person's check-ins (physio, coach, mentor…), or null when
+  // they use Between on their own. Drives "your physio will see this" copy.
+  String? get providerKey =>
+      patient == null ? null : profileFor(patient!).providerKey;
   String? get _legacyTagField => legacyTagField(
       patient?.clinicianAccountType, patient?.clinicianDiscipline);
   bool restoring = true;

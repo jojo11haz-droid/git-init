@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../theme.dart';
 
 /// Onboarding + consent. This gates everything: no check-in can be sent until
@@ -41,6 +42,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
     final state = context.watch<AppState>();
     final s = state.s;
     final name = state.patient?.firstName ?? '';
+    // Who reads their check-ins (null when they're using Between on their own).
+    final provider =
+        state.patient == null ? null : profileFor(state.patient!).providerKey;
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -58,9 +62,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   fontSize: 24, fontWeight: FontWeight.w700, height: 1.3),
             ),
             const SizedBox(height: 18),
-            _Bullet(s.consentBullet1),
+            _Bullet(s.consentBullet1(provider)),
             _Bullet(s.consentBullet2),
-            _Bullet(s.consentBullet3),
+            _Bullet(s.consentBullet3(provider)),
             _Bullet(s.consentBullet4),
             const SizedBox(height: 20),
             Container(

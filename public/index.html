@@ -1476,6 +1476,10 @@
   .btw-hep-msg{font-size:12px;color:var(--ink-soft);margin-top:6px;}
   .btw-compose-hep{margin:4px 0 16px;}
   .btw-hep-sub{font-size:12px;color:var(--ink-soft);margin:-2px 0 8px;}
+  .btw-prev-hepsw{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--ink-soft);border-top:1px dashed var(--line);padding-top:9px;}
+  .btw-prev-hepsw span{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.05em;font-size:10px;margin-right:2px;}
+  .btw-prev-hepsw button{border:1px solid var(--line);background:var(--panel);color:var(--ink-soft);border-radius:100px;padding:4px 10px;font:500 11.5px var(--font-body);cursor:pointer;}
+  .btw-prev-hepsw button.on{border-color:var(--moss);color:var(--moss);background:var(--moss-light);}
   .btw-exstat{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
   .btw-exstat-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:100px;padding:9px 16px;font:500 14px var(--font-body);cursor:pointer;}
   .btw-exstat-btn.on{background:var(--moss);border-color:var(--moss);color:#fff;}
@@ -5281,6 +5285,8 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Preview as":"Aperçu",
+    "Exercises in Between":"Exercices dans Between",
     "Did you do your exercises?":"Avez-vous fait vos exercices?",
     "The ones in":"Ceux dans",
     "since your last check-in.":"depuis votre dernier suivi.",
@@ -8683,10 +8689,10 @@
                 fr:{metric:'ÉNERGIE',trend:"Votre tendance d'énergie · 6 dernières semaines",scan:'SUIVIS · À VOIR EN PREMIER',who:'votre nutritionniste',r1:'Signalé · énergie en chute',r2:'Nouveau suivi · fortes envies',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
     physio:{ en:{metric:'RECOVERY',trend:'Your recovery trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your physiotherapist',r1:'Flagged · pain up 3 days',r2:'New check-in · missed exercises',safe:'SHOWN TO THE PATIENT INSTANTLY'},
              fr:{metric:'RÉCUPÉRATION',trend:'Votre tendance de récupération · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre physiothérapeute',r1:'Signalé · douleur en hausse 3 j',r2:'Nouveau suivi · exercices manqués',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
-    occupational:{ en:{metric:'FUNCTION',trend:'Your daily-function trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your therapist',r1:'Flagged · daily tasks harder',r2:'New check-in · very fatigued',safe:'SHOWN TO THE PATIENT INSTANTLY'},
-                   fr:{metric:'FONCTION',trend:'Votre tendance de fonction · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre ergothérapeute',r1:'Signalé · tâches plus dures',r2:'Nouveau suivi · très fatigué',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
-    neuropsych:{ en:{metric:'FOCUS',trend:'Your focus trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your neuropsychologist',r1:'Flagged · foggy, losing focus',r2:'New check-in · more forgetful',safe:'SHOWN TO THE PATIENT INSTANTLY'},
-                 fr:{metric:'CONCENTRATION',trend:'Votre tendance de concentration · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre neuropsychologue',r1:'Signalé · brouillard, concentration',r2:'Nouveau suivi · plus distrait',safe:'MONTRÉ AU PATIENT AUSSITÔT'} },
+    occupational:{ en:{metric:'FUNCTION',trend:'Your daily-function trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your occupational therapist',r1:'Flagged · daily tasks harder',r2:'New check-in · very fatigued',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+                   fr:{metric:'FONCTION',trend:'Votre tendance de fonction · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre ergothérapeute',r1:'Signalé · tâches plus dures',r2:'Nouveau suivi · très fatigué',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
+    neuropsych:{ en:{metric:'FOCUS',trend:'Your focus trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your neuropsychologist',r1:'Flagged · foggy, losing focus',r2:'New check-in · more forgetful',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+                 fr:{metric:'CONCENTRATION',trend:'Votre tendance de concentration · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre neuropsychologue',r1:'Signalé · brouillard, concentration',r2:'Nouveau suivi · plus distrait',safe:'MONTRÉ AU CLIENT AUSSITÔT'} },
     sports:{ en:{metric:'FORM',trend:'Your form trend · last 6 weeks',scan:'ROSTER · CHECK ON FIRST',who:'your coach',r1:'Flagged · pressure building',r2:'New check-in · legs heavy',safe:'SHOWN TO THE PLAYER INSTANTLY'},
              fr:{metric:'FORME',trend:'Votre tendance de forme · 6 dernières semaines',scan:'ÉQUIPE · À VOIR EN PREMIER',who:'votre entraîneur',r1:'Signalé · la pression monte',r2:'Nouveau suivi · jambes lourdes',safe:'MONTRÉ AU JOUEUR AUSSITÔT'} },
     recovery:{ en:{metric:'MOOD',trend:'Your mood trend · last 6 weeks',scan:'MEMBERS · CHECK ON FIRST',who:'your mentor',r1:'Flagged · strong craving',r2:'New check-in · shaky start',safe:'SHOWN TO THEM INSTANTLY'},
@@ -8701,6 +8707,14 @@
     if(!document.querySelector('#btwViewHome .btw-feature-grid')) return;
     var L = (curLang==='fr') ? 'fr' : 'en';
     var F = FEAT_FIXED[L]; var A = (FEAT_AUD[featVizKey()] || FEAT_AUD.therapy)[L];
+    // Kinesiology and osteopathy reuse physio's visuals, but with their own
+    // professional and "client" rather than physio's "patient".
+    if(curAudience === 'kinesiology' || curAudience === 'osteo'){
+      A = Object.assign({}, A, {
+        who: curAudience === 'osteo' ? (L === 'fr' ? 'votre ostéopathe' : 'your osteopath') : (L === 'fr' ? 'votre kinésiologue' : 'your kinesiologist'),
+        safe: L === 'fr' ? 'MONTRÉ AU CLIENT AUSSITÔT' : 'SHOWN TO THE CLIENT INSTANTLY'
+      });
+    }
     function t(id,s){ var e=document.getElementById(id); if(e) e.textContent = s; }
     function q(sel){ return document.querySelector(sel); }
     function qa(sel){ return [].slice.call(document.querySelectorAll(sel)); }
@@ -8831,7 +8845,7 @@
       var bringEl = document.getElementById('btwSetupBring');
       if(bringEl){
         if(curAudience === 'individual'){ bringEl.style.display = 'none'; }
-        else { bringEl.style.display = ''; bringEl.textContent = SU.bring; }
+        else { bringEl.style.display = ''; bringEl.textContent = fieldNoun(SU.bring); }
       }
     }
   }
@@ -15463,7 +15477,7 @@
       + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
       + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
       + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t(W.add)) + '</span></button></div></details>'
-      + (pSel ? hepSourceHtml(pSel) : '')
+      + (pSel && hepKind(meAs().at, meAs().disc) === 'exercise' ? hepSourceHtml(pSel) : '')
       + '<div class="btw-hep-msg hep-msg"></div>';
     host.innerHTML = h;
     wireHepSource(host, pid, d);
@@ -15798,10 +15812,19 @@
   function renderComposeHep(){
     try { renderInbox(); } catch(e){}
     var box = document.getElementById('btwComposeHep'); if(!box) return;
+    // Owner preview of the patient side: sample items in the field's words,
+    // and (for exercise-based fields) a switch to see the "other app" version.
+    if(isPatient() && _ownerPreview && _ownerPreviewMode === 'patient'){ renderPreviewHep(box); return; }
     // Program in another app (Wibbi, Physitrack…): one yes / some / no question.
     if(isPatient() && !_ownerPreview && state.patient && state.patient.exercises_external){
+      renderExternalHep(box, state.patient.exercises_app);
+      return;
+    }
+    var ex = isPatient() ? (state.exercises || []) : [];
+    renderHepList(box, ex);
+  }
+  function renderExternalHep(box, app){
       box.style.display = '';
-      var app = state.patient.exercises_app;
       var l0 = document.getElementById('btwComposeHepLabel'); if(l0) l0.textContent = t('Did you do your exercises?');
       var s0 = document.getElementById('btwComposeHepSub'); if(s0) s0.textContent = app ? (t('The ones in') + ' ' + app + ', ' + t('since your last check-in.')) : t('Since your last check-in.');
       var l1 = document.getElementById('btwComposeHepList');
@@ -15809,21 +15832,56 @@
         return '<button type="button" class="btw-exstat-btn' + (state.exStatus === o[0] ? ' on' : '') + '" data-st="' + o[0] + '" role="radio" aria-checked="' + (state.exStatus === o[0]) + '">' + esc(o[1]) + '</button>';
       }).join('') + '</div>';
       l1.querySelectorAll('.btw-exstat-btn').forEach(function(b){ b.addEventListener('click', function(){ state.exStatus = (state.exStatus === b.dataset.st) ? null : b.dataset.st; renderComposeHep(); }); });
-      return;
+  }
+  // Sample items for the owner preview, per kind of program.
+  const PREVIEW_HEP = {
+    exercise: { en:[['Wall squat','3 × 10','Back against the wall, slow down and up.'],['Bridge','2 × 12','Lift the hips, hold 2 seconds, lower slowly.']],
+                fr:[['Squat au mur','3 × 10','Dos au mur, descendez et remontez lentement.'],['Pont','2 × 12','Levez les hanches, tenez 2 secondes, redescendez lentement.']] },
+    practice: { en:[['Breathing pause','Daily, 5 min','Slow breathing when worry builds up.'],['Note one good moment','Each evening','One line about something that went okay.']],
+                fr:[['Pause respiration','Chaque jour, 5 min','Respirer lentement quand l’inquiétude monte.'],['Noter un bon moment','Chaque soir','Une ligne sur quelque chose qui s’est bien passé.']] },
+    habit:    { en:[['Water with each meal','Daily','A glass with breakfast, lunch and dinner.'],['Pack a lunch','Workdays','Plan it the night before.']],
+                fr:[['De l’eau à chaque repas','Chaque jour','Un verre au déjeuner, au dîner et au souper.'],['Préparer son dîner','Jours de travail','Le prévoir la veille.']] },
+    recovery: { en:[['Call your support person','Every evening','A short call or text.'],['Evening plan','Daily','Decide how you will spend the evening.']],
+                fr:[['Appeler votre personne de soutien','Chaque soir','Un court appel ou texto.'],['Plan de soirée','Chaque jour','Décider comment passer la soirée.']] },
+    school:   { en:[['Break homework into steps','Before homework','Three small steps, one at a time.'],['Two-minute reset','When stressed','Breathe and stretch before going back to it.']],
+                fr:[['Découper les devoirs en étapes','Avant les devoirs','Trois petites étapes, une à la fois.'],['Pause de deux minutes','En cas de stress','Respirer et s’étirer avant de reprendre.']] }
+  };
+  let _prevHepExt = false;
+  const _prevHepDone = new Set();
+  function renderPreviewHep(box){
+    const pt = state.patient || {};
+    const kind = hepKind(pt.clinician_account_type, pt.clinician_discipline);
+    const canExt = kind === 'exercise';
+    if(!canExt) _prevHepExt = false;
+    box.style.display = '';
+    if(_prevHepExt) renderExternalHep(box, 'Wibbi');
+    else {
+      const items = ((PREVIEW_HEP[kind] || PREVIEW_HEP.practice)[curLang] || PREVIEW_HEP[kind].en).map(function(r, i){ return { id:'prev' + i, name:r[0], dosage:r[1], description:r[2] }; });
+      renderHepList(box, items, _prevHepDone);
     }
-    var ex = isPatient() ? (state.exercises || []) : [];
+    if(canExt){
+      const sw = document.createElement('div'); sw.className = 'btw-prev-hepsw';
+      sw.innerHTML = '<span>' + esc(t('Preview as')) + '</span>'
+        + '<button type="button" data-ext="0" class="' + (_prevHepExt ? '' : 'on') + '">' + esc(t('Exercises in Between')) + '</button>'
+        + '<button type="button" data-ext="1" class="' + (_prevHepExt ? 'on' : '') + '">' + esc(t('In another app')) + '</button>';
+      sw.querySelectorAll('button').forEach(function(b){ b.addEventListener('click', function(){ _prevHepExt = b.dataset.ext === '1'; renderComposeHep(); }); });
+      const list = document.getElementById('btwComposeHepList'); if(list) list.appendChild(sw);
+    }
+  }
+  function renderHepList(box, ex, doneSet){
+    doneSet = doneSet || state.hepDone;
     if(!ex.length){ box.style.display = 'none'; return; }
     box.style.display = '';
     var lbl = document.getElementById('btwComposeHepLabel'); if(lbl) lbl.textContent = t(hepWords().mine);
     var sub = document.getElementById('btwComposeHepSub'); if(sub) sub.textContent = t('Tick what you did since your last check-in.');
     var list = document.getElementById('btwComposeHepList'); list.innerHTML = '';
     ex.forEach(function(e){
-      var row = document.createElement('label'); row.className = 'btw-hep-check' + (state.hepDone.has(e.id) ? ' on' : '');
-      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.hepDone.has(e.id);
+      var row = document.createElement('label'); row.className = 'btw-hep-check' + (doneSet.has(e.id) ? ' on' : '');
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = doneSet.has(e.id);
       var main = document.createElement('div'); main.className = 'btw-hep-main';
       main.innerHTML = '<span class="btw-hep-name">' + esc(e.name) + '</span>' + (e.dosage ? '<span class="btw-hep-dose">' + esc(e.dosage) + '</span>' : '')
         + (e.description ? '<div class="btw-hep-desc">' + esc(e.description) + '</div>' : '');
-      cb.addEventListener('change', function(){ if(cb.checked) state.hepDone.add(e.id); else state.hepDone.delete(e.id); row.classList.toggle('on', cb.checked); });
+      cb.addEventListener('change', function(){ if(cb.checked) doneSet.add(e.id); else doneSet.delete(e.id); row.classList.toggle('on', cb.checked); });
       row.appendChild(cb); row.appendChild(main); list.appendChild(row);
     });
   }
