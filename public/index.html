@@ -1316,6 +1316,8 @@
   .btw-msg-body{font-size:13px;white-space:pre-wrap;margin-top:2px;}
   .btw-msg-att{font-size:12px;color:var(--moss);margin-top:3px;}
   /* Client side: messages from their professional */
+  .btw-add-more{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;}
+  .btw-add-more-lbl{font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;}
   .btw-inbox{display:flex;flex-direction:column;gap:10px;margin:0 0 16px;}
   /* Personalization: the professional's welcome card on the client's page,
      the accent swatches, and an individual's hidden sections. */
@@ -4810,6 +4812,7 @@
           <button type="button" class="btw-modal-continue" id="btwAddUpgrade" style="display:none;margin-bottom:8px;">Upgrade to Premium</button>
           <button type="submit" class="btw-modal-continue" id="btwAddSubmit">Add</button>
         </form>
+        <div class="btw-add-more" id="btwAddMore"><div class="btw-add-more-lbl">Adding several people?</div></div>
       </div>
       <div id="btwAddStep2" style="display:none;">
         <div class="btw-modal-eyebrow">Added</div>
@@ -5241,6 +5244,9 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Adding several people?":"Plusieurs personnes à ajouter?",
+    "stats, trends & themes":"stats, tendances et thèmes",
+    "pain & themes":"douleur et thèmes",
     "You see who needs you, and why":"Vous voyez qui a besoin de vous, et pourquoi",
     "A chart note, drafted for you":"Une note au dossier, rédigée pour vous",
     "Quiet for 9 days":"Silence depuis 9 jours",
@@ -14926,11 +14932,8 @@
     var fr = curLang === 'fr';
     var big = document.getElementById('btwSavedBig');
     var brk = document.getElementById('btwSavedBreak');
-    if(!d.totalMinutes){
-      big.textContent = t('Time saved will show here');
-      brk.textContent = t('As Between drafts your notes, builds programs and summarises check-ins, it adds up the time it saves you.');
-      return;
-    }
+    // Nothing saved yet: keep the dashboard clear rather than show a placeholder.
+    if(!d.totalMinutes){ card.style.display = 'none'; return; }
     var h = Math.floor(d.totalMinutes / 60), m = d.totalMinutes % 60;
     var lbl = h ? (m ? h + ' h ' + m + ' min' : h + ' h') : m + ' min';
     big.innerHTML = esc(t('Between saved you about')) + ' <strong>' + esc(lbl) + '</strong> ' + esc(t('in the last 30 days'));
@@ -15839,6 +15842,8 @@
       return;
     }
     var d = _ocData, s = d.summary || {}, pain = d.metric === 'pain';
+    // Nobody placed yet (needs 3+ check-ins): a row of zeros is just noise.
+    if(!((s.improving || 0) + (s.steady || 0) + (s.declining || 0))){ el.style.display = 'none'; return; }
     var html = '<div class="btw-oc-head">' + OC_ICON + '<span>' + esc(t('How your caseload is trending')) + '</span></div>';
     html += '<div class="btw-oc-stats">'
       + '<div class="btw-oc-tile up"><div class="num">' + (s.improving || 0) + '</div><div class="lab"><span class="btw-oc-dot up"></span>' + esc(t('improving')) + '</div></div>'
@@ -15995,7 +16000,7 @@
     setTxt('btwAccTrendsLabel', t('Trends'));
     setTxt('btwAccTimelineLabel', t('Timeline'));
     setTxt('btwAccHealthLabel', t('Health & body'));
-    setTxt('btwAccTrendsPrev', n ? t('mood & themes') : '');
+    setTxt('btwAccTrendsPrev', n ? (isTherapist() ? t('stats, trends & themes') : (painMode() ? t('pain & themes') : t('mood & themes'))) : '');
     setTxt('btwAccTimelinePrev', n ? (n + ' ' + (n === 1 ? t('check-in') : t('check-ins'))) : '');
   }
 
@@ -16084,6 +16089,14 @@
       });
       upgrade.addEventListener('click', ()=>{ const pl = premFor(); if(pl){ ov.style.display = 'none'; changePlan(pl); } });
       document.getElementById('btwAddDone').addEventListener('click', ()=>{ ov.style.display = 'none'; });
+      // Adding several people at once (from a photo/list or today's schedule)
+      // lives in this box rather than at the top of the dashboard.
+      (function(){
+        const row = document.getElementById('btwImportRow'), slot = document.getElementById('btwAddMore');
+        if(!row || !slot) return;
+        slot.appendChild(row); row.style.margin = '0';
+        ['btwImportBtn','btwScheduleBtn'].forEach(function(id){ const b = document.getElementById(id); if(b) b.addEventListener('click', function(){ setTimeout(function(){ ov.style.display = 'none'; }, 0); }); });
+      })();
       document.getElementById('btwAddForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const name = nameIn.value.trim();
@@ -16747,9 +16760,16 @@
     return out;
   }
   function themeName(tag){ return curLang==='fr' ? (FR[tag]||tag) : tag; }
+  let _insightsSlot = null;
   function renderInsights(){
     const el = document.getElementById('btwInsights');
     if(!el) return;
+    // Professionals: the stat tiles live inside the Trends section (the line
+    // above it already gives the headline numbers). Clients keep them in place.
+    if(!_insightsSlot){ _insightsSlot = document.createComment('insights'); el.parentNode.insertBefore(_insightsSlot, el); }
+    const accBody = document.querySelector('#btwAccTrends .btw-acc-body');
+    if(isTherapist() && accBody){ if(el.parentNode !== accBody) accBody.insertBefore(el, accBody.firstChild); }
+    else if(el.parentNode !== _insightsSlot.parentNode || el.previousSibling !== _insightsSlot){ _insightsSlot.parentNode.insertBefore(el, _insightsSlot.nextSibling); }
     const list = state.checkIns || [];
     if(list.length === 0){ el.style.display='none'; el.innerHTML=''; return; }
     const ins = computeInsights(list);
@@ -17506,6 +17526,8 @@
   function renderWeekSummary(){
     const el = document.getElementById('btwWeekSummary');
     if(!el) return;
+    // Professionals get the same numbers in the client's stats line below.
+    if(isTherapist()){ el.style.display='none'; el.innerHTML=''; return; }
     const cutoff = Date.now() - 7*86400000;
     const week = (state.checkIns||[]).filter(c=>c.time && c.time>=cutoff);
     if(week.length === 0){ el.style.display='none'; el.innerHTML=''; return; }
