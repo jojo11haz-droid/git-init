@@ -154,6 +154,14 @@ export function sanitizeExercisesDone(raw, validIds) {
   return out.length ? out : null;
 }
 
+// "Did you do your exercises?" when the program lives in another app.
+export const EXERCISE_STATUSES = ['yes', 'some', 'no'];
+export function sanitizeExerciseStatus(v) { return EXERCISE_STATUSES.includes(v) ? v : null; }
+// The name of that app, as the professional typed it (e.g. "Wibbi").
+export function sanitizeAppName(v) {
+  return typeof v === 'string' ? v.replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 40) : '';
+}
+
 // Clean one clinician-entered (or AI-suggested) exercise.
 export function sanitizeExercise(raw) {
   if (!raw || typeof raw !== 'object') return null;

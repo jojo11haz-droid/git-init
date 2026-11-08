@@ -273,6 +273,12 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercises_done JSONB;
 -- One short AI follow-up question asked after a check-in, and the patient's
 -- (optional) answer, which the clinician sees with the check-in.
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_q TEXT;
+-- Clients whose program lives in another exercise app (Wibbi, Physitrack…):
+-- the check-in asks "did you do your exercises?" (yes / some / no) instead of
+-- listing exercises.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_external BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_app TEXT;
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercise_status TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_a TEXT;
 -- Hands-off mode: a morning email listing only the patients who need the
 -- clinician (sent only on days someone does), and the last day it went out.
@@ -753,7 +759,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -1464,11 +1470,11 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone, followupQ }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone, followupQ, exerciseStatus }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done, followup_q)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null, followupQ || null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done, followup_q, exercise_status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null, followupQ || null, exerciseStatus || null]
   );
   return rows[0];
 }
@@ -1995,6 +2001,15 @@ export async function getClinicianBrandLogo(clinicianId) {
   const { rows } = await pool.query(
     `SELECT brand_logo, brand_logo_type FROM clinicians WHERE id = $1 AND brand_logo IS NOT NULL`,
     [clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// The professional marks that this client's exercises are in another app.
+export async function setPatientExerciseSource(clinicianId, patientId, external, appName) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET hep_external = $3, hep_app = $4 WHERE id = $1 AND clinician_id = $2 RETURNING ${PATIENT_ROW_COLS}`,
+    [patientId, clinicianId, !!external, appName || null]
   );
   return rows[0] || null;
 }

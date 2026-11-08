@@ -105,6 +105,18 @@ class CheckInDetailScreen extends StatelessWidget {
                 ],
               ),
             ],
+            if (c.exerciseStatus != null) ...[
+              const SizedBox(height: 22),
+              Text(s.exercisesLabel.toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 10.5,
+                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w700,
+                      color: BtwColors.moss)),
+              const SizedBox(height: 8),
+              Text(s.exerciseStatusLabel(c.exerciseStatus!),
+                  style: const TextStyle(fontSize: 15)),
+            ],
             if (painMap != null) ...[
               const SizedBox(height: 22),
               Text(s.painMapLabel.toUpperCase(),

@@ -7,6 +7,7 @@
 import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, LEGACY_TAG_ALIAS, needsAttention, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, TIME_SAVED_MINUTES, programContext, sanitizeSuggestion, areaLabel } from '../clinical.js';
 import { readFileSync } from 'fs';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage } from '../brand.js';
+import { sanitizeExerciseStatus, sanitizeAppName } from '../clinical.js';
 
 let failures = 0;
 function eq(actual, expected, msg) {
@@ -182,6 +183,11 @@ console.log('personalization — branding and page prefs');
   eq(sniffImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>')), null, 'logo: SVG refused');
   eq(sniffImage(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0])), 'image/png', 'logo: PNG recognised by its bytes');
 }
+
+console.log('exercises in another app');
+eq([sanitizeExerciseStatus('yes'), sanitizeExerciseStatus('some'), sanitizeExerciseStatus('no'), sanitizeExerciseStatus('maybe'), sanitizeExerciseStatus(3)], ['yes', 'some', 'no', null, null], 'exercise status: only yes / some / no');
+eq(sanitizeAppName('  Wibbi<script>  '), 'Wibbiscript', 'app name: trimmed, no angle brackets');
+eq(sanitizeAppName('x'.repeat(60)).length, 40, 'app name: capped at 40');
 
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

@@ -1462,6 +1462,20 @@
   .btw-hep-msg{font-size:12px;color:var(--ink-soft);margin-top:6px;}
   .btw-compose-hep{margin:4px 0 16px;}
   .btw-hep-sub{font-size:12px;color:var(--ink-soft);margin:-2px 0 8px;}
+  .btw-exstat{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  .btw-exstat-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:100px;padding:9px 16px;font:500 14px var(--font-body);cursor:pointer;}
+  .btw-exstat-btn.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-hep-src{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:7px;}
+  .btw-hep-srcl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .btw-hep-srcl input{width:16px;height:16px;accent-color:var(--moss);}
+  .hep-ext-app{max-width:260px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13px;background:var(--panel);color:var(--ink);}
+  .btw-exstat-sum{font-size:13.5px;margin:8px 0 10px;color:var(--ink);}
+  .btw-exstat-sum b{font-weight:600;margin-right:4px;}
+  .btw-exstat-sum .y{color:#2E7D4F;font-weight:600;} .btw-exstat-sum .s{color:#B7791F;font-weight:600;} .btw-exstat-sum .n{color:var(--clay);font-weight:600;}
+  .btw-exstat-days{display:flex;flex-wrap:wrap;gap:6px;}
+  .btw-exstat-day{font-size:11.5px;border-radius:8px;padding:5px 8px;border:1px solid var(--line);display:flex;flex-direction:column;line-height:1.3;}
+  .btw-exstat-day i{font-style:normal;color:var(--ink-soft);font-size:10.5px;}
+  .btw-exstat-day.yes{background:#E6F2EA;border-color:#B9DBC5;} .btw-exstat-day.some{background:#FBF1DE;border-color:#EBD3A2;} .btw-exstat-day.no{background:#F8E5E2;border-color:#E9BDB6;}
   .btw-hep-check{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;cursor:pointer;background:var(--card,#fff);}
   .btw-hep-check input{margin-top:3px;width:17px;height:17px;accent-color:var(--moss);flex-shrink:0;}
   .btw-hep-check.on{border-color:var(--moss);background:var(--moss-light);}
@@ -5253,6 +5267,26 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "Did you do your exercises?":"Avez-vous fait vos exercices?",
+    "The ones in":"Ceux dans",
+    "since your last check-in.":"depuis votre dernier suivi.",
+    "Since your last check-in.":"Depuis votre dernier suivi.",
+    "Yes":"Oui",
+    "Some":"En partie",
+    "Not this time":"Pas cette fois",
+    "In":"Dans",
+    "In another app":"Dans une autre application",
+    "Their check-ins now ask whether they did their exercises. Answers show up here, next to how they are feeling.":"Ses suivis demandent maintenant s'il a fait ses exercices. Les réponses s'affichent ici, à côté de son état.",
+    "Did their exercises (last 2 weeks)":"Exercices faits (2 dernières semaines)",
+    "yes":"oui",
+    "some":"en partie",
+    "no":"non",
+    "pain":"douleur",
+    "mood":"humeur",
+    "Their exercises are in another app":"Ses exercices sont dans une autre application",
+    "App name, e.g. Wibbi":"Nom de l'application, p. ex. Wibbi",
+    "Their check-in asks whether they did their exercises (yes / some / no) instead of listing them.":"Son suivi demande s'il a fait ses exercices (oui / en partie / non) au lieu de les lister.",
+    "Using Wibbi, Physitrack or another app? Tick this and their check-in just asks whether they did their exercises.":"Vous utilisez Wibbi, Physitrack ou une autre application? Cochez ceci et son suivi demandera simplement s'il a fait ses exercices.",
     "AI suggestions":"Suggestions de l'IA",
     "Suggest exercises or review the program":"Suggérer des exercices ou réviser le programme",
     "Suggest exercises from their check-ins":"Suggérer des exercices à partir de ses suivis",
@@ -9438,6 +9472,7 @@
       painMap: (row.pain_map && typeof row.pain_map === 'object') ? row.pain_map : null,
       painSens: (row.pain_sensations && typeof row.pain_sensations === 'object') ? row.pain_sensations : null,
       exercisesDone: Array.isArray(row.exercises_done) ? row.exercises_done : null,
+      exerciseStatus: row.exercise_status || null,
       followupQ: row.followup_q || null,
       followupA: row.followup_a || null,
       bodySex: (row.body_sex === 'f' || row.body_sex === 'm') ? row.body_sex : null
@@ -15324,8 +15359,59 @@
     if(host._pid !== pid){ host._pid = pid; host._sug = null; host._rev = null; host._aiOpen = null; host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Loading…')) + '</div>'; }
     fetchHep(pid).then(function(d){ if(host._pid === pid) drawHep(host, pid, d); }).catch(function(){ if(host._pid === pid) host.innerHTML = '<div class="btw-hep-msg">' + esc(t('Could not load exercises.')) + '</div>'; });
   }
+  // Program kept in another exercise app: the card shows how often they did it
+  // (from the yes / some / no answer in each check-in) instead of a list.
+  function hepExternalHtml(p){
+    var app = p.hep_app || '';
+    var cutoff = Date.now() - 14 * 86400000;
+    var recent = (state.checkIns || []).filter(function(c){ return c.time >= cutoff && c.exerciseStatus; });
+    var n = function(st){ return recent.filter(function(c){ return c.exerciseStatus === st; }).length; };
+    var W = hepWords();
+    var h = '<div class="btw-hep-h"><span class="btw-hep-t">' + esc(t(W.title)) + '</span><span class="btw-hep-meta">' + esc(app ? t('In') + ' ' + app : t('In another app')) + '</span></div>';
+    if(!recent.length){
+      h += '<div class="btw-hep-msg" style="margin:6px 0 2px;">' + esc(t('Their check-ins now ask whether they did their exercises. Answers show up here, next to how they are feeling.')) + '</div>';
+    } else {
+      h += '<div class="btw-exstat-sum"><b>' + esc(t('Did their exercises (last 2 weeks)')) + '</b> '
+        + '<span class="y">' + n('yes') + ' ' + esc(t('yes')) + '</span> · <span class="s">' + n('some') + ' ' + esc(t('some')) + '</span> · <span class="n">' + n('no') + ' ' + esc(t('no')) + '</span></div>';
+      h += '<div class="btw-exstat-days">' + recent.slice(0, 10).map(function(c){
+        var sc = (c.mood != null) ? ((painMode() ? t('pain') : t('mood')) + ' ' + c.mood + '/10') : '';
+        return '<span class="btw-exstat-day ' + esc(c.exerciseStatus) + '" title="' + esc(fmtWhen(c.time) + (sc ? ' · ' + sc : '')) + '">' + esc(new Date(c.time).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { month:'short', day:'numeric' })) + (sc ? '<i>' + esc(sc) + '</i>' : '') + '</span>';
+      }).join('') + '</div>';
+    }
+    return h;
+  }
+  function hepSourceHtml(p){
+    var on = !!p.hep_external;
+    return '<div class="btw-hep-src"><label class="btw-hep-srcl"><input type="checkbox" class="hep-ext"' + (on ? ' checked' : '') + '> ' + esc(t('Their exercises are in another app')) + '</label>'
+      + (on ? '<input type="text" class="hep-ext-app" maxlength="40" placeholder="' + esc(t('App name, e.g. Wibbi')) + '" value="' + esc(p.hep_app || '') + '">' : '')
+      + '<div class="btw-hep-meta">' + esc(on ? t('Their check-in asks whether they did their exercises (yes / some / no) instead of listing them.') : t('Using Wibbi, Physitrack or another app? Tick this and their check-in just asks whether they did their exercises.')) + '</div></div>';
+  }
+  function wireHepSource(host, pid, d){
+    var p = (typeof selectedPatient === 'function') ? selectedPatient() : null;
+    var cb = host.querySelector('.hep-ext'), appIn = host.querySelector('.hep-ext-app');
+    if(!p || !cb) return;
+    var save = async function(external, app){
+      try{
+        var r = await api('PUT', '/api/patients/' + encodeURIComponent(pid) + '/exercise-source', { external: external, app: app || '' });
+        p.hep_external = r.external; p.hep_app = r.app;
+        drawHep(host, pid, d);
+      }catch(e){ var m = host.querySelector('.hep-msg'); if(m) m.textContent = e.message; cb.checked = !!p.hep_external; }
+    };
+    cb.addEventListener('change', function(){ save(cb.checked, cb.checked ? (p.hep_app || '') : ''); });
+    if(appIn){
+      var commit = function(){ var v = appIn.value.trim(); if(v !== (p.hep_app || '')) save(true, v); };
+      appIn.addEventListener('blur', commit);
+      appIn.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+    }
+  }
   function drawHep(host, pid, d){
     var ex = (d && d.exercises) || [];
+    var pSel = (typeof selectedPatient === 'function') ? selectedPatient() : null;
+    if(pSel && pSel.hep_external){
+      host.innerHTML = hepExternalHtml(pSel) + hepSourceHtml(pSel) + '<div class="btw-hep-msg hep-msg"></div>';
+      wireHepSource(host, pid, d);
+      return;
+    }
     var W = hepWords();
     var cutoff = Date.now() - 14 * 86400000;
     var recentN = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff; }).length;
@@ -15363,8 +15449,10 @@
       + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
       + '<textarea class="hep-desc" maxlength="400" placeholder="' + esc(t('How to do it, in one or two lines (your patient sees this)')) + '"></textarea></div>'
       + '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-btn"><span>' + esc(t(W.add)) + '</span></button></div></details>'
+      + (pSel ? hepSourceHtml(pSel) : '')
       + '<div class="btw-hep-msg hep-msg"></div>';
     host.innerHTML = h;
+    wireHepSource(host, pid, d);
     var aiFold = host.querySelector('.btw-hep-aifold');
     if(aiFold) aiFold.addEventListener('toggle', function(){ host._aiOpen = aiFold.open; });
     var msg = host.querySelector('.hep-msg');
@@ -15696,6 +15784,19 @@
   function renderComposeHep(){
     try { renderInbox(); } catch(e){}
     var box = document.getElementById('btwComposeHep'); if(!box) return;
+    // Program in another app (Wibbi, Physitrack…): one yes / some / no question.
+    if(isPatient() && !_ownerPreview && state.patient && state.patient.exercises_external){
+      box.style.display = '';
+      var app = state.patient.exercises_app;
+      var l0 = document.getElementById('btwComposeHepLabel'); if(l0) l0.textContent = t('Did you do your exercises?');
+      var s0 = document.getElementById('btwComposeHepSub'); if(s0) s0.textContent = app ? (t('The ones in') + ' ' + app + ', ' + t('since your last check-in.')) : t('Since your last check-in.');
+      var l1 = document.getElementById('btwComposeHepList');
+      l1.innerHTML = '<div class="btw-exstat" role="radiogroup" aria-label="' + esc(t('Did you do your exercises?')) + '">' + [['yes', t('Yes')], ['some', t('Some')], ['no', t('Not this time')]].map(function(o){
+        return '<button type="button" class="btw-exstat-btn' + (state.exStatus === o[0] ? ' on' : '') + '" data-st="' + o[0] + '" role="radio" aria-checked="' + (state.exStatus === o[0]) + '">' + esc(o[1]) + '</button>';
+      }).join('') + '</div>';
+      l1.querySelectorAll('.btw-exstat-btn').forEach(function(b){ b.addEventListener('click', function(){ state.exStatus = (state.exStatus === b.dataset.st) ? null : b.dataset.st; renderComposeHep(); }); });
+      return;
+    }
     var ex = isPatient() ? (state.exercises || []) : [];
     if(!ex.length){ box.style.display = 'none'; return; }
     box.style.display = '';
@@ -17901,7 +18002,8 @@
         const photoUploadId = await uploadComposePhoto();
         const resp = await pApi('POST', '/api/patient/check-ins', {
           text: text || null, moodScore: mood, manualTags, painMap, painSens, photoUploadId, inputMode: composeMode, scoreKind: painMode() ? 'pain' : 'mood', bodySex: (painMap && composeBodyMap) ? composeBodyMap.getSex() : null,
-          exercisesDone: [...(state.hepDone || [])]
+          exercisesDone: [...(state.hepDone || [])],
+          exerciseStatus: state.exStatus || null
         });
         risk = !!(resp.crisis || (resp.checkIn && resp.checkIn.risk_flag));
         state.pendingFollowup = (!risk && resp.checkIn && resp.checkIn.followup_q) ? { id: resp.checkIn.id, q: resp.checkIn.followup_q } : null;
@@ -17928,6 +18030,7 @@
       if(composeBodyMap) composeBodyMap.clear();
       clearComposePhoto();
       if(state.hepDone) state.hepDone.clear();
+      state.exStatus = null;
 
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();
