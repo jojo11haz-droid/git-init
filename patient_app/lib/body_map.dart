@@ -144,6 +144,18 @@ const _hairF = <String, String>{
   'front': 'M50 1.6 C57.4 1.6 61.8 6 61.8 13 C61.8 19.5 62.6 25 64 29.6 C61.4 31 58.8 30.6 57.4 29.2 C58.3 24 58.5 19 57.7 14 C56.2 9.6 53.2 8 50 8 C46.8 8 43.8 9.6 42.3 14 C41.5 19 41.7 24 42.6 29.2 C41.2 30.6 38.6 31 36 29.6 C37.4 25 38.2 19.5 38.2 13 C38.2 6 42.6 1.6 50 1.6 Z',
   'back': 'M50 1.6 C57.4 1.6 61.8 6 61.8 13 C61.8 19.5 62.6 25 64 29.6 C58.4 31.8 41.6 31.8 36 29.6 C37.4 25 38.2 19.5 38.2 13 C38.2 6 42.6 1.6 50 1.6 Z',
 };
+// Clothing, front and back — identical to BTW_CLOTH on the website: shorts
+// for the man; a sports top and shorts for the woman. Drawn inside the body
+// outline, above the figure and under the pain colours.
+const _cloth = <String, String>{
+  'shortsM': 'M33.5 70.5 L66.5 70.5 L66.5 104 C60 105.5 40 105.5 33.5 104 Z',
+  'shortsF': 'M33.5 71 L66.5 71 L69 80 L69 101 C62 102.5 38 102.5 31 101 L31 80 Z',
+  'topFrontF': 'M36 38.5 C42 41.5 58 41.5 64 38.5 L64 55 C58 56.5 42 56.5 36 55 Z M39.6 30.4 L42.4 30.4 L43.6 39.5 L40.8 39.5 Z M57.6 30.4 L60.4 30.4 L59.2 39.5 L56.4 39.5 Z',
+  'topBackF': 'M36 41 L64 41 L64 52 L36 52 Z M40.2 30.4 L43 30.4 L43.4 41.5 L40.6 41.5 Z M57 30.4 L59.8 30.4 L59.4 41.5 L56.6 41.5 Z',
+};
+final _clothPaths = <String, Path>{};
+Path _clothPath(String k) =>
+    _clothPaths.putIfAbsent(k, () => _svgPath(_cloth[k]!));
 final _hairPaths = <String, Path>{};
 Path _hair(String view) =>
     _hairPaths.putIfAbsent(view, () => _svgPath(_hairF[view]!));
@@ -1121,6 +1133,13 @@ class _BodyPainter extends CustomPainter {
     }
     // Pain colours are trimmed to the body so they read as body areas.
     canvas.clipPath(body);
+    // Clothing (same shapes as the website), under the pain colours.
+    final clothPaint = Paint()..color = const Color(0xFF8C96A8);
+    for (final k in female
+        ? [view == 'back' ? 'topBackF' : 'topFrontF', 'shortsF']
+        : ['shortsM']) {
+      canvas.drawPath(_clothPath(k), clothPaint);
+    }
     for (final reg in regions) {
       final lv = levels[reg.id] ?? 0;
       if (lv <= 0) continue;
