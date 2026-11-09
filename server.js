@@ -4984,6 +4984,8 @@ app.get('/api/public-config', (req, res) => {
 });
 const demoRequestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Too many requests — please wait a little while, or email owner@betweenpsych.com.' });
 const DEMO_FIELDS = ['therapy', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition', 'sports', 'fitness', 'recovery', 'schools', 'other'];
+// Field page with that profession's product video (linked from the demo confirmation).
+const DEMO_VIDEO_PATH = { therapy: '/therapy', physio: '/physio', kinesiology: '/kinesiology', osteo: '/osteopathy', occupational: '/occupational-therapy', neuropsych: '/neuropsychology', nutrition: '/nutrition', sports: '/sports', fitness: '/fitness', recovery: '/addiction', schools: '/schools' };
 const FIELD_LABEL = { therapy: 'Psychotherapy / counselling', physio: 'Physiotherapy', kinesiology: 'Kinesiology', osteo: 'Osteopathy', occupational: 'Occupational therapy', neuropsych: 'Neuropsychology', nutrition: 'Nutrition', sports: 'Sports', fitness: 'Fitness', recovery: 'Recovery / addiction', schools: 'Schools', other: 'Other' };
 app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
   try {
@@ -5040,10 +5042,11 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
     // Let them know it arrived (their own language).
     if (emailConfigured()) {
       const fr = r.lang === 'fr';
-      // Physio has a 40-second video on its How it works page: a quick look before the call.
-      const video = r.field === 'physio'
-        ? (fr ? `\n\nEn attendant, voici Between en 40 secondes : https://betweenpsych.com/physio?lang=fr#how-it-works`
-              : `\n\nIn the meantime, here's a 40-second look at Between: https://betweenpsych.com/physio#how-it-works`)
+      // Each profession has a 40-second video on its How it works page: a quick look before the call.
+      const videoPath = DEMO_VIDEO_PATH[r.field];
+      const video = videoPath
+        ? (fr ? `\n\nEn attendant, voici Between en 40 secondes : ${SITE_URL}${videoPath}?lang=fr#how-it-works`
+              : `\n\nIn the meantime, here's a 40-second look at Between: ${SITE_URL}${videoPath}#how-it-works`)
         : '';
       sendEmail({
         to: r.email,
