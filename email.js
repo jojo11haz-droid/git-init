@@ -13,7 +13,7 @@ export function emailConfigured() {
 export async function sendEmail({ to, subject, text, html, replyTo }) {
   if (!RESEND_API_KEY) {
     console.log(`📧 [email not configured — would send]\nTo: ${to}\nSubject: ${subject}\n${replyTo ? 'Reply-To: ' + replyTo + '\n' : ''}${text}\n`);
-    return { delivered: false };
+    return { delivered: false, error: 'Email is not set up (RESEND_API_KEY is missing).' };
   }
   const payload = { from: EMAIL_FROM, to: [to], subject, text };
   if (html) payload.html = html;
@@ -27,8 +27,14 @@ export async function sendEmail({ to, subject, text, html, replyTo }) {
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
-    console.error('Email delivery failed:', response.status, await response.text());
-    return { delivered: false };
+    const body = await response.text();
+    console.error('Email delivery failed:', response.status, body);
+    let msg = body;
+    try { const j = JSON.parse(body); msg = j.message || j.error || body; } catch (e) {}
+    return { delivered: false, status: response.status, error: String(msg).slice(0, 300) };
   }
   return { delivered: true };
 }
+
+// Which address the site sends from (shown in the owner's email test).
+export function emailFrom() { return EMAIL_FROM; }
