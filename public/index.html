@@ -2898,6 +2898,14 @@
   .btw-contact h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:8px 0 8px;}
   .btw-contact p{font-size:15px;color:var(--ink-soft);line-height:1.6;max-width:480px;margin:0 auto 20px;}
   .btw-contact-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;}
+  /* Homepage product video */
+  .btw-video{max-width:960px;margin:8px auto 46px;padding:0 16px;text-align:center;}
+  .btw-video[hidden]{display:none;}
+  .btw-video .btw-section-label{justify-content:center;}
+  .btw-video-frame{margin:14px auto 0;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 44px rgba(30,76,134,.14);background:#F5F4F1;aspect-ratio:16/9;}
+  .btw-video-frame video{display:block;width:100%;height:100%;object-fit:cover;background:#F5F4F1;}
+  .btw-video-note{font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;}
+  @media (max-width:700px){ .btw-video-frame{aspect-ratio:9/16;max-width:420px;} }
   /* "Book a 15-min demo" */
   .btw-demo-link{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:none;border:none;padding:4px 0;color:var(--moss);font-family:var(--font-body);font-weight:600;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
   .btw-demo-link svg{flex:0 0 auto;}
@@ -3444,6 +3452,15 @@
         <div class="btw-hero-aside" id="btwHeroAside" aria-hidden="true"></div>
         </div>
         <div class="btw-hero-thread" id="btwHeroThread"></div>
+      </section>
+
+      <!-- 40-second product video. Only fields that have one (physio for now). -->
+      <section class="btw-video" id="btwVideo" hidden>
+        <div class="btw-section-label">See it in 40 seconds</div>
+        <div class="btw-video-frame">
+          <video id="btwVideoEl" muted playsinline loop preload="none" controls aria-label="Between in 40 seconds: a patient checks in, the physiotherapist sees the summary, the pain map and a drafted SOAP note"></video>
+        </div>
+        <p class="btw-video-note">No sound needed. Real screens from Between; the patients are demo patients.</p>
       </section>
 
       <section class="btw-recovery" id="btwRecovery" style="display:none;">
@@ -5461,6 +5478,8 @@
     "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
+    "See it in 40 seconds":"Voyez-le en 40 secondes",
+    "No sound needed. Real screens from Between; the patients are demo patients.":"Pas besoin de son. De vrais écrans de Between; les patients sont des patients de démonstration.",
     "Book a 15-min demo":"Réserver une démo de 15 min","Want to see it first?":"Envie de le voir d'abord?",
     "15 minutes · free":"15 minutes · gratuit","Book a demo":"Réserver une démo",
     "We'll show you Between with your own field and answer your questions. Tell us when suits you and we'll email you to set a time.":"Nous vous montrons Between pour votre domaine et répondons à vos questions. Dites-nous ce qui vous convient et nous vous écrirons pour fixer un moment.",
@@ -9106,6 +9125,7 @@
   }
   function translateStatic(){
     try { translateAttrs(); } catch(e){}
+    try { if(window.__btwSyncVideo) window.__btwSyncVideo(); } catch(e){}
     const walker = document.createTreeWalker(btwRoot, NodeFilter.SHOW_TEXT, null);
     const nodes = [];
     while(walker.nextNode()) nodes.push(walker.currentNode);
@@ -9856,10 +9876,46 @@
     } catch(e){ errEl.textContent = e.message; }
     finally { btn.disabled = false; btn.textContent = orig; }
   });
+  // --- Homepage product video ---------------------------------------------
+  // Shown for fields that have one; picks English/French and wide/tall (phone),
+  // loads only when it scrolls near, plays muted while on screen.
+  const VIDEO_FIELDS = { physio: 'physio' };
+  const videoSec = document.getElementById('btwVideo'), videoEl = document.getElementById('btwVideoEl');
+  let videoNear = false, videoCounted = false;
+  const videoNarrow = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
+  const videoReduce = (function(){ try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
+  function syncVideo(){
+    if(!videoSec || !videoEl) return;
+    const key = VIDEO_FIELDS[curAudience];
+    videoSec.hidden = !key;
+    if(!key){ try { videoEl.pause(); } catch(e){} return; }
+    const shape = (videoNarrow && videoNarrow.matches) ? 'tall' : 'wide';
+    const base = '/media/' + key + '-' + (curLang === 'fr' ? 'fr' : 'en') + '-' + shape;
+    if(videoEl.getAttribute('poster') !== base + '.jpg') videoEl.setAttribute('poster', base + '.jpg');
+    if(videoNear && videoEl.dataset.src !== base + '.mp4'){
+      videoEl.dataset.src = base + '.mp4'; videoEl.src = base + '.mp4'; videoEl.load();
+      if(!videoReduce){ const pr = videoEl.play(); if(pr && pr.catch) pr.catch(function(){}); }
+    }
+  }
+  window.__btwSyncVideo = syncVideo;
+  if(videoNarrow && videoNarrow.addEventListener) videoNarrow.addEventListener('change', syncVideo);
+  if(videoEl){
+    try {
+      new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){ videoNear = true; syncVideo(); if(!videoReduce && videoEl.src){ const pr = videoEl.play(); if(pr && pr.catch) pr.catch(function(){}); } }
+          else { try { videoEl.pause(); } catch(err){} }
+        });
+      }, { rootMargin: '200px 0px', threshold: 0.01 }).observe(videoEl);
+    } catch(e){ videoNear = true; }
+    videoEl.addEventListener('playing', function(){ if(!videoCounted){ videoCounted = true; btwStat('video_play'); } });
+  }
+
   // Demo buttons are for professionals: hidden on the "On your own" field.
   function syncDemoButtons(){
     const hide = curAudience === 'individual';
     document.querySelectorAll('[data-demo-only]').forEach(function(el){ el.hidden = hide; });
+    syncVideo();
   }
   window.__btwSyncDemoButtons = syncDemoButtons;
 
@@ -12878,6 +12934,7 @@
           '<div class="btw-st-kpi"><b>' + n('demo_sent') + '</b><span>demo requests · ' + n('demo_open') + ' opened</span></div>' +
           '<div class="btw-st-kpi"><b>' + n('tour_start') + '</b><span>walkthroughs</span></div>' +
           '<div class="btw-st-kpi"><b>' + n('try_demo') + '</b><span>live demo tries · ' + n('voice_demo') + ' voice</span></div>' +
+          '<div class="btw-st-kpi"><b>' + n('video_play') + '</b><span>video plays</span></div>' +
         '</div>' +
         '<div style="font-size:11.5px;">Visits per day</div><div class="btw-st-bars">' + bars + '</div>' +
         '<div style="display:flex;justify-content:space-between;font-size:10.5px;"><span>' + daysArr[0][0] + '</span><span>' + daysArr[daysArr.length - 1][0] + '</span></div>' +

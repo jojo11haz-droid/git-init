@@ -13,7 +13,8 @@ export const STAT_EVENTS = [
   'demo_sent',     // sent the demo request
   'tour_start',    // "Walk me through it"
   'voice_demo',    // tried the demo mic
-  'try_demo'       // sent a check-in in the live demo
+  'try_demo',      // sent a check-in in the live demo
+  'video_play'     // the homepage video started playing
 ];
 export const STAT_FIELDS = ['therapy', 'individual', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition', 'sports', 'fitness', 'recovery', 'schools'];
 export const STAT_PAGES = ['home', 'learn', 'pricing', 'guide', 'product', 'features', 'chooser'];
