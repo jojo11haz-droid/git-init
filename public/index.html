@@ -1676,6 +1676,9 @@
   .btw-bz-art{fill:none;stroke:#9A4A31;stroke-width:0.9;stroke-opacity:.6;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
   .btw-bz-art .fillmus{fill:#CB8B6F;fill-opacity:.5;stroke:#9A4A31;stroke-opacity:.6;}
   .btw-bz-hair{fill:#7A5642;stroke:#5E3F2F;stroke-width:.4;pointer-events:none;}
+  .btw-bz-cloth{fill:#3D5370;stroke:#2B3B52;stroke-width:.45;stroke-linejoin:round;pointer-events:none;}
+  .btw-bz-cloth.m{fill:#33445C;}
+  .btw-bz-cloth.flat{fill:#9AA3B2;stroke:none;}
   .btw-bz-sh{fill:#8a4a34;opacity:.06;pointer-events:none;}
   .btw-bz{fill:transparent;stroke:none;pointer-events:all;cursor:pointer;transition:fill .12s ease;}
   .btw-bz.on{fill-opacity:.82;}
@@ -10707,6 +10710,26 @@
     back: 'M50 1.6 C57.4 1.6 61.8 6 61.8 13 C61.8 19.5 62.6 25 64 29.6 C58.4 31.8 41.6 31.8 36 29.6 C37.4 25 38.2 19.5 38.2 13 C38.2 6 42.6 1.6 50 1.6 Z',
     side: 'M50.5 1.8 C56.6 1.8 61.4 6 61.6 12.8 C61.8 19 62.4 24.4 63.6 28.6 C60.6 30 57.4 29.4 55.6 27.4 C54.8 23.4 53 21 50 20 C46.2 18.8 43 15.2 41.4 10.4 C43 5 46.4 1.8 50.5 1.8 Z'
   };
+  // Clothing, drawn inside the body outline (so it always fits) above the
+  // muscle lines and under the pain colours: shorts for the man; a sports top
+  // and shorts for the woman. Front/back shapes are kept identical in the app
+  // (_cloth in patient_app/lib/body_map.dart) by app-tests.
+  const BTW_CLOTH = {
+    shortsM: 'M33.5 70.5 L66.5 70.5 L66.5 104 C60 105.5 40 105.5 33.5 104 Z',
+    shortsF: 'M33.5 71 L66.5 71 L69 80 L69 101 C62 102.5 38 102.5 31 101 L31 80 Z',
+    topFrontF: 'M36 38.5 C42 41.5 58 41.5 64 38.5 L64 55 C58 56.5 42 56.5 36 55 Z M39.6 30.4 L42.4 30.4 L43.6 39.5 L40.8 39.5 Z M57.6 30.4 L60.4 30.4 L59.2 39.5 L56.4 39.5 Z',
+    topBackF: 'M36 41 L64 41 L64 52 L36 52 Z M40.2 30.4 L43 30.4 L43.4 41.5 L40.6 41.5 Z M57 30.4 L59.8 30.4 L59.4 41.5 L56.6 41.5 Z',
+    sideShortsM: 'M36 66.5 L68 66.5 L68 104 L36 104 Z',
+    sideShortsF: 'M36 67.5 L68 67.5 L68 101 L36 101 Z',
+    sideTopF: 'M37 37 L64 37 L64 53 L37 53 Z'
+  };
+  function btwClothSvg(view, sex){
+    const f = sex === 'f', side = (view === 'left' || view === 'right');
+    let d;
+    if(side) d = f ? [BTW_CLOTH.sideTopF, BTW_CLOTH.sideShortsF] : [BTW_CLOTH.sideShortsM];
+    else d = f ? [view === 'back' ? BTW_CLOTH.topBackF : BTW_CLOTH.topFrontF, BTW_CLOTH.shortsF] : [BTW_CLOTH.shortsM];
+    return '<g class="btw-bz-cloth' + (f ? ' f' : ' m') + '">' + d.map(function(x){ return '<path d="' + x + '"/>'; }).join('') + '</g>';
+  }
   function btwHairSvg(view, fill){
     const d = BTW_HAIR[view === 'back' ? 'back' : (view === 'left' || view === 'right') ? 'side' : 'front'];
     return '<path class="btw-bz-hair" d="' + d + '"' + (fill ? ' style="fill:' + fill + ';stroke:none"' : '') + '></path>';
@@ -10813,12 +10836,13 @@
     .replace('<path d="M40 51 C39 58 39 65 41 71"/>', '<path d="M42 52 C41.6 58 41.6 65 42.4 71"/>');
   function btwMuscleArt(v, sex){
     if(btwIsSide(v)){
-      return '<g class="btw-bz-art">' + (sex === 'f' ? BTW_ART_SIDE_TORSO_F : BTW_ART_SIDE_TORSO) +
-        '<path class="btw-bz-base" d="' + BTW_SIDE_ARM_D + '"/>' +   // re-cover the arm to hide torso lines behind it
-        BTW_ART_SIDE_ARM + BTW_ART_SIDE_LEG + '</g>';
+      return '<g class="btw-bz-art">' + (sex === 'f' ? BTW_ART_SIDE_TORSO_F : BTW_ART_SIDE_TORSO) + BTW_ART_SIDE_LEG + '</g>' +
+        btwClothSvg(v, sex) +                                            // clothes over the torso and leg lines
+        '<g class="btw-bz-art"><path class="btw-bz-base" d="' + BTW_SIDE_ARM_D + '"/>' +   // the near arm hangs in front of everything
+        BTW_ART_SIDE_ARM + '</g>';
     }
     const half = (v === 'back') ? BTW_ART_BACK : (sex === 'f' ? BTW_ART_FRONT_F : BTW_ART_FRONT);
-    return '<g class="btw-bz-art">' + half + '<g transform="matrix(-1,0,0,1,100,0)">' + half + '</g></g>';
+    return '<g class="btw-bz-art">' + half + '<g transform="matrix(-1,0,0,1,100,0)">' + half + '</g></g>' + btwClothSvg(v, sex);
   }
 
   // How a sore spot feels, in words a patient actually uses. Each maps to the
@@ -11763,7 +11787,7 @@
       // clipped to it so they read as body areas.
       fig._n = (fig._n || 0) + 1;
       const cid = 'brc' + fig._n, OB = btwBodyBase(cid, btwBodySex, GREY, 'front');
-      var g = '<svg viewBox="0 0 100 198" width="66" height="131" aria-hidden="true"><defs><clipPath id="' + cid + '">' + OB.clip + '</clipPath></defs>' + OB.base + '<g clip-path="url(#' + cid + ')">';
+      var g = '<svg viewBox="0 0 100 198" width="66" height="131" aria-hidden="true"><defs><clipPath id="' + cid + '">' + OB.clip + '</clipPath></defs>' + OB.base + '<g clip-path="url(#' + cid + ')">' + btwClothSvg('front', btwBodySex).replace('btw-bz-cloth', 'btw-bz-cloth flat');
       marks.forEach(function(m){ if(m.level > 0) g += shape(m, FILL[m.level]); });
       return g + '</g></svg>';
     }

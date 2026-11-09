@@ -423,6 +423,19 @@ console.log('Checking the body outline matches between web and app...');
     else ok('body outline → man and woman silhouettes (and her hair) identical on web and app');
   }
 }
+// Clothing on the figures (shorts; the woman's sports top) matches too.
+{
+  const html = readFileSync(join(root, 'public', 'index.html'), 'utf8');
+  const dart = readFileSync(join(root, 'patient_app', 'lib', 'body_map.dart'), 'utf8');
+  const keys = ['shortsM', 'shortsF', 'topFrontF', 'topBackF'];
+  const bad = keys.filter(k => {
+    const w = html.match(new RegExp(`\\n    ${k}: '(M[^']+)'`));
+    const a = dart.match(new RegExp(`\\n  '${k}': '(M[^']+)'`));
+    return !w || !a || w[1] !== a[1];
+  });
+  if (bad.length) fail('figure clothing differs between web and app (or is missing): ' + bad.join(', '));
+  else ok('figure clothing → shorts and sports top identical on web and app');
+}
 
 if (failures) { console.error('\n' + failures + ' app test(s) failed.'); process.exit(1); }
 console.log('\nAll app tests passed.');
