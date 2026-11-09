@@ -32,9 +32,11 @@ import {
   getDocumentForClinician, deleteDocumentForPatient, deleteDocumentForClinician,
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
+  bumpSiteStat, siteStatsSummary, storeDemoRequest, listDemoRequests,
   storageStats, purgeOldMedia
 , addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
+import { sanitizeStat } from './sitestats.js';
 import { sendEmail, emailConfigured } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
@@ -1197,6 +1199,12 @@ function notifyOwner({ subject, lines }) {
     console.error('notifyOwner error:', err && err.message);
   }
 }
+// Add one to today's website total (fire-and-forget; never blocks a request).
+function countStat(row) {
+  if (!dbEnabled()) return;
+  bumpSiteStat(row).catch(err => console.error('Site stat failed:', err.message));
+}
+
 function notifyOwnerOfSignup(clinician) {
   try {
     if (!clinician) return;
@@ -1210,6 +1218,7 @@ function notifyOwnerOfSignup(clinician) {
     if (clinician.province) lines.push(clinician.province);
     if (needsReview) lines.push('Needs licence review.');
     notifyOwner({ subject, lines });
+    if (!isFreeAccess(clinician.email)) countStat({ event: 'signup', field: clinician.discipline || ({ therapist: 'therapy', mentor: 'recovery', school: 'schools' })[clinician.account_type] || '' });
   } catch (err) {
     console.error('notifyOwnerOfSignup error:', err && err.message);
   }
@@ -3755,6 +3764,7 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
     sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
     if (!isFreeAccess(patient.email)) {
       notifyOwner({ subject: 'Between: new patient signed up', lines: [patient.display_name, patient.email, plan ? ('Plan: ' + plan) : 'Free plan'] });
+      countStat({ event: 'signup', field: 'individual' });
     }
 
     // Hand back a Stripe Checkout URL so the client can send them to pay. If
@@ -4925,6 +4935,89 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     console.error('Error handling contact form:', err);
     res.status(500).json({ error: 'Could not send your message — please try again.' });
   }
+});
+
+// --- Website statistics: the page reports an event, we add 1 to today's total.
+// No cookies, no visitor ID, nothing about the person is stored (see sitestats.js).
+const statLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 120, message: 'Too many.' });
+app.post('/api/stat', statLimiter, express.text({ type: () => true, limit: '2kb' }), (req, res) => {
+  try {
+    let body = req.body;
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = null; } }
+    const row = sanitizeStat(body, req.headers['user-agent']);
+    if (row) countStat(row);
+  } catch (e) { /* stats never error to the visitor */ }
+  res.status(204).end();
+});
+app.get('/api/admin/site-stats', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try { res.json(await siteStatsSummary(req.query.days)); }
+  catch (err) { console.error('Site stats error:', err); res.status(500).json({ error: 'Could not load website stats.' }); }
+});
+
+// --- "Book a 15-min demo" ---
+// A booking page link, if the owner has one (Cal.com, Calendly…): the button
+// goes straight there. Without it, the website shows a short request form.
+app.get('/api/public-config', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json({ bookingUrl: /^https:\/\//.test(process.env.BOOKING_URL || '') ? process.env.BOOKING_URL : null });
+});
+const demoRequestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Too many requests — please wait a little while, or email owner@betweenpsych.com.' });
+const DEMO_FIELDS = ['therapy', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition', 'sports', 'fitness', 'recovery', 'schools', 'other'];
+const FIELD_LABEL = { therapy: 'Psychotherapy / counselling', physio: 'Physiotherapy', kinesiology: 'Kinesiology', osteo: 'Osteopathy', occupational: 'Occupational therapy', neuropsych: 'Neuropsychology', nutrition: 'Nutrition', sports: 'Sports', fitness: 'Fitness', recovery: 'Recovery / addiction', schools: 'Schools', other: 'Other' };
+app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+    const name = str(b.name, 120), email = str(b.email, 200);
+    if (b.website) return res.json({ ok: true }); // honeypot: bots fill every box
+    if (!name) return res.status(400).json({ error: 'Please include your name.' });
+    if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please include a valid email so we can reply.' });
+    const r = {
+      name, email,
+      clinic: str(b.clinic, 160), phone: str(b.phone, 40), bestTime: str(b.bestTime, 200), message: str(b.message, 2000),
+      field: DEMO_FIELDS.includes(b.field) ? b.field : 'other',
+      lang: b.lang === 'fr' ? 'fr' : 'en'
+    };
+    const rowsHtml = [['Name', r.name], ['Email', r.email], ['Clinic', r.clinic], ['Field', FIELD_LABEL[r.field]], ['Phone', r.phone], ['Best time', r.bestTime], ['Language', r.lang === 'fr' ? 'French' : 'English']]
+      .filter(x => x[1]).map(x => `<tr><td style="padding:4px 12px 4px 0;color:#5A6169;font-size:13px;">${x[0]}</td><td style="padding:4px 0;font-size:14px;color:#1A1E1C;font-weight:600;">${escapeHtml(x[1])}</td></tr>`).join('');
+    const html = brandedEmailHtml({
+      eyebrow: 'Demo request',
+      heading: `${escapeHtml(r.name)} wants a 15-min demo`,
+      bodyHtml: `<table style="border-collapse:collapse;margin:0 0 14px;">${rowsHtml}</table>` +
+        (r.message ? `<div style="background:#F5F4F1;border:1px solid #E4E3DD;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.6;color:#1A1E1C;white-space:pre-wrap;">${escapeHtml(r.message)}</div>` : ''),
+      footerHtml: `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Reply to this email to set a time with ${escapeHtml(r.name)}.</p>`
+    });
+    const textLines = [`${r.name} <${r.email}>`, r.clinic && `Clinic: ${r.clinic}`, `Field: ${FIELD_LABEL[r.field]}`, r.phone && `Phone: ${r.phone}`, r.bestTime && `Best time: ${r.bestTime}`, r.message && `\n${r.message}`].filter(Boolean);
+    let delivered = false;
+    try {
+      ({ delivered } = await sendEmail({ to: CONTACT_EMAIL, replyTo: r.email, subject: `Between — demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}`, text: textLines.join('\n'), html }));
+    } catch (e) { console.error('Demo request email failed:', e.message); }
+    // A quick text to the owner too, when an alert number is set up.
+    if (ADMIN_ALERT_PHONE && smsConfigured()) {
+      sendSms({ to: ADMIN_ALERT_PHONE, text: `Between: demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}, ${FIELD_LABEL[r.field]}. Check your email.` }).catch(() => {});
+    }
+    // Let them know it arrived (their own language).
+    if (emailConfigured()) {
+      const fr = r.lang === 'fr';
+      sendEmail({
+        to: r.email,
+        subject: fr ? 'Votre démo Between' : 'Your Between demo',
+        text: fr
+          ? `Bonjour ${r.name},\n\nMerci! Nous avons bien reçu votre demande de démo de 15 minutes. Nous vous écrirons d'ici un jour ouvrable pour fixer un moment.\n\nL'équipe Between\nbetweenpsych.com`
+          : `Hi ${r.name},\n\nThanks! We got your request for a 15-minute demo. We'll email you within one business day to set a time.\n\nThe Between team\nbetweenpsych.com`
+      }).catch(err => console.error('Demo confirmation email failed:', err.message));
+    }
+    try { await storeDemoRequest({ ...r, delivered }); } catch (e) { console.error('Could not store demo request:', e.message); }
+    countStat({ event: 'demo_sent', field: r.field === 'other' ? '' : r.field, lang: r.lang });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Demo request error:', err);
+    res.status(500).json({ error: 'Could not send your request — please try again, or email owner@betweenpsych.com.' });
+  }
+});
+app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try { res.json(await listDemoRequests(100)); }
+  catch (err) { console.error('Demo requests error:', err); res.status(500).json({ error: 'Could not load demo requests.' }); }
 });
 
 // Each field has its own marketing URL (/physio, /sports, …). They're the same
