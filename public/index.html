@@ -11143,6 +11143,29 @@
       else { selected = key; if(!state[key]) state[key] = brush; if(levelEl) levelEl.value = state[key]; updBrush(); zoomPart = btwDetailFor(view, z.id) ? z.id : null; }
       paint(); updateSummary(); renderMkSens(); renderZoom();
     });
+    // Man / Woman, same switch as the real check-in: the figure, the physio's
+    // mirror and the close-up photos all follow it.
+    const viewsRow = document.getElementById('btwMkBodyViews');
+    let demoSexBtns = [];
+    if(viewsRow){
+      const top = document.createElement('div'); top.className = 'btw-pm-top btw-mk-sexrow';
+      viewsRow.parentNode.insertBefore(top, viewsRow); top.appendChild(viewsRow);
+      const sexes = document.createElement('div'); sexes.className = 'btw-pz-sexes'; sexes.setAttribute('role', 'group');
+      [['m', 'Man', 'Homme'], ['f', 'Woman', 'Femme']].forEach(function(o){
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btw-pz-sex'; b.setAttribute('data-sex', o[0]);
+        b.addEventListener('click', function(){ btwSetBodySex(o[0]); syncDemoSex(); render(); renderZoom(); });
+        sexes.appendChild(b); demoSexBtns.push(b);
+      });
+      top.appendChild(sexes);
+    }
+    function syncDemoSex(){
+      demoSexBtns.forEach(function(b){
+        const f = b.getAttribute('data-sex') === 'f', on = b.getAttribute('data-sex') === btwBodySex;
+        b.textContent = fr() ? (f ? 'Femme' : 'Homme') : (f ? 'Woman' : 'Man');
+        b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
+      });
+    }
+    syncDemoSex();
     const VIEWS = { front:1, back:1, left:1, right:1 };
     viewBtns.forEach(function(b){ b.addEventListener('click', function(){
       view = VIEWS[b.dataset.view] ? b.dataset.view : 'front';
@@ -11161,7 +11184,7 @@
       // The photo attaches only to a pain check-in, so show it for physio,
       // kinesiology and osteopathy but not the load-focused sports and fitness.
       if(photoEl) photoEl.hidden = !(aud === 'physio' || aud === 'kinesiology' || aud === 'osteo' || aud === 'occupational');
-      render(); updateSummary(); renderMkSens();
+      render(); updateSummary(); renderMkSens(); syncDemoSex();
     }
     // Highlight body regions from a typed check-in ("sore knee", "lower back",
     // "tight hamstring") so the demo body map reacts to what the person wrote.
