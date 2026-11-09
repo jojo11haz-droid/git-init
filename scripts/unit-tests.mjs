@@ -9,6 +9,7 @@ import { readFileSync } from 'fs';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage } from '../brand.js';
 import { sanitizeExerciseStatus, sanitizeAppName } from '../clinical.js';
 import { normalizePhone } from '../sms.js';
+import { sanitizeStat, cleanSource } from '../sitestats.js';
 
 let failures = 0;
 function eq(actual, expected, msg) {
@@ -193,5 +194,12 @@ eq(sanitizeAppName('x'.repeat(60)).length, 40, 'app name: capped at 40');
 console.log('phone numbers for texting (E.164)');
 eq([normalizePhone('514-555-0122'), normalizePhone('(514) 555 0122'), normalizePhone('1 514 555 0122'), normalizePhone('+1 514 555 0122'), normalizePhone('+44 20 7946 0958'), normalizePhone('123')],
    ['+15145550122', '+15145550122', '+15145550122', '+15145550122', '+442079460958', null], 'phone: North American numbers get +1; international kept; too short refused');
+console.log('website statistics (privacy)');
+eq(sanitizeStat({ e:'view', f:'physio', p:'pricing', l:'fr', d:'phone', ip:'1.2.3.4', id:'abc' }, 'Mozilla/5.0 (iPad)'), { event:'view', field:'physio', page:'pricing', source:'', lang:'fr', device:'phone' }, 'stat: only the known fields are kept (no IP / ID ever)');
+eq(sanitizeStat({ e:'hack', f:'physio' }, 'Mozilla'), null, 'stat: unknown event ignored');
+eq(sanitizeStat({ e:'visit' }, 'Googlebot/2.1'), null, 'stat: bots ignored');
+eq(sanitizeStat({ e:'view', f:"x'; drop table", p:'<script>' }, 'Mozilla'), { event:'view', field:'', page:'', source:'', lang:'en', device:'' }, 'stat: junk field/page dropped');
+eq([cleanSource('https://www.google.ca/search?q=x'), cleanSource('https://l.instagram.com/?u=1'), cleanSource('https://betweenpsych.com/physio'), cleanSource(''), cleanSource('Kinatex Newsletter!')], ['google', 'instagram', 'direct', 'direct', 'kinatexnewsletter'], 'stat: sources grouped and cleaned');
+eq(sanitizeStat({ e:'visit', s:'https://www.linkedin.com/feed' }, 'Mozilla').source, 'linkedin', 'stat: a visit keeps where it came from');
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

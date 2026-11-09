@@ -215,6 +215,35 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   delivered BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Website statistics: daily totals only. No visitor IDs, IP addresses, cookies
+-- or user agents are stored — just "how many of this, that day".
+CREATE TABLE IF NOT EXISTS site_stats (
+  day DATE NOT NULL,
+  event TEXT NOT NULL,
+  field TEXT NOT NULL DEFAULT '',
+  page TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT '',
+  lang TEXT NOT NULL DEFAULT '',
+  device TEXT NOT NULL DEFAULT '',
+  n INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, event, field, page, source, lang, device)
+);
+
+-- "Book a 15-min demo" requests from the website.
+CREATE TABLE IF NOT EXISTS demo_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  clinic TEXT,
+  field TEXT,
+  phone TEXT,
+  best_time TEXT,
+  message TEXT,
+  lang TEXT,
+  delivered BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 // Databases created before the auth release have a patients table without
@@ -2023,4 +2052,49 @@ export async function setPatientPrefs(patientId, prefs) {
     [patientId, JSON.stringify(prefs)]
   );
   return rows[0] || null;
+}
+
+// --- Website statistics (daily totals, nothing per visitor) ---
+export async function bumpSiteStat({ event, field = '', page = '', source = '', lang = '', device = '' }) {
+  await pool.query(
+    `INSERT INTO site_stats (day, event, field, page, source, lang, device, n)
+     VALUES ((now() AT TIME ZONE 'America/Toronto')::date, $1, $2, $3, $4, $5, $6, 1)
+     ON CONFLICT (day, event, field, page, source, lang, device) DO UPDATE SET n = site_stats.n + 1`,
+    [event, field || '', page || '', source || '', lang || '', device || '']
+  );
+}
+
+export async function siteStatsSummary(days = 30) {
+  const d = Math.min(Math.max(1, parseInt(days, 10) || 30), 366);
+  const since = `(now() AT TIME ZONE 'America/Toronto')::date - ($1::int - 1)`;
+  const q = sql => pool.query(sql, [d]).then(r => r.rows);
+  const [daily, totals, fields, sources, pages, devices, langs] = await Promise.all([
+    q(`SELECT day::text AS day, event, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} GROUP BY day, event ORDER BY day`),
+    q(`SELECT event, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} GROUP BY event`),
+    q(`SELECT field, event, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} AND event IN ('visit','signup_click','signup','demo_sent') GROUP BY field, event`),
+    q(`SELECT source, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} AND event = 'visit' GROUP BY source ORDER BY n DESC LIMIT 12`),
+    q(`SELECT page, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} AND event = 'view' GROUP BY page ORDER BY n DESC`),
+    q(`SELECT device, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} AND event = 'visit' GROUP BY device ORDER BY n DESC`),
+    q(`SELECT lang, SUM(n)::int AS n FROM site_stats WHERE day >= ${since} AND event = 'visit' GROUP BY lang ORDER BY n DESC`)
+  ]);
+  return { days: d, daily, totals, fields, sources, pages, devices, langs };
+}
+
+// --- Demo requests ---
+export async function storeDemoRequest(r) {
+  const { rows } = await pool.query(
+    `INSERT INTO demo_requests (name, email, clinic, field, phone, best_time, message, lang, delivered)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at`,
+    [r.name, r.email, r.clinic || null, r.field || null, r.phone || null, r.bestTime || null, r.message || null, r.lang || null, !!r.delivered]
+  );
+  return rows[0];
+}
+
+export async function listDemoRequests(limit = 100) {
+  const { rows } = await pool.query(
+    `SELECT id, name, email, clinic, field, phone, best_time, message, lang, delivered, created_at
+       FROM demo_requests ORDER BY created_at DESC LIMIT $1`,
+    [Math.min(Math.max(1, limit), 500)]
+  );
+  return rows;
 }
