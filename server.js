@@ -37,7 +37,7 @@ import {
 , addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sanitizeStat } from './sitestats.js';
-import { sendEmail, emailConfigured } from './email.js';
+import { sendEmail, emailConfigured, emailFrom } from './email.js';
 import { sendSms, smsConfigured, normalizePhone } from './sms.js';
 import { transcribeAudio, transcriptionConfigured, transcribeConversation } from './transcribe.js';
 import {
@@ -1709,6 +1709,27 @@ app.post('/api/admin/test-sms', requireDb, requireAuth, requireOwner, async (req
   } catch (err) {
     console.error('test-sms error:', err);
     res.status(500).json({ ok: false, error: 'Could not send test SMS: ' + (err && err.message) });
+  }
+});
+
+// Owner "Send test email": confirms Resend works and shows its exact error.
+app.post('/api/admin/test-email', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    const want = (req.body && typeof req.body.to === 'string') ? req.body.to.trim() : '';
+    const to = want && EMAIL_RE.test(want) ? want : (ADMIN_ALERT_EMAIL || OWNER_EMAIL);
+    const r = await sendEmail({ to, subject: 'Between test email', text: 'Between test: your email alerts are working. Demo requests and new sign-ups will arrive here.' });
+    const info = { to, from: emailFrom() };
+    if (r.delivered) return res.json({ ok: true, ...info });
+    let hint = '';
+    if (/only send testing emails to your own|verify a domain|not verified/i.test(r.error || '')) {
+      hint = 'Your email service is in starter mode: it only sends to your own Resend login address. Verify betweenpsych.com in Resend (Domains), then set EMAIL_FROM on Render to e.g. "Between <hello@betweenpsych.com>".';
+    } else if (/RESEND_API_KEY/.test(r.error || '')) {
+      hint = 'Add RESEND_API_KEY on Render (Environment), then redeploy.';
+    }
+    return res.status(502).json({ ok: false, ...info, status: r.status || null, error: r.error || 'Delivery failed.', hint });
+  } catch (err) {
+    console.error('test-email error:', err);
+    res.status(500).json({ ok: false, error: 'Could not send test email: ' + (err && err.message) });
   }
 });
 
@@ -4988,13 +5009,33 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
       footerHtml: `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Reply to this email to set a time with ${escapeHtml(r.name)}.</p>`
     });
     const textLines = [`${r.name} <${r.email}>`, r.clinic && `Clinic: ${r.clinic}`, `Field: ${FIELD_LABEL[r.field]}`, r.phone && `Phone: ${r.phone}`, r.bestTime && `Best time: ${r.bestTime}`, r.message && `\n${r.message}`].filter(Boolean);
+    // Sent where the owner's other alerts go (new sign-ups…), plus a copy to
+    // the contact address if that's a different inbox. Separate sends, so one
+    // refused address can't block the other.
+    const subjectLine = `Between — demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}`;
+    const ownerTo = ADMIN_ALERT_EMAIL || OWNER_EMAIL;
     let delivered = false;
     try {
-      ({ delivered } = await sendEmail({ to: CONTACT_EMAIL, replyTo: r.email, subject: `Between — demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}`, text: textLines.join('\n'), html }));
+      ({ delivered } = await sendEmail({ to: ownerTo, replyTo: r.email, subject: subjectLine, text: textLines.join('\n'), html }));
     } catch (e) { console.error('Demo request email failed:', e.message); }
-    // A quick text to the owner too, when an alert number is set up.
+    if (CONTACT_EMAIL && CONTACT_EMAIL.toLowerCase() !== ownerTo.toLowerCase()) {
+      sendEmail({ to: CONTACT_EMAIL, replyTo: r.email, subject: subjectLine, text: textLines.join('\n'), html })
+        .then(x => { if (x && x.delivered) delivered = true; })
+        .catch(e => console.error('Demo request copy failed:', e.message));
+    }
+    // The full request by text to the owner's alert number: everything needed
+    // to reply straight from the phone (email is the backup).
     if (ADMIN_ALERT_PHONE && smsConfigured()) {
-      sendSms({ to: ADMIN_ALERT_PHONE, text: `Between: demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}, ${FIELD_LABEL[r.field]}. Check your email.` }).catch(() => {});
+      const sms = [
+        'Between: new demo request',
+        r.name + (r.clinic ? ' · ' + r.clinic : ''),
+        FIELD_LABEL[r.field] + ' · ' + (r.lang === 'fr' ? 'French' : 'English'),
+        r.email,
+        r.phone && ('Phone: ' + r.phone),
+        r.bestTime && ('Best time: ' + r.bestTime),
+        r.message && ('Note: ' + (r.message.length > 400 ? r.message.slice(0, 400) + '…' : r.message))
+      ].filter(Boolean).join('\n');
+      sendSms({ to: ADMIN_ALERT_PHONE, text: sms }).catch(err => console.error('Demo request SMS failed:', err && err.message));
     }
     // Let them know it arrived (their own language).
     if (emailConfigured()) {

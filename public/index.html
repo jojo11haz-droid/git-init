@@ -4876,6 +4876,15 @@
         <div class="btw-modal-eyebrow">Backend · Storage</div>
         <div id="btwStorageBody" style="font-size:13px;color:var(--ink-soft);line-height:1.6;">Loading…</div>
       </div>
+      <div id="btwEmailCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+        <div class="btw-modal-eyebrow">Backend · Notifications (email)</div>
+        <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:4px 0 10px;">Send yourself a test email to confirm demo requests and sign-up alerts reach you. Leave the box blank to use your alert address.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="btwEmailTestTo" type="email" autocomplete="off" placeholder="you@example.com (optional)" style="flex:1;min-width:170px;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);font-family:var(--font-body);font-size:13px;">
+          <button type="button" id="btwEmailTestBtn" style="flex:0 0 auto;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:9px;padding:9px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;">Send test email</button>
+        </div>
+        <div id="btwEmailTestResult" style="display:none;font-size:12.5px;line-height:1.55;margin-top:10px;"></div>
+      </div>
       <div id="btwSmsCard" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
         <div class="btw-modal-eyebrow">Backend · Notifications (SMS)</div>
         <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.55;margin:4px 0 10px;">Send yourself a test text to confirm Twilio is working. Leave the box blank to use your configured alert number.</div>
@@ -12899,6 +12908,23 @@
       }).join('');
     } catch(e){ el.textContent = 'Could not load: ' + e.message; }
   }
+  // Owner "Send test email": confirms Resend delivers, and shows its exact error.
+  (function(){
+    const btn = document.getElementById('btwEmailTestBtn'); if(!btn) return;
+    const resEl = document.getElementById('btwEmailTestResult'), inp = document.getElementById('btwEmailTestTo');
+    btn.addEventListener('click', async ()=>{
+      const to = ((inp && inp.value) || '').trim();
+      const orig = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…'; resEl.style.display = 'none';
+      try {
+        const r = await fetch('/api/admin/test-email', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(to ? { to } : {}) });
+        const d = await r.json().catch(function(){ return {}; });
+        resEl.style.display = '';
+        if(r.ok && d.ok){ resEl.style.color = 'var(--moss)'; resEl.textContent = '✓ Sent to ' + d.to + ' (from ' + d.from + '). Check that inbox, and its spam folder, in a minute.'; }
+        else { resEl.style.color = 'var(--clay)'; resEl.textContent = 'Not sent to ' + (d.to || to || 'your alert address') + ': ' + (d.error || ('error ' + r.status)) + (d.hint ? '\n\nWhat to do: ' + d.hint : ''); resEl.style.whiteSpace = 'pre-wrap'; }
+      } catch(e){ resEl.style.display = ''; resEl.style.color = 'var(--clay)'; resEl.textContent = 'Could not reach the server: ' + e.message; }
+      finally { btn.disabled = false; btn.textContent = orig; }
+    });
+  })();
   // Owner "Send test SMS" — confirms Twilio works end to end from any device
   // (no dev console needed, so it works on iPad). Shows Twilio's own error.
   (function(){
