@@ -3458,13 +3458,13 @@
         <div class="btw-hero-thread" id="btwHeroThread"></div>
       </section>
 
-      <!-- 40-second product video. Moved onto How it works at load; physio only. -->
+      <!-- 40-second product video, one per profession. Moved onto How it works at load. -->
       <section class="btw-video" id="btwVideo" hidden>
         <div class="btw-section-label">See it in 40 seconds</div>
         <div class="btw-video-frame">
-          <video id="btwVideoEl" muted playsinline loop preload="none" controls aria-label="Between in 40 seconds: a patient checks in, the physiotherapist sees the summary, the pain map and a drafted SOAP note"></video>
+          <video id="btwVideoEl" muted playsinline loop preload="none" controls aria-label="Between in 40 seconds: a check-in, then the summary, the trend and a drafted note in the dashboard"></video>
         </div>
-        <p class="btw-video-note">No sound needed. Real screens from Between; the patients are demo patients.</p>
+        <p class="btw-video-note">No sound needed. Real screens from Between; everyone shown is a made-up demo person.</p>
       </section>
 
       <section class="btw-recovery" id="btwRecovery" style="display:none;">
@@ -5482,7 +5482,7 @@
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
     "See it in 40 seconds":"Voyez-le en 40 secondes",
-    "No sound needed. Real screens from Between; the patients are demo patients.":"Pas besoin de son. De vrais écrans de Between; les patients sont des patients de démonstration.",
+    "No sound needed. Real screens from Between; everyone shown is a made-up demo person.":"Pas besoin de son. De vrais écrans de Between; toutes les personnes montrées sont fictives.",
     "Book a 15-min demo":"Réserver une démo de 15 min","Want to see it first?":"Envie de le voir d'abord?",
     "15 minutes · free":"15 minutes · gratuit","Book a demo":"Réserver une démo",
     "We'll show you Between with your own field and answer your questions. Tell us when suits you and we'll email you to set a time.":"Nous vous montrons Between pour votre domaine et répondons à vos questions. Dites-nous ce qui vous convient et nous vous écrirons pour fixer un moment.",
@@ -9882,8 +9882,10 @@
   // --- Product video (on How it works, after the 3 steps) ----------------
   // Shown for fields that have one; picks English/French and wide/tall (phone),
   // loads only when it scrolls near, plays muted while on screen.
-  // Physio only: the video's title card names physiotherapists.
-  const VIDEO_FIELDS = { physio: 'physio' };
+  // One video per profession (its title card names the profession). 'On your
+  // own' has none: its story is different (no professional's dashboard).
+  const VIDEO_FIELDS = { physio:'physio', kinesiology:'kinesiology', osteo:'osteo', occupational:'occupational', sports:'sports', fitness:'fitness',
+    therapy:'therapy', neuropsych:'neuropsych', recovery:'recovery', nutrition:'nutrition', schools:'schools' };
   const videoSec = document.getElementById('btwVideo'), videoEl = document.getElementById('btwVideoEl');
   let videoNear = false, videoCounted = false;
   const videoNarrow = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
