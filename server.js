@@ -5040,12 +5040,17 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
     // Let them know it arrived (their own language).
     if (emailConfigured()) {
       const fr = r.lang === 'fr';
+      // Physio has a 40-second video on its How it works page: a quick look before the call.
+      const video = r.field === 'physio'
+        ? (fr ? `\n\nEn attendant, voici Between en 40 secondes : https://betweenpsych.com/physio?lang=fr#how-it-works`
+              : `\n\nIn the meantime, here's a 40-second look at Between: https://betweenpsych.com/physio#how-it-works`)
+        : '';
       sendEmail({
         to: r.email,
         subject: fr ? 'Votre démo Between' : 'Your Between demo',
         text: fr
-          ? `Bonjour ${r.name},\n\nMerci! Nous avons bien reçu votre demande de démo de 15 minutes. Nous vous écrirons d'ici un jour ouvrable pour fixer un moment.\n\nL'équipe Between\nbetweenpsych.com`
-          : `Hi ${r.name},\n\nThanks! We got your request for a 15-minute demo. We'll email you within one business day to set a time.\n\nThe Between team\nbetweenpsych.com`
+          ? `Bonjour ${r.name},\n\nMerci! Nous avons bien reçu votre demande de démo de 15 minutes. Nous vous écrirons d'ici un jour ouvrable pour fixer un moment.${video}\n\nL'équipe Between\nbetweenpsych.com`
+          : `Hi ${r.name},\n\nThanks! We got your request for a 15-minute demo. We'll email you within one business day to set a time.${video}\n\nThe Between team\nbetweenpsych.com`
       }).catch(err => console.error('Demo confirmation email failed:', err.message));
     }
     try { await storeDemoRequest({ ...r, delivered }); } catch (e) { console.error('Could not store demo request:', e.message); }
