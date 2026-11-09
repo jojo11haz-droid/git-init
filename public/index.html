@@ -3458,7 +3458,7 @@
         <div class="btw-hero-thread" id="btwHeroThread"></div>
       </section>
 
-      <!-- 40-second product video. Only fields that have one (physio for now). -->
+      <!-- 40-second product video. Moved onto How it works at load; physio only. -->
       <section class="btw-video" id="btwVideo" hidden>
         <div class="btw-section-label">See it in 40 seconds</div>
         <div class="btw-video-frame">
@@ -9758,7 +9758,7 @@
   // tab. Move the DOM nodes over once at load (keeps Home a quick scroll). The
   // "How it works" 3-step explainer belongs on that page too, so it leads it.
   if(viewLearn){
-    ['.btw-howitworks', '#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
+    ['.btw-howitworks', '#btwVideo', '#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
       const el = document.querySelector(sel);
       if(el) viewLearn.appendChild(el);
     });
@@ -9879,10 +9879,11 @@
     } catch(e){ errEl.textContent = e.message; }
     finally { btn.disabled = false; btn.textContent = orig; }
   });
-  // --- Homepage product video ---------------------------------------------
+  // --- Product video (on How it works, after the 3 steps) ----------------
   // Shown for fields that have one; picks English/French and wide/tall (phone),
   // loads only when it scrolls near, plays muted while on screen.
-  const VIDEO_FIELDS = {}; // paused: add { physio: 'physio' } back to show the physio video again
+  // Physio only: the video's title card names physiotherapists.
+  const VIDEO_FIELDS = { physio: 'physio' };
   const videoSec = document.getElementById('btwVideo'), videoEl = document.getElementById('btwVideoEl');
   let videoNear = false, videoCounted = false;
   const videoNarrow = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
@@ -18912,6 +18913,8 @@
     const stored = localStorage.getItem('btw_lang');
     _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
   } catch(e){}
+  // A ?lang=fr / ?lang=en link (e.g. from a French email) wins.
+  try { const ql = new URLSearchParams(location.search).get('lang'); if(ql === 'fr' || ql === 'en') _startLang = ql; } catch(e){}
   try { document.getElementById('btwFooterYear').textContent = new Date().getFullYear(); } catch(e){}
   // Pick the starting use-case. A ?for=sports (or ?for=therapy) deep link wins
   // and is remembered, so an outreach link opens straight in the right view;
