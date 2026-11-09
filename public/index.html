@@ -9882,7 +9882,7 @@
   // --- Homepage product video ---------------------------------------------
   // Shown for fields that have one; picks English/French and wide/tall (phone),
   // loads only when it scrolls near, plays muted while on screen.
-  const VIDEO_FIELDS = { physio: 'physio' };
+  const VIDEO_FIELDS = {}; // paused: add { physio: 'physio' } back to show the physio video again
   const videoSec = document.getElementById('btwVideo'), videoEl = document.getElementById('btwVideoEl');
   let videoNear = false, videoCounted = false;
   const videoNarrow = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
