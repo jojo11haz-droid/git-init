@@ -256,7 +256,7 @@ class S {
 
   // Consent
   String consentTitle(String name) => _(
-      'Before you start, $name, here's how Between uses your check-ins.',
+      'Before you start, $name, here\'s how Between uses your check-ins.',
       'Avant de commencer, $name, comment Between utilise tes nouvelles.');
   // providerKey: who reads the check-ins (null = on their own).
   String consentBullet1(String? providerKey) => providerKey == null
@@ -642,7 +642,7 @@ class S {
   String get coachHelpTitle => _('Help anytime', 'De l\'aide à tout moment');
   String get coachHelpBody => _(
       'This opens the guide to using Between, whenever you need it.',
-      'Ceci ouvre le guide d'utilisation de Between, quand vous en avez besoin.');
+      'Ceci ouvre le guide d\'utilisation de Between, quand vous en avez besoin.');
   String get coachDoneTitle => _('You are all set', 'Vous êtes prêt');
   // A solo account's check-ins are private; a patient with a clinician is
   // told who sees them (they always do; AI consent only covers the summaries).
