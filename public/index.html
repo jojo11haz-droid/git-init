@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>Between — Between-session check-ins for therapy</title>
+<title>Between | Between-session check-ins for therapy</title>
 <meta name="description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session. Private, consent-first and not a crisis service.">
 <link rel="canonical" href="https://betweenpsych.com/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -15,21 +15,21 @@
 <!-- Social / link previews -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Between">
-<meta property="og:title" content="Between — Between-session check-ins for therapy">
+<meta property="og:title" content="Between | Between-session check-ins for therapy">
 <meta property="og:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
 <meta property="og:url" content="https://betweenpsych.com/">
 <meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Between — Between-session check-ins for therapy">
+<meta property="og:image:alt" content="Between | Between-session check-ins for therapy">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Between — Between-session check-ins for therapy">
+<meta name="twitter:title" content="Between | Between-session check-ins for therapy">
 <meta name="twitter:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
 <meta name="twitter:image" content="https://betweenpsych.com/og/therapy.png">
 
 <!-- Structured data for search engines and AI answer engines: who we are, the
      site, and the product with its plans. Prices must match the pricing page
-     (CAD, data-cad="…") — scripts/app-tests.mjs fails if they drift. -->
+     (CAD, data-cad="…"): scripts/app-tests.mjs fails if they drift. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -60,13 +60,13 @@
       "description": "Between-session check-ins for therapists, physiotherapists, nutritionists, coaches and other professionals. Clients send a quick note or voice memo between appointments, AI summarizes it and the professional sees the pattern before the next session. Private, consent-first and not a crisis service.",
       "publisher": { "@id": "https://betweenpsych.com/#org" },
       "offers": [
-        { "@type": "Offer", "name": "Solo — per clinician, billed monthly", "price": "99.99", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Solo Annual — per clinician, billed yearly", "price": "959.88", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Premium — per clinician, billed monthly", "price": "149.99", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Personal — billed monthly", "price": "14.99", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Personal Annual — billed yearly", "price": "119.88", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Personal Premium — billed monthly", "price": "24.99", "priceCurrency": "CAD" },
-        { "@type": "Offer", "name": "Personal Premium Annual — billed yearly", "price": "239.88", "priceCurrency": "CAD" }
+        { "@type": "Offer", "name": "Solo: per clinician, billed monthly", "price": "99.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Solo Annual: per clinician, billed yearly", "price": "959.88", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Premium: per clinician, billed monthly", "price": "149.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal: billed monthly", "price": "14.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Annual: billed yearly", "price": "119.88", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Premium: billed monthly", "price": "24.99", "priceCurrency": "CAD" },
+        { "@type": "Offer", "name": "Personal Premium Annual: billed yearly", "price": "239.88", "priceCurrency": "CAD" }
       ]
     }
   ]
@@ -1506,7 +1506,7 @@
   .btw-today-row .btw-ping{flex:none;}
   /* Patient dashboard: hide the therapist-only caseload controls, the
      clinician's private notes / check-in-mode card, and the clinician-worded
-     storage disclaimer — none of that belongs on the patient's own view. */
+     storage disclaimer: none of that belongs on the patient's own view. */
   .btw-role-patient #btwPatientList,
   .btw-role-patient #btwCaseloadControls,
   .btw-role-patient #btwCopyEmrBar,
@@ -1541,10 +1541,10 @@
   /* Apple-style reveal: fade + rise + slight scale + a soft blur that clears,
      on a long expo ease. */
   /* Section reveal: each section slides up into view, one at a time, as you
-     scroll down to it — a rise (not a soft fade). Driven by a keyframe
+     scroll down to it, a rise (not a soft fade). Driven by a keyframe
      animation so an element's own transitions can't override it. */
   /* No will-change here: on Safari (iPad/iPhone) a will-change layer that was
-     hidden can stay unpainted when its page is shown again — the page looks
+     hidden can stay unpainted when its page is shown again, the page looks
      empty until the first scroll or tap. The animation makes its own layer. */
   .btw-reveal{opacity:0;}
   #btwViewHome .btw-hero, #btwViewHome .btw-chooser{animation:btwSectionIn .8s cubic-bezier(.22,.9,.3,1) both;}
@@ -2244,7 +2244,7 @@
   .btw-chooser-card.active{border-color:var(--moss);background:var(--moss-light);box-shadow:inset 0 0 0 1px var(--moss),0 12px 26px -16px rgba(30,76,134,.45);}
   .btw-chooser-card.active .ic{box-shadow:inset 0 0 0 1px var(--moss);}
   /* Home gate: the "Who's it for?" chooser is the landing on every plain visit
-     (returning visitors included) — show only the chooser until a field is
+     (returning visitors included): show only the chooser until a field is
      picked. A field URL (/physio) or a signed-in account skips the gate. */
   .btw-home.btw-gated > *:not(.btw-chooser){display:none !important;}
   /* Once a field is picked the chooser gives way to that field's page; reopen
@@ -2253,7 +2253,7 @@
   /* First-paint anti-flash (set by the inline script at the top of <body>,
      cleared by the main script). Hides the header chrome + home content and
      forces the chooser visible from the very first frame on a plain landing,
-     and veils the home view when a session is likely — so a phone never flashes
+     and veils the home view when a session is likely, so a phone never flashes
      the homepage before locking onto the chooser. */
   /* Each pre-class must leave the page looking exactly like the state the main
      script then settles on, or the switch shows as a flash on refresh. So the
@@ -2269,8 +2269,8 @@
   html.btw-pre-resolving #btwViewHome{visibility:hidden !important;}
   /* While a likely session is confirmed (pre-class, then body.btw-resolving),
      show the header a signed-in visitor ends up with (the app-mode rules
-     below): no Log in / Sign up and — unless it's the owner, who keeps the
-     full header (btw-hint-owner, from the last visit) — no page nav, tagline
+     below): no Log in / Sign up and, unless it's the owner, who keeps the
+     full header (btw-hint-owner, from the last visit): no page nav, tagline
      or field pill. An expired session lands on the gated chooser, whose
      header hides the same things, so nothing flips either way. */
   html.btw-pre-resolving #btwLoginBtn, html.btw-pre-resolving #btwSignupBtn,
@@ -2530,7 +2530,7 @@
     content:'';width:22px;height:2px;background:var(--clay);border-radius:1px;flex:none;
   }
   /* How-it-works steps: one full-width panel at a time, scrolled through like
-     the features — big number, large serif heading, room for more text. */
+     the features: big number, large serif heading, room for more text. */
   .btw-steps{
     display:flex;
     flex-direction:column;
@@ -2589,7 +2589,7 @@
   }
   /* Features flow: each capability is its own full-width panel you scroll
      through one at a time (not a grid of small tiles). Spacious, left-aligned,
-     transparent so the ambient circles show behind — and each slides in on its
+     transparent so the ambient circles show behind, and each slides in on its
      own as it reaches the viewport (reveal wired per-feature in JS below). */
   .btw-feature-grid{
     display:flex;
@@ -2631,7 +2631,7 @@
     .btw-feature{min-height:auto;padding:26px 0;}
   }
   /* Features: every one gets a full screen to itself — copy on the left, a live
-     animated mockup on the right — revealing one at a time as you scroll
+     animated mockup on the right, revealing one at a time as you scroll
      (the v2 "nine things, one at a time" feel). */
   .btw-feature-grid > .btw-feature{
     min-height:88vh;max-width:1080px;margin:0 auto;
@@ -2768,7 +2768,7 @@
     .btw-viz-in{opacity:1;transform:none;transition:none;}
   }
   /* The How-it-works steps now lead the "How it works" page, which already has
-     its own "How it works" eyebrow — hide the section's duplicate there. */
+     its own "How it works" eyebrow: hide the section's duplicate there. */
   #btwViewLearn .btw-howitworks .btw-section-label{display:none;}
   /* Side nav: a dot per feature, click to jump, label on hover/active. */
   .btw-featnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:40;display:none;flex-direction:column;gap:13px;align-items:flex-end;}
@@ -3289,7 +3289,7 @@
       <div id="btwPracticeMember" style="display:none;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px;"></div>
 
       <div id="btwPracticeOwner" style="display:none;">
-        <div style="font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Add clinicians to your clinic. Each gets their own login and their own private caseload — clinicians can't see each other's patients — and they're all covered by your clinic subscription.</div>
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;">Add clinicians to your clinic. Each gets their own login and their own private caseload, clinicians can't see each other's patients, and they're all covered by your clinic subscription.</div>
         <div id="btwSeatList" style="border:1px solid var(--line);border-radius:9px;margin-bottom:12px;"></div>
         <div id="btwPendingWrap" style="display:none;margin-bottom:12px;">
           <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;">Pending invites</div>
@@ -3316,7 +3316,7 @@
       <button class="btw-modal-close" data-close="btwJoinOverlay" type="button" aria-label="Close">✕</button>
       <div class="btw-modal-eyebrow">Join a clinic</div>
       <h2>Create your clinician login</h2>
-      <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a clinic</strong> on Between. Create your login below — you'll have your own account and your own private caseload.</div>
+      <div id="btwJoinIntro" style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">You've been invited to join <strong id="btwJoinPractice">a clinic</strong> on Between. Create your login below. You'll have your own account and your own private caseload.</div>
       <input id="btwJoinName" placeholder="Your name" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
       <input id="btwJoinPassword" type="password" placeholder="Choose a password (10+ characters)" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--font-body);font-size:14px;margin-bottom:10px;">
       <div id="btwJoinLicenceWrap" style="display:none;">
@@ -3331,7 +3331,7 @@
 
   <div class="btw-header" role="banner">
     <div>
-      <div class="btw-title" id="btwBrandHome" role="button" tabindex="0" aria-label="Between — go to homepage" title="Home"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
+      <div class="btw-title" id="btwBrandHome" role="button" tabindex="0" aria-label="Between home page" title="Home"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
       <div class="btw-nav" role="navigation" aria-label="Menu">
         <button class="btw-nav-btn active" id="btwNavHome">Home</button>
         <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
@@ -3469,7 +3469,7 @@
 
       <section class="btw-recovery" id="btwRecovery" style="display:none;">
         <div class="btw-section-label">Your recovery, seen</div>
-        <p class="btw-demo-lead">Patients don't just rate their pain — they watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.</p>
+        <p class="btw-demo-lead">Patients don't just rate their pain. They watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.</p>
         <div class="btw-rec-wrap">
           <div class="btw-rec-fig"><div class="btw-rec-when">Week 1</div><div id="btwRecThen"></div></div>
           <div class="btw-rec-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
@@ -3478,8 +3478,8 @@
           <div class="btw-rec-fig"><div class="btw-rec-when">Now</div><div id="btwRecNow"></div></div>
         </div>
         <div class="btw-rec-chips">
-          <span class="btw-rec-chip">Lower back — easing · was 8, now 3</span>
-          <span class="btw-rec-chip">Right shoulder — cleared</span>
+          <span class="btw-rec-chip">Lower back: easing · was 8, now 3</span>
+          <span class="btw-rec-chip">Right shoulder: cleared</span>
         </div>
       </section>
 
@@ -3831,7 +3831,7 @@
         <div class="btw-section-label">For clinics &amp; practices</div>
         <div class="btw-solo">
           <h3>Bring your whole team onto one plan.</h3>
-          <p>Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.</p>
+          <p>Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.</p>
           <div class="btw-solo-steps">
             <div class="btw-solo-step">
               <div class="n">One bill</div>
@@ -3886,7 +3886,7 @@
       <section class="btw-contact" id="btwContactSection">
         <div class="btw-section-label">Contact</div>
         <h2>Questions, or Between for your clinic?</h2>
-        <p>We're happy to help — email us and we'll get back to you.</p>
+        <p>We're happy to help. Email us and we'll get back to you.</p>
         <div class="btw-contact-actions">
           <a class="btw-hero-btn primary" href="mailto:owner@betweenpsych.com?subject=Between%20%E2%80%94%20enquiry">Email us</a>
           <a class="btw-contact-email" href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>
@@ -3900,7 +3900,7 @@
     <div style="max-width:1080px;margin:0 auto;padding:4px 0 2px;text-align:center;">
       <div class="btw-section-label">How it works</div>
       <h2 style="margin:6px 0 8px;">See Between in action</h2>
-      <p class="btw-demo-lead" style="margin:0 auto 6px;">Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.</p>
+      <p class="btw-demo-lead" style="margin:0 auto 6px;">Both sides of a between-visit check-in. Try it live, and see the trends, features and recovery view that come with it.</p>
     </div>
   </div>
 
@@ -4080,7 +4080,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--moss)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <div style="flex:1;">
             <div style="font-weight:700;font-size:13.5px;color:var(--moss);">Get a daily text to check in</div>
-            <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:3px 0 10px;">Between can send you a quick text every day so checking in becomes a habit. Add your mobile number — it takes a few seconds, and you can turn it off anytime.</div>
+            <div style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:3px 0 10px;">Between can send you a quick text every day so checking in becomes a habit. Add your mobile number. It takes a few seconds, and you can turn it off anytime.</div>
             <button type="button" id="btwReminderNudgeBtn" style="background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:8px 15px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Turn on daily reminders</button>
           </div>
         </div>
@@ -4136,7 +4136,7 @@
           <span class="btw-today-count" id="btwNeedsCount"></span>
         </div>
         <div class="btw-today-list" id="btwNeedsList"></div>
-        <label class="btw-needs-mail" id="btwNeedsMailRow"><input type="checkbox" id="btwNeedsMail"> <span id="btwNeedsMailLbl">Email me this list each morning — only on days someone needs me</span></label>
+        <label class="btw-needs-mail" id="btwNeedsMailRow"><input type="checkbox" id="btwNeedsMail"> <span id="btwNeedsMailLbl">Email me this list each morning, only on days someone needs me</span></label>
       </div>
       <div class="btw-today" id="btwTodayRoster" style="display:none;">
         <div class="btw-today-head">
@@ -4212,7 +4212,7 @@
         </button>
       </div>
       <div id="btwScribePanel" class="btw-ainote btw-scribe" style="display:none;">
-        <div class="btw-ainote-label" id="btwScribeLabel">Record the session — Between writes the chart note from it</div>
+        <div class="btw-ainote-label" id="btwScribeLabel">Record the session: Between writes the chart note from it</div>
         <div class="btw-scribe-who" id="btwScribeWho"></div>
         <label class="btw-scribe-consent"><input type="checkbox" id="btwScribeConsent"> <span>The client agreed to this session being recorded.</span></label>
         <div class="btw-scribe-ctrl">
@@ -4230,15 +4230,15 @@
       </div>
       <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
         <div class="btw-ainote-own">
-          <div class="btw-ainote-own-l" id="btwAiOwnLabel">Your session notes (optional) — dictate or type, and Between writes them into the note</div>
-          <textarea id="btwAiFindings" maxlength="3000" placeholder="What you observed, your assessment and the plan — in your own words, as short as you like."></textarea>
+          <div class="btw-ainote-own-l" id="btwAiOwnLabel">Your session notes (optional): dictate or type, and Between writes them into the note</div>
+          <textarea id="btwAiFindings" maxlength="3000" placeholder="What you observed, your assessment and the plan, in your own words, as short as you like."></textarea>
           <div class="btw-ainote-own-btns">
             <button type="button" id="btwDictateBtn" class="btw-emr-btn"><span>Dictate</span></button>
             <button type="button" id="btwAiNoteUpdate" class="btw-emr-btn"><span>Update note</span></button>
             <span id="btwAiOwnMsg" style="font-size:12px;color:var(--ink-soft);"></span>
           </div>
         </div>
-        <div class="btw-ainote-label" id="btwAiNoteLabel">Draft note — review and edit before using</div>
+        <div class="btw-ainote-label" id="btwAiNoteLabel">Draft note: review and edit before using</div>
         <textarea id="btwAiNoteText" class="btw-ainote-text" rows="7" spellcheck="true"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwAiNoteMeta"></span>
@@ -4246,7 +4246,7 @@
         </div>
       </div>
       <div id="btwReportPanel" class="btw-ainote" style="display:none;">
-        <div class="btw-ainote-label" id="btwReportLabel">Report or letter — Between drafts it from the history; add your clinical input where marked</div>
+        <div class="btw-ainote-label" id="btwReportLabel">Report or letter: Between drafts it from the history; add your clinical input where marked</div>
         <div class="btw-report-opts">
           <select id="btwReportKind" aria-label="Kind of report">
             <option value="progress">Progress report</option>
@@ -4265,7 +4265,7 @@
         </div>
       </div>
       <div id="btwEncouragePanel" class="btw-ainote btw-msg" style="display:none;">
-        <div class="btw-ainote-label" id="btwEncourageLabel">Message to your client — they read it in Between</div>
+        <div class="btw-ainote-label" id="btwEncourageLabel">Message to your client. They read it in Between</div>
         <div class="btw-msg-to" id="btwMsgTo"></div>
         <textarea id="btwEncourageText" class="btw-ainote-text" rows="5" maxlength="1200" spellcheck="true" placeholder="A short note: how they're doing, what to focus on this week."></textarea>
         <div class="btw-msg-tools"><button type="button" id="btwMsgDraft" class="btw-emr-btn"><span>Draft with AI</span></button><span id="btwEncourageMeta"></span></div>
@@ -4431,7 +4431,7 @@
     <div class="btw-pricing-wrap">
       <div class="btw-pricing-intro">
         <h2>Pricing for therapists and patients</h2>
-        <p class="btw-price-value">The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.</p>
+        <p class="btw-price-value">The real cost isn't the subscription. It's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.</p>
         <p>Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.</p>
         <p class="btw-allfeat" style="margin:4px 0 14px;text-align:left;"><a href="/features" class="btw-features-link">See every feature that's included <span aria-hidden="true">→</span></a></p>
         <div class="btw-ccy-toggle" role="group" aria-label="Currency">
@@ -4712,14 +4712,14 @@
                 <option value="NSBEP">Nova Scotia Board of Examiners in Psychology</option>
                 <option value="PEIPRB">PEI Psychologists Registration Board</option>
                 <option value="NLPB">Newfoundland &amp; Labrador Psychology Board</option>
-                <option value="CA-Psychology">Psychologist or therapist — other provincial college</option>
+                <option value="CA-Psychology">Psychologist or therapist: other provincial college</option>
               </optgroup>
               <optgroup label="Canada · Social work &amp; counselling">
-                <option value="OTSTCFQ">OTSTCFQ — social work, couple &amp; family therapy (QC)</option>
+                <option value="OTSTCFQ">OTSTCFQ: social work, couple &amp; family therapy (QC)</option>
                 <option value="OCCOQ">Conseillers d'orientation du Québec (OCCOQ)</option>
                 <option value="OCSWSSW">Social Workers of Ontario (OCSWSSW)</option>
-                <option value="CA-SocialWork">Social worker — other provincial college</option>
-                <option value="CA-Counselling">Counselling therapist — provincial college</option>
+                <option value="CA-SocialWork">Social worker: other provincial college</option>
+                <option value="CA-Counselling">Counselling therapist: provincial college</option>
               </optgroup>
               <optgroup label="Canada · Physiotherapy">
                 <option value="OPPQ">Physiothérapie du Québec (OPPQ)</option>
@@ -4732,18 +4732,18 @@
                 <option value="NSCP">Nova Scotia College of Physiotherapists</option>
                 <option value="PEI-PT">Prince Edward Island physiotherapy regulator</option>
                 <option value="NL-PT">Newfoundland &amp; Labrador physiotherapy regulator</option>
-                <option value="CA-Physio">Physiotherapist — other provincial college</option>
+                <option value="CA-Physio">Physiotherapist: other provincial college</option>
               </optgroup>
               <optgroup label="Canada · Dietetics &amp; nutrition">
                 <option value="ODNQ">Diététistes-nutritionnistes du Québec (ODNQ)</option>
                 <option value="CDO-Diet">College of Dietitians of Ontario</option>
                 <option value="CDA-Diet">College of Dietitians of Alberta</option>
                 <option value="CDBC-Diet">College of Dietitians of British Columbia</option>
-                <option value="CA-Dietitian">Dietitian or nutritionist — other provincial college</option>
+                <option value="CA-Dietitian">Dietitian or nutritionist: other provincial college</option>
               </optgroup>
               <optgroup label="Canada · Nursing">
                 <option value="OIIQ">Infirmières et infirmiers du Québec (OIIQ)</option>
-                <option value="CA-Nursing">Nurse — provincial college</option>
+                <option value="CA-Nursing">Nurse: provincial college</option>
               </optgroup>
               <optgroup label="United States · Therapy &amp; counselling">
                 <option value="US-Psychologist">Licensed Psychologist (state board)</option>
@@ -4753,12 +4753,12 @@
                 <option value="US-LPCC">Licensed Professional Clinical Counselor (LPCC)</option>
                 <option value="US-LMFT">Licensed Marriage &amp; Family Therapist (LMFT)</option>
                 <option value="US-LMHC">Licensed Mental Health Counselor (LMHC)</option>
-                <option value="US-Therapy-Other">Therapist or counselor — other state board</option>
+                <option value="US-Therapy-Other">Therapist or counselor: other state board</option>
               </optgroup>
               <optgroup label="United States · Physiotherapy">
                 <option value="US-PT">Licensed Physical Therapist, PT (state board)</option>
                 <option value="US-DPT">Doctor of Physical Therapy, DPT (state board)</option>
-                <option value="US-Physio-Other">Physical therapist — other state board</option>
+                <option value="US-Physio-Other">Physical therapist: other state board</option>
               </optgroup>
               <option value="other">Other regulated licence or board</option>
             </select>
@@ -5315,9 +5315,9 @@
     if(ind) ind.classList.toggle('active', _ownerPreviewMode === 'individual');
     const note = document.getElementById('btwOwnerPreviewNote');
     if(note) note.textContent = _ownerPreviewMode === 'individual'
-      ? t('Previewing the individual view — nothing here is saved or sent.')
+      ? t('Previewing the individual view. Nothing here is saved or sent.')
       : _ownerPreviewMode === 'patient'
-        ? t('Previewing the patient view — nothing here is saved or sent.')
+        ? t('Previewing the patient view. Nothing here is saved or sent.')
         : t('Preview the patient side of the product.');
   }
   window.__btwSyncOwnerPreview = syncOwnerPreviewUI;
@@ -5362,11 +5362,11 @@
   const FR = {
     "iPhone & iPad app coming soon":"Application iPhone et iPad bientôt disponible",
     // Pricing value anchor
-    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":"Le vrai coût, ce n'est pas l'abonnement — ce sont les minutes au début de chaque séance passées à faire le point. Between vous les redonne, et signale les risques entre les visites, pour toutes les personnes que vous accompagnez.",
+    "The real cost isn't the subscription. It's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":"Le vrai coût, ce n'est pas l'abonnement. Ce sont les minutes au début de chaque séance passées à faire le point. Between vous les redonne, et signale les risques entre les visites, pour toutes les personnes que vous accompagnez.",
     // For clinics & practices band
     "For clinics & practices":"Pour les cliniques et cabinets",
     "Bring your whole team onto one plan.":"Réunissez toute votre équipe sur un seul forfait.",
-    "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte du praticien seul à la clinique entière — un seul forfait couvre l'équipe, et chaque clinicien garde sa propre liste de clients privée.",
+    "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte du praticien seul à la clinique entière, un seul forfait couvre l'équipe, et chaque clinicien garde sa propre liste de clients privée.",
     "One bill":"Une facture",
     "One plan for the team":"Un forfait pour l'équipe",
     "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le cabinet est facturé une seule fois. Ajoutez des cliniciens à mesure que vous grandissez, au lieu que chacun achète le sien.",
@@ -5408,7 +5408,7 @@
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
     "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
-    "Clinician":"Clinicien","Individual":"Particulier","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view — nothing here is saved or sent.":"Aperçu de la vue patient — rien ici n'est enregistré ni envoyé.","Previewing the individual view — nothing here is saved or sent.":"Aperçu de la vue particulier — rien ici n'est enregistré ni envoyé.","This is a preview — your check-in was not sent.":"Ceci est un aperçu — votre suivi n'a pas été envoyé.",
+    "Clinician":"Clinicien","Individual":"Particulier","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view. Nothing here is saved or sent.":"Aperçu de la vue patient. Rien ici n'est enregistré ni envoyé.","Previewing the individual view. Nothing here is saved or sent.":"Aperçu de la vue particulier. Rien ici n'est enregistré ni envoyé.","This is a preview. Your check-in was not sent.":"Ceci est un aperçu. Votre suivi n'a pas été envoyé.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
     "For therapists, counsellors & anyone on their own":"Pour thérapeutes, conseillers et les particuliers",
@@ -5451,15 +5451,15 @@
     // AI draft progress note
     "AI draft note":"Note rédigée par IA",
     "Refresh note":"Actualiser la note",
-    "Draft note — review and edit before using":"Brouillon de note — à relire et modifier avant usage",
+    "Draft note: review and edit before using":"Brouillon de note : à relire et modifier avant usage",
     "Needs you today":"Ont besoin de vous aujourd'hui",
-    "Nobody needs you right now — everyone's checking in fine.":"Personne n'a besoin de vous pour l'instant — tout le monde fait ses suivis normalement.",
-    "Email me this list each morning — only on days someone needs me":"M'envoyer cette liste chaque matin — seulement les jours où quelqu'un a besoin de moi",
+    "Nobody needs you right now. Everyone's checking in fine.":"Personne n'a besoin de vous pour l'instant. Tout le monde fait ses suivis normalement.",
+    "Email me this list each morning, only on days someone needs me":"M'envoyer cette liste chaque matin, seulement les jours où quelqu'un a besoin de moi",
     "Could not save that setting.":"Impossible d'enregistrer ce réglage.",
     "Home exercise program":"Programme d'exercices à domicile",
     "Did exercises in":"Exercices faits dans",
     "check-ins (last 2 weeks)":"suivis (2 dernières semaines)",
-    "Assign once — your patient ticks them off when they check in.":"Assignez-les une fois — votre patient les coche lors de ses suivis.",
+    "Assign once: your patient ticks them off when they check in.":"Assignez-les une fois : votre patient les coche lors de ses suivis.",
     "Ticked in":"Coché dans",
     "Suggest with AI":"Suggestions de l'IA",
     "Goal or area, e.g. knee pain on stairs, early stage":"Objectif ou zone, p. ex. douleur au genou dans les escaliers, début",
@@ -5470,15 +5470,15 @@
     "How to do it, in one or two lines (your patient sees this)":"Comment le faire, en une ou deux lignes (votre patient le voit)",
     "Add exercise":"Ajouter l'exercice",
     "Add all":"Tout ajouter",
-    "AI suggestions — check they suit this patient before adding.":"Suggestions de l'IA — vérifiez qu'elles conviennent à ce patient avant de les ajouter.",
-    "No suggestions came back — try describing the goal differently.":"Aucune suggestion — essayez de décrire l'objectif autrement.",
+    "AI suggestions: check they suit this patient before adding.":"Suggestions de l'IA : vérifiez qu'elles conviennent à ce patient avant de les ajouter.",
+    "No suggestions came back. Try describing the goal differently.":"Aucune suggestion : essayez de décrire l'objectif autrement.",
     "Could not suggest exercises just now.":"Impossible de suggérer des exercices pour le moment.",
     "Could not load exercises.":"Impossible de charger les exercices.",
     "Could not save the exercise.":"Impossible d'enregistrer l'exercice.",
     "Could not remove the exercise.":"Impossible de retirer l'exercice.",
     "Your home exercises":"Vos exercices à domicile",
     "Tick what you did since your last check-in.":"Cochez ce que vous avez fait depuis votre dernier suivi.",
-    "Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) — ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
+    "Chart note (SOAP): add your in-clinic findings and plan, then copy it into your chart":"Note de dossier (SOAP) : ajoutez vos constats en clinique et le plan, puis copiez-la dans votre dossier",
     "Copy to chart":"Copier dans le dossier",
     "Save as PDF":"Enregistrer en PDF",
     "See it in 40 seconds":"Voyez-le en 40 secondes",
@@ -5494,8 +5494,8 @@
     "Recording":"Enregistrement","tap the mic to stop":"touchez le micro pour arrêter",
     "Turning your voice into text…":"Transcription de votre voix…",
     "Added. Edit it if you like, then send. Between will summarize it.":"Ajouté. Modifiez-le au besoin, puis envoyez. Between en fera le résumé.",
-    "Chart note (ADIME) — from the recorded session; check it before it goes in the chart":"Note au dossier (ADIME) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
-    "Chart note (ADIME) — add your findings, nutrition diagnosis and plan, then copy it into your chart":"Note au dossier (ADIME) — ajoutez vos constats, votre diagnostic nutritionnel et le plan, puis copiez-la dans votre dossier",
+    "Chart note (ADIME): from the recorded session; check it before it goes in the chart":"Note au dossier (ADIME) : tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "Chart note (ADIME): add your findings, nutrition diagnosis and plan, then copy it into your chart":"Note au dossier (ADIME) : ajoutez vos constats, votre diagnostic nutritionnel et le plan, puis copiez-la dans votre dossier",
     "Chart note (ADIME)":"Note au dossier (ADIME)",
     "or review the program":"ou réviser le programme",
     "from their check-ins":"à partir de ses suivis",
@@ -5570,7 +5570,7 @@
     "Tap the area, zoom in to the exact spot and say how it feels. Pick Man or Woman once; it stays that way.":"Touchez la zone, zoomez sur l'endroit exact et dites comment vous le ressentez. Choisissez Homme ou Femme une fois; ça reste ainsi.",
     "Tick what you did":"Cochez ce que vous avez fait",
     "Your program is here. Tick what you did since last time so your clinician can see how it is going.":"Votre programme est ici. Cochez ce que vous avez fait depuis la dernière fois pour que votre clinicien voie comment ça se passe.",
-    "A quick tour of your dashboard — about a minute. You can skip anytime.":"Un rapide tour de votre tableau de bord — environ une minute. Vous pouvez passer en tout temps.",
+    "A quick tour of your dashboard, about a minute. You can skip anytime.":"Un rapide tour de votre tableau de bord, environ une minute. Vous pouvez passer en tout temps.",
     "Only the patients who need you, with the reason: a safety flag, scores getting worse, or gone quiet. Tick the box to get this list by email each morning.":"Seulement les patients qui ont besoin de vous, avec la raison : un signalement, des scores qui empirent ou un silence. Cochez la case pour recevoir cette liste par courriel chaque matin.",
     "Your tools for each patient":"Vos outils pour chaque patient",
     "AI draft note writes the chart note from their check-ins; type or dictate your findings into it. Record session turns an appointment into the note. Report / letter drafts progress reports and letters. Message sends them a note with exercises attached.":"Ébauche IA rédige la note au dossier à partir des suivis; tapez ou dictez-y vos constats. Enregistrer la séance transforme un rendez-vous en note. Rapport / lettre rédige rapports d'évolution et lettres. Message lui envoie un mot avec des exercices joints.",
@@ -5581,7 +5581,7 @@
     "Time saved":"Temps gagné",
     "Every note, brief and program Between drafts for you adds up here.":"Chaque note, résumé et programme que Between rédige pour vous s'additionne ici.",
     "Message":"Message",
-    "Message to your client — they read it in Between":"Message à votre client — il le lit dans Between",
+    "Message to your client. They read it in Between":"Message à votre client. Il le lit dans Between",
     "A short note: how they're doing, what to focus on this week.":"Un court mot : comment ça va, sur quoi se concentrer cette semaine.",
     "Draft with AI":"Rédiger avec l'IA",
     "Attach from their program":"Joindre de son programme",
@@ -5609,11 +5609,11 @@
     "The one number that decides the business: do clients keep checking in on their own. Retention is the share still checking in N weeks after their first check-in.":"Le chiffre qui décide de tout : les clients continuent-ils à faire leurs suivis d'eux-mêmes ? La rétention est la part qui fait encore des suivis N semaines après le premier.",
     "Create your clinician login":"Créez votre accès clinicien",
     "You've been invited to join":"Vous avez été invité à rejoindre",
-    "on Between. Create your login below — you'll have your own account and your own private caseload.":"sur Between. Créez votre accès ci-dessous : vous aurez votre propre compte et vos propres suivis, privés.",
+    "on Between. Create your login below. You'll have your own account and your own private caseload.":"sur Between. Créez votre accès ci-dessous : vous aurez votre propre compte et vos propres suivis, privés.",
     "Your discipline is regulated, so your account is reviewed before it can reach patient data.":"Votre profession est réglementée : votre compte est donc vérifié avant de pouvoir accéder aux données des patients.",
     "Your discipline is regulated, so your account is reviewed before it can reach client data.":"Votre profession est réglementée : votre compte est donc vérifié avant de pouvoir accéder aux données des clients.",
     "Create account":"Créer le compte",
-    "We're happy to help — email us and we'll get back to you.":"Nous sommes heureux de vous aider : écrivez-nous et nous vous répondrons.",
+    "We're happy to help. Email us and we'll get back to you.":"Nous sommes heureux de vous aider : écrivez-nous et nous vous répondrons.",
     "Your subscription isn't active. Start it to continue using Between.":"Votre abonnement n'est pas actif. Activez-le pour continuer à utiliser Between.",
     "We're confirming your professional licence against your licensing board or professional order's public registry. As soon as it's approved, usually within a day or two, your dashboard opens and your 14-day free trial begins. We'll email":"Nous vérifions votre permis auprès du registre public de votre ordre professionnel. Dès son approbation, habituellement en un ou deux jours, votre tableau de bord s'ouvre et votre essai gratuit de 14 jours commence. Nous écrirons à",
     "when you're in. Nothing is charged in the meantime.":"dès que c'est fait. Rien n'est facturé d'ici là.",
@@ -5635,13 +5635,13 @@
     "South Carolina":"Caroline du Sud",
     "South Dakota":"Dakota du Sud",
     "West Virginia":"Virginie-Occidentale",
-    "Psychologist or therapist — other provincial college":"Psychologue ou thérapeute — autre ordre provincial",
-    "Social worker — other provincial college":"Travailleur social — autre ordre provincial",
-    "Counselling therapist — provincial college":"Thérapeute en counseling — ordre provincial",
-    "Physiotherapist — other provincial college":"Physiothérapeute — autre ordre provincial",
-    "Dietitian or nutritionist — other provincial college":"Diététiste ou nutritionniste — autre ordre provincial",
-    "Therapist or counselor — other state board":"Thérapeute ou conseiller — autre ordre d'État",
-    "Physical therapist — other state board":"Physiothérapeute — autre ordre d'État",
+    "Psychologist or therapist: other provincial college":"Psychologue ou thérapeute : autre ordre provincial",
+    "Social worker: other provincial college":"Travailleur social: autre ordre provincial",
+    "Counselling therapist: provincial college":"Thérapeute en counseling : ordre provincial",
+    "Physiotherapist: other provincial college":"Physiothérapeute : autre ordre provincial",
+    "Dietitian or nutritionist: other provincial college":"Diététiste ou nutritionniste : autre ordre provincial",
+    "Therapist or counselor: other state board":"Thérapeute ou conseiller : autre ordre d'État",
+    "Physical therapist: other state board":"Physiothérapeute : autre ordre d'État",
     "Other regulated licence or board":"Autre permis ou ordre réglementé",
     "Prince Edward Island physiotherapy regulator":"Organisme de réglementation de la physiothérapie de l'Î.-P.-É.",
     "Newfoundland & Labrador physiotherapy regulator":"Organisme de réglementation de la physiothérapie de T.-N.-L.",
@@ -5654,7 +5654,7 @@
     "The one number that decides the business: do patients keep checking in on their own. Retention is the share still checking in N weeks after their first check-in.":"Le chiffre qui décide de tout : les patients continuent-ils à faire leurs suivis d'eux-mêmes ? La rétention est la part qui fait encore des suivis N semaines après le premier.",
     "What's new":"Quoi de neuf",
     "New professionals, new patients and contact messages, newest first. A dot on Settings means there's something new since you last looked.":"Nouveaux professionnels, nouveaux patients et messages de contact, du plus récent au plus ancien. Un point sur Paramètres signifie qu'il y a du nouveau depuis votre dernière visite.",
-    "Add clinicians to your clinic. Each gets their own login and their own private caseload — clinicians can't see each other's patients — and they're all covered by your clinic subscription.":"Ajoutez des cliniciens à votre clinique. Chacun a son propre accès et ses propres suivis, privés — les cliniciens ne voient pas les patients des autres — et tous sont couverts par l'abonnement de votre clinique.",
+    "Add clinicians to your clinic. Each gets their own login and their own private caseload, clinicians can't see each other's patients, and they're all covered by your clinic subscription.":"Ajoutez des cliniciens à votre clinique. Chacun a son propre accès et ses propres suivis, privés, les cliniciens ne voient pas les patients des autres, et tous sont couverts par l'abonnement de votre clinique.",
     "Clinic agreement":"Entente de clinique",
     "Your name":"Votre nom",
     "Choose a password (10+ characters)":"Choisissez un mot de passe (10 caractères ou plus)",
@@ -5702,13 +5702,13 @@
     "Easier":"Plus facile",
     "Harder":"Plus difficile",
     "Based on":"Selon",
-    "AI suggestions — check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.":"Suggestions de l'IA — vérifiez qu'elles conviennent à ce patient avant de les ajouter. Votre patient voit la marche à suivre, la dose et la règle de douleur; les raisons et les variantes plus faciles ou difficiles sont pour vous.",
+    "AI suggestions: check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.":"Suggestions de l'IA : vérifiez qu'elles conviennent à ce patient avant de les ajouter. Votre patient voit la marche à suivre, la dose et la règle de douleur; les raisons et les variantes plus faciles ou difficiles sont pour vous.",
     "this client":"ce client",
     "AI summaries are off for {name}, so there is nothing to draft from yet. Turn them on under “View patient data & AI settings” once they agree.":"Les résumés IA sont désactivés pour {name} : il n'y a donc rien à partir de quoi rédiger pour l'instant. Activez-les dans « Voir les données du patient et les réglages IA » une fois son accord obtenu.",
     "No check-ins with an AI summary from {name} in the last 4 weeks yet.":"Aucun suivi avec résumé IA de {name} au cours des 4 dernières semaines pour l'instant.",
     "You can still dictate or type your session notes above, or record the session.":"Vous pouvez quand même dicter ou taper vos notes de séance ci-dessus, ou enregistrer la séance.",
     "Record session":"Enregistrer la séance",
-    "Record the session — Between writes the chart note from it":"Enregistrez la séance — Between en rédige la note au dossier",
+    "Record the session: Between writes the chart note from it":"Enregistrez la séance : Between en rédige la note au dossier",
     "The client agreed to this session being recorded.":"Le client a accepté que cette séance soit enregistrée.",
     "Start recording":"Commencer l'enregistrement",
     "Pause":"Pause",
@@ -5731,8 +5731,8 @@
     "Recording discarded.":"Enregistrement supprimé.",
     "Speaker":"Interlocuteur",
     "Done. The note is below: check it, add anything missing, then save it as a PDF or copy it into your chart.":"C'est fait. La note est ci-dessous : vérifiez-la, ajoutez ce qui manque, puis enregistrez-la en PDF ou copiez-la dans votre dossier.",
-    "Chart note (SOAP) — from the recorded session; check it before it goes in the chart":"Note au dossier (SOAP) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
-    "Chart note (DAP) — from the recorded session; check it before it goes in the chart":"Note au dossier (DAP) — tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "Chart note (SOAP): from the recorded session; check it before it goes in the chart":"Note au dossier (SOAP) : tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
+    "Chart note (DAP): from the recorded session; check it before it goes in the chart":"Note au dossier (DAP) : tirée de la séance enregistrée; vérifiez-la avant de la verser au dossier",
     "From the recorded session":"Tirée de la séance enregistrée",
     "session recorded":"séance enregistrée",
     "sessions recorded":"séances enregistrées",
@@ -5744,21 +5744,21 @@
     "Signature":"Signature",
     "Page":"Page",
     "of":"de",
-    "Your session notes (optional) — dictate or type, and Between writes them into the note":"Vos notes de séance (facultatif) — dictez ou tapez, et Between les intègre à la note",
+    "Your session notes (optional): dictate or type, and Between writes them into the note":"Vos notes de séance (facultatif) : dictez ou tapez, et Between les intègre à la note",
     "Dictate":"Dicter",
     "Update note":"Mettre à jour la note",
     "Stop":"Arrêter",
     "Transcribing…":"Transcription…",
-    "Recording — tap Stop when done.":"Enregistrement — touchez Arrêter quand c'est fini.",
-    "Recording is not supported in this browser — type instead.":"L'enregistrement n'est pas pris en charge par ce navigateur — tapez plutôt.",
-    "Microphone access was blocked — type instead.":"L'accès au micro a été bloqué — tapez plutôt.",
-    "Added — tap \"Update note\" to write it into the note.":"Ajouté — touchez « Mettre à jour la note » pour l'intégrer.",
+    "Recording: tap Stop when done.":"Enregistrement : touchez Arrêter quand c'est fini.",
+    "Recording is not supported in this browser. Type instead.":"L'enregistrement n'est pas pris en charge par ce navigateur. Tapez plutôt.",
+    "Microphone access was blocked. Type instead.":"L'accès au micro a été bloqué. Tapez plutôt.",
+    "Added: tap \"Update note\" to write it into the note.":"Ajouté : touchez « Mettre à jour la note » pour l'intégrer.",
     "Could not transcribe that just now.":"Impossible de transcrire pour le moment.",
     "Add your session notes or wait for a check-in first.":"Ajoutez vos notes de séance ou attendez un premier suivi.",
     "your session notes":"vos notes de séance",
     "Report / letter":"Rapport / lettre",
-    "What you observed, your assessment and the plan — in your own words, as short as you like.":"Ce que vous avez observé, votre évaluation et le plan — dans vos mots, aussi bref que vous voulez.",
-    "Report or letter — Between drafts it from the history; add your clinical input where marked":"Rapport ou lettre — Between le rédige à partir de l'historique; ajoutez votre avis clinique aux endroits indiqués",
+    "What you observed, your assessment and the plan, in your own words, as short as you like.":"Ce que vous avez observé, votre évaluation et le plan, dans vos mots, aussi bref que vous voulez.",
+    "Report or letter: Between drafts it from the history; add your clinical input where marked":"Rapport ou lettre : Between le rédige à partir de l'historique; ajoutez votre avis clinique aux endroits indiqués",
     "Progress report":"Rapport d'évolution",
     "Discharge summary":"Résumé de fin de suivi",
     "Letter to a doctor / professional":"Lettre à un médecin / professionnel",
@@ -5767,14 +5767,14 @@
     "Addressed to (optional), e.g. Dr. Tremblay":"Destinataire (facultatif), p. ex. Dre Tremblay",
     "Draft it":"Rédiger",
     "No check-ins yet to build a report from.":"Pas encore de suivis pour rédiger un rapport.",
-    "Draft — add your clinical input where marked, then copy.":"Brouillon — ajoutez votre avis clinique aux endroits indiqués, puis copiez.",
+    "Draft: add your clinical input where marked, then copy.":"Brouillon : ajoutez votre avis clinique aux endroits indiqués, puis copiez.",
     "Could not draft the report just now.":"Impossible de rédiger le rapport pour le moment.",
     "Review program with AI":"Réviser le programme avec l'IA",
-    "Suggests what to progress, ease off, add or drop — you approve each change.":"Suggère quoi faire progresser, alléger, ajouter ou retirer — vous approuvez chaque changement.",
+    "Suggests what to progress, ease off, add or drop. You approve each change.":"Suggère quoi faire progresser, alléger, ajouter ou retirer. Vous approuvez chaque changement.",
     "Progress":"Progresser",
     "Ease off":"Alléger",
     "Apply":"Appliquer",
-    "The program looks right as it is — no changes suggested.":"Le programme semble adéquat — aucun changement suggéré.",
+    "The program looks right as it is, no changes suggested.":"Le programme semble adéquat. Aucun changement suggéré.",
     "Could not apply that change.":"Impossible d'appliquer ce changement.",
     "Could not review the program just now.":"Impossible de réviser le programme pour le moment.",
     "One quick question":"Une petite question",
@@ -5814,7 +5814,7 @@
     "When, e.g. before homework":"Quand, p. ex. avant les devoirs",
     "Add strategy":"Ajouter la stratégie",
     "Ticked something in":"Au moins un élément coché dans",
-    "Chart note (DAP) — add your assessment and plan, then copy it into your chart":"Note de dossier (DAP) — ajoutez votre évaluation et le plan, puis copiez-la dans votre dossier",
+    "Chart note (DAP): add your assessment and plan, then copy it into your chart":"Note de dossier (DAP) : ajoutez votre évaluation et le plan, puis copiez-la dans votre dossier",
     "Add":"Ajouter",
     "Copy note":"Copier la note",
     "Not enough check-ins with AI turned on yet to draft a note.":
@@ -5852,7 +5852,7 @@
     "Copy":"Copier","Download":"Télécharger","Copied.":"Copié.","Select the text and press Ctrl/Cmd+C.":"Sélectionnez le texte et appuyez sur Ctrl/Cmd+C.",
     // patterns (automatic insight callouts)
     "Patterns worth noticing":"Tendances à remarquer",
-    "Noticed from your own check-ins — something to reflect on, not a diagnosis.":"Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.",
+    "Noticed from your own check-ins, something to reflect on, not a diagnosis.":"Observé à partir de vos propres suivis, une piste de réflexion, pas un diagnostic.",
     // standing support card (solo individuals)
     "You're not on your own":"Vous n'êtes pas seul",
     "Text 988":"Texter 988","Call 988":"Appeler 988","Emergency 911":"Urgence 911",
@@ -5884,7 +5884,7 @@
     "Daily tasks":"Tâches quotidiennes","Self-care":"Soins personnels",
     // check-in streak (habit chip)
     "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
-    "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week — well done":"une semaine complète — bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
+    "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week: well done":"une semaine complète : bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
     // dashboard zones + collapsible sections
     "Caseload overview":"Vue d'ensemble de la clientèle",
     "Your progress":"Votre progression",
@@ -5893,9 +5893,9 @@
     "mood & themes":"humeur et thèmes",
     // encouragement message (AI draft to send the patient)
     "Encouragement":"Encouragement","Copy message":"Copier le message","Refresh message":"Régénérer",
-    "A message to send between sessions — review and edit before sending":"Un message à envoyer entre les séances — à relire et modifier avant l'envoi",
+    "A message to send between sessions. Review and edit before sending":"Un message à envoyer entre les séances, à relire et modifier avant l'envoi",
     "Not enough recent check-ins with AI turned on yet to draft a message.":"Pas encore assez de suivis récents avec l'IA activée pour rédiger un message.",
-    "A draft — your words, your send.":"Un brouillon — vos mots, votre envoi.",
+    "A draft: your words, your send.":"Un brouillon : vos mots, votre envoi.",
     "Could not draft a message just now.":"Impossible de rédiger un message pour le moment.",
     "From":"À partir de",
     // caseload outcomes
@@ -5961,7 +5961,7 @@
     "How it works":"Comment ça marche",
     "See how it works":"Voir comment ça marche",
     "See Between in action":"Voyez Between en action",
-    "Both sides of a between-visit check-in — try it live, and see the trends, features and recovery view that come with it.":"Les deux côtés d'un suivi entre les visites — essayez-le, et voyez les tendances, les fonctionnalités et la vue de rétablissement qui l'accompagnent.",
+    "Both sides of a between-visit check-in. Try it live, and see the trends, features and recovery view that come with it.":"Les deux côtés d'un suivi entre les visites. Essayez-le, et voyez les tendances, les fonctionnalités et la vue de rétablissement qui l'accompagnent.",
     "private to you":"privé, pour vous",
     "Save note":"Enregistrer la note",
     "Only you can see this. The person you're supporting never does.":"Vous seul pouvez la voir. La personne que vous accompagnez ne la voit jamais.",
@@ -6007,13 +6007,13 @@
     "Your whole caseload, at-a-glance, with flags for anything that needs a closer look.":"Toute votre clientèle d'un coup d'œil, avec des indicateurs pour ce qui mérite un examen plus attentif.",
     "Built-in safety net":"Filet de sécurité intégré",
     "Your recovery, seen":"Votre rétablissement, en images",
-    "Patients don't just rate their pain — they watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.":"Les patients ne font pas que noter leur douleur — ils la voient s'estomper. Between montre à chacun son propre rétablissement au fil du temps, ce qu'une liste d'exercices ne fait jamais.",
+    "Patients don't just rate their pain. They watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.":"Les patients ne font pas que noter leur douleur. Ils la voient s'estomper. Between montre à chacun son propre rétablissement au fil du temps, ce qu'une liste d'exercices ne fait jamais.",
     "Week 1":"Semaine 1",
     "Week 3":"Semaine 3",
     "Now":"Maintenant",
     "This week":"Cette semaine",
-    "Lower back — easing · was 8, now 3":"Bas du dos — en amélioration · était 8, maintenant 3",
-    "Right shoulder — cleared":"Épaule droite — disparue",
+    "Lower back: easing · was 8, now 3":"Bas du dos : en amélioration · était 8, maintenant 3",
+    "Right shoulder: cleared":"Épaule droite : disparue",
     "Clients see their progress":"Les clients voient leurs progrès",
     "Between shows each client their own recovery over time. They watch the sore spots ease week by week and the good days add up. It's the feedback loop that keeps them checking in.":"Between montre à chaque client son propre rétablissement au fil du temps. Les zones sensibles s'apaisent semaine après semaine et les bonnes journées s'accumulent. C'est la boucle de rétroaction qui les incite à continuer.",
     "Fits your stack":"S'intègre à vos outils",
@@ -6053,7 +6053,7 @@
     "Soreness":"Courbatures","Stiffness":"Raideur","Fatigue":"Fatigue","Injury":"Blessure","Mobility":"Mobilité","Training load":"Charge d'entraînement","Stress":"Stress",
     "Focus":"Concentration","Memory":"Mémoire","Mental fatigue":"Fatigue mentale","Word-finding":"Recherche de mots","Overwhelm":"Surcharge","Mood":"Humeur","Headache":"Maux de tête",
     "Ask Between":"Demander à Between",
-    "Hi — I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?":"Bonjour — je peux répondre à vos questions sur Between : fonctionnement, tarifs, confidentialité et plus. Que souhaitez-vous savoir ?",
+    "Hi: I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?":"Bonjour : je peux répondre à vos questions sur Between : fonctionnement, tarifs, confidentialité et plus. Que souhaitez-vous savoir ?",
     "How does it work?":"Comment ça fonctionne ?",
     "How much does it cost?":"Combien ça coûte ?",
     "Do my patients pay?":"Mes patients paient-ils ?",
@@ -6123,8 +6123,8 @@
     "Summarizing for your therapist…":"Résumé en cours pour votre thérapeute…",
     "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.":
       "Ça semble être beaucoup à porter en ce moment. Between n'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, veuillez composer le 988 (Ligne d'aide en cas de crise suicidaire) ou votre numéro d'urgence local.",
-    "If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away — don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).":
-      "Si vous ressentez une douleur intense, êtes blessé ou vivez une urgence médicale, composez le 911 ou consultez sans tarder — n'attendez pas après cette application. Si vous êtes en détresse ou pensez à vous faire du mal, vous pouvez joindre le 988 (Ligne d'aide en cas de crise suicidaire).",
+    "If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away. Don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).":
+      "Si vous ressentez une douleur intense, êtes blessé ou vivez une urgence médicale, composez le 911 ou consultez sans tarder. N'attendez pas après cette application. Si vous êtes en détresse ou pensez à vous faire du mal, vous pouvez joindre le 988 (Ligne d'aide en cas de crise suicidaire).",
     "Your therapist has also been notified.":"Votre thérapeute a aussi été avisé.",
     "Check-ins are stored on the server for the selected patient. AI summarization only runs for patients whose AI consent is switched on. This is not a crisis response system.":
       "Les suivis sont enregistrés sur le serveur pour le patient sélectionné. Le résumé par IA ne s'exécute que pour les patients dont le consentement IA est activé. Ce n'est pas un système d'intervention de crise.",
@@ -6218,7 +6218,7 @@
     "Your account is pending verification":"Votre compte est en attente de validation",
     // dynamic (built in JS)
     "Signed in as":"Connecté en tant que",
-    "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries: —":"Résumés IA : —",
+    "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries:: ":"Résumés IA : : ",
     "No check-ins on file.":"Aucun suivi au dossier.","safety flag":"signal de sécurité","mood":"humeur",
     "Very low":"Très bas","Low":"Bas","Okay":"Correct","Good":"Bon","Great":"Excellent",
     "Flagged for review":"Signalé à revoir","At risk":"À risque",
@@ -6258,11 +6258,11 @@
     "Stored check-ins ·":"Suivis enregistrés ·","Timeline ·":"Chronologie ·",
     "No check-ins yet.":"Aucun suivi pour l'instant.",
     "No patients yet, add your first patient to start receiving check-ins.":"Aucun patient pour l'instant, ajoutez votre premier patient pour commencer à recevoir des suivis.",
-    "Welcome — let's get your first check-ins coming in":"Bienvenue — faisons arriver vos premiers suivis",
-    "Add someone to your caseload — a first name is all you need.":"Ajoutez une personne à votre clientèle — un prénom suffit.",
+    "Welcome: let's get your first check-ins coming in":"Bienvenue : faisons arriver vos premiers suivis",
+    "Add someone to your caseload, a first name is all you need.":"Ajoutez une personne à votre clientèle, un prénom suffit.",
     "Between gives you a one-time invite code. Share it with them.":"Between vous donne un code d'invitation à usage unique. Partagez-le avec elle.",
     "They check in between visits, and a short summary is waiting for you before the next one.":"Elle fait ses suivis entre les visites, et un court résumé vous attend avant le prochain rendez-vous.",
-    "Nothing pings you. You are never on call — the summary just waits for your next session.":"Rien ne vous sonne. Vous n'êtes jamais de garde — le résumé attend simplement votre prochaine séance.",
+    "Nothing pings you. You are never on call, the summary just waits for your next session.":"Rien ne vous sonne. Vous n'êtes jamais de garde, le résumé attend simplement votre prochaine séance.",
     "No check-ins yet for":"Aucun suivi pour l'instant pour",
     "check-in":"suivi","check-ins":"suivis","Most affected areas":"Zones les plus touchées","up to":"jusqu'à",
     "since last session":"depuis la dernière séance","avg mood":"humeur moy.","most common theme:":"thème le plus fréquent :",
@@ -6375,8 +6375,8 @@
     "Welcome to your journal":"Bienvenue dans votre journal",
     "Your journal":"Votre journal",
     "Your check-ins live here":"Vos suivis se trouvent ici",
-    "This is your private space. Check in whenever something is on your mind — write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.":"C'est votre espace privé. Faites un suivi dès que quelque chose vous trotte dans la tête — écrivez un mot, enregistrez un mémo vocal ou répondez à quelques questions douces. Between apprend discrètement vos tendances pour que vous puissiez les revoir.",
-    "Check in whenever something comes up — a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.":"Faites un suivi dès que quelque chose survient — un mot, un mémo vocal ou quelques questions. Vos entrées restent privées et ne sont partagées qu'avec la personne qui vous accompagne.",
+    "This is your private space. Check in whenever something is on your mind. Write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.":"C'est votre espace privé. Faites un suivi dès que quelque chose vous trotte dans la tête. Écrivez un mot, enregistrez un mémo vocal ou répondez à quelques questions douces. Between apprend discrètement vos tendances pour que vous puissiez les revoir.",
+    "Check in whenever something comes up, a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.":"Faites un suivi dès que quelque chose survient, un mot, un mémo vocal ou quelques questions. Vos entrées restent privées et ne sont partagées qu'avec la personne qui vous accompagne.",
     "What is on your mind right now?":"Qu'avez-vous en tête en ce moment ?",
     "One small win today":"Une petite réussite aujourd'hui",
     "Something that felt heavy":"Quelque chose qui a pesé",
@@ -6390,38 +6390,38 @@
     "See more":"Voir plus","See less":"Voir moins",
     "Take a quick tour":"Faire une visite rapide","Quick tour":"Visite rapide",
     "Welcome to Between":"Bienvenue sur Between",
-    "A quick tour of your dashboard — about 30 seconds. You can skip anytime.":"Une visite rapide de votre tableau de bord — environ 30 secondes. Vous pouvez passer à tout moment.",
+    "A quick tour of your dashboard, about 30 seconds. You can skip anytime.":"Une visite rapide de votre tableau de bord, environ 30 secondes. Vous pouvez passer à tout moment.",
     "Your caseload":"Votre clientèle",
     "Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.":"Toutes les personnes que vous suivez apparaissent ici, regroupées selon leur état : vert pour sur la bonne voie, ambre pour correct, rouge pour à examiner maintenant.",
     "Add your first patient":"Ajoutez votre premier patient",
-    "They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.":"Ils reçoivent un lien d'invitation privé et font un suivi par texte, par voix ou avec quelques questions guidées. Rien ne vous sollicite — le résumé attend simplement votre prochaine séance.",
+    "They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you. It just waits for your next session.":"Ils reçoivent un lien d'invitation privé et font un suivi par texte, par voix ou avec quelques questions guidées. Rien ne vous sollicite, le résumé attend simplement votre prochaine séance.",
     "Trends at a glance":"Les tendances en un coup d'œil",
     "Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances d'humeur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
     "Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances de douleur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
     "The timeline":"La chronologie",
     "Every check-in lands here as a short, dated summary you can read in seconds.":"Chaque suivi apparaît ici sous forme d'un court résumé daté, lisible en quelques secondes.",
     "Consent and private notes":"Consentement et notes privées",
-    "Pick a patient and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.":"Sélectionnez un patient et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées — visibles de vous seul.",
+    "Pick a patient and this panel holds their AI-consent controls and your private follow-up notes, visible only to you.":"Sélectionnez un patient et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées, visibles de vous seul.",
     "You are all set":"Vous êtes prêt",
     "Add your first patient to start receiving check-ins. You can replay this tour anytime from the welcome card.":"Ajoutez votre premier patient pour commencer à recevoir des suivis. Vous pouvez revoir cette visite à tout moment depuis la carte de bienvenue.",
     "Add your first person to start receiving check-ins. You can replay this tour anytime from the welcome card.":"Ajoutez votre première personne pour commencer à recevoir des suivis. Vous pouvez revoir cette visite à tout moment depuis la carte de bienvenue.",
-    "Pick someone and this panel holds their AI-consent controls and your private follow-up notes — visible only to you.":"Sélectionnez une personne et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées — visibles de vous seul.",
+    "Pick someone and this panel holds their AI-consent controls and your private follow-up notes, visible only to you.":"Sélectionnez une personne et ce panneau regroupe ses réglages de consentement à l'IA et vos notes de suivi privées, visibles de vous seul.",
     "Done":"Terminé",
-    "A quick tour of your check-ins — about 30 seconds. You can skip anytime.":"Une visite rapide de vos suivis — environ 30 secondes. Vous pouvez passer à tout moment.",
+    "A quick tour of your check-ins, about 30 seconds. You can skip anytime.":"Une visite rapide de vos suivis, environ 30 secondes. Vous pouvez passer à tout moment.",
     "Check in here":"Faites un suivi ici",
-    "The moment something comes up, capture it — by writing, a voice note, or a few guided questions.":"Dès que quelque chose survient, notez-le — par écrit, par note vocale ou avec quelques questions guidées.",
+    "The moment something comes up, capture it, by writing, a voice note, or a few guided questions.":"Dès que quelque chose survient, notez-le, par écrit, par note vocale ou avec quelques questions guidées.",
     "Rate your pain":"Évaluez votre douleur","Set how you are doing":"Indiquez comment vous allez",
     "Slide to show your pain right now, or let Between estimate it from what you wrote.":"Glissez pour indiquer votre douleur en ce moment, ou laissez Between l'estimer à partir de ce que vous avez écrit.",
     "Slide to show how you are feeling, or let Between estimate it from what you wrote.":"Glissez pour indiquer comment vous vous sentez, ou laissez Between l'estimer à partir de ce que vous avez écrit.",
     "Send it":"Envoyez",
-    "That is it — a check-in takes under a minute, whenever something happens.":"C'est tout — un suivi prend moins d'une minute, dès que quelque chose arrive.",
+    "That is it: a check-in takes under a minute, whenever something happens.":"C'est tout : un suivi prend moins d'une minute, dès que quelque chose arrive.",
     "Your trends":"Vos tendances",
     "Mood and theme trends build here as check-ins come in.":"Les tendances d'humeur et de thèmes se construisent ici au fil des suivis.",
     "Pain and theme trends build here as check-ins come in.":"Les tendances de douleur et de thèmes se construisent ici au fil des suivis.",
     "Your history":"Votre historique",
     "Every check-in you make is saved here, so a rough stretch is something you can actually see.":"Chaque suivi que vous faites est enregistré ici, pour qu'une période difficile devienne visible.",
-    "Private to you. Your data is yours — export or delete it anytime.":"Privé pour vous. Vos données vous appartiennent — exportez-les ou supprimez-les à tout moment.",
-    "Your clinician sees a short summary, not the raw recording — and only with your consent.":"Votre clinicien voit un court résumé, pas l'enregistrement brut — et seulement avec votre consentement.",
+    "Private to you. Your data is yours. Export or delete it anytime.":"Privé pour vous. Vos données vous appartiennent. Exportez-les ou supprimez-les à tout moment.",
+    "Your clinician sees a short summary, not the raw recording, and only with your consent.":"Votre clinicien voit un court résumé, pas l'enregistrement brut, et seulement avec votre consentement.",
     "You can replay this tour anytime from your check-in screen.":"Vous pouvez revoir cette visite à tout moment depuis votre écran de suivi.",
     "You can replay this tour anytime: tap “Walk me through it” on your dashboard.":"Vous pouvez revoir cette visite à tout moment : touchez « Visite guidée » dans votre tableau de bord.",
     "Add your first person to start receiving check-ins.":"Ajoutez votre première personne pour commencer à recevoir des suivis.",
@@ -6447,7 +6447,7 @@
     "Questions, or want Between for your clinic? Email":"Des questions, ou Between pour votre clinique ? Écrivez à",
     "Contact":"Contact",
     "Questions, or Between for your clinic?":"Des questions, ou Between pour votre clinique ?",
-    "We're happy to help — send us a message and we'll get back to you.":"Nous sommes là pour aider — écrivez-nous et nous vous répondrons.",
+    "We're happy to help. Send us a message and we'll get back to you.":"Nous sommes là pour aider. Écrivez-nous et nous vous répondrons.",
     "Send a message":"Envoyer un message",
     "Good to know.":"Bon à savoir.",
     "AI summaries are optional, and nothing runs without your say-so. Between isn't a crisis service. If it's an emergency, call 988 or 911. You can use Between on your own, or alongside a professional.":"Les résumés par IA sont optionnels, et rien ne se lance sans votre accord. Between n'est pas un service d'urgence. En cas d'urgence, composez le 988 ou le 911. Vous pouvez utiliser Between seul ou avec un professionnel.",
@@ -6462,7 +6462,7 @@
     "a bit heavier than the week before":"un peu plus lourde que la semaine précédente",
     "steady, much like the week before":"stable, comme la semaine précédente",
     "What came up most:":"Ce qui est revenu le plus :",
-    "You marked a win this week — worth holding onto.":"Vous avez souligné une réussite cette semaine — à garder en tête.",
+    "You marked a win this week, worth holding onto.":"Vous avez souligné une réussite cette semaine, à garder en tête.",
     "Going into next week, what would you like a little more of?":"Pour la semaine à venir, qu'aimeriez-vous un peu plus ?",
     "What is one small thing that helped this week, worth repeating?":"Quelle petite chose vous a aidé cette semaine, à répéter ?",
     "If next week could feel one notch better, what would nudge it there?":"Si la semaine prochaine pouvait être un cran meilleure, qu'est-ce qui y aiderait ?",
@@ -6500,8 +6500,8 @@
     "Your account is created and pending licence review. You will get access once it is approved.":
       "Votre compte est créé et en attente de validation de votre licence. Vous y aurez accès dès son approbation.",
     "Get a daily text to check in":"Recevez un texto chaque jour pour faire le point",
-    "Between can send you a quick text every day so checking in becomes a habit. Add your mobile number — it takes a few seconds, and you can turn it off anytime.":
-      "Between peut vous envoyer un court texto chaque jour pour que faire le point devienne une habitude. Ajoutez votre numéro de mobile — c'est l'affaire de quelques secondes, et vous pouvez le désactiver quand vous voulez.",
+    "Between can send you a quick text every day so checking in becomes a habit. Add your mobile number. It takes a few seconds, and you can turn it off anytime.":
+      "Between peut vous envoyer un court texto chaque jour pour que faire le point devienne une habitude. Ajoutez votre numéro de mobile. C'est l'affaire de quelques secondes, et vous pouvez le désactiver quand vous voulez.",
     "Turn on daily reminders":"Activer les rappels quotidiens",
     "Check-in reminders":"Rappels de suivi",
     "We'll text you a reminder at the time and on the days you choose. Off by default; unsubscribe anytime.":
@@ -6522,14 +6522,14 @@
     "Documents reviewed by AI":"Documents examinés par l'IA",
     "Your documents":"Vos documents",
     "Intake documents":"Documents d'admission",
-    "Share a document from your clinic or doctor — a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.":"Partagez un document de votre clinique ou de votre médecin — une référence, un formulaire d'admission ou une note. Si les résumés IA sont activés, Between donne à votre clinicien un court résumé pour qu'il ne parte pas de zéro.",
+    "Share a document from your clinic or doctor, a referral, intake form, or note. If you have AI summaries on, Between gives your clinician a short summary so they are not starting from scratch.":"Partagez un document de votre clinique ou de votre médecin, une référence, un formulaire d'admission ou une note. Si les résumés IA sont activés, Between donne à votre clinicien un court résumé pour qu'il ne parte pas de zéro.",
     "Forms, referrals, or notes for this patient. Between reviews each one and gives you a starting summary so you do not begin from a blank page.":"Formulaires, références ou notes pour ce patient. Between examine chacun et vous donne un résumé de départ pour ne pas commencer d'une page blanche.",
     "Documents your clinician has shared with you. Only your clinician can add documents.":"Les documents que votre clinicien a partagés avec vous. Seul votre clinicien peut ajouter des documents.",
     "Upload a document (PDF or photo)":"Téléverser un document (PDF ou photo)",
     "No documents yet.":"Aucun document pour l'instant.",
     "Reviewing…":"Analyse en cours…",
     "Turn on AI summaries to have Between review documents.":"Activez les résumés IA pour que Between examine les documents.",
-    "Between couldn't read this one — you can still open it below.":"Between n'a pas pu lire celui-ci — vous pouvez quand même l'ouvrir ci-dessous.",
+    "Between couldn't read this one. You can still open it below.":"Between n'a pas pu lire celui-ci. Vous pouvez quand même l'ouvrir ci-dessous.",
     "Document":"Document",
     "Image":"Image",
     "added by your clinician":"ajouté par votre clinicien",
@@ -6616,7 +6616,7 @@
     "Copy summary for EMR":"Copier le résumé pour le DME",
     "Copied ✓":"Copié ✓",
     "Copy this summary, then paste it into your EMR:":"Copiez ce résumé, puis collez-le dans votre DME :",
-    "Between — between-session check-in summary":"Between — résumé des suivis entre les séances",
+    "Between | between-session check-in summary":"Between | résumé des suivis entre les séances",
     "Patient:":"Patient :",
     "Period:":"Période :",
     "Top themes:":"Thèmes principaux :",
@@ -6628,7 +6628,7 @@
     "Everyone has checked in recently.":"Tout le monde a fait un suivi récemment.",
     "AI reads":"L'IA perçoit","Between estimates":"Between estime",
     "Between will name the topic from your check-in.":"Between nommera le sujet à partir de votre suivi.",
-    "No topic is set unless you tap one — turn on AI summaries to have Between name it.":"Aucun sujet n'est défini sauf si vous en touchez un — activez les résumés IA pour que Between le nomme.",
+    "No topic is set unless you tap one. Turn on AI summaries to have Between name it.":"Aucun sujet n'est défini sauf si vous en touchez un. Activez les résumés IA pour que Between le nomme.",
     "Move the slider. Between reads how you're feeling from what you share.":"Bougez le curseur. Between perçoit comment vous allez d'après ce que vous partagez.",
     "Edit this, then send to see Between read it.":"Modifiez ceci, puis envoyez pour voir Between l'interpréter.",
     "I'll set it":"Je l'indique","Let Between estimate":"Laisser Between estimer",
@@ -6748,7 +6748,7 @@
     btwJoinPassword:'Choisissez un mot de passe (10 caractères ou plus)',
     btwJoinLicence:"Numéro de permis ou d'ordre professionnel",
     btwInviteEmail:'clinicien@courriel.com',
-    btwAiFindings:'Ce que vous avez observé, votre évaluation et le plan — dans vos mots, aussi bref que vous voulez.',
+    btwAiFindings:'Ce que vous avez observé, votre évaluation et le plan, dans vos mots, aussi bref que vous voulez.',
     btwReportTo:'Destinataire (facultatif), p. ex. Dre Tremblay',
     btwAddName:'p. ex. Alex R.',
     btwPatientSearch:'Rechercher un patient',
@@ -7479,7 +7479,7 @@
     "Effortless on both sides. A check-in takes your client under a minute and your whole caseload comes into focus at a glance.":
       "Effortless. A check-in takes under a minute and your own patterns come into focus at a glance.",
     "Pricing for therapists and patients":"Pricing for keeping track of yourself",
-    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
+    "The real cost isn't the subscription. It's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
       "A small monthly plan for a clearer picture of your own weeks. Check in when something comes up and watch your mood and themes take shape over time.",
     "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Pick the plan that fits how much you want to check in. Personal keeps it simple, and Premium opens up unlimited check-ins, guided journaling and deeper trends."
@@ -7505,7 +7505,7 @@
     "Effortless on both sides. A check-in takes your client under a minute and your whole caseload comes into focus at a glance.":
       "Sans effort. Un suivi prend moins d'une minute, et vos propres tendances se dessinent d'un coup d'œil.",
     "Pricing for therapists and patients":"Tarifs pour vous suivre vous-même",
-    "The real cost isn't the subscription — it's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
+    "The real cost isn't the subscription. It's the minutes at the start of every session spent catching up. Between hands those back, and flags risk between visits, for everyone you support.":
       "Un petit abonnement mensuel pour y voir plus clair dans vos propres semaines. Faites un suivi quand quelque chose survient et voyez votre humeur et vos thèmes prendre forme au fil du temps.",
     "Pay per clinician and bring your caseload on board. Solo covers up to 30 patients and Premium is there for larger caseloads. Clients can also subscribe on their own to track their patterns, with or without a therapist.":
       "Choisissez le forfait qui correspond à votre rythme de suivi. Personnel reste simple, et Premium ouvre les suivis illimités, le journal guidé et des tendances plus poussées.",
@@ -8444,7 +8444,7 @@
     "Rough week, work stress kept me up again.":"Foggy week, couldn't focus and words kept slipping.",
     "For therapists, counsellors & anyone on their own":"For neuropsychologists & anyone on their own",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
-      "Your patients check in the moment something shifts — a lapse in focus, a word that wouldn't come, a foggy afternoon. Between turns each one into a clear summary and a trend across focus, memory, mental fatigue and mood, ready in your dashboard before the next session. You walk in already knowing their week.",
+      "Your patients check in the moment something shifts, a lapse in focus, a word that wouldn't come, a foggy afternoon. Between turns each one into a clear summary and a trend across focus, memory, mental fatigue and mood, ready in your dashboard before the next session. You walk in already knowing their week.",
     "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":
       "The between-session notes on focus, memory, fatigue and mood now land in one calm place instead of your inbox.",
     "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":
@@ -8460,7 +8460,7 @@
     "Rough week, work stress kept me up again.":"Semaine brumeuse, difficile de me concentrer et les mots m'échappaient.",
     "For therapists, counsellors & anyone on their own":"Pour neuropsychologues et particuliers",
     "Your clients check in the moment something happens with a quick voice note or message. Between turns each one into a clear summary and mood trend that's ready in your dashboard before the next session. You walk in already knowing their week and spend less of the hour catching up.":
-      "Vos patients font un suivi dès que quelque chose change — une baisse de concentration, un mot qui ne vient pas, un après-midi embrumé. Between transforme chacun en un résumé clair et une tendance de la concentration, de la mémoire, de la fatigue mentale et de l'humeur, prête dans votre tableau de bord avant la prochaine séance. Vous arrivez en sachant déjà leur semaine.",
+      "Vos patients font un suivi dès que quelque chose change, une baisse de concentration, un mot qui ne vient pas, un après-midi embrumé. Between transforme chacun en un résumé clair et une tendance de la concentration, de la mémoire, de la fatigue mentale et de l'humeur, prête dans votre tableau de bord avant la prochaine séance. Vous arrivez en sachant déjà leur semaine.",
     "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":
       "Les notes entre les séances sur la concentration, la mémoire, la fatigue et l'humeur arrivent dans un seul endroit calme plutôt que dans votre boîte de réception.",
     "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":
@@ -8529,7 +8529,7 @@
   (function(){
     Object.assign(SPORTS_EN, {
       "For clinics & practices":"For teams & clubs",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single coach to a full club — one plan covers the staff, and every coach keeps their own private roster.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single coach to a full club, one plan covers the staff, and every coach keeps their own private roster.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The club is billed once. Add coaches as you grow, instead of everyone buying their own.",
       "Separate caseloads":"Separate rosters",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each coach invites their own athletes and sees only their own. Nothing is shared across the staff.",
@@ -8537,7 +8537,7 @@
     });
     Object.assign(SPORTS_FR, {
       "For clinics & practices":"Pour les équipes et les clubs",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un club — un forfait couvre le personnel, et chaque entraîneur garde sa propre liste d'athlètes privée.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un club, un forfait couvre le personnel, et chaque entraîneur garde sa propre liste d'athlètes privée.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le club est facturé une seule fois. Ajoutez des entraîneurs à mesure que vous grandissez, au lieu que chacun achète le sien.",
       "Separate caseloads":"Listes d'athlètes séparées",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque entraîneur invite ses propres athlètes et ne voit que les siens. Rien n'est partagé au sein du personnel.",
@@ -8545,7 +8545,7 @@
     });
     Object.assign(FITNESS_EN, {
       "For clinics & practices":"For gyms & studios",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single trainer to a full studio — one plan covers the team, and every trainer keeps their own private client list.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single trainer to a full studio, one plan covers the team, and every trainer keeps their own private client list.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The studio is billed once. Add trainers as you grow, instead of everyone buying their own.",
       "Separate caseloads":"Separate client lists",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each trainer invites their own clients and sees only their own. Nothing is shared across the team.",
@@ -8553,7 +8553,7 @@
     });
     Object.assign(FITNESS_FR, {
       "For clinics & practices":"Pour les gyms et les studios",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un studio — un forfait couvre l'équipe, et chaque entraîneur garde sa propre liste de clients privée.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul entraîneur à tout un studio, un forfait couvre l'équipe, et chaque entraîneur garde sa propre liste de clients privée.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le studio est facturé une seule fois. Ajoutez des entraîneurs à mesure que vous grandissez, au lieu que chacun achète le sien.",
       "Separate caseloads":"Listes de clients séparées",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque entraîneur invite ses propres clients et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
@@ -8561,7 +8561,7 @@
     });
     Object.assign(NUTRITION_EN, {
       "For clinics & practices":"For nutrition practices",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a solo nutritionist to a full practice — one plan covers the team, and every nutritionist keeps their own private client list.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a solo nutritionist to a full practice, one plan covers the team, and every nutritionist keeps their own private client list.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The practice is billed once. Add nutritionists as you grow, instead of everyone buying their own.",
       "Separate caseloads":"Separate client lists",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each nutritionist invites their own clients and sees only their own. Nothing is shared across the team.",
@@ -8569,7 +8569,7 @@
     });
     Object.assign(NUTRITION_FR, {
       "For clinics & practices":"Pour les cabinets de nutrition",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul nutritionniste à tout un cabinet — un forfait couvre l'équipe, et chaque nutritionniste garde sa propre liste de clients privée.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul nutritionniste à tout un cabinet, un forfait couvre l'équipe, et chaque nutritionniste garde sa propre liste de clients privée.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le cabinet est facturé une seule fois. Ajoutez des nutritionnistes à mesure que vous grandissez, au lieu que chacun achète le sien.",
       "Separate caseloads":"Listes de clients séparées",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque nutritionniste invite ses propres clients et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
@@ -8577,7 +8577,7 @@
     });
     Object.assign(RECOVERY_EN, {
       "For clinics & practices":"For programs & teams",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a full program — one plan covers the team, and every counsellor keeps their own private group.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a full program, one plan covers the team, and every counsellor keeps their own private group.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The program is billed once. Add counsellors as you grow, instead of everyone buying their own.",
       "Separate caseloads":"Separate groups",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each counsellor invites their own members and sees only their own. Nothing is shared across the team.",
@@ -8585,7 +8585,7 @@
     });
     Object.assign(RECOVERY_FR, {
       "For clinics & practices":"Pour les programmes et les équipes",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à tout un programme — un forfait couvre l'équipe, et chaque intervenant garde son propre groupe privé.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à tout un programme, un forfait couvre l'équipe, et chaque intervenant garde son propre groupe privé.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"Le programme est facturé une seule fois. Ajoutez des intervenants à mesure que vous grandissez, au lieu que chacun achète le sien.",
       "Separate caseloads":"Groupes séparés",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque intervenant invite ses propres membres et ne voit que les siens. Rien n'est partagé au sein de l'équipe.",
@@ -8593,7 +8593,7 @@
     });
     const schoolsEN = {
       "For clinics & practices":"For schools & boards",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a whole school — one plan covers the staff, and every counsellor keeps their own private student list.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between scales from a single counsellor to a whole school, one plan covers the staff, and every counsellor keeps their own private student list.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"The school is billed once. Add staff as you grow, instead of everyone buying their own.",
       "Separate caseloads":"Separate student lists",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Each counsellor invites their own students and sees only their own. Nothing is shared across the staff.",
@@ -8601,7 +8601,7 @@
     };
     const schoolsFR = {
       "For clinics & practices":"Pour les écoles et les commissions",
-      "Between scales from a solo practitioner to a full clinic — one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à toute une école — un forfait couvre le personnel, et chaque intervenant garde sa propre liste d'élèves privée.",
+      "Between scales from a solo practitioner to a full clinic, one plan covers the team, and every clinician keeps their own private caseload.":"Between s'adapte d'un seul intervenant à toute une école, un forfait couvre le personnel, et chaque intervenant garde sa propre liste d'élèves privée.",
       "The practice is billed once. Add clinicians as you grow, instead of everyone buying their own.":"L'école est facturée une seule fois. Ajoutez du personnel à mesure que vous grandissez, au lieu que chacun achète le sien.",
       "Separate caseloads":"Listes d'élèves séparées",
       "Each clinician invites their own clients and sees only their own people. Nothing is shared across the team.":"Chaque intervenant invite ses propres élèves et ne voit que les siens. Rien n'est partagé au sein du personnel.",
@@ -9356,18 +9356,18 @@
   // copy the crawler sees; the server is the source of truth on first load.)
   const SITE_ORIGIN = 'https://betweenpsych.com';
   const FIELD_HEAD = {
-    therapy: { title: 'Between — Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session. Private, consent-first and not a crisis service.' },
-    individual: { title: 'Between — Private check-ins for yourself', desc: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
-    physio: { title: 'Between — Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
-    kinesiology: { title: 'Between — Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
-    osteo: { title: 'Between — Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
-    occupational: { title: 'Between — Between-visit check-ins for occupational therapy', desc: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
-    neuropsych: { title: 'Between — Between-session check-ins for neuropsychology', desc: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
-    sports: { title: 'Between — Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
-    fitness: { title: 'Between — Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
-    recovery: { title: 'Between — Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
-    schools: { title: 'Between — Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
-    nutrition: { title: 'Between — Between-session check-ins for nutritionists', desc: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
+    therapy: { title: 'Between | Between-session check-ins for therapy', desc: 'Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session. Private, consent-first and not a crisis service.' },
+    individual: { title: 'Between | Private check-ins for yourself', desc: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
+    physio: { title: 'Between | Between-visit pain check-ins for physiotherapy', desc: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
+    kinesiology: { title: 'Between | Between-session check-ins for kinesiology', desc: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
+    osteo: { title: 'Between | Between-visit check-ins for osteopathy', desc: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
+    occupational: { title: 'Between | Between-visit check-ins for occupational therapy', desc: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
+    neuropsych: { title: 'Between | Between-session check-ins for neuropsychology', desc: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
+    sports: { title: 'Between | Between-practice check-ins for sports teams', desc: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
+    fitness: { title: 'Between | Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
+    recovery: { title: 'Between | Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
+    schools: { title: 'Between | Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
+    nutrition: { title: 'Between | Between-session check-ins for nutritionists', desc: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
   };
   function applyFieldHead(){
     const m = FIELD_HEAD[curAudience] || FIELD_HEAD.therapy;
@@ -10172,7 +10172,7 @@
       }
       if(chipsNote){
         chipsNote.textContent = (topicMode === 'ai')
-          ? (fr ? "Pas de souci — Between choisira le sujet d'après votre suivi." : 'No problem — Between will choose the topic from your check-in.')
+          ? (fr ? "Pas de souci : Between choisira le sujet d'après votre suivi." : 'No problem: Between will choose the topic from your check-in.')
           : '';
         // Like the live check-in: no caption unless they handed the topic to Between.
         chipsNote.hidden = (topicMode !== 'ai');
@@ -10312,8 +10312,8 @@
       const prev = {};
       host.querySelectorAll('textarea[data-qi]').forEach(function(ta){ prev[ta.getAttribute('data-qi')] = ta.value; });
       const hint = fr
-        ? 'Répondez à deux questions — Between lit comment vous vous sentez à partir de vos réponses.'
-        : 'Answer a couple of questions — Between reads how you’re feeling from them.';
+        ? 'Répondez à deux questions : Between lit comment vous vous sentez à partir de vos réponses.'
+        : 'Answer a couple of questions: Between reads how you’re feeling from them.';
       host.innerHTML = '<div class="btw-mk-qhint">' + esc(hint) + '</div>' + qs.map(function(q, i){
         return '<div class="btw-mk-cq"><label>' + esc(q.q) + '</label><textarea data-qi="' + i + '" rows="2"></textarea></div>';
       }).join('');
@@ -10399,8 +10399,8 @@
           nutrition:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
           neuropsych:{en:'No check-ins since the last session, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis la dernière séance, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'}
         },
-        dir:{en:'— no data',fr:'— aucune donnée'}, dirColor:'soft',
-        tied:{en:'—',fr:'—'}, ys:[28,30,33,36,38]
+        dir:{en:': no data',fr:' : aucune donnée'}, dirColor:'soft',
+        tied:{en:': ',fr:': '}, ys:[28,30,33,36,38]
       }
     };
     let cur = 'amy';
@@ -10473,7 +10473,7 @@
     if(emrBtn){
       emrBtn.addEventListener('click', async ()=>{
         const name = (sumLabel ? sumLabel.textContent : '').replace(/^AI summary · /, '').replace(/^Résumé IA · /, '');
-        const note = L({en:'Between — between-session check-in summary', fr:'Between — résumé des suivis entre les séances'})
+        const note = L({en:'Between | between-session check-in summary', fr:'Between | résumé des suivis entre les séances'})
           + '\n' + (FR() ? 'Patient : ' : 'Patient: ') + name
           + '\n\n' + (sumText ? sumText.textContent : '')
           + '\n\n' + L({en:'Generated by Between (betweenpsych.com). Shared with patient consent. Not a clinical or crisis record.', fr:'Généré par Between (betweenpsych.com). Partagé avec le consentement du patient. N\'est pas un dossier clinique ou de crise.'});
@@ -11730,7 +11730,7 @@
   const talkBtn = document.getElementById('btwTalkToUs');
   function openContact(){
     window.location.href = 'mailto:' + CONTACT_EMAIL_ADDR +
-      '?subject=' + encodeURIComponent('Between — enquiry');
+      '?subject=' + encodeURIComponent('Between | enquiry');
   }
   // Change the signed-in pro's plan (e.g. upgrade to Premium). If they already
   // have a live subscription the server swaps the price in place (no second
@@ -11861,7 +11861,7 @@
     }
     function greet(){
       if(greeted) return; greeted = true;
-      addMsg('bot', t('Hi — I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?'));
+      addMsg('bot', t('Hi: I can answer questions about Between: how it works, pricing, privacy and more. What would you like to know?'));
       renderChips();
     }
     async function ask(q){
@@ -12213,7 +12213,7 @@
       // fields keep the suicide-specific wording.
       const _physAud = physicalField();
       const lead = _physAud
-        ? t("If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away — don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).")
+        ? t("If you're in severe pain, injured, or it's a medical emergency, call 911 or seek urgent care right away. Don't wait on this app. If you're in distress or thinking about harming yourself, you can reach 988 (Suicide & Crisis Lifeline).")
         : t("This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please contact 988 (Suicide & Crisis Lifeline, US) or your local emergency number.");
       const full = patient ? lead : (lead + ' ' + t('Your therapist has also been notified.'));
       crisisBox.innerHTML = full.replace('988', '<strong>988</strong>').replace('911', '<strong>911</strong>');
@@ -13070,11 +13070,11 @@
         usageHtml =
           '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> total database</div>' +
           '<div style="margin-top:7px;">Storage cost ≈ <strong style="color:var(--moss);">' + monthlyStr + ' / month</strong> <span style="color:var(--ink-soft);">(at $' + s.costPerGb + '/GB-month)</span></div>' +
-          '<div style="margin-top:4px;font-size:12px;">Usage-based — storage auto-scales, so there\'s no limit to hit; the cost just tracks your data.</div>';
+          '<div style="margin-top:4px;font-size:12px;">Usage-based: storage auto-scales, so there\'s no limit to hit; the cost just tracks your data.</div>';
       } else if(s.limitBytes){
         const usedPct = Math.min(100, Math.round(s.dbBytes / s.limitBytes * 100));
         const col = usedPct >= 80 ? 'var(--clay)' : usedPct >= 60 ? '#b45309' : 'var(--moss)';
-        const label = usedPct >= 80 ? 'Upgrade your plan soon' : usedPct >= 60 ? 'Getting full — plan an upgrade' : 'Plenty of room';
+        const label = usedPct >= 80 ? 'Upgrade your plan soon' : usedPct >= 60 ? 'Getting full: plan an upgrade' : 'Plenty of room';
         usageHtml =
           '<div><strong style="font-size:15px;color:var(--ink);">' + btwFmtBytes(s.dbBytes) + '</strong> of ' + btwFmtBytes(s.limitBytes) + ' used · <strong style="color:' + col + ';">' + usedPct + '%</strong></div>' +
           '<div style="height:9px;border-radius:999px;background:var(--line);margin:9px 0 5px;overflow:hidden;"><div style="height:100%;width:' + usedPct + '%;background:' + col + ';border-radius:999px;"></div></div>' +
@@ -13088,9 +13088,9 @@
         usageHtml +
         '<div style="margin-top:12px;">' + s.photos.count + ' photos · ' + btwFmtBytes(s.photos.bytes) + '</div>' +
         '<div>' + s.audio.count + ' voice memos · ' + btwFmtBytes(s.audio.bytes) + '</div>' +
-        '<div style="margin-top:6px;">Photos &amp; voice memos are about <strong>' + mediaPct + '%</strong> of your data — the part that grows over time. (This is a breakdown of what you\'re using, not how full you are.)</div>' +
+        '<div style="margin-top:6px;">Photos &amp; voice memos are about <strong>' + mediaPct + '%</strong> of your data: the part that grows over time. (This is a breakdown of what you\'re using, not how full you are.)</div>' +
         '<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-          '<span>Free up space — delete media older than</span>' +
+          '<span>Free up space: delete media older than</span>' +
           '<select id="btwPurgeMonths" style="padding:5px 8px;border:1px solid var(--line);border-radius:8px;font-family:var(--font-body);">' +
             '<option value="6">6 months</option><option value="12" selected>12 months</option><option value="24">24 months</option>' +
           '</select>' +
@@ -13108,13 +13108,13 @@
         catch(e){ showResult('<span style="color:var(--clay);">' + esc(e.message) + '</span>'); btn.disabled = false; btn.textContent = 'Free up space'; return; }
         btn.disabled = false; btn.textContent = 'Free up space';
         const nP = prev.photos.count, nA = prev.audio.count, freed = (prev.photos.bytes || 0) + (prev.audio.bytes || 0);
-        if(nP === 0 && nA === 0){ showResult('<span style="color:var(--ink-soft);">Nothing older than ' + months + ' months — there\'s nothing to delete.</span>'); return; }
+        if(nP === 0 && nA === 0){ showResult('<span style="color:var(--ink-soft);">Nothing older than ' + months + ' months: there\'s nothing to delete.</span>'); return; }
         if(!confirm('This will permanently delete ' + nP + ' photo(s) and ' + nA + ' voice memo(s) older than ' + months + ' months, freeing about ' + btwFmtBytes(freed) + '.\n\nThe check-ins and their text are kept. This affects all patients and cannot be undone. Continue?')) return;
         btn.disabled = true; btn.textContent = 'Working…';
         try {
           const r = await api('POST', '/api/admin/purge-old-media', { months });
           const freed2 = (r.photos.bytes || 0) + (r.audio.bytes || 0);
-          showResult('<span style="color:var(--moss);font-weight:600;">Freed ' + btwFmtBytes(freed2) + ' — removed ' + r.photos.count + ' photos and ' + r.audio.count + ' voice memos.</span>');
+          showResult('<span style="color:var(--moss);font-weight:600;">Freed ' + btwFmtBytes(freed2) + ': removed ' + r.photos.count + ' photos and ' + r.audio.count + ' voice memos.</span>');
           loadAdminStorage();
         } catch(e){ showResult('<span style="color:var(--clay);">' + esc(e.message) + '</span>'); btn.disabled = false; btn.textContent = 'Free up space'; }
       });
@@ -13161,7 +13161,7 @@
       const regLink = reg ? ` · <a href="${esc(reg)}" target="_blank" rel="noopener" style="color:var(--moss);">check registry ↗</a>` : '';
       return `<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--paper);">
         <div style="font-weight:600;">${esc(c.name)} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">· ${esc(c.email)}</span></div>
-        <div style="font-size:12.5px;color:var(--ink-soft);margin:3px 0 9px;">${esc(c.licence_order||'—')} · #${esc(c.licence_number||'—')} · ${esc(c.province||'—')}${regLink}</div>
+        <div style="font-size:12.5px;color:var(--ink-soft);margin:3px 0 9px;">${esc(c.licence_order||': ')} · #${esc(c.licence_number||': ')} · ${esc(c.province||': ')}${regLink}</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span style="font-size:12px;">${status}</span>
           ${verified
@@ -13217,7 +13217,7 @@
     const w = Math.max(0, Math.min(100, pct == null ? 0 : pct));
     return '<div style="margin-bottom:9px;">'
       + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:3px;">'
-      +   '<span>' + esc(label) + '</span><span>' + (pct == null ? '—' : pct + '%') + (caption ? ' <span style="opacity:.65;">' + esc(caption) + '</span>' : '') + '</span>'
+      +   '<span>' + esc(label) + '</span><span>' + (pct == null ? ': ' : pct + '%') + (caption ? ' <span style="opacity:.65;">' + esc(caption) + '</span>' : '') + '</span>'
       + '</div>'
       + '<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;">'
       +   '<div style="height:100%;width:' + w + '%;background:var(--moss);border-radius:4px;"></div>'
@@ -13234,10 +13234,10 @@
       + '</div>';
 
     // Retention curve — the headline signal. Skip week 0 (always ~100%).
-    html += '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:4px 0 10px;">Retention — still checking in N weeks after their first</div>';
+    html += '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:4px 0 10px;">Retention: still checking in N weeks after their first</div>';
     const ret = (data.retention || []).filter(r => r.week >= 1);
     if(!ret.some(r => r.eligible > 0)){
-      html += '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">Not enough history yet — needs patients whose first check-in was at least two weeks ago.</div>';
+      html += '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:16px;">Not enough history yet, needs patients whose first check-in was at least two weeks ago.</div>';
     } else {
       for(const r of ret){
         const pct = r.eligible ? Math.round(100 * r.active / r.eligible) : null;
@@ -13965,7 +13965,7 @@
       + esc(t('Send them this link, their code is built in:')) + '<br>'
       + '<span style="font-family:var(--font-mono);color:var(--moss);word-break:break-all;font-size:11px;">' + esc(link) + '</span><br>'
       + '<button id="btwCopyInvite" data-code="' + esc(p.invite_code || '') + '" style="margin-top:8px;background:var(--moss);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-family:var(--font-body);font-size:12px;cursor:pointer;">' + esc(t('Copy invite message')) + '</button>'
-      + ' <span style="font-size:11px;color:var(--ink-soft);">' + esc(t('code:')) + ' <span style="font-family:var(--font-mono);">' + esc(p.invite_code || '—') + '</span></span>';
+      + ' <span style="font-size:11px;color:var(--ink-soft);">' + esc(t('code:')) + ' <span style="font-family:var(--font-mono);">' + esc(p.invite_code || ': ') + '</span></span>';
     const b = el.querySelector('#btwCopyInvite');
     if(b) b.addEventListener('click', ()=> copyInvite(b.dataset.code, b));
   }
@@ -14014,7 +14014,7 @@
     let on, has;
     if(isPatient()){ on = !!(state.patient && state.patient.ai_consent_enabled); has = true; }
     else { const p = selectedPatient(); on = !!(p && p.ai_consent_enabled); has = !!p; }
-    aiStatusEl.textContent = has ? (on ? t('AI summaries: on') : t('AI summaries: off')) : t('AI summaries: —');
+    aiStatusEl.textContent = has ? (on ? t('AI summaries: on') : t('AI summaries: off')) : t('AI summaries:: ');
     const dataToggle = document.getElementById('btwDataAiToggle');
     if(dataToggle) dataToggle.checked = on;
   }
@@ -14332,7 +14332,7 @@
   function docStatusLabel(d){
     if(d.ai_status === 'pending') return t('Reviewing…');
     if(d.ai_status === 'skipped') return t('Turn on AI summaries to have Between review documents.');
-    if(d.ai_status === 'error') return t("Between couldn't read this one — you can still open it below.");
+    if(d.ai_status === 'error') return t("Between couldn't read this one. You can still open it below.");
     return '';
   }
 
@@ -14807,9 +14807,9 @@
     const scoreLblCap = scoreLbl.charAt(0).toUpperCase() + scoreLbl.slice(1);
     const perLbl = painMode() ? t('pain') : t('mood');
     const lines = [];
-    lines.push(t('Between — between-session check-in summary'));
+    lines.push(t('Between | between-session check-in summary'));
     lines.push(t('Patient:') + ' ' + p.display_name);
-    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + ' – ' + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
+    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + '–' + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
     if(avg!=null) lines.push(scoreLblCap + ': ' + scoreWord(avg) + ' (' + nf(avg) + '/10)');
     if(topTags.length) lines.push(t('Top themes:') + ' ' + topTags.join(', '));
     if(riskN>0) lines.push(t('Flagged:') + ' ' + riskN + ' ' + (riskN===1?t('check-in'):t('check-ins')) + ' ' + t('with a possible safety concern'));
@@ -14821,7 +14821,7 @@
       let sum = (c.summary||'').replace(/\s+/g,' ').trim();
       if(sum.length>220) sum = sum.slice(0,217) + '…';
       const tags = c.tags.length ? (' [' + c.tags.map(trFr).join(', ') + ']') : '';
-      lines.push('- ' + fmtDate(c.time) + mood + flag + ' — ' + sum + tags);
+      lines.push('- ' + fmtDate(c.time) + mood + flag + ': ' + sum + tags);
     });
     lines.push('');
     lines.push(t('Generated by Between (betweenpsych.com). Shared with patient consent. Not a clinical or crisis record.'));
@@ -14840,7 +14840,7 @@
   // clinician can attach the note in one step. Built in the browser, so the
   // note never leaves the device to make it.
   var PDF_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
-  var PDF_CP = {'€':128,'‚':130,'ƒ':131,'„':132,'…':133,'†':134,'‡':135,'ˆ':136,'‰':137,'Š':138,'‹':139,'Œ':140,'Ž':142,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151,'˜':152,'™':153,'š':154,'›':155,'œ':156,'ž':158,'Ÿ':159};
+  var PDF_CP = {'€':128,'‚':130,'ƒ':131,'„':132,'…':133,'†':134,'‡':135,'ˆ':136,'‰':137,'Š':138,'‹':139,'Œ':140,'Ž':142,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,': ':151,'˜':152,'™':153,'š':154,'›':155,'œ':156,'ž':158,'Ÿ':159};
   function pdfChar(ch){
     var c = ch.charCodeAt(0);
     if(c >= 32 && c < 127) return ch;
@@ -14988,7 +14988,7 @@
     meta.push(t('Date') + ': ' + dateStr);
     var blob = buildPdf({
       title: kindTitle, meta: meta, body: body,
-      signature: (opts && opts.signature) ? (t('Signature') + (me.name ? ' — ' + me.name : '')) : null,
+      signature: (opts && opts.signature) ? (t('Signature') + (me.name ? ': ' + me.name : '')) : null,
       dateLabel: t('Date'), pageWord: t('Page'), ofWord: t('of'),
       footer: [(p && p.display_name) || '', dateStr].filter(Boolean).join(' · ')
     });
@@ -15164,7 +15164,7 @@
       if(composeTopicAi){
         const aiOn = !!(state.patient && state.patient.ai_consent_enabled);
         note.style.display = '';
-        note.textContent = aiOn ? t('Between will name the topic from your check-in.') : t('No topic is set unless you tap one — turn on AI summaries to have Between name it.');
+        note.textContent = aiOn ? t('Between will name the topic from your check-in.') : t('No topic is set unless you tap one. Turn on AI summaries to have Between name it.');
       } else { note.style.display = 'none'; }
     }
   }
@@ -15647,7 +15647,7 @@
       var pair = fr ? w.fr : w.en;
       return it.count + ' ' + (it.count === 1 ? pair[0] : pair[1]);
     }).filter(Boolean);
-    brk.textContent = parts.join(' · ') + ' — ' + t('estimated');
+    brk.textContent = parts.join(' · ') + ': ' + t('estimated');
   }
 
 
@@ -15806,10 +15806,10 @@
         var label = document.getElementById('btwAiNoteLabel');
         var soap = d && d.format === 'soap', dap = d && d.format === 'dap', adime = d && d.format === 'adime';
         state.noteFormat = soap ? 'soap' : dap ? 'dap' : adime ? 'adime' : null;
-        if(label) label.textContent = soap ? t('Chart note (SOAP) — from the recorded session; check it before it goes in the chart')
-          : dap ? t('Chart note (DAP) — from the recorded session; check it before it goes in the chart')
-          : adime ? t('Chart note (ADIME) — from the recorded session; check it before it goes in the chart')
-          : t('Draft note — review and edit before using');
+        if(label) label.textContent = soap ? t('Chart note (SOAP): from the recorded session; check it before it goes in the chart')
+          : dap ? t('Chart note (DAP): from the recorded session; check it before it goes in the chart')
+          : adime ? t('Chart note (ADIME): from the recorded session; check it before it goes in the chart')
+          : t('Draft note: review and edit before using');
         aiPanelNotice(np, '');
         if(ta){ ta.value = (d && d.note) || ''; ta.rows = 16; }
         var n = (d && d.checkInsUsed) || 0;
@@ -15834,9 +15834,9 @@
       var p = selectedPatient(); if(!p) return;
       var sp = dict.querySelector('span');
       if(rec && rec.state === 'recording'){ rec.stop(); return; }
-      if(!window.MediaRecorder || !navigator.mediaDevices){ setMsg(t('Recording is not supported in this browser — type instead.')); return; }
+      if(!window.MediaRecorder || !navigator.mediaDevices){ setMsg(t('Recording is not supported in this browser. Type instead.')); return; }
       try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-      catch(e){ setMsg(t('Microphone access was blocked — type instead.')); return; }
+      catch(e){ setMsg(t('Microphone access was blocked. Type instead.')); return; }
       chunks = [];
       rec = new MediaRecorder(stream);
       rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
@@ -15851,12 +15851,12 @@
           var d = null; try { d = await resp.json(); } catch(_){}
           if(!resp.ok) throw new Error((d && d.error) || t('Could not transcribe that just now.'));
           ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + (d.text || '');
-          setMsg(t('Added — tap "Update note" to write it into the note.'));
+          setMsg(t('Added: tap "Update note" to write it into the note.'));
         } catch(e){ setMsg((e && e.message) || t('Could not transcribe that just now.')); }
         finally { dict.disabled = false; }
       };
       rec.start();
-      dict.classList.add('btw-rec-on'); sp.textContent = t('Stop'); setMsg(t('Recording — tap Stop when done.'));
+      dict.classList.add('btw-rec-on'); sp.textContent = t('Stop'); setMsg(t('Recording: tap Stop when done.'));
     });
     upd.addEventListener('click', async function(){
       var p = selectedPatient(); if(!p) return;
@@ -15901,7 +15901,7 @@
       try {
         var d = await api('POST', '/api/patients/' + p.id + '/report', { kind: document.getElementById('btwReportKind').value, recipient: document.getElementById('btwReportTo').value, lang: curLang === 'fr' ? 'fr' : 'en' });
         if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; pdf.style.display = 'none'; meta.textContent = aiEmptyMsg(p); }
-        else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; pdf.style.display = ''; meta.textContent = t('Draft — add your clinical input where marked, then copy.'); }
+        else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; pdf.style.display = ''; meta.textContent = t('Draft: add your clinical input where marked, then copy.'); }
       } catch(e){ meta.textContent = (e && e.message) || t('Could not draft the report just now.'); }
       finally { go.disabled = false; sp.textContent = t('Draft it'); }
     });
@@ -15934,7 +15934,7 @@
     var list = document.getElementById('btwNeedsList'); list.innerHTML = '';
     if(!items.length){
       var e = document.createElement('div'); e.className = 'btw-needs-empty';
-      e.textContent = t("Nobody needs you right now — everyone's checking in fine.");
+      e.textContent = t("Nobody needs you right now. Everyone's checking in fine.");
       list.appendChild(e);
     }
     items.forEach(function(it){
@@ -15948,7 +15948,7 @@
     var mail = document.getElementById('btwNeedsMail');
     var mailRow = document.getElementById('btwNeedsMailRow');
     if(mailRow) mailRow.style.display = d.emailReady === false ? 'none' : '';
-    var lbl = document.getElementById('btwNeedsMailLbl'); if(lbl) lbl.textContent = t('Email me this list each morning — only on days someone needs me');
+    var lbl = document.getElementById('btwNeedsMailLbl'); if(lbl) lbl.textContent = t('Email me this list each morning, only on days someone needs me');
     if(mail){
       mail.checked = !!d.digestEnabled;
       if(!mail._wired){
@@ -16076,7 +16076,7 @@
     var recentN = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff; }).length;
     var any = (state.checkIns||[]).filter(function(c){ return c.time >= cutoff && Array.isArray(c.exercisesDone) && c.exercisesDone.length; }).length;
     var h = '<div class="btw-hep-h"><span class="btw-hep-t">' + esc(t(W.title)) + '</span>'
-      + '<span class="btw-hep-meta">' + (ex.length ? esc(t('Ticked something in') + ' ' + any + ' ' + t('of') + ' ' + recentN + ' ' + t('check-ins (last 2 weeks)')) : esc(t('Assign once — your patient ticks them off when they check in.'))) + '</span></div>';
+      + '<span class="btw-hep-meta">' + (ex.length ? esc(t('Ticked something in') + ' ' + any + ' ' + t('of') + ' ' + recentN + ' ' + t('check-ins (last 2 weeks)')) : esc(t('Assign once: your patient ticks them off when they check in.'))) + '</span></div>';
     ex.forEach(function(e){
       var a = hepAdherence(e.id);
       h += '<div class="btw-hep-row"><div class="btw-hep-main"><span class="btw-hep-name">' + esc(e.name) + '</span>'
@@ -16102,7 +16102,7 @@
           ? (ctx.hint ? t('Filled in from their check-ins. Suggestions also use where it hurts, how it is trending and what they already do.') : t('Suggestions use their recent check-ins: what they reported and what they already do.'))
           : t('AI summaries are off for this client, so nothing from their check-ins goes to the AI: suggestions use only the goal you type.')) + '</div>' : '')
       + '<div class="hep-sugs"></div></div>'
-      + (ex.length ? '<div class="btw-hep-rev"><div class="btw-hep-btns" style="margin-top:0;"><button type="button" class="btw-emr-btn hep-rev-btn"><span>' + esc(t('Review program with AI')) + '</span></button><span class="btw-hep-meta">' + esc(t('Suggests what to progress, ease off, add or drop — you approve each change.')) + '</span></div><div class="hep-revs"></div></div>' : '')
+      + (ex.length ? '<div class="btw-hep-rev"><div class="btw-hep-btns" style="margin-top:0;"><button type="button" class="btw-emr-btn hep-rev-btn"><span>' + esc(t('Review program with AI')) + '</span></button><span class="btw-hep-meta">' + esc(t('Suggests what to progress, ease off, add or drop. You approve each change.')) + '</span></div><div class="hep-revs"></div></div>' : '')
       + '</details>'
       + '<details class="btw-hep-manual" style="margin-top:10px;"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:var(--moss);">' + esc(t('Add one yourself')) + '</summary>'
       + '<div class="btw-hep-add"><input type="text" class="hep-name" maxlength="80" placeholder="' + esc(t(W.name)) + '"><input type="text" class="hep-dose" maxlength="80" placeholder="' + esc(t(W.dose)) + '">'
@@ -16155,7 +16155,7 @@
           + '</div><button type="button" class="btw-emr-btn" data-add="' + i + '"><span>' + esc(t('Add')) + '</span></button></div>';
       });
       s += '<div class="btw-hep-btns"><button type="button" class="btw-emr-btn hep-add-all"><span>' + esc(t('Add all')) + '</span></button></div>'
-        + '<div class="btw-hep-msg">' + esc((host._sugUsed ? t('Based on') + ' ' + host._sugUsed + ' ' + (host._sugUsed === 1 ? t('check-in') : t('check-ins')) + '. ' : '') + t('AI suggestions — check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.')) + '</div>';
+        + '<div class="btw-hep-msg">' + esc((host._sugUsed ? t('Based on') + ' ' + host._sugUsed + ' ' + (host._sugUsed === 1 ? t('check-in') : t('check-ins')) + '. ' : '') + t('AI suggestions: check they suit this patient before adding. Your patient sees the how-to, dose and pain rule; the reasons and harder/easier steps are for you.')) + '</div>';
       sugs.innerHTML = s;
       sugs.querySelectorAll('[data-add]').forEach(function(b){
         b.addEventListener('click', async function(){
@@ -16179,7 +16179,7 @@
     function drawRevs(list){
       if(!revs) return;
       if(!list){ revs.innerHTML = ''; return; }
-      if(!list.length){ revs.innerHTML = '<div class="btw-hep-msg">' + esc(t('The program looks right as it is — no changes suggested.')) + '</div>'; return; }
+      if(!list.length){ revs.innerHTML = '<div class="btw-hep-msg">' + esc(t('The program looks right as it is, no changes suggested.')) + '</div>'; return; }
       var s = '';
       list.forEach(function(r, i){
         s += '<div class="btw-hep-sug"><div class="btw-hep-main"><span class="btw-hep-act ' + (r.action === 'remove' ? 'remove' : '') + '">' + esc(ACT[r.action] || r.action) + '</span><span class="btw-hep-name">' + esc(r.name || '') + '</span>'
@@ -16224,7 +16224,7 @@
         host._sug = (r && r.suggestions) || [];
         host._sugUsed = (r && r.usedCheckIns) || 0;
         drawSugs(host._sug);
-        if(!host._sug.length) msg.textContent = t('No suggestions came back — try describing the goal differently.');
+        if(!host._sug.length) msg.textContent = t('No suggestions came back. Try describing the goal differently.');
       } catch(e){ msg.textContent = (e && e.message) || t('Could not suggest exercises just now.'); }
       finally { sugBtn.disabled = false; sp.textContent = t(W.sug); }
     });
@@ -16723,7 +16723,7 @@
       thread: L('The one thread running through their weeks, and how it has shifted.', 'Le fil qui traverse ses semaines, et comment il a évolué.'),
       cognitive: L('What tends to precede their hardest cognitive days.', 'Ce qui précède souvent ses journées cognitives les plus difficiles.'),
       trajectory: L('Whether the main area is improving, and what the flares cluster around.', 'Si la zone principale s’améliore, et autour de quoi les poussées se regroupent.'),
-      triggers: L('The patterns around their harder days — without judgment.', 'Les tendances autour de ses journées plus difficiles — sans jugement.'),
+      triggers: L('The patterns around their harder days, without judgment.', 'Les tendances autour de ses journées plus difficiles, sans jugement.'),
       radar: L('Where risk rose or steadied, and any milestone to name.', 'Où le risque a monté ou s’est stabilisé, et tout jalon à souligner.'),
       readiness: L('A ready / monitor / back-off read from soreness and mood.', 'Un signal prêt / à surveiller / à alléger, selon courbatures et humeur.'),
       drift: L('Whether they’re staying engaged or quietly drifting.', 'S’il reste engagé ou décroche peu à peu.')
@@ -16932,7 +16932,7 @@
           state.selectedPatientId = patient.id;
           await loadPatients();
           document.getElementById('btwAddDoneTitle').textContent = t('{name} is on your caseload').replace('{name}', name);
-          document.getElementById('btwAddCode').textContent = patient.invite_code || '—';
+          document.getElementById('btwAddCode').textContent = patient.invite_code || ': ';
           const copyB = document.getElementById('btwAddCopy');
           copyB.textContent = t('Copy invite message');
           copyB.onclick = ()=> copyInvite(patient.invite_code || '', copyB);
@@ -17028,18 +17028,18 @@
   // few minutes are obvious instead of a blank screen.
   function clinicianOnboardingHtml(){
     const steps = [
-      t('Add someone to your caseload — a first name is all you need.'),
+      t('Add someone to your caseload, a first name is all you need.'),
       t('Between gives you a one-time invite code. Share it with them.'),
       t('They check in between visits, and a short summary is waiting for you before the next one.')
     ];
     return '<div class="btw-onboard">'
-      + '<div class="btw-onboard-title">' + esc(t('Welcome — let\'s get your first check-ins coming in')) + '</div>'
+      + '<div class="btw-onboard-title">' + esc(t('Welcome: let\'s get your first check-ins coming in')) + '</div>'
       + '<ol class="btw-onboard-steps">' + steps.map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>'
       + '<button type="button" class="btw-onboard-btn" id="btwOnboardAdd">' + esc(t('Add patient')) + '</button>'
       + '<button type="button" class="btw-tour-start" id="btwOnboardTour">'
       + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
       + esc(t('Take a quick tour')) + '</button>'
-      + '<div class="btw-onboard-foot">' + esc(t('Nothing pings you. You are never on call — the summary just waits for your next session.')) + '</div>'
+      + '<div class="btw-onboard-foot">' + esc(t('Nothing pings you. You are never on call, the summary just waits for your next session.')) + '</div>'
       + '</div>';
   }
 
@@ -17129,7 +17129,7 @@
     var msg;
     if(s >= 30) msg = t('a month of showing up');
     else if(s >= 14) msg = t('two weeks strong');
-    else if(s >= 7) msg = t('a full week — well done');
+    else if(s >= 7) msg = t('a full week: well done');
     else if(s >= 3) msg = t('building a habit');
     else msg = t('keep it going');
     el.style.display = '';
@@ -17242,7 +17242,7 @@
       var ta = thisW.reduce(function(s,c){ return s + c.mood; }, 0) / thisW.length;
       var la = lastW.reduce(function(s,c){ return s + c.mood; }, 0) / lastW.length;
       if(ta - la >= 1) out.push(L('Your mood is up from last week.', 'Votre humeur est en hausse par rapport à la semaine dernière.'));
-      else if(la - ta >= 1) out.push(L('Your mood is down from last week — be gentle with yourself.', 'Votre humeur est en baisse par rapport à la semaine dernière — soyez indulgent envers vous-même.'));
+      else if(la - ta >= 1) out.push(L('Your mood is down from last week. Be gentle with yourself.', 'Votre humeur est en baisse par rapport à la semaine dernière. Soyez indulgent envers vous-même.'));
     }
     return out.slice(0, 3);
   }
@@ -17254,7 +17254,7 @@
     el.style.display = '';
     el.innerHTML = '<div class="btw-pat-head">' + esc(t('Patterns worth noticing')) + '</div>'
       + ins.map(function(x){ return '<div class="btw-pat-row"><span class="btw-pat-dot"></span><span>' + esc(x) + '</span></div>'; }).join('')
-      + '<div class="btw-pat-foot">' + esc(t('Noticed from your own check-ins — something to reflect on, not a diagnosis.')) + '</div>';
+      + '<div class="btw-pat-foot">' + esc(t('Noticed from your own check-ins, something to reflect on, not a diagnosis.')) + '</div>';
   }
 
   // --- Bring-to-a-pro: a plain-language summary the individual can hand to a
@@ -17270,7 +17270,7 @@
     var ci = (state.checkIns || []).filter(function(c){ return c && c.time; }).slice().sort(function(a,b){ return a.time - b.time; });
     var moods = ci.filter(function(c){ return typeof c.mood === 'number'; });
     var out = [];
-    out.push(L('BETWEEN — CHECK-IN SUMMARY', 'BETWEEN — RÉSUMÉ DES SUIVIS'));
+    out.push(L('BETWEEN: CHECK-IN SUMMARY', 'BETWEEN : RÉSUMÉ DES SUIVIS'));
     out.push('');
     if(ci.length) out.push(L('Period: ', 'Période : ') + _proFmtDate(ci[0].time) + ' → ' + _proFmtDate(ci[ci.length - 1].time));
     out.push(L('Check-ins: ', 'Suivis : ') + ci.length);
@@ -17372,8 +17372,8 @@
     const ico = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>';
     const title = solo ? t('Welcome to your journal') : t('Your check-ins live here');
     const body = solo
-      ? t('This is your private space. Check in whenever something is on your mind — write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.')
-      : t('Check in whenever something comes up — a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.');
+      ? t('This is your private space. Check in whenever something is on your mind. Write a line, record a voice memo, or answer a few gentle questions. Between quietly learns your patterns so you can look back and see them.')
+      : t('Check in whenever something comes up, a line, a voice memo, or a few questions. Your entries stay private to you and are shared only with the person supporting you.');
     const prompts = solo
       ? [t('What is on your mind right now?'), t('One small win today'), t('Something that felt heavy'), t('What would help tomorrow?')]
       : [];
@@ -17724,10 +17724,10 @@
         + '<div class="btw-bodyov-readv">' + esc(catLbl) + '</div>';
       if(sensRead.flag){
         html += '<div class="btw-bodyov-flag">⚑ ' + esc(me
-          ? (fr ? 'Vous avez signalé des picotements / engourdissements — à mentionner avant votre prochaine visite.'
-                : 'You mentioned tingling / numbness — worth raising before your next visit.')
-          : (fr ? 'Signale des picotements / engourdissements — à revoir avant la prochaine visite.'
-                : 'Reports tingling / numbness — worth a look before the next visit.')) + '</div>';
+          ? (fr ? 'Vous avez signalé des picotements / engourdissements, à mentionner avant votre prochaine visite.'
+                : 'You mentioned tingling / numbness, worth raising before your next visit.')
+          : (fr ? 'Signale des picotements / engourdissements, à revoir avant la prochaine visite.'
+                : 'Reports tingling / numbness, worth a look before the next visit.')) + '</div>';
       }
       read.innerHTML = html;
       host.appendChild(read);
@@ -17803,7 +17803,7 @@
     const spanMonths = s.spanDays!=null ? Math.max(1, Math.round(s.spanDays/30)) : null;
     out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Overview'))+'</div><div class="btw-stats-tiles">'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Total check-ins'))+'</div><div class="v">'+s.n+'</div>'+(s.ratedN<s.n?'<div class="s">'+s.ratedN+' '+esc(pm?t('with a pain rating'):t('with a mood'))+'</div>':'')+'</div>'
-      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Tracking since'))+'</div><div class="v" style="font-size:15px">'+(s.first?esc(fmtDate(s.first)):'—')+'</div>'+(spanMonths?'<div class="s">'+esc((spanMonths+' '+(spanMonths===1?t('month'):t('months'))))+'</div>':'')+'</div>'
+      + '<div class="btw-stats-tile"><div class="l">'+esc(t('Tracking since'))+'</div><div class="v" style="font-size:15px">'+(s.first?esc(fmtDate(s.first)):': ')+'</div>'+(spanMonths?'<div class="s">'+esc((spanMonths+' '+(spanMonths===1?t('month'):t('months'))))+'</div>':'')+'</div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Active weeks'))+'</div><div class="v">'+(s.activeWeeks||0)+(s.spanWeeks?'<span style="font-size:12px;color:var(--ink-soft);font-weight:400"> '+esc(t('of'))+' '+s.spanWeeks+'</span>':'')+'</div></div>'
       + '<div class="btw-stats-tile"><div class="l">'+esc(t('Longest streak'))+'</div><div class="v">'+(s.longestStreak||0)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">'+esc(s.longestStreak===1?t('week'):t('weeks'))+'</span></div>'+(s.currentStreak?'<div class="s">'+esc(t('current'))+': '+s.currentStreak+' '+esc(s.currentStreak===1?t('week'):t('weeks'))+'</div>':'')+'</div>'
       + '</div></div>');
@@ -17833,7 +17833,7 @@
           if(d>=0.5) delta = pm ? '<span class="down">↑ '+esc(t('more pain'))+'</span>' : '<span class="up">↑ '+esc(t('better'))+'</span>';
           else if(d<=-0.5) delta = pm ? '<span class="up">↓ '+esc(t('less pain'))+'</span>' : '<span class="down">↓ '+esc(t('lower'))+'</span>';
           else delta='<span style="color:var(--ink-soft)">'+esc(t('typical'))+'</span>'; }
-        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(scoreWord(th.avg))+' ('+nf(th.avg)+')':'—')+'</td><td>'+delta+'</td></tr>';
+        return '<tr><td><span class="dot" style="background:'+color+'"></span>'+esc(themeName(th.tag))+'</td><td class="num">'+th.count+'</td><td class="num">'+Math.round(th.share*100)+'%</td><td class="num">'+(th.avg!=null?esc(scoreWord(th.avg))+' ('+nf(th.avg)+')':': ')+'</td><td>'+delta+'</td></tr>';
       }).join('');
       out.push('<div class="btw-stats-section"><div class="btw-stats-h">'+esc(t('Themes in depth'))+'</div><table class="btw-stats-table"><thead><tr><th>'+esc(t('Theme'))+'</th><th>'+esc(t('Count'))+'</th><th>'+esc(t('Share'))+'</th><th>'+esc(pm?t('Avg pain'):t('Avg mood'))+'</th><th>'+esc(t('vs overall'))+'</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
     }
@@ -17940,17 +17940,17 @@
         const joined = (itemKind === 'exercise') ? 'joints' : 'jointes'; // exercices (m) vs habitudes / pratiques / stratégies (f)
         const cap1 = function(x){ return x.charAt(0).toUpperCase() + x.slice(1); };
         const privacy = solo
-          ? t('Private to you. Your data is yours — export or delete it anytime.')
-          : (fr ? cap1(yourPro) + ' voit un court résumé, pas l’enregistrement brut — et seulement avec votre consentement.'
-                : cap1(yourPro) + ' sees a short summary, not the raw recording — and only with your consent.');
+          ? t('Private to you. Your data is yours. Export or delete it anytime.')
+          : (fr ? cap1(yourPro) + ' voit un court résumé, pas l’enregistrement brut, et seulement avec votre consentement.'
+                : cap1(yourPro) + ' sees a short summary, not the raw recording, and only with your consent.');
         return [
-          { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your check-ins — about 30 seconds. You can skip anytime.') },
+          { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your check-ins, about 30 seconds. You can skip anytime.') },
           { sel:'#btwInbox', title:(fr ? 'Messages de ' + yourPro : 'Messages from ' + yourPro), body:(fr ? 'Les mots de ' + yourPro + ' s’affichent ici, avec les ' + items + ' ' + joined + ' et comment les faire.' : 'Notes from ' + yourPro + ' show here, with any ' + items + ' they attached and how to do them.') },
-          { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it — by writing, a voice note, or a few guided questions.') },
+          { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it, by writing, a voice note, or a few guided questions.') },
           { sel:'#btwMoodSlider', title: pm ? t('Rate your pain') : t('Set how you are doing'), body: pm ? t('Slide to show your pain right now, or let Between estimate it from what you wrote.') : t('Slide to show how you are feeling, or let Between estimate it from what you wrote.') },
           { sel:'#btwComposePain', title:t('Show where it hurts'), body:t('Tap the area, zoom in to the exact spot and say how it feels. Pick Man or Woman once; it stays that way.') },
           { sel:'#btwComposeHep', title:t('Tick what you did'), body:(fr ? 'Vos ' + items + ' sont ici. Cochez ce que vous avez fait depuis la dernière fois pour que ' + yourPro + ' voie comment ça se passe.' : 'Your ' + items + ' are here. Tick what you did since last time so ' + yourPro + ' can see how it is going.') },
-          { sel:'#btwSend', title:t('Send it'), body:t('That is it — a check-in takes under a minute, whenever something happens.') },
+          { sel:'#btwSend', title:t('Send it'), body:t('That is it: a check-in takes under a minute, whenever something happens.') },
           { sel:'#btwAccTrends', title:t('Your trends'), body:scoreTrend },
           { sel:'#btwAccTimeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
           { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime: tap “Walk me through it” on your dashboard.') }
@@ -17961,10 +17961,10 @@
       const hasPeople = !!(state.patients && state.patients.length);
       const addTitle = hasPeople ? (curLang === 'fr' ? 'Ajoutez un ' : 'Add a ') + noun : (curLang === 'fr' ? 'Ajoutez votre premier ' : 'Add your first ') + noun;
       return [
-        { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard — about a minute. You can skip anytime.') },
+        { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard, about a minute. You can skip anytime.') },
         { sel:'#btwNeeds', title:t('Needs you today'), body:t('Only the patients who need you, with the reason: a safety flag, scores getting worse, or gone quiet. Tick the box to get this list by email each morning.') },
         { sel:'#btwPatientList', title:t('Your caseload'), body:t('Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.') },
-        { sel:'#btwAddPatient', title:addTitle, body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you — it just waits for your next session.') },
+        { sel:'#btwAddPatient', title:addTitle, body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you. It just waits for your next session.') },
         { sel:'#btwCopyEmrBar', title:t('Your tools for each patient'), body:t('AI draft note writes the chart note from their check-ins; type or dictate your findings into it. Record session turns an appointment into the note. Report / letter drafts progress reports and letters. Message sends them a note with exercises attached.') },
         { sel:'#btwHep', title:t('Their program'), body:t('Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.') },
         { sel:'.btw-prep-pair', title:t('Prep in seconds'), body:t('A short read on how they have been since last time and what to open with, plus the thread running through their weeks.') },
@@ -18153,19 +18153,19 @@
       const noun = personNoun();
       return [
         { sel:null, title:L('A quick walkthrough','Visite guidée rapide'), body:L('Thirty seconds, both sides: what your ' + noun + ' does, and what you see. Skip anytime.','Trente secondes, les deux côtés : ce que fait votre ' + noun + ' et ce que vous voyez. Passez quand vous voulez.') },
-        { sel:'#btwMkSlider', act:'slider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste — ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide — or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste — ou laisse Between l’estimer.') },
-        { sel:'.btw-mk-airead', title:L('Between reads it back','Between le relit'), body:L('From a sentence or a voice note, Between reads the feeling and the themes — no forms to fill.','À partir d’une phrase ou d’un mémo vocal, Between dégage le ressenti et les thèmes — aucun formulaire.') },
+        { sel:'#btwMkSlider', act:'slider', title:L('One slider for how they are','Un curseur pour l’état du moment'), body: pm ? L('Your ' + noun + ' sets today’s pain in one slide, or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique sa douleur du jour en un geste, ou laisse Between l’estimer à partir de ce qu’il écrit.') : L('Your ' + noun + ' sets how they’re doing in one slide, or lets Between estimate it from what they wrote.','Votre ' + noun + ' indique comment il va en un geste, ou laisse Between l’estimer.') },
+        { sel:'.btw-mk-airead', title:L('Between reads it back','Between le relit'), body:L('From a sentence or a voice note, Between reads the feeling and the themes, no forms to fill.','À partir d’une phrase ou d’un mémo vocal, Between dégage le ressenti et les thèmes. Aucun formulaire.') },
         { sel:'#btwMkChips', title:L('What’s going on','Ce qui se passe'), body:L('They tap what fits, or let Between pick up the themes from their words.','Il choisit ce qui colle, ou laisse Between repérer les thèmes dans ses mots.') },
         { sel:'.btw-mk-bodyrow', title:L('Where it hurts','Où ça fait mal'), body:L('They tap the spot on a body map (front, back, left or right side) and slide how bad it is.','Il touche l’endroit sur une carte du corps (devant, derrière, côté gauche ou droit) et glisse le curseur selon l’intensité.') },
         { sel:'.btw-mk-zoom', pre:'knee', keepIf:'#btwMkBody', room:0.66, title:L('A close-up of the joint','Un gros plan de l’articulation'), body:L('Tap a knee, shoulder, ankle or hand and it zooms in, so they point to the exact spot: the inner side of the left knee, not just “my knee”. That exact spot is what you see.','Touchez un genou, une épaule, une cheville ou une main et ça zoome : il pointe l’endroit exact, le côté interne du genou gauche, pas seulement « mon genou ». C’est cet endroit précis que vous voyez.') },
-        { sel:'#btwMkInput', title:L('In their own words','Dans ses propres mots'), body:L('A few words or a voice memo — the whole check-in takes under a minute, whenever something comes up.','Quelques mots ou un mémo vocal — le suivi complet prend moins d’une minute, dès que quelque chose survient.') },
+        { sel:'#btwMkInput', title:L('In their own words','Dans ses propres mots'), body:L('A few words or a voice memo, the whole check-in takes under a minute, whenever something comes up.','Quelques mots ou un mémo vocal, le suivi complet prend moins d’une minute, dès que quelque chose survient.') },
         { sel:'#btwMkSend', title:L('They send it','Il l’envoie'), body:L('No appointment, no one waiting. It just lands in your dashboard for the next session.','Sans rendez-vous, sans personne à l’autre bout. Cela arrive dans votre tableau de bord pour la prochaine séance.') },
         { sel:'.btw-mk-row.flag', title:L('Your caseload','Votre liste'), body:L('Everyone shows here. Anyone flagged or with new check-ins rises to the top, so a big list is one glance.','Tout le monde est ici. Les personnes signalées ou avec de nouveaux suivis remontent en haut : une grande liste se lit d’un coup d’œil.') },
-        { sel:'#btwMkSummary', title:L('The week, in two lines','La semaine, en deux lignes'), body:L('Between turns their check-ins into a short summary — you read it in seconds instead of scrubbing raw notes.','Between transforme ses suivis en un court résumé — vous le lisez en quelques secondes au lieu de parcourir des notes brutes.') },
+        { sel:'#btwMkSummary', title:L('The week, in two lines','La semaine, en deux lignes'), body:L('Between turns their check-ins into a short summary. You read it in seconds instead of scrubbing raw notes.','Between transforme ses suivis en un court résumé. Vous le lisez en quelques secondes au lieu de parcourir des notes brutes.') },
         { sel:'.btw-mk-insights', title:L('Direction, and what’s driving it','La tendance, et ce qui l’explique'), body: pm ? L('See whether pain is easing or climbing, and the theme that tracks with the harder days.','Voyez si la douleur baisse ou monte, et le thème qui accompagne les journées plus difficiles.') : L('See whether mood is improving or dipping, and the theme that tracks with the harder days.','Voyez si l’humeur s’améliore ou baisse, et le thème qui accompagne les journées plus difficiles.') },
-        { sel:'#btwMkTrendSvg', title:L('The trend','La tendance'), body:L('Each check-in adds a point, so a rough stretch — or a real recovery — is something you can actually see.','Chaque suivi ajoute un point : une mauvaise passe — ou un vrai rétablissement — devient visible.') },
+        { sel:'#btwMkTrendSvg', title:L('The trend','La tendance'), body:L('Each check-in adds a point, so a rough stretch, or a real recovery, is something you can actually see.','Chaque suivi ajoute un point : une mauvaise passe, ou un vrai rétablissement, devient visible.') },
         { sel:'.btw-mk-statslink', title:L('Go deeper when you want','Allez plus loin au besoin'), body:L('Open advanced stats for month-by-month mood, streaks and the themes behind the harder weeks.','Ouvrez les stats avancées pour l’humeur mois par mois, les séries et les thèmes des semaines difficiles.') },
-        { sel:null, title:L('That’s the loop','C’est la boucle'), body:L('Your ' + noun + ' checks in in seconds; you walk in already knowing their week. Try the cards yourself — they’re live.','Votre ' + noun + ' fait un suivi en quelques secondes ; vous arrivez en sachant déjà sa semaine. Essayez les cartes — elles sont actives.') }
+        { sel:null, title:L('That’s the loop','C’est la boucle'), body:L('Your ' + noun + ' checks in in seconds; you walk in already knowing their week. Try the cards yourself, they’re live.','Votre ' + noun + ' fait un suivi en quelques secondes ; vous arrivez en sachant déjà sa semaine. Essayez les cartes. Elles sont actives.') }
       ];
     }
     function end(){ active = false; if(raf){ cancelAnimationFrame(raf); raf = null; } card.classList.remove('btw-tour-moving'); overlay.classList.remove('show'); resetZoom(); curTarget = null; if(actTimer){ clearTimeout(actTimer); actTimer = null; } try{ localStorage.setItem('btw_tour_v2','done'); }catch(e){} }
@@ -18353,17 +18353,17 @@
       var ta = document.getElementById('btwAiNoteText');
       var meta = document.getElementById('btwAiNoteMeta');
       var label = document.getElementById('btwAiNoteLabel');
-      if(label) label.textContent = t('Draft note — review and edit before using');
+      if(label) label.textContent = t('Draft note: review and edit before using');
       btn.disabled = true; if(span) span.textContent = t('Thinking…');
       try{
         var d = await api('GET', '/api/patients/' + p.id + '/note');
         var soap = !!(d && d.format === 'soap');
         var dap = !!(d && d.format === 'dap');
         var adime = !!(d && d.format === 'adime');
-        if(label) label.textContent = soap ? t('Chart note (SOAP) — add your in-clinic findings and plan, then copy it into your chart')
-          : dap ? t('Chart note (DAP) — add your assessment and plan, then copy it into your chart')
-          : adime ? t('Chart note (ADIME) — add your findings, nutrition diagnosis and plan, then copy it into your chart')
-          : t('Draft note — review and edit before using');
+        if(label) label.textContent = soap ? t('Chart note (SOAP): add your in-clinic findings and plan, then copy it into your chart')
+          : dap ? t('Chart note (DAP): add your assessment and plan, then copy it into your chart')
+          : adime ? t('Chart note (ADIME): add your findings, nutrition diagnosis and plan, then copy it into your chart')
+          : t('Draft note: review and edit before using');
         if(ta) ta.rows = (soap || dap || adime) ? 12 : 7;
         var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap || adime) ? t('Copy to chart') : t('Copy note');
         state.noteFormat = soap ? 'soap' : dap ? 'dap' : adime ? 'adime' : null;
@@ -18450,7 +18450,7 @@
       if(forPid !== p.id){ forPid = p.id; picked = new Set(); ta.value = ''; meta.textContent = ''; status.textContent = ''; }
       var open = panel.style.display === 'none';
       panel.style.display = open ? '' : 'none';
-      if(open){ var label = document.getElementById('btwEncourageLabel'); if(label) label.textContent = t('Message to your client — they read it in Between'); drawEx(p); load(p); setTimeout(function(){ try { ta.focus(); } catch(e){} }, 50); }
+      if(open){ var label = document.getElementById('btwEncourageLabel'); if(label) label.textContent = t('Message to your client. They read it in Between'); drawEx(p); load(p); setTimeout(function(){ try { ta.focus(); } catch(e){} }, 50); }
     });
     draft.addEventListener('click', async function(){
       var p = selectedPatient(); if(!p) return;
@@ -18682,7 +18682,7 @@
       paras.push(t('What came up most:') + ' <strong>' + joined + '</strong>.');
     }
     if(week.some(function(c){ return c.tags.some(function(tg){ return /^win$/i.test(tg); }); })){
-      paras.push(t('You marked a win this week — worth holding onto.'));
+      paras.push(t('You marked a win this week, worth holding onto.'));
     }
 
     // 4) A gentle, forward-looking closer, stable within the week.
@@ -18835,7 +18835,7 @@
   }
 
   sendBtn.addEventListener('click', async ()=>{
-    if(_ownerPreview){ alert(t('This is a preview — your check-in was not sent.')); return; }
+    if(_ownerPreview){ alert(t('This is a preview. Your check-in was not sent.')); return; }
     const p = selectedPatient();
     if(!isPatient() && !p) return;
     const text = composeText();

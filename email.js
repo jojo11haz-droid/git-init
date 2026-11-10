@@ -12,7 +12,7 @@ export function emailConfigured() {
 
 export async function sendEmail({ to, subject, text, html, replyTo }) {
   if (!RESEND_API_KEY) {
-    console.log(`📧 [email not configured — would send]\nTo: ${to}\nSubject: ${subject}\n${replyTo ? 'Reply-To: ' + replyTo + '\n' : ''}${text}\n`);
+    console.log(`📧 [email not configured, would send]\nTo: ${to}\nSubject: ${subject}\n${replyTo ? 'Reply-To: ' + replyTo + '\n' : ''}${text}\n`);
     return { delivered: false, error: 'Email is not set up (RESEND_API_KEY is missing).' };
   }
   const payload = { from: EMAIL_FROM, to: [to], subject, text };

@@ -31,7 +31,7 @@ class AboutScreen extends StatelessWidget {
         ? const [
             [
               'Ai-je besoin d\'un professionnel?',
-              'Non. Vous pouvez utiliser Between seul comme journal privé. Si vous avez un professionnel, il peut vous inviter et voir un court résumé — seulement avec votre consentement.'
+              'Non. Vous pouvez utiliser Between seul comme journal privé. Si vous avez un professionnel, il peut vous inviter et voir un court résumé, seulement avec votre consentement.'
             ],
             [
               'Mes données sont-elles privées?',
@@ -57,7 +57,7 @@ class AboutScreen extends StatelessWidget {
         : const [
             [
               'Do I need a professional?',
-              'No. You can use Between on your own as a private journal. If you do have a professional, they can invite you and see a short summary — only with your consent.'
+              'No. You can use Between on your own as a private journal. If you do have a professional, they can invite you and see a short summary, only with your consent.'
             ],
             [
               'Is my data private?',
@@ -276,11 +276,11 @@ class _PreviewSectionState extends State<_PreviewSection> {
   Widget _checkinCard(bool fr, bool body) {
     final entry = body
         ? (fr
-            ? 'Le genou s\'apaise — j\'ai monté les escaliers aujourd\'hui.'
-            : 'Knee\'s easing — I managed the stairs today.')
+            ? 'Le genou s\'apaise : j\'ai monté les escaliers aujourd\'hui.'
+            : 'Knee\'s easing: I managed the stairs today.')
         : (fr
-            ? 'Un peu plus stable aujourd\'hui — je suis sorti marcher.'
-            : 'Felt steadier today — I got out for a walk.');
+            ? 'Un peu plus stable aujourd\'hui: je suis sorti marcher.'
+            : 'Felt steadier today: I got out for a walk.');
     final pill = body
         ? (fr ? 'Genou · 4/10' : 'Knee · 4/10')
         : (fr ? 'Correct (6/10)' : 'Okay (6/10)');

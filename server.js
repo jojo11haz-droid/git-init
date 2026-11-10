@@ -191,6 +191,9 @@ if (!ANTHROPIC_API_KEY) {
 
 const VALID_TAGS = ['Sleep', 'Work', 'Conflict', 'Craving', 'Panic', 'Family', 'Health', 'Money', 'Loneliness', 'Anger', 'Win', 'Social', 'Other'];
 const MODEL_VERSION = 'claude-sonnet-5';
+// House style for everything the AI writes (summaries, notes, letters): plain
+// punctuation, no dashes.
+const STYLE_RULE = '\n\nWriting style: never use em dashes (—) or en dashes as punctuation. Use commas, colons, periods or parentheses instead.';
 
 // opts.pain: the check-in is on the pain scale (physical fields), so the model
 // also estimates a pain level (1 = mild, 10 = worst) — the mood estimate runs
@@ -216,7 +219,7 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
     body: JSON.stringify({
       model: MODEL_VERSION,
       max_tokens: 500,
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content: prompt + STYLE_RULE }]
     })
   });
 
@@ -400,7 +403,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) {
     console.error('Anthropic API error (prep):', response.status);
@@ -469,7 +472,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (signature):', response.status); throw new Error('AI signature read failed.'); }
   const data = await response.json();
@@ -522,7 +525,7 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 600, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 600, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (note):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
@@ -615,7 +618,7 @@ ${session ? `- A TRANSCRIPT of today's recorded session is given below, with spe
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: session ? 1400 : 800, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: session ? 1400 : 800, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
@@ -655,7 +658,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (encouragement):', response.status); throw new Error('AI encouragement failed.'); }
   const data = await response.json();
@@ -696,7 +699,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (reflection):', response.status); throw new Error('AI reflection failed.'); }
   const data = await response.json();
@@ -745,7 +748,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 800, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 800, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (caseload):', response.status); throw new Error('AI caseload digest failed.'); }
   const data = await response.json();
@@ -824,7 +827,7 @@ ${ASK_FACTS}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system, messages: [{ role: 'user', content: question }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE, messages: [{ role: 'user', content: question }] })
   });
   if (!response.ok) {
     console.error('Anthropic API error (ask):', response.status);
@@ -832,13 +835,13 @@ ${ASK_FACTS}`;
   }
   const data = await response.json();
   const raw = (data.content || []).map(b => b.text || '').join('').trim();
-  const fallback = "I'm not sure about that one — starting a free trial or emailing owner@betweenpsych.com is the best way to get it answered.";
+  const fallback = "I'm not sure about that one. Starting a free trial or emailing owner@betweenpsych.com is the best way to get it answered.";
   let answer = raw, cta = 'none';
   try {
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
     if (parsed && typeof parsed.answer === 'string') answer = parsed.answer;
     if (parsed && ['trial', 'pricing', 'contact', 'none'].includes(parsed.cta)) cta = parsed.cta;
-  } catch (e) { /* model didn't return JSON — treat the text as the answer */ }
+  } catch (e) { /* model didn't return JSON, treat the text as the answer */ }
   return { answer: (answer || '').trim().slice(0, 1200) || fallback, cta };
 }
 
@@ -849,31 +852,31 @@ ${ASK_FACTS}`;
 
 const summarizeLimiter = rateLimit({
   windowMs: 60 * 1000, max: 10,
-  message: 'Too many summarize requests — wait a minute and try again.'
+  message: 'Too many summarize requests. Wait a minute and try again.'
 });
 const loginEmailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 10,
   keyFn: req => req.ip + '|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
-  message: 'Too many login attempts for this account — wait 15 minutes and try again.'
+  message: 'Too many login attempts for this account. Wait 15 minutes and try again.'
 });
 const loginIpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 50,
-  message: 'Too many login attempts — wait 15 minutes and try again.'
+  message: 'Too many login attempts. Wait 15 minutes and try again.'
 });
 const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 10,
-  message: 'Too many signup attempts — wait an hour and try again.'
+  message: 'Too many signup attempts. Wait an hour and try again.'
 });
 const checkInLimiter = rateLimit({
   windowMs: 60 * 1000, max: 15,
   keyFn: req => (req.clinician && req.clinician.id) || req.ip,
-  message: 'Too many check-ins at once — wait a minute and try again.'
+  message: 'Too many check-ins at once. Wait a minute and try again.'
 });
 // Public landing-page "try it" demo. Strict per-IP window plus a global daily
 // ceiling so it can't be abused as a cheap AI endpoint or run up cost.
 const demoLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, max: 6,
-  message: 'You have tried the demo a few times — start a free trial to keep going.'
+  message: 'You have tried the demo a few times. Start a free trial to keep going.'
 });
 const DEMO_DAILY_MAX = parseInt(process.env.DEMO_DAILY_MAX || '300', 10);
 let demoDay = '', demoCount = 0;
@@ -889,7 +892,7 @@ function demoBudgetOk() {
 // without becoming a free, abusable chatbot.
 const askLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, max: 12,
-  message: 'You have asked a few questions — start a free trial or email us to keep going.'
+  message: 'You have asked a few questions. Start a free trial or email us to keep going.'
 });
 const ASK_DAILY_MAX = parseInt(process.env.ASK_DAILY_MAX || '500', 10);
 let askDay = '', askCount = 0;
@@ -947,7 +950,7 @@ app.post('/api/demo/interpret', demoLimiter, async (req, res) => {
     }
     const trimmed = text.trim();
     if (trimmed.length > 400) {
-      return res.status(400).json({ error: 'Keep it short for the demo — a sentence or two.' });
+      return res.status(400).json({ error: 'Keep it short for the demo: a sentence or two.' });
     }
     if (!demoBudgetOk()) {
       return res.status(429).json({ error: 'The live demo is busy today. Start a free trial to use it for real.' });
@@ -972,20 +975,20 @@ app.post('/api/demo/interpret', demoLimiter, async (req, res) => {
 // per-IP window and the shared daily ceiling. Nothing is stored or logged.
 const demoVoiceLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, max: 6,
-  message: 'You have tried the voice demo a few times — start a free trial to keep going.'
+  message: 'You have tried the voice demo a few times. Start a free trial to keep going.'
 });
 app.post('/api/demo/transcribe',
   express.raw({ type: () => true, limit: 2 * 1024 * 1024 }),
   demoVoiceLimiter,
   async (req, res) => {
     try {
-      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice is unavailable right now — type instead.' });
+      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice is unavailable right now. Type instead.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
       if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
       if (!demoBudgetOk()) return res.status(429).json({ error: 'The live demo is busy today. Start a free trial to use it for real.' });
       const text = await transcribeAudio(req.body, mime);
-      if (!text) return res.status(422).json({ error: "Couldn't make that out — try again, or type it." });
+      if (!text) return res.status(422).json({ error: "Couldn't make that out. Try again, or type it." });
       res.json({ text: text.slice(0, 400) });
     } catch (err) {
       console.error('Demo transcribe error:', err.message);
@@ -999,7 +1002,7 @@ app.post('/api/demo/transcribe',
 app.post('/api/ask', askLimiter, async (req, res) => {
   try {
     if (!ANTHROPIC_API_KEY) {
-      return res.status(503).json({ error: 'The assistant is unavailable right now — email owner@betweenpsych.com and we will help.' });
+      return res.status(503).json({ error: 'The assistant is unavailable right now. Email owner@betweenpsych.com and we will help.' });
     }
     const { question } = req.body || {};
     if (!question || typeof question !== 'string' || !question.trim()) {
@@ -1007,10 +1010,10 @@ app.post('/api/ask', askLimiter, async (req, res) => {
     }
     const trimmed = question.trim();
     if (trimmed.length > 500) {
-      return res.status(400).json({ error: 'Keep the question short — a sentence or two.' });
+      return res.status(400).json({ error: 'Keep the question short: a sentence or two.' });
     }
     if (!askBudgetOk()) {
-      return res.status(429).json({ error: 'The assistant is busy today — email owner@betweenpsych.com and we will help.' });
+      return res.status(429).json({ error: 'The assistant is busy today. Email owner@betweenpsych.com and we will help.' });
     }
     const field = (req.body && typeof req.body.field === 'string' && ASK_FIELD_CONTEXT[req.body.field]) ? req.body.field : null;
     const result = await askBetween(trimmed, field);
@@ -1121,7 +1124,7 @@ function confirmationEmailHtml({ heading, paragraphs, site }) {
     ctaHref: site,
     footerHtml:
       `<p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#5A6169;">Between is not a crisis service. If you or someone you support is in danger, call 988 or 911.</p>` +
-      `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it — Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>`
+      `<p style="margin:0;font-size:12px;line-height:1.6;color:#5A6169;">Thanks for trying it, Jack · <a href="${site}" style="color:#1E4C86;text-decoration:none;">betweenpsych.com</a></p>`
   });
 }
 
@@ -1136,19 +1139,19 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
   // practice — patients, recovery between visits, and the body pain map.
   const proBody =
     discipline === 'physio'
-      ? `Your clinic account is confirmed and ready. Add your patients and you'll see how their recovery is going between appointments — a quick note when pain flares or an exercise is hard, plus a body pain map showing exactly where it hurts and how much.`
+      ? `Your clinic account is confirmed and ready. Add your patients and you'll see how their recovery is going between appointments: a quick note when pain flares or an exercise is hard, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'kinesiology'
-      ? `Your kinesiology account is confirmed and ready. Add your clients and you'll see how they're moving between sessions — a quick note when something bothers them, plus a body pain map showing exactly where it hurts and how much.`
+      ? `Your kinesiology account is confirmed and ready. Add your clients and you'll see how they're moving between sessions: a quick note when something bothers them, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'osteo'
-      ? `Your osteopathy account is confirmed and ready. Add your patients and you'll see how they're doing between appointments — a quick note when pain flares or something feels off, plus a body pain map showing exactly where it hurts and how much.`
+      ? `Your osteopathy account is confirmed and ready. Add your patients and you'll see how they're doing between appointments: a quick note when pain flares or something feels off, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'occupational'
-      ? `Your occupational therapy account is confirmed and ready. Add your patients and you'll see how they're doing between visits — how daily activities and recovery are going, plus a body pain map showing exactly where it hurts and how much.`
+      ? `Your occupational therapy account is confirmed and ready. Add your patients and you'll see how they're doing between visits: how daily activities and recovery are going, plus a body pain map showing exactly where it hurts and how much.`
     : discipline === 'fitness'
-      ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions — soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
+      ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions: soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
     : discipline === 'nutrition'
-      ? `Your nutrition account is confirmed and ready. Add your clients and you'll see how they're doing between sessions — energy, cravings and how the plan is going, summarized before the next appointment.`
+      ? `Your nutrition account is confirmed and ready. Add your clients and you'll see how they're doing between sessions: energy, cravings and how the plan is going, summarized before the next appointment.`
     : discipline === 'neuropsych'
-      ? `Your neuropsychology account is confirmed and ready. Add your patients and you'll see how they're doing between assessments and sessions — how their focus, memory, mental fatigue and mood are going, summarized before the next appointment.`
+      ? `Your neuropsychology account is confirmed and ready. Add your patients and you'll see how they're doing between assessments and sessions: how their focus, memory, mental fatigue and mood are going, summarized before the next appointment.`
     : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
   const body = kind === 'therapist'
     ? `Thanks for signing up. Your account is confirmed. We review each clinician's professional licence against the order's public registry, and we'll email you as soon as your account is approved. Once it's active you can add clients and start seeing their between-session check-ins.`
@@ -1509,7 +1512,7 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
 
 const mfaCodeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 20,
-  message: 'Too many code attempts — wait 15 minutes and try again.'
+  message: 'Too many code attempts. Wait 15 minutes and try again.'
 });
 
 app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
@@ -1517,7 +1520,7 @@ app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
     const { mfaToken, code } = req.body || {};
     if (!mfaToken || !code) return res.status(400).json({ error: 'Missing code.' });
     const challenge = await getValidMfaChallenge(hashSessionToken(mfaToken));
-    if (!challenge) return res.status(401).json({ error: 'This login attempt expired — start again.' });
+    if (!challenge) return res.status(401).json({ error: 'This login attempt expired. Start again.' });
     const mfa = await getClinicianMfa(challenge.clinician_id);
     if (!mfa || !mfa.mfa_secret || !verifyTotp(mfa.mfa_secret, code)) {
       return res.status(401).json({ error: 'That code isn\'t right. Check your authenticator app.' });
@@ -1807,7 +1810,7 @@ app.post('/api/practice/invite', requireDb, requireAuth, requireVerifiedClinicia
       text: `${owner.name} has invited you to join ${clinic} on Between, a between-visit check-in tool.\n\n` +
         `Create your clinician login here within ${PRACTICE_INVITE_TTL_DAYS} days:\n` +
         `${siteOrigin(req)}/?pjoin=${token}\n\n` +
-        `You'll have your own account and your own private caseload — clinicians at a clinic can't see each other's patients. ` +
+        `You'll have your own account and your own private caseload. Clinicians at a clinic can't see each other's patients. ` +
         `Your account is covered by ${clinic}'s subscription, so there's nothing to pay.\n\n` +
         `If you weren't expecting this, you can ignore this email.`
     });
@@ -2061,7 +2064,7 @@ const RESET_TTL_MINUTES = 60;
 const resetRequestLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 5,
   keyFn: req => req.ip + '|r|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
-  message: 'Too many reset requests — wait an hour and try again.'
+  message: 'Too many reset requests. Wait an hour and try again.'
 });
 
 app.post('/api/auth/password/reset-request', requireDb, resetRequestLimiter, async (req, res) => {
@@ -2445,7 +2448,7 @@ async function raiseRiskAlert(patient, checkIn) {
         subject: `Between: check-in flagged for ${patient.display_name}`,
         text: `A check-in from ${patient.display_name} was flagged for possible safety concern.\n\n` +
           `Open your Between dashboard to review it. The patient has already been shown crisis resources in the app.\n\n` +
-          `(No response is required through Between — it is a documentation tool, not a monitoring service.)`
+          `(No response is required through Between. It is a documentation tool, not a monitoring service.)`
       });
       if (delivered) deliveredAt = new Date();
       await createAlert({ checkInId: checkIn.id, clinicianId: clinician.id, deliveryChannel: channel, deliveredAt });
@@ -2867,8 +2870,8 @@ async function suggestExercises({ goal, discipline, accountType, lang, context, 
   const pp = PROGRAM_PROMPT[kind];
   const ex = kind === 'exercise';
   const fields = ex
-    ? `"name", "description" (1-2 plain sentences for the client: how to do it, the key form cue), "dosage" (precise: sets x reps or hold time, tempo if it matters, rest if it matters, and how often — e.g. "3 x 10, 3-second lower, once a day"), "pain_rule" (one sentence for the client on how much discomfort is OK and when to stop or tell the clinician — e.g. "Discomfort up to 3/10 is fine; it should settle by the next morning. Stop and tell me if it's sharp."), "why" (one sentence for the clinician tying it to what the check-ins show, with the specifics), "harder" (one short progression), "easier" (one short regression)`
-    : `"name", "description" (1-2 plain sentences for the client: exactly what to do), "dosage" (precise: how often, how long and when — e.g. "once a day after dinner, 5 minutes"), "why" (one sentence for the clinician tying it to what the check-ins show), "harder" (one short way to build on it), "easier" (one short way to make it lighter)`;
+    ? `"name", "description" (1-2 plain sentences for the client: how to do it, the key form cue), "dosage" (precise: sets x reps or hold time, tempo if it matters, rest if it matters, and how often, e.g. "3 x 10, 3-second lower, once a day"), "pain_rule" (one sentence for the client on how much discomfort is OK and when to stop or tell the clinician, e.g. "Discomfort up to 3/10 is fine; it should settle by the next morning. Stop and tell me if it's sharp."), "why" (one sentence for the clinician tying it to what the check-ins show, with the specifics), "harder" (one short progression), "easier" (one short regression)`
+    : `"name", "description" (1-2 plain sentences for the client: exactly what to do), "dosage" (precise: how often, how long and when, e.g. "once a day after dinner, 5 minutes"), "why" (one sentence for the clinician tying it to what the check-ins show), "harder" (one short way to build on it), "easier" (one short way to make it lighter)`;
   const safety = caution
     ? `\n- SAFETY: the check-ins show ${caution.reasons.join(' and ')} (${caution.areas.join(', ') || 'the main area'}). Do NOT suggest strengthening, loading, stretching into pain or impact for that area. Suggest only gentle, pain-free range-of-motion, positioning or general movement that avoids it, and say in each "why" that loading waits until it has been checked in person.`
     : '';
@@ -2883,7 +2886,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1800, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1800, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (exercises):', response.status); throw new Error('AI suggestions failed.'); }
   const data = await response.json();
@@ -2924,14 +2927,14 @@ app.post('/api/patients/:id/dictate',
   requireDb, requireAuth, requireVerifiedClinician, prepLimiter,
   async (req, res) => {
     try {
-      if (!transcriptionConfigured()) return res.status(503).json({ error: "Dictation isn't set up yet — type your notes instead." });
+      if (!transcriptionConfigured()) return res.status(503).json({ error: "Dictation isn't set up yet. Type your notes instead." });
       const patient = await getPatient(req.clinician.id, req.params.id);
       if (!patient) return res.status(404).json({ error: 'Patient not found.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
       if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
       const text = await transcribeAudio(req.body, mime);
-      if (!text) return res.status(502).json({ error: "Couldn't make out the recording — try again, or type it." });
+      if (!text) return res.status(502).json({ error: "Couldn't make out the recording. Try again, or type it." });
       res.json({ text: text.slice(0, 3000) });
     } catch (err) {
       console.error('Dictation error:', err);
@@ -2952,7 +2955,7 @@ function messageExercises(ids, program) {
 function publicMessage(m, program) {
   return { id: m.id, body: m.body, created_at: m.created_at, read_at: m.read_at, exercises: messageExercises(m.exercise_ids, program) };
 }
-const messageLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, message: 'Too many messages for now — try again in a little while.' });
+const messageLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, message: 'Too many messages for now. Try again in a little while.' });
 app.get('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
@@ -3097,7 +3100,7 @@ ${recent}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1100, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1100, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (report):', response.status); throw new Error('AI report failed.'); }
   const data = await response.json();
@@ -3148,7 +3151,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (review):', response.status); throw new Error('AI review failed.'); }
   const data = await response.json();
@@ -3386,7 +3389,7 @@ app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifie
 const CONSENT_VERSION = 'v1';
 const CHECK_IN_GRACE_MINUTES = 15;
 const CRISIS_RESOURCES = {
-  message: "This sounds like a lot to carry right now. Between isn't a crisis service — if you're in immediate danger or thinking about suicide, please reach out now.",
+  message: "This sounds like a lot to carry right now. Between isn't a crisis service. If you're in immediate danger or thinking about suicide, please reach out now.",
   lines: [
     { name: '988 Suicide Crisis Helpline (call or text, Canada)', number: '988' },
     { name: 'Emergency services', number: '911' }
@@ -3608,13 +3611,13 @@ function clinicianNeedsSub(c) {
 }
 function requirePatientSubscription(req, res, next) {
   if (patientNeedsSub(req.patient)) {
-    return res.status(402).json({ error: 'A subscription is needed to continue — subscribe from your settings.', code: 'subscription_required' });
+    return res.status(402).json({ error: 'A subscription is needed to continue. Subscribe from your settings.', code: 'subscription_required' });
   }
   next();
 }
 function requireClinicianSubscription(req, res, next) {
   if (clinicianNeedsSub(req.clinician)) {
-    return res.status(402).json({ error: 'An active subscription is needed to continue — open Billing to subscribe.', code: 'subscription_required' });
+    return res.status(402).json({ error: 'An active subscription is needed to continue. Open Billing to subscribe.', code: 'subscription_required' });
   }
   next();
 }
@@ -3699,17 +3702,17 @@ function requireOwner(req, res, next) {
 
 const inviteLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 10,
-  message: 'Too many attempts — wait an hour and try again.'
+  message: 'Too many attempts. Wait an hour and try again.'
 });
 const patientLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 10,
   keyFn: req => req.ip + '|p|' + String((req.body && req.body.email) || '').trim().toLowerCase(),
-  message: 'Too many login attempts for this account — wait 15 minutes and try again.'
+  message: 'Too many login attempts for this account. Wait 15 minutes and try again.'
 });
 const patientCheckInLimiter = rateLimit({
   windowMs: 60 * 1000, max: 15,
   keyFn: req => (req.patient && req.patient.id) || req.ip,
-  message: 'Too many check-ins at once — wait a minute and try again.'
+  message: 'Too many check-ins at once. Wait a minute and try again.'
 });
 
 // Accept the therapist's invite: turns an invite code into login credentials
@@ -4049,7 +4052,7 @@ app.get('/api/reminders/unsubscribe', requireDb, async (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8').send(
     `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
-    `<title>Reminders — Between</title>` +
+    `<title>Reminders | Between</title>` +
     `<style>body{margin:0;background:#F5F4F1;color:#1A1E1C;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;}` +
     `.wrap{max-width:460px;margin:12vh auto 0;padding:32px 24px;text-align:center;}` +
     `h1{font-size:22px;margin:16px 0 8px;}p{color:#5A6169;font-size:15px;}a{color:#1E4C86;}</style></head>` +
@@ -4068,18 +4071,18 @@ const AUDIO_MIMES = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audi
 // The website check-in mic: the memo is turned into text (Deepgram, not
 // stored) and the words go into the check-in box, so they're summarized and
 // safety-screened like typed text when it's sent.
-const patientVoiceLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, message: 'Too many recordings at once — wait a minute and try again.' });
+const patientVoiceLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, message: 'Too many recordings at once. Wait a minute and try again.' });
 app.post('/api/patient/transcribe',
   express.raw({ type: () => true, limit: 10 * 1024 * 1024 }),
   requireDb, requirePatientAuth, patientVoiceLimiter,
   async (req, res) => {
     try {
-      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice-to-text is off right now — type instead.' });
+      if (!transcriptionConfigured()) return res.status(503).json({ error: 'Voice-to-text is off right now. Type instead.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
       if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
       const text = await transcribeAudio(req.body, mime);
-      if (!text) return res.status(422).json({ error: "Couldn't make out the recording — try again, or type it." });
+      if (!text) return res.status(422).json({ error: "Couldn't make out the recording. Try again, or type it." });
       res.json({ text: text.slice(0, 4000) });
     } catch (err) {
       console.error('Check-in transcribe error:', err.message);
@@ -4111,7 +4114,7 @@ app.put('/api/patient/audio-upload/:token',
   async (req, res) => {
     try {
       const grant = await consumeAudioUploadToken(hashSessionToken(req.params.token));
-      if (!grant) return res.status(403).json({ error: 'Upload link expired — try recording again.' });
+      if (!grant) return res.status(403).json({ error: 'Upload link expired. Try recording again.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!AUDIO_MIMES.includes(mime)) {
         return res.status(415).json({ error: 'Unsupported audio format.' });
@@ -4156,7 +4159,7 @@ app.put('/api/patient/photo-upload/:token',
   async (req, res) => {
     try {
       const grant = await consumePhotoUploadToken(hashSessionToken(req.params.token));
-      if (!grant) return res.status(403).json({ error: 'Upload link expired — try adding the photo again.' });
+      if (!grant) return res.status(403).json({ error: 'Upload link expired. Try adding the photo again.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!PHOTO_MIMES.includes(mime)) {
         return res.status(415).json({ error: 'Unsupported image format.' });
@@ -4261,7 +4264,7 @@ app.put('/api/document-upload/:token',
   async (req, res) => {
     try {
       const grant = await consumeDocumentUploadToken(hashSessionToken(req.params.token));
-      if (!grant) return res.status(403).json({ error: 'Upload link expired — try uploading the document again.' });
+      if (!grant) return res.status(403).json({ error: 'Upload link expired. Try uploading the document again.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!DOC_MIMES.includes(mime)) {
         return res.status(415).json({ error: 'Please upload a PDF or an image (JPG or PNG).' });
@@ -4628,7 +4631,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (photoUploadId) {
       const photo = await getPhotoUploadOwned(photoUploadId, req.patient.id);
       if (!photo) {
-        return res.status(400).json({ error: 'That photo could not be found — try again.' });
+        return res.status(400).json({ error: 'That photo could not be found. Try again.' });
       }
     }
 
@@ -4636,7 +4639,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (audioUploadId) {
       const audio = await getAudioUploadOwned(audioUploadId, req.patient.id);
       if (!audio) {
-        return res.status(400).json({ error: 'That recording could not be found — try again.' });
+        return res.status(400).json({ error: 'That recording could not be found. Try again.' });
       }
       // Transcribe the memo server-side when no text was typed, so voice
       // check-ins flow through the same consent-gated AI summarization and
@@ -4672,7 +4675,7 @@ app.post('/api/patient/check-ins/:id/followup', requireDb, requirePatientAuth, a
   try {
     const answer = req.body && typeof req.body.answer === 'string' ? req.body.answer.trim() : '';
     if (!answer) return res.status(400).json({ error: 'Write a short answer, or skip it.' });
-    if (answer.length > 1000) return res.status(400).json({ error: 'That answer is a bit long — keep it under 1000 characters.' });
+    if (answer.length > 1000) return res.status(400).json({ error: 'That answer is a bit long. Keep it under 1000 characters.' });
     if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.status(404).json({ error: 'Check-in not found.' });
     const checkIn = await answerFollowup(req.patient.id, req.params.id, answer);
     if (!checkIn) return res.status(404).json({ error: 'This question was already answered.' });
@@ -4802,7 +4805,7 @@ app.post('/api/patient/future-notes', requireDb, requirePatientAuth, requirePati
   try {
     const body = (req.body && typeof req.body.body === 'string') ? req.body.body.trim() : '';
     if (!body) return res.status(400).json({ error: 'Write a few words first.' });
-    if (body.length > 1000) return res.status(400).json({ error: 'That note is a bit long — keep it under 1000 characters.' });
+    if (body.length > 1000) return res.status(400).json({ error: 'That note is a bit long. Keep it under 1000 characters.' });
     // 'note' is the emotional keepsake; 'helps' and 'goal' are the physio /
     // rehab prompts (what eased the pain, what you're working back toward).
     const kind = ['note', 'helps', 'goal'].includes((req.body || {}).kind) ? req.body.kind : 'note';
@@ -4912,7 +4915,7 @@ app.post('/api/patient/check-ins/:id/flag-inaccurate', requireDb, requirePatient
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'owner@betweenpsych.com';
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 8,
-  message: 'Too many messages — please wait a little while and try again.'
+  message: 'Too many messages: please wait a little while and try again.'
 });
 app.post('/api/contact', contactLimiter, async (req, res) => {
   try {
@@ -4934,7 +4937,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     const { delivered } = await sendEmail({
       to: CONTACT_EMAIL,
       replyTo: email.trim(),
-      subject: `Between — message from ${name.trim()}`,
+      subject: `Between | message from ${name.trim()}`,
       text: `From: ${name.trim()} <${email.trim()}>\n\n${message.trim()}`,
       html
     });
@@ -4954,7 +4957,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
     res.json({ ok: true, delivered });
   } catch (err) {
     console.error('Error handling contact form:', err);
-    res.status(500).json({ error: 'Could not send your message — please try again.' });
+    res.status(500).json({ error: 'Could not send your message. Please try again.' });
   }
 });
 
@@ -4982,7 +4985,7 @@ app.get('/api/public-config', (req, res) => {
   res.set('Cache-Control', 'public, max-age=300');
   res.json({ bookingUrl: /^https:\/\//.test(process.env.BOOKING_URL || '') ? process.env.BOOKING_URL : null });
 });
-const demoRequestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Too many requests — please wait a little while, or email owner@betweenpsych.com.' });
+const demoRequestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Too many requests: please wait a little while, or email owner@betweenpsych.com.' });
 const DEMO_FIELDS = ['therapy', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition', 'sports', 'fitness', 'recovery', 'schools', 'other'];
 // Field page with that profession's product video (linked from the demo confirmation).
 const DEMO_VIDEO_PATH = { therapy: '/therapy', physio: '/physio', kinesiology: '/kinesiology', osteo: '/osteopathy', occupational: '/occupational-therapy', neuropsych: '/neuropsychology', nutrition: '/nutrition', sports: '/sports', fitness: '/fitness', recovery: '/addiction', schools: '/schools' };
@@ -5014,7 +5017,7 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
     // Sent where the owner's other alerts go (new sign-ups…), plus a copy to
     // the contact address if that's a different inbox. Separate sends, so one
     // refused address can't block the other.
-    const subjectLine = `Between — demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}`;
+    const subjectLine = `Between | demo request from ${r.name}${r.clinic ? ' (' + r.clinic + ')' : ''}`;
     const ownerTo = ADMIN_ALERT_EMAIL || OWNER_EMAIL;
     let delivered = false;
     try {
@@ -5061,7 +5064,7 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Demo request error:', err);
-    res.status(500).json({ error: 'Could not send your request — please try again, or email owner@betweenpsych.com.' });
+    res.status(500).json({ error: 'Could not send your request. Please try again, or email owner@betweenpsych.com.' });
   }
 });
 app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async (req, res) => {
@@ -5078,17 +5081,17 @@ app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async 
 const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
 const FIELD_META = {
-  '/individual': { title: 'Between — Private check-ins for yourself', description: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
-  '/physio': { title: 'Between — Between-visit pain check-ins for physiotherapy', description: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
-  '/kinesiology': { title: 'Between — Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
-  '/osteopathy': { title: 'Between — Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
-  '/occupational-therapy': { title: 'Between — Between-visit check-ins for occupational therapy', description: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
-  '/neuropsychology': { title: 'Between — Between-session check-ins for neuropsychology', description: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
-  '/sports': { title: 'Between — Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
-  '/fitness': { title: 'Between — Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
-  '/addiction': { title: 'Between — Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
-  '/schools': { title: 'Between — Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
-  '/nutrition': { title: 'Between — Between-session check-ins for nutritionists', description: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
+  '/individual': { title: 'Between | Private check-ins for yourself', description: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
+  '/physio': { title: 'Between | Between-visit pain check-ins for physiotherapy', description: 'Patients report where it hurts on a body map between visits. Between summarizes it and physiotherapists see the pain trend before the next appointment. Private and consent-first.' },
+  '/kinesiology': { title: 'Between | Between-session check-ins for kinesiology', description: 'Clients track movement and pain between sessions. Between summarizes it and kinesiologists see the trend before the next appointment. Private and consent-first.' },
+  '/osteopathy': { title: 'Between | Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
+  '/occupational-therapy': { title: 'Between | Between-visit check-ins for occupational therapy', description: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
+  '/neuropsychology': { title: 'Between | Between-session check-ins for neuropsychology', description: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
+  '/sports': { title: 'Between | Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
+  '/fitness': { title: 'Between | Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
+  '/addiction': { title: 'Between | Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
+  '/schools': { title: 'Between | Between-session check-ins for schools', description: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
+  '/nutrition': { title: 'Between | Between-session check-ins for nutritionists', description: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
 };
 // The <head> tags a field page rewrites, matched by tag name/property — never
 // by their current text. (Matching the text once broke silently: the default
@@ -5252,11 +5255,11 @@ async function deliverReminder(p, base) {
       await sendSms({
         to: p.phone,
         text: fr
-          ? `Bonjour${name ? ' ' + name : ''} — un petit rappel pour faire votre suivi dans Between. Aucune pression : quand vous aurez un moment, même quelques mots sur ${phrase} aident. ${base}/\n` +
-            `Pas pour les urgences — si vous avez besoin d'aide maintenant, appelez ou textez le 988, ou composez le 911.\n` +
+          ? `Bonjour${name ? ' ' + name : ''} : un petit rappel pour faire votre suivi dans Between. Aucune pression : quand vous aurez un moment, même quelques mots sur ${phrase} aident. ${base}/\n` +
+            `Pas pour les urgences, si vous avez besoin d'aide maintenant, appelez ou textez le 988, ou composez le 911.\n` +
             `Arrêter les rappels : ${unsub}`
-          : `Hi ${name} — a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
-            `Not for emergencies — if you need help now, call or text 988, or call 911.\n` +
+          : `Hi ${name}: a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
+            `Not for emergencies: if you need help now, call or text 988, or call 911.\n` +
             `Turn off reminders: ${unsub}`
       });
       channel = 'text';
@@ -5266,19 +5269,19 @@ async function deliverReminder(p, base) {
         subject: fr ? 'Votre rappel de suivi Between' : 'Your Between check-in reminder',
         text: fr
           ? `Bonjour${name ? ' ' + name : ''},\n\n` +
-            `Voici votre rappel de suivi de Between. Aucune pression — quand vous aurez un moment, ` +
+            `Voici votre rappel de suivi de Between. Aucune pression : quand vous aurez un moment, ` +
             `même une courte note sur ${phrase} donne un point de départ à votre prochain rendez-vous.\n\n` +
             `Ouvrir Between : ${base}/\n\n` +
             `Between n'est pas fait pour les problèmes urgents. Si vous avez besoin d'aide maintenant, composez le 988 ou le 911.\n\n` +
-            `— Between\n\n` +
+            `L'équipe Between\n\n` +
             `Vous ne voulez plus ces rappels? Désabonnez-vous ici : ${unsub}`
           : `Hi ${name},\n\n` +
-          `This is your check-in reminder from Between. No pressure at all — whenever you have a ` +
+          `This is your check-in reminder from Between. No pressure at all, whenever you have a ` +
           `moment, even a short note about ${phrase} gives your next appointment something ` +
           `to start from.\n\n` +
           `Open Between: ${base}/\n\n` +
           `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
-          `— Between\n\n` +
+          `The Between team\n\n` +
           `Don't want these reminders? Unsubscribe here: ${unsub}`
       });
       channel = 'email';
@@ -5339,17 +5342,17 @@ async function runNeedsDigest(base) {
     if (!(await claimNeedsDigest(c.id, now.date))) continue; // another tick got it
     if (!items.length) continue; // quiet day: nothing to send
     const firstName = (p) => (String(p.name || '').trim().split(/\s+/)[0]) || 'A patient';
-    const lines = items.slice(0, 25).map(p => `• ${firstName(p)} — ${p.reasons.map(r => r.en).join('; ')}`).join('\n');
+    const lines = items.slice(0, 25).map(p => `• ${firstName(p)} : ${p.reasons.map(r => r.en).join('; ')}`).join('\n');
     const more = items.length > 25 ? `\n…and ${items.length - 25} more.` : '';
     try {
       await sendEmail({
         to: c.email,
-        subject: `${items.length} ${items.length === 1 ? 'patient needs' : 'patients need'} you today — Between`,
+        subject: `${items.length} ${items.length === 1 ? 'patient needs' : 'patients need'} you today | Between`,
         text: `Good morning${c.name ? ' ' + String(c.name).split(/\s+/)[0] : ''},\n\n` +
           `Only the people who need you today:\n\n${lines}${more}\n\n` +
-          `Everyone else is checking in fine — nothing to do for them.\n\n` +
+          `Everyone else is checking in fine. Nothing to do for them.\n\n` +
           `Open your dashboard: ${base}/\n\n` +
-          `— Between\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
+          `The Between team\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
       });
       countWork(c.id, 'needs_email');
     } catch (err) { console.error('Needs digest email failed for a clinician:', err); }
