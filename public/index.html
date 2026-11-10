@@ -8966,8 +8966,8 @@
       : fk === 'nutrition'
       ? (fr ? ["Baisses d'énergie l'après-midi, moins de fringales; énergie 4 → 6/10 sur 5 suivis · habitudes faites 4 jours sur 7.", 'Apport en protéines insuffisant le midi, lié aux baisses d’énergie.', 'Ajouter des protéines au dîner.', 'Énergie et fringales dans 2 semaines.']
             : ['Energy dips mid-afternoon, fewer cravings; energy 4 → 6/10 over 5 check-ins · habits done 4 of 7 days.', 'Low protein at lunch, related to afternoon energy dips.', 'Add protein at lunch.', 'Energy and cravings in 2 weeks.'])
-      : (fr ? ['Semaine difficile au travail; sommeil léger lun–mer, mieux après la fin de semaine.', 'Humeur 4 → 6/10 sur 5 suivis; respiration utilisée 4 fois.', 'Mieux outillé face au stress.', 'Garder la routine du soir; revoir les limites au travail.']
-            : ['Hard week at work; poor sleep Mon–Wed, better after the weekend.', 'Mood 4 → 6/10 over 5 check-ins; breathing practice used 4 times.', 'Coping better with stress.', 'Keep the evening wind-down; revisit work boundaries.']);
+      : (fr ? ['Semaine difficile au travail; sommeil léger du lundi au mercredi, mieux après la fin de semaine.', 'Humeur 4 → 6/10 sur 5 suivis; respiration utilisée 4 fois.', 'Mieux outillé face au stress.', 'Garder la routine du soir; revoir les limites au travail.']
+            : ['Hard week at work; poor sleep Monday to Wednesday, better after the weekend.', 'Mood 4 → 6/10 over 5 check-ins; breathing practice used 4 times.', 'Coping better with stress.', 'Keep the evening wind-down; revisit work boundaries.']);
     var adime = (fk === 'nutrition');
     var labs = dap ? ['D', 'A', 'P'] : adime ? ['A', 'D', 'I', 'M/E'] : ['S', 'O', 'A', 'P'];
     var lines = dap ? [NOTE[0], NOTE[1] + ' ' + NOTE[2], NOTE[3]] : NOTE;
@@ -14809,7 +14809,7 @@
     const lines = [];
     lines.push(t('Between | between-session check-in summary'));
     lines.push(t('Patient:') + ' ' + p.display_name);
-    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + '–' + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
+    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + (curLang === 'fr' ? ' au ' : ' to ') + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
     if(avg!=null) lines.push(scoreLblCap + ': ' + scoreWord(avg) + ' (' + nf(avg) + '/10)');
     if(topTags.length) lines.push(t('Top themes:') + ' ' + topTags.join(', '));
     if(riskN>0) lines.push(t('Flagged:') + ' ' + riskN + ' ' + (riskN===1?t('check-in'):t('check-ins')) + ' ' + t('with a possible safety concern'));
@@ -17628,8 +17628,8 @@
     }
     if(ins.low != null){
       const wLow = scoreWord(ins.low), wHigh = scoreWord(ins.high);
-      const rangeWord = wLow === wHigh ? wLow : wLow + '–' + wHigh;
-      cards.push(card(pm ? t('Pain range') : t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + '–' + ins.high + '/10)</span>', t('most recent') + ': ' + scoreWord(ins.latest) + ' (' + ins.latest + '/10)'));
+      const rangeWord = wLow === wHigh ? wLow : wLow + (curLang === 'fr' ? ' à ' : ' to ') + wHigh;
+      cards.push(card(pm ? t('Pain range') : t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + (curLang === 'fr' ? ' à ' : ' to ') + ins.high + '/10)</span>', t('most recent') + ': ' + scoreWord(ins.latest) + ' (' + ins.latest + '/10)'));
     }
     // Only talk about a rate once there's enough of a time window to mean
     // something, otherwise a couple of check-ins made minutes apart would
