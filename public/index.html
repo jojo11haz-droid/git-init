@@ -9434,7 +9434,14 @@
       if(US_ZONES.some(function(z){ return tz.indexOf(z) === 0; })) btwCurrency = 'USD';
     }
   } catch(e){}
-  function fmtMoney(cad){ return (btwCurrency === 'USD') ? ('$' + Math.round(cad * USD_RATE)) : ('$' + cad.toFixed(2)); }
+  // Prices in each language's own style: "$79.99" in English, "79,99 $" in
+  // French (non-breaking space). Whole amounts drop the cents ("$199").
+  function fmtMoney(cad){
+    const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+    const v = (btwCurrency === 'USD') ? Math.round(cad * USD_RATE) : cad;
+    const num = (Math.round(v * 100) % 100 === 0) ? String(Math.round(v)) : v.toFixed(2);
+    return fr ? (num.replace('.', ',') + '\u00a0$') : ('$' + num);
+  }
   function applyCurrency(){
     // Update text nodes in place (not textContent) so translateStatic keeps its
     // cached originals and the units still translate to French.
@@ -9447,6 +9454,19 @@
       const tn = u.firstChild;
       if(tn && tn.nodeType === 3) tn.nodeValue = tn.nodeValue.replace(/\b(?:CAD|USD)\b/, btwCurrency);
     });
+    // Prices a profession swaps in as text ("$199", "199 $") get the same
+    // style as the rest: only the format changes, never the amount.
+    (function(){
+      const fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+      document.querySelectorAll('#btwViewPricing .num').forEach(function(el){
+        const tn = el.firstChild; if(!tn || tn.nodeType !== 3) return;
+        const v = tn.nodeValue.trim();
+        let m = v.match(/^\$\s?(\d+(?:[.,]\d{2})?)$/) || v.match(/^(\d+(?:[.,]\d{2})?)\s?\$$/);
+        if(!m) return;
+        const n = m[1].replace(',', '.');
+        tn.nodeValue = fr ? (n.replace('.', ',') + '\u00a0$') : ('$' + n);
+      });
+    })();
     document.querySelectorAll('.btw-ccy-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ccy') === btwCurrency); });
     // Show the matching disclaimer: in USD, either the real "billed in USD" note
     // (when USD billing is live) or the "approximate, billed in CAD" one.
