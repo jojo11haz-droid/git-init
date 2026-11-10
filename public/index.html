@@ -2969,15 +2969,31 @@
   .btw-drawer-close svg,.btw-drawer-back-btn svg{width:17px;height:17px;}
   /* page links: large and quiet; the current page gets a small dot */
   .btw-drawer .btw-nav{flex-direction:column;flex-wrap:nowrap;gap:0;margin:0 0 8px;}
-  .btw-drawer .btw-nav-btn,.btw-drawer .btw-nav-btn.active{display:flex;align-items:center;gap:12px;width:100%;justify-content:flex-start;text-align:left;font:500 23px/1.2 var(--font-display);letter-spacing:-.01em;color:var(--ink);background:none;border:0;border-radius:0;padding:11px 0;box-shadow:none;}
-  .btw-drawer .btw-nav-btn::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--clay);opacity:0;transition:opacity .2s ease;}
-  .btw-drawer .btw-nav-btn.active::after{opacity:1;}
-  .btw-drawer .btw-nav-btn:hover{color:var(--moss);background:none;}
-  .btw-drawer .btw-nav-btn,.btw-drawer-field,.btw-drawer-prefs{opacity:0;transform:translateX(14px);transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1),color .2s ease;}
-  .btw-drawer.open .btw-nav-btn,.btw-drawer.open .btw-drawer-field,.btw-drawer.open .btw-drawer-prefs{opacity:1;transform:none;}
-  .btw-drawer.open .btw-nav-btn:nth-child(1){transition-delay:.06s}.btw-drawer.open .btw-nav-btn:nth-child(2){transition-delay:.09s}.btw-drawer.open .btw-nav-btn:nth-child(3){transition-delay:.12s}
-  .btw-drawer.open .btw-nav-btn:nth-child(4){transition-delay:.15s}.btw-drawer.open .btw-nav-btn:nth-child(5){transition-delay:.18s}.btw-drawer.open .btw-nav-btn:nth-child(6){transition-delay:.21s}
-  .btw-drawer.open .btw-drawer-field{transition-delay:.25s}.btw-drawer.open .btw-drawer-prefs{transition-delay:.29s}
+  .btw-drawer .btw-nav .btw-nav-btn,.btw-drawer .btw-nav .btw-nav-btn.active{display:flex;align-items:center;gap:12px;width:100%;justify-content:flex-start;text-align:left;font:500 23px/1.2 var(--font-display);letter-spacing:-.01em;color:var(--ink);background:none;border:0;border-radius:0;padding:11px 0;box-shadow:none;}
+  .btw-drawer .btw-nav .btw-nav-btn::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--clay);opacity:0;transition:opacity .2s ease;}
+  .btw-drawer .btw-nav .btw-nav-btn.active::after{opacity:1;}
+  .btw-drawer .btw-nav .btw-nav-btn:hover{color:var(--moss);background:none;}
+  .btw-drawer .btw-nav .btw-nav-btn,.btw-drawer-acct,.btw-drawer-field,.btw-drawer-prefs{opacity:0;transform:translateX(14px);transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1),color .2s ease;}
+  .btw-drawer.open .btw-nav .btw-nav-btn,.btw-drawer.open .btw-drawer-acct,.btw-drawer.open .btw-drawer-field,.btw-drawer.open .btw-drawer-prefs{opacity:1;transform:none;}
+  .btw-drawer.open .btw-nav .btw-nav-btn:nth-child(1){transition-delay:.06s}.btw-drawer.open .btw-nav .btw-nav-btn:nth-child(2){transition-delay:.09s}.btw-drawer.open .btw-nav .btw-nav-btn:nth-child(3){transition-delay:.12s}
+  .btw-drawer.open .btw-nav .btw-nav-btn:nth-child(4){transition-delay:.15s}.btw-drawer.open .btw-nav .btw-nav-btn:nth-child(5){transition-delay:.18s}.btw-drawer.open .btw-nav .btw-nav-btn:nth-child(6){transition-delay:.21s}
+  .btw-drawer.open .btw-drawer-acct{transition-delay:.12s}.btw-drawer.open .btw-drawer-field{transition-delay:.25s}.btw-drawer.open .btw-drawer-prefs{transition-delay:.29s}
+  /* Signed in: the account list (what the gear used to open) sits in the panel. */
+  #btwAccountBtn{display:none !important;}
+  body:not(.btw-signed-in) .btw-drawer-acct{display:none;}
+  .btw-drawer-acct{margin:0 0 6px;}
+  .btw-drawer .btw-nav:not([aria-hidden="true"]) ~ .btw-drawer-acct{border-top:1px solid var(--line);padding-top:14px;}
+  .btw-drawer-who .btw-auth-user{display:block;font-size:13px;color:var(--ink-soft);margin:0 0 10px;}
+  .btw-drawer-who .btw-auth-user strong{display:block;font:500 22px/1.2 var(--font-display);color:var(--ink);margin-top:2px;}
+  .btw-drawer #btwNavMenu{display:flex !important;position:static;flex-direction:column;gap:0;background:none;border:0;box-shadow:none;padding:0;margin:0;min-width:0;width:100%;max-width:none;}
+  .btw-drawer #btwNavMenu .btw-nav-menu-head{display:none;}
+  .btw-drawer #btwNavMenu .btw-nav-btn{display:flex;width:100%;justify-content:flex-start;text-align:left;font:500 15.5px var(--font-body);color:var(--ink);background:none;border:0;border-radius:0;padding:10px 0;}
+  .btw-drawer #btwNavMenu .btw-nav-btn:hover{color:var(--moss);background:none;}
+  .btw-drawer #btwNavMenu .btw-nav-menu-sep{margin:6px 0;}
+  .btw-drawer #btwNavMenuSep{display:none !important;}
+  .btw-drawer-logout:empty{display:none;}
+  .btw-drawer-logout .btw-nav-btn{display:flex;width:100%;justify-content:flex-start;font:600 14.5px var(--font-body);color:var(--clay);background:none;border:0;border-radius:0;padding:14px 0 2px;margin-top:12px;border-top:1px solid var(--line);}
+  .btw-drawer-logout .btw-nav-btn:hover{background:none;text-decoration:underline;}
   /* profession: one quiet row that opens its own screen */
   .btw-drawer-field{border-top:1px solid var(--line);padding-top:6px;}
   .btw-drawer-fieldrow{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;background:none;border:0;padding:14px 0;cursor:pointer;color:var(--ink);text-align:left;font-family:var(--font-body);}
@@ -3425,6 +3441,7 @@
           <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
           <a class="btw-nav-btn btw-nav-link" id="btwNavAbout" href="/about">About</a>
         </div>
+      <div class="btw-drawer-acct" id="btwDrawerAcct"><div class="btw-drawer-who" id="btwDrawerWho"></div><div class="btw-drawer-acctlist" id="btwDrawerAcctList"></div></div>
       <div class="btw-drawer-sec btw-drawer-field">
         <button type="button" class="btw-drawer-fieldrow" id="btwDrawerFieldRow" aria-haspopup="true"><span class="btw-drawer-fieldtxt"><span class="btw-drawer-l">Viewing Between for</span><strong id="btwDrawerFieldName">Psychotherapist</strong></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
         <div class="btw-audsel btw-audnow" id="btwAudNow">
@@ -3448,7 +3465,7 @@
           <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
         </div>
         <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
-      </div></div>
+      </div><div class="btw-drawer-logout" id="btwDrawerLogout"></div></div>
       <div class="btw-drawer-sub" id="btwDrawerSub" aria-hidden="true">
         <div class="btw-drawer-head"><button type="button" class="btw-drawer-back-btn" id="btwDrawerSubBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button><span class="btw-drawer-title">Choose your field</span><span style="width:36px"></span></div>
         <div class="btw-drawer-sublist" id="btwDrawerSubList"></div>
@@ -3466,6 +3483,15 @@
     var menu = document.getElementById('btwAudSelMenu');
     if(!d || !tg) return;
     if(menu && subList) subList.appendChild(menu);   // the list lives on its own screen
+    // Signed in: who you are, your settings list and Log out live in the panel
+    // (one menu for everything instead of a separate gear button).
+    (function(){
+      var who = document.getElementById('btwAuthUser'), list = document.getElementById('btwNavMenu'), out = document.getElementById('btwLogoutBtn');
+      var whoBox = document.getElementById('btwDrawerWho'), listBox = document.getElementById('btwDrawerAcctList'), outBox = document.getElementById('btwDrawerLogout');
+      if(who && whoBox) whoBox.appendChild(who);
+      if(list && listBox) listBox.appendChild(list);
+      if(out && outBox) outBox.appendChild(out);
+    })();
     function sync(){
       var f = d.querySelector('.btw-drawer-field'), a = document.getElementById('btwAudNow');
       if(f && a) f.style.display = (getComputedStyle(a).display === 'none' && !a.closest('.btw-drawer')) ? 'none' : '';
@@ -3473,6 +3499,7 @@
       if(f && hidden) f.style.display = 'none';
       var lbl = document.getElementById('btwAudSelLabel');
       if(lbl && rowName) rowName.textContent = lbl.textContent;
+      var nv = d.querySelector('.btw-nav'); if(nv) nv.setAttribute('aria-hidden', getComputedStyle(nv).display === 'none' ? 'true' : 'false');
     }
     // Keep the page still behind the menu. iOS Safari ignores overflow:hidden
     // for touch scrolling, so pin the body in place and put it back exactly
