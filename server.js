@@ -5147,6 +5147,8 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 
 // The full feature list, at a clean address (the file is public/features.html).
 app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', 'features.html')));
+// Who builds Between and how it treats data (public/about.html).
+app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public', 'about.html')));
 
 // The old web build of the patient app lived at /app. It was removed (the site
 // itself is the patient web app), so send any saved /app link to the homepage,
