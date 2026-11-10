@@ -14,7 +14,7 @@ export function smsConfigured() {
 
 export async function sendSms({ to, text }) {
   if (!smsConfigured()) {
-    console.log(`📱 [sms not configured — would send]\nTo: ${to}\n${text}\n`);
+    console.log(`📱 [sms not configured, would send]\nTo: ${to}\n${text}\n`);
     return { delivered: false, error: 'SMS not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM).' };
   }
   // Numbers saved before the +1 fix (e.g. "5145550122") are put in full

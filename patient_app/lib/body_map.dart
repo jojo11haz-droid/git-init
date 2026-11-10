@@ -781,8 +781,8 @@ class _BodyMapState extends State<BodyMap> {
                 ],
                 Text(
                   widget.isFr
-                      ? 'Niveau de douleur — $name'
-                      : 'Pain level — $name',
+                      ? 'Niveau de douleur : $name'
+                      : 'Pain level: $name',
                   style:
                       const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),

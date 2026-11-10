@@ -424,7 +424,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
     final moods = ci.where((c) => c.mood != null).toList();
     final b = StringBuffer();
-    b.writeln(f ? 'BETWEEN — RÉSUMÉ DES SUIVIS' : 'BETWEEN — CHECK-IN SUMMARY');
+    b.writeln(f ? 'BETWEEN : RÉSUMÉ DES SUIVIS' : 'BETWEEN: CHECK-IN SUMMARY');
     b.writeln();
     if (ci.isNotEmpty) {
       final label = f ? 'Période : ' : 'Period: ';

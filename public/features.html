@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<title>All features — Between</title>
+<title>All features | Between</title>
 <meta name="description" content="Everything Between does: check-ins by voice or text, a needs-you-today list, chart notes from check-ins, dictation or a recorded session, home programs with AI, reports and letters, trends, safety alerts and privacy by default.">
 <link rel="canonical" href="https://betweenpsych.com/features">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#1E4C86">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Between">
-<meta property="og:title" content="All features — Between">
+<meta property="og:title" content="All features | Between">
 <meta property="og:description" content="Everything Between does for professionals, their clients and their clinic.">
 <meta property="og:url" content="https://betweenpsych.com/features">
 <meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
@@ -311,7 +311,7 @@
   function render(){
     var L = S[lang], F = FIELDS[fk], w = F[lang];
     document.documentElement.lang = lang;
-    document.title = (lang === 'fr' ? 'Toutes les fonctionnalités' : 'All features') + ' — Between';
+    document.title = (lang === 'fr' ? 'Toutes les fonctionnalités' : 'All features') + ' | Between';
     document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
     var set = function(id, v){ var e = document.getElementById(id); if(e) e.textContent = v; };
     set('h1', L.title); set('eyebrow', L.eyebrow); set('backTxt', L.back); set('fieldLbl', L.fieldLbl); set('printTxt', L.print);

@@ -82,14 +82,14 @@ class S {
 
   // Welcome
   String get welcomeTagline => _(
-      'A quiet place to check in on how you\'re\nreally doing — on your own, or with a pro.',
-      'Un endroit tranquille pour faire le point sur\ncomment tu vas vraiment — seul, ou avec un pro.');
+      'A quiet place to check in on how you\'re\nreally doing: on your own, or with a pro.',
+      'Un endroit tranquille pour faire le point sur\ncomment tu vas vraiment, seul, ou avec un pro.');
   String get startOnYourOwn => _('Start on your own', 'Commence par toi-même');
   String get howItWorks => _('How it works', 'Comment ça marche');
   String get stepCheckTitle => _('Check in, your way', 'Fais le point, à ta façon');
   String get stepCheckBody => _(
-      'A quick note, a voice memo, or a few taps — whenever something comes up.',
-      'Une note rapide, un mémo vocal ou quelques touches — quand quelque chose survient.');
+      'A quick note, a voice memo, or a few taps, whenever something comes up.',
+      'Une note rapide, un mémo vocal ou quelques touches, quand quelque chose survient.');
   String get stepPatternsTitle => _('See your patterns', 'Vois tes tendances');
   String get stepPatternsBody => _(
       'Your mood and themes take shape over time, so you can spot what helps.',
@@ -110,23 +110,23 @@ class S {
       'Quelques mots ou un mémo vocal, dès que quelque chose survient. Sans formulaire, sans rendez-vous.');
   String get featTrendsTitle => _('See your own trends', 'Voyez vos tendances');
   String get featTrendsBody => _(
-      'Your mood and themes take shape over time, so a rough stretch — or real progress — is something you can see.',
-      'Votre humeur et vos thèmes se dessinent avec le temps : une mauvaise passe — ou un vrai progrès — devient visible.');
+      'Your mood and themes take shape over time, so a rough stretch, or real progress, is something you can see.',
+      'Votre humeur et vos thèmes se dessinent avec le temps : une mauvaise passe, ou un vrai progrès, devient visible.');
   String get featPrivacyTitle => _('Private by default', 'Privé par défaut');
   String get featPrivacyBody => _(
       'Your entries are yours. AI analysis is opt-in, and you can export or delete your data anytime.',
       'Vos entrées vous appartiennent. L\'analyse par IA est optionnelle, et vous pouvez exporter ou supprimer vos données à tout moment.');
   String get featRemindersTitle => _('Gentle reminders', 'Rappels discrets');
   String get featRemindersBody => _(
-      'An optional nudge on your own schedule — nothing nagging, just a quiet prompt to check in.',
-      'Un rappel optionnel selon votre horaire — rien d\'insistant, juste une invitation discrète à faire le point.');
+      'An optional nudge on your own schedule. Nothing nagging, just a quiet prompt to check in.',
+      'Un rappel optionnel selon votre horaire. Rien d\'insistant, juste une invitation discrète à faire le point.');
   String get featCrisisTitle => _('Help is one tap away', 'De l\'aide à un geste');
   String get featCrisisBody => _(
       'Crisis resources are always one tap away. Between isn\'t a crisis service, and it never leaves you without one.',
       'Les ressources de crise sont toujours à portée. Between n\'est pas un service de crise, et ne vous laisse jamais sans ressource.');
   String get trustLine => _(
-      'Built with Canadian privacy law in mind — PIPEDA and Quebec\'s Law 25.',
-      'Conçu dans le respect des lois canadiennes sur la vie privée — LPRPDE et la Loi 25 du Québec.');
+      'Built with Canadian privacy law in mind: PIPEDA and Quebec\'s Law 25.',
+      'Conçu dans le respect des lois canadiennes sur la vie privée : LPRPDE et la Loi 25 du Québec.');
 
   // About / Why Between
   String get aboutTitle => _('Why Between', 'Pourquoi Between');
@@ -179,14 +179,14 @@ class S {
   String get perMonthCad => _('CAD / month', 'CAD / mois');
   String get trial3 => _('3-day free trial', 'Essai gratuit de 3 jours');
   String get annualNote => _(
-      'Paid yearly, it\'s even less — about \$9.99/mo on Personal and \$19.99/mo on Premium.',
-      'Payé à l\'année, c\'est encore moins — environ 9,99 \$/mois sur Personnel et 19,99 \$/mois sur Premium.');
+      'Paid yearly, it\'s even less: about \$9.99/mo on Personal and \$19.99/mo on Premium.',
+      'Payé à l\'année, c\'est encore moins : environ 9,99 \$/mois sur Personnel et 19,99 \$/mois sur Premium.');
   String get subscribeOnWeb => _('Choose a plan on betweenpsych.com', 'Choisir un forfait sur betweenpsych.com');
   String get managedOnWeb => _(
       'Plans are set up on the website. You\'ll finish securely in your browser, then sign in here with the same email.',
       'Les forfaits se configurent sur le site web. Vous terminerez en toute sécurité dans votre navigateur, puis vous vous connecterez ici avec le même courriel.');
   String get currentPlanFree => _('You\'re on the free plan', 'Vous êtes sur le forfait gratuit');
-  String get currentPlanPremium => _('You\'re on Premium — thank you!', 'Vous êtes sur Premium — merci!');
+  String get currentPlanPremium => _('You\'re on Premium. Thank you!', 'Vous êtes sur Premium, merci!');
   String get planStatusLabel => _('Your plan', 'Votre forfait');
   // Plan feature bullets
   List<String> get personalBullets => isFr
@@ -229,8 +229,8 @@ class S {
       'Utilise Between par toi-même pour faire le point et suivre tes tendances au fil du temps. C\'est gratuit pour commencer.');
   String get yourName => _('Your name', 'Ton nom');
   String get ageConfirm => _(
-      'I\'m 18 or older — or a parent or guardian agrees to my using Between.',
-      'J\'ai 18 ans ou plus — ou un parent ou tuteur accepte que j\'utilise Between.');
+      'I\'m 18 or older, or a parent or guardian agrees to my using Between.',
+      'J\'ai 18 ans ou plus, ou un parent ou tuteur accepte que j\'utilise Between.');
   String get pleaseConfirmAge => _(
       'Please confirm the box above to continue.',
       'Confirme la case ci-dessus pour continuer.');
@@ -245,8 +245,8 @@ class S {
   String get signingIn => _('Signing in…', 'Connexion…');
   String get forgotPassword => _('Forgot your password?', 'Mot de passe oublié?');
   String get forgotPasswordBody => _(
-      'Ask the professional who invited you to reset your app access — they can do it from their dashboard in a few seconds. You\'ll get a new invite code, and setting up again keeps all your history.',
-      'Demande au professionnel qui t\'a invité de réinitialiser ton accès — il peut le faire depuis son tableau de bord en quelques secondes. Tu recevras un nouveau code d\'invitation, et tout ton historique est conservé.');
+      'Ask the professional who invited you to reset your app access. They can do it from their dashboard in a few seconds. You\'ll get a new invite code, and setting up again keeps all your history.',
+      'Demande au professionnel qui t\'a invité de réinitialiser ton accès. Il peut le faire depuis son tableau de bord en quelques secondes. Tu recevras un nouveau code d\'invitation, et tout ton historique est conservé.');
   String get gotIt => _('Got it', 'Compris');
   String get enterEmailPassword =>
       _('Enter your email and password.', 'Entre ton courriel et ton mot de passe.');
@@ -268,22 +268,22 @@ class S {
 
   // Consent
   String consentTitle(String name) => _(
-      'Before you start, $name — how Between uses your check-ins.',
-      'Avant de commencer, $name — comment Between utilise tes nouvelles.');
+      'Before you start, $name, here's how Between uses your check-ins.',
+      'Avant de commencer, $name, comment Between utilise tes nouvelles.');
   // providerKey: who reads the check-ins (null = on their own).
   String consentBullet1(String? providerKey) => providerKey == null
       ? _('Your check-ins stay private to you. No one else sees them.',
           'Tes nouvelles restent privées. Personne d\'autre ne les voit.')
-      : _('Your check-ins are shared with your ${_providerEn[providerKey] ?? 'provider'} as short summaries — not always the raw recording.',
-          'Tes nouvelles sont partagées avec ton ${_providerFr[providerKey] ?? 'intervenant'} sous forme de courts résumés — pas toujours l\'enregistrement brut.');
+      : _('Your check-ins are shared with your ${_providerEn[providerKey] ?? 'provider'} as short summaries, not always the raw recording.',
+          'Tes nouvelles sont partagées avec ton ${_providerFr[providerKey] ?? 'intervenant'} sous forme de courts résumés, pas toujours l\'enregistrement brut.');
   String get consentBullet2 => _(
       'If you turn on AI summaries below, an AI model analyzes what you send to write the summary and to find patterns over time (mood, themes, timing). Under Quebec\'s privacy law (Law 25), this counts as "profiling" of your health information.',
       'Si tu actives les résumés par IA ci-dessous, un modèle d\'IA analyse ce que tu envoies pour rédiger le résumé et repérer des tendances dans le temps (humeur, thèmes, moments). Selon la loi québécoise sur la vie privée (loi 25), cela constitue du « profilage » de tes renseignements de santé.');
   String consentBullet3(String? providerKey) => providerKey == null
-      ? _('You can leave it off and still check in — your entries are saved exactly as you wrote them, with no AI analysis.',
-          'Tu peux le laisser désactivé et faire quand même tes suivis — ils sont enregistrés exactement comme tu les as écrits, sans analyse par IA.')
-      : _('You can leave it off and still send check-ins — they\'ll go to your ${_providerEn[providerKey] ?? 'provider'} exactly as you wrote them, with no AI analysis.',
-          'Tu peux le laisser désactivé et envoyer quand même tes nouvelles — elles iront à ton ${_providerFr[providerKey] ?? 'intervenant'} exactement comme tu les as écrites, sans analyse par IA.');
+      ? _('You can leave it off and still check in. Your entries are saved exactly as you wrote them, with no AI analysis.',
+          'Tu peux le laisser désactivé et faire quand même tes suivis. Ils sont enregistrés exactement comme tu les as écrits, sans analyse par IA.')
+      : _('You can leave it off and still send check-ins. They\'ll go to your ${_providerEn[providerKey] ?? 'provider'} exactly as you wrote them, with no AI analysis.',
+          'Tu peux le laisser désactivé et envoyer quand même tes nouvelles. Elles iront à ton ${_providerFr[providerKey] ?? 'intervenant'} exactement comme tu les as écrites, sans analyse par IA.');
   String get consentBullet4 => _(
       'You can see everything the app has on file about you at any time, change this choice, and ask for your history to be deleted.',
       'Tu peux voir en tout temps tout ce que l\'application conserve à ton sujet, changer ce choix et demander la suppression de ton historique.');
@@ -291,8 +291,8 @@ class S {
   String get offByDefault =>
       _('Off by default. Your choice, changeable anytime.', 'Désactivé par défaut. Ton choix, modifiable en tout temps.');
   String get consentCrisis => _(
-      'Between is not a crisis or emergency service. If you\'re in immediate danger or thinking about suicide, call or text 988 (Suicide Crisis Helpline) or call 911 — don\'t wait on this app.',
-      'Between n\'est pas un service de crise ou d\'urgence. Si tu es en danger immédiat ou que tu penses au suicide, appelle ou texte le 988 (Ligne d\'aide en cas de crise suicidaire) ou compose le 911 — n\'attends pas après cette application.');
+      'Between is not a crisis or emergency service. If you\'re in immediate danger or thinking about suicide, call or text 988 (Suicide Crisis Helpline) or call 911. Don\'t wait on this app.',
+      'Between n\'est pas un service de crise ou d\'urgence. Si tu es en danger immédiat ou que tu penses au suicide, appelle ou texte le 988 (Ligne d\'aide en cas de crise suicidaire) ou compose le 911, n\'attends pas après cette application.');
   String get consentAgree => _(
       'I understand how my check-ins are used and processed, and I consent to that use as described above.',
       'Je comprends comment mes nouvelles sont utilisées et traitées, et je consens à cette utilisation telle que décrite ci-dessus.');
@@ -309,7 +309,7 @@ class S {
   String streakNote(int s) {
     if (s >= 30) return _('a month of showing up', 'un mois de présence');
     if (s >= 14) return _('two weeks strong', 'deux semaines de suite');
-    if (s >= 7) return _('a full week — well done', 'une semaine complète — bravo');
+    if (s >= 7) return _('a full week: well done', 'une semaine complète : bravo');
     if (s >= 3) return _('building a habit', "une habitude qui s'installe");
     return _('keep it going', 'continuez comme ça');
   }
@@ -330,13 +330,13 @@ class S {
   String get shareWithPro =>
       _('Share a summary with a professional', 'Partager un résumé avec un professionnel');
   String get proCopied => _(
-      'Summary copied — paste it into an email or notes for your professional.',
-      'Résumé copié — collez-le dans un courriel ou des notes pour votre professionnel.');
+      'Summary copied: paste it into an email or notes for your professional.',
+      'Résumé copié : collez-le dans un courriel ou des notes pour votre professionnel.');
   // Patterns (automatic insight callouts)
   String get patternsTitle => _('Patterns worth noticing', 'Tendances à remarquer');
   String get patternsFoot => _(
-      'Noticed from your own check-ins — something to reflect on, not a diagnosis.',
-      'Observé à partir de vos propres suivis — une piste de réflexion, pas un diagnostic.');
+      'Noticed from your own check-ins, something to reflect on, not a diagnosis.',
+      'Observé à partir de vos propres suivis, une piste de réflexion, pas un diagnostic.');
   String patternWeekday(String day) => _(
       '${day}s tend to be lower-mood days for you.',
       "Le $day est souvent une journée d'humeur plus basse.");
@@ -346,29 +346,29 @@ class S {
   String get patternUp => _('Your mood is up from last week.',
       'Votre humeur est en hausse par rapport à la semaine dernière.');
   String get patternDown => _(
-      'Your mood is down from last week — be gentle with yourself.',
-      'Votre humeur est en baisse par rapport à la semaine dernière — soyez indulgent envers vous-même.');
+      'Your mood is down from last week. Be gentle with yourself.',
+      'Votre humeur est en baisse par rapport à la semaine dernière. Soyez indulgent envers vous-même.');
   String get howAreThings =>
       _('How are things right now? Take your time.', 'Comment ça va, là, maintenant? Prends ton temps.');
   String get tellItHint => _('Tell it like it happened…', 'Raconte comme ça s\'est passé…');
   String get recordVoice => _('Record a voice memo', 'Enregistrer une note vocale');
   String get stopRecording => _('Stop recording', 'Arrêter l\'enregistrement');
   String recordingElapsed(String t) =>
-      _('Recording… $t — tap to stop', 'Enregistrement… $t — touche pour arrêter');
+      _('Recording… $t: tap to stop', 'Enregistrement… $t : touche pour arrêter');
   String voiceAttached(String t) =>
       _('Voice memo attached ($t)', 'Note vocale jointe ($t)');
   String get orRecord => _(
-      'Or record a voice memo — whichever is easier right now.',
-      'Ou enregistre une note vocale — ce qui est le plus simple pour toi.');
+      'Or record a voice memo, whichever is easier right now.',
+      'Ou enregistre une note vocale. Ce qui est le plus simple pour toi.');
   String get micOff => _(
       'Microphone access is off. You can type instead, or allow it in settings.',
       'L\'accès au micro est désactivé. Tu peux écrire à la place, ou l\'autoriser dans les réglages.');
   String recordFailed(String e) => _(
-      'Couldn\'t start recording — you can type instead. ($e)',
-      'Impossible de démarrer l\'enregistrement — tu peux écrire à la place. ($e)');
+      'Couldn\'t start recording: you can type instead. ($e)',
+      'Impossible de démarrer l\'enregistrement : tu peux écrire à la place. ($e)');
   String get saySomething => _(
-      'Say a little about what happened — record, type, or tap a tag.',
-      'Dis un mot sur ce qui s\'est passé — enregistre, écris ou touche une étiquette.');
+      'Say a little about what happened. Record, type, or tap a tag.',
+      'Dis un mot sur ce qui s\'est passé : enregistre, écris ou touche une étiquette.');
   String get addMoodTags => _('Add mood & tags (optional)', 'Ajouter humeur et étiquettes (facultatif)');
   String get moodRightNow => _('Mood right now', 'Humeur en ce moment');
   String get illSetIt => _('I\'ll set it', 'Je la règle');
@@ -382,8 +382,8 @@ class S {
   String get fewWordsOptional =>
       _('A few words is plenty (optional)', 'Quelques mots suffisent (facultatif)');
   String get sendAnswer => _('Send answer', 'Envoyer la réponse');
-  String get thanksAnswer => _('Thanks — added to your check-in.',
-      'Merci — ajouté à votre suivi.');
+  String get thanksAnswer => _('Thanks: added to your check-in.',
+      'Merci : ajouté à votre suivi.');
   // Home exercise program (assigned by the clinician) — mirrors the website.
   String get homeExercises =>
       _('Your home exercises', 'Vos exercices à domicile');
@@ -431,8 +431,8 @@ class S {
   String get illPick => _('I\'ll pick', 'Je choisis');
   String get notSureYet => _('Not sure yet', 'Pas encore sûr');
   String get betweenWillPickTopic => _(
-      'No problem — Between will pick the theme from your check-in.',
-      'Pas de souci — Between choisira le thème à partir de votre suivi.');
+      'No problem: Between will pick the theme from your check-in.',
+      'Pas de souci : Between choisira le thème à partir de votre suivi.');
   String get whereHurts =>
       _('Where does it hurt or feel sore?', 'Où avez-vous mal ou des courbatures?');
   String get addSorePhoto =>
@@ -540,19 +540,19 @@ class S {
   String sentReassure(String? providerKey) => providerKey == null
       ? _('Saved. It\'s in your history whenever you want to look back.',
           'Enregistré. C\'est dans ton historique quand tu veux y revenir.')
-      : _('Your ${_providerEn[providerKey] ?? 'provider'} will see this before your next session. That\'s it — nothing else you need to do.',
-          'Ton ${_providerFr[providerKey] ?? 'intervenant'} le verra avant ta prochaine séance. C\'est tout — tu n\'as rien d\'autre à faire.');
+      : _('Your ${_providerEn[providerKey] ?? 'provider'} will see this before your next session. That\'s it: nothing else you need to do.',
+          'Ton ${_providerFr[providerKey] ?? 'intervenant'} le verra avant ta prochaine séance. C\'est tout : tu n\'as rien d\'autre à faire.');
   String sentCrisisNote(String? providerKey) => providerKey == null
-      ? _('Your check-in was saved — but please don\'t wait on anyone if you\'re in danger right now.',
-          'Ton suivi a été enregistré — mais n\'attends après personne si tu es en danger maintenant.')
-      : _('Your check-in was sent and your ${_providerEn[providerKey] ?? 'provider'} has been notified — but please don\'t wait on anyone if you\'re in danger right now.',
-          'Tes nouvelles ont été envoyées et ton ${_providerFr[providerKey] ?? 'intervenant'} a été avisé — mais n\'attends après personne si tu es en danger maintenant.');
+      ? _('Your check-in was saved, but please don\'t wait on anyone if you\'re in danger right now.',
+          'Ton suivi a été enregistré, mais n\'attends après personne si tu es en danger maintenant.')
+      : _('Your check-in was sent and your ${_providerEn[providerKey] ?? 'provider'} has been notified, but please don\'t wait on anyone if you\'re in danger right now.',
+          'Tes nouvelles ont été envoyées et ton ${_providerFr[providerKey] ?? 'intervenant'} a été avisé, mais n\'attends après personne si tu es en danger maintenant.');
   String get undo => _('Didn\'t mean to send it? Undo (15 min)', 'Envoyé par erreur? Annuler (15 min)');
   // My progress / recovery-over-time view
   String get myProgress => _('My progress', 'Mes progrès');
   String get progressLede => _(
-      'A picture of how you\'ve been — the part a checklist can\'t show you.',
-      'Un portrait de comment vous allez — ce qu\'une simple liste ne peut pas montrer.');
+      'A picture of how you\'ve been: the part a checklist can\'t show you.',
+      'Un portrait de comment vous allez. Ce qu\'une simple liste ne peut pas montrer.');
   // Weekly AI reflection (Premium)
   String get weeklyReflectionTitle =>
       _('This week, reflected', 'Votre semaine, en quelques mots');
@@ -569,8 +569,8 @@ class S {
       'Where it hurt, and how each spot has changed since you started.',
       'Où ça faisait mal, et comment chaque zone a changé depuis le début.');
   String get recoveryAllClear => _(
-      'No sore spots in your latest check-in — nice work.',
-      'Aucune zone sensible dans votre dernier suivi — beau travail.');
+      'No sore spots in your latest check-in, nice work.',
+      'Aucune zone sensible dans votre dernier suivi, beau travail.');
   String get trendCleared => _('cleared', 'disparue');
   String get trendEasing => _('easing', 'en amélioration');
   String get trendSteady => _('about the same', 'stable');
@@ -595,8 +595,8 @@ class S {
       'Écrivez un mot, enregistrez un court mémo vocal ou touchez où ça fait mal. Trente secondes, dès que quelque chose survient.');
   String get onbTitle2 => _('Watch your patterns', 'Voyez vos tendances');
   String get onbBody2 => _(
-      'Between gathers your check-ins into a clear picture over time — your mood, your sore spots, your recovery.',
-      'Between rassemble vos suivis en un portrait clair au fil du temps — votre humeur, vos zones sensibles, votre rétablissement.');
+      'Between gathers your check-ins into a clear picture over time. Your mood, your sore spots, your recovery.',
+      'Between rassemble vos suivis en un portrait clair au fil du temps. Votre humeur, vos zones sensibles, votre rétablissement.');
   String get onbTitle3 => _('Private by default', 'Privé par défaut');
   String get onbBody3 => _(
       'Your check-ins are yours. Shared only with the person supporting you, and only if you have one. You can delete everything anytime.',
@@ -608,8 +608,8 @@ class S {
       'Between turns short check-ins into a clear picture over time. Here is how it works.',
       'Between transforme de courts suivis en un portrait clair au fil du temps. Voici comment ça marche.');
   String get guideStep1 => _(
-      'Capture the moment something comes up — write a line, record a voice note, tap where it hurts, or answer a few short questions.',
-      'Notez-le dès que quelque chose survient — écrivez un mot, enregistrez une note vocale, touchez où ça fait mal, ou répondez à quelques courtes questions.');
+      'Capture the moment something comes up. Write a line, record a voice note, tap where it hurts, or answer a few short questions.',
+      'Notez-le dès que quelque chose survient. Écrivez un mot, enregistrez une note vocale, touchez où ça fait mal, ou répondez à quelques courtes questions.');
   String get guideStep2 => _(
       "Set how you're doing on the slider, or let Between estimate it from what you wrote.",
       "Indiquez comment vous allez avec le curseur, ou laissez Between l'estimer à partir de ce que vous avez écrit.");
@@ -623,12 +623,12 @@ class S {
       "Open My history to read every check-in you've made.",
       'Ouvrez Mon historique pour relire tous vos suivis.');
   String get guideStep6 => _(
-      'Your data is yours — delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.',
-      'Vos données vous appartiennent — supprimez-les à tout moment. Si vous avez un clinicien, il ne voit qu\'un court résumé, et seulement avec votre consentement.');
+      'Your data is yours. Delete it anytime. If you have a clinician, they see only a short summary, and only with your consent.',
+      'Vos données vous appartiennent. Supprimez-les à tout moment. Si vous avez un clinicien, il ne voit qu\'un court résumé, et seulement avec votre consentement.');
   String get guideGoodTitle => _('Good to know', 'Bon à savoir');
   String get guideGoodBody => _(
-      'AI summaries are optional and consent-first. Between is not a crisis service — in an emergency call 988 or 911.',
-      "Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence — en cas d'urgence, composez le 988 ou le 911.");
+      'AI summaries are optional and consent-first. Between is not a crisis service. In an emergency, call 988 or 911.',
+      "Les résumés par IA sont optionnels et fondés sur le consentement. Between n'est pas un service d'urgence. En cas d'urgence, composez le 988 ou le 911.");
   String get guideReplayIntro => _('Replay the intro', "Revoir l'intro");
   String get guideReplayTour => _('Replay the app tour', "Revoir la visite de l'application");
   String get guideContact =>
@@ -637,12 +637,12 @@ class S {
   String get tourBack => _('Back', 'Retour');
   String get coachWelcomeTitle => _('Welcome to Between', 'Bienvenue sur Between');
   String get coachWelcomeBody =>
-      _('A quick tour — tap Next, or skip anytime.',
-          'Une visite rapide — touchez Suivant, ou passez à tout moment.');
+      _('A quick tour: tap Next, or skip anytime.',
+          'Une visite rapide : touchez Suivant, ou passez à tout moment.');
   String get coachComposerTitle => _('Check in here', 'Faites un suivi ici');
   String get coachComposerBody => _(
-      'Write a line, record a voice note, or answer a few questions — the moment something comes up.',
-      'Écrivez un mot, enregistrez une note vocale, ou répondez à quelques questions — dès que quelque chose survient.');
+      'Write a line, record a voice note, or answer a few questions, the moment something comes up.',
+      'Écrivez un mot, enregistrez une note vocale, ou répondez à quelques questions, dès que quelque chose survient.');
   String get coachProgressTitle => _('Your progress', 'Vos progrès');
   String get coachProgressBody => _(
       'Tap here anytime to see your trends and recovery over time.',
@@ -653,8 +653,8 @@ class S {
       'Chaque suivi que vous faites est enregistré ici pour le relire.');
   String get coachHelpTitle => _('Help anytime', 'De l\'aide à tout moment');
   String get coachHelpBody => _(
-      'This opens the guide — how to use Between, whenever you need it.',
-      'Ceci ouvre le guide — comment utiliser Between, quand vous en avez besoin.');
+      'This opens the guide to using Between, whenever you need it.',
+      'Ceci ouvre le guide d'utilisation de Between, quand vous en avez besoin.');
   String get coachDoneTitle => _('You are all set', 'Vous êtes prêt');
   // A solo account's check-ins are private; a patient with a clinician is
   // told who sees them (they always do; AI consent only covers the summaries).
@@ -697,14 +697,14 @@ class S {
   String get progressEmptyTitle =>
       _('Your progress will show here', 'Vos progrès apparaîtront ici');
   String get progressEmptyBody => _(
-      'Send a few check-ins and you\'ll see your patterns — and for body check-ins, how your sore spots change over time.',
-      'Envoyez quelques suivis et vous verrez vos tendances — et pour les suivis du corps, comment vos zones sensibles évoluent avec le temps.');
+      'Send a few check-ins and you\'ll see your patterns, and for body check-ins, how your sore spots change over time.',
+      'Envoyez quelques suivis et vous verrez vos tendances, et pour les suivis du corps, comment vos zones sensibles évoluent avec le temps.');
   String get aiSummaryLabel => _('AI summary', 'Résumé IA');
   String get aiReadMood =>
       _('Between read your mood as', 'Between a estimé votre humeur à');
   String get aiSummaryNote => _(
-      'This short summary is what your clinician sees — not the raw text.',
-      'Ce court résumé est ce que voit votre intervenant — pas le texte brut.');
+      'This short summary is what your clinician sees, not the raw text.',
+      'Ce court résumé est ce que voit votre intervenant, pas le texte brut.');
   String get removing => _('Removing…', 'Suppression…');
   String get removed =>
       _('Check-in removed. Nothing was kept.', 'Nouvelle supprimée. Rien n\'a été conservé.');
@@ -733,8 +733,8 @@ class S {
   String get previewCategory =>
       _('Preview a category', 'Aperçu d\'une catégorie');
   String get previewCategoryDesc => _(
-      'See what the check-in looks like for each profession. Just for trying things out — it doesn\'t change your account.',
-      'Voyez à quoi ressemble le suivi pour chaque profession. Juste pour essayer — ça ne change pas votre compte.');
+      'See what the check-in looks like for each profession. Just for trying things out. It doesn\'t change your account.',
+      'Voyez à quoi ressemble le suivi pour chaque profession. Juste pour essayer. Ça ne change pas votre compte.');
   String get previewDefault =>
       _('My account (default)', 'Mon compte (par défaut)');
   String get groupOnYourOwn => _('On your own', 'Par vous-même');
@@ -745,8 +745,8 @@ class S {
       _('The Between home / landing page.', 'La page d\'accueil de Between.');
   String get appleHealth => _('Apple Health', 'Apple Santé');
   String get appleHealthDesc => _(
-      'Connect Apple Health so your sleep and activity show alongside your check-ins. Between only reads — it never writes back.',
-      'Connecte Apple Santé pour que ton sommeil et ton activité apparaissent avec tes suivis. Between ne fait que lire — il n\'écrit jamais rien.');
+      'Connect Apple Health so your sleep and activity show alongside your check-ins. Between only reads. It never writes back.',
+      'Connecte Apple Santé pour que ton sommeil et ton activité apparaissent avec tes suivis. Between ne fait que lire. Il n\'écrit jamais rien.');
   String get healthConnected =>
       _('Apple Health connected.', 'Apple Santé connecté.');
   String get healthUnavailable => _(
