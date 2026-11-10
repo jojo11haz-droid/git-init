@@ -2949,6 +2949,58 @@
   .btw-contact-email{font-size:15px;color:var(--moss);text-decoration:none;font-weight:600;}
   .btw-contact-email:hover{text-decoration:underline;}
   /* ---- auth area ---- */
+  /* Header menu: page links, profession, language and display live in a calm
+     side panel opened from the Menu button. The header keeps only the logo,
+     Log in / Sign up (or Settings) and Menu. */
+  .btw-menu-toggle{display:inline-flex;align-items:center;gap:8px;font:600 12.5px var(--font-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:100px;padding:8px 15px 8px 13px;cursor:pointer;transition:border-color .2s ease;}
+  .btw-menu-toggle:hover{border-color:var(--moss);}
+  .btw-menu-toggle svg{width:17px;height:17px;display:block;}
+  .btw-menu-toggle:focus-visible,.btw-drawer-close:focus-visible,.btw-drawer-back-btn:focus-visible,.btw-drawer-fieldrow:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  @media (max-width:520px){ .btw-menu-toggle-l{display:none;} .btw-menu-toggle{padding:9px;} }
+  .btw-drawer-back{position:fixed;inset:0;background:rgba(15,20,25,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:900;}
+  .btw-drawer-back.open{opacity:1;pointer-events:auto;}
+  .btw-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px,90vw);background:var(--panel);box-shadow:-24px 0 60px rgba(0,0,0,.16);transform:translateX(104%);visibility:hidden;transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s linear .42s;z-index:901;display:flex;flex-direction:column;padding:22px max(26px, env(safe-area-inset-right, 0px)) max(22px, env(safe-area-inset-bottom, 0px)) 26px;overflow:hidden;}
+  .btw-drawer.open{transform:none;visibility:visible;transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s;}
+  body.btw-drawer-open{overflow:hidden;}
+  .btw-drawer-head{display:flex;justify-content:space-between;align-items:center;min-height:36px;margin-bottom:22px;}
+  .btw-drawer-title{font:600 11.5px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+  .btw-drawer-close,.btw-drawer-back-btn{width:36px;height:36px;border-radius:50%;border:0;background:color-mix(in srgb, var(--ink) 6%, transparent);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s ease;}
+  .btw-drawer-close:hover,.btw-drawer-back-btn:hover{background:color-mix(in srgb, var(--ink) 11%, transparent);}
+  .btw-drawer-close svg,.btw-drawer-back-btn svg{width:17px;height:17px;}
+  /* page links: large and quiet; the current page gets a small dot */
+  .btw-drawer .btw-nav{flex-direction:column;flex-wrap:nowrap;gap:0;margin:0 0 8px;}
+  .btw-drawer .btw-nav-btn,.btw-drawer .btw-nav-btn.active{display:flex;align-items:center;gap:12px;width:100%;justify-content:flex-start;text-align:left;font:500 23px/1.2 var(--font-display);letter-spacing:-.01em;color:var(--ink);background:none;border:0;border-radius:0;padding:11px 0;box-shadow:none;}
+  .btw-drawer .btw-nav-btn::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--clay);opacity:0;transition:opacity .2s ease;}
+  .btw-drawer .btw-nav-btn.active::after{opacity:1;}
+  .btw-drawer .btw-nav-btn:hover{color:var(--moss);background:none;}
+  .btw-drawer .btw-nav-btn,.btw-drawer-field,.btw-drawer-prefs{opacity:0;transform:translateX(14px);transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1),color .2s ease;}
+  .btw-drawer.open .btw-nav-btn,.btw-drawer.open .btw-drawer-field,.btw-drawer.open .btw-drawer-prefs{opacity:1;transform:none;}
+  .btw-drawer.open .btw-nav-btn:nth-child(1){transition-delay:.06s}.btw-drawer.open .btw-nav-btn:nth-child(2){transition-delay:.09s}.btw-drawer.open .btw-nav-btn:nth-child(3){transition-delay:.12s}
+  .btw-drawer.open .btw-nav-btn:nth-child(4){transition-delay:.15s}.btw-drawer.open .btw-nav-btn:nth-child(5){transition-delay:.18s}.btw-drawer.open .btw-nav-btn:nth-child(6){transition-delay:.21s}
+  .btw-drawer.open .btw-drawer-field{transition-delay:.25s}.btw-drawer.open .btw-drawer-prefs{transition-delay:.29s}
+  /* profession: one quiet row that opens its own screen */
+  .btw-drawer-field{border-top:1px solid var(--line);padding-top:6px;}
+  .btw-drawer-fieldrow{display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;background:none;border:0;padding:14px 0;cursor:pointer;color:var(--ink);text-align:left;font-family:var(--font-body);}
+  .btw-drawer-fieldtxt{display:flex;flex-direction:column;gap:3px;}
+  .btw-drawer-fieldtxt strong{font-size:16px;font-weight:600;}
+  .btw-drawer-fieldrow svg{width:18px;height:18px;color:var(--ink-soft);flex:none;transition:transform .2s ease;}
+  .btw-drawer-fieldrow:hover svg{transform:translateX(3px);color:var(--moss);}
+  .btw-drawer-l{font:500 12px var(--font-body);color:var(--ink-soft);}
+  .btw-drawer .btw-audnow{display:none !important;}
+  .btw-drawer .btw-submode{margin:2px 0 8px;}
+  /* language and display, pinned at the bottom */
+  .btw-drawer-prefs{margin-top:auto;padding-top:18px;border-top:1px solid var(--line);}
+  .btw-drawer-row{display:flex;gap:10px;align-items:center;justify-content:space-between;}
+  /* the field list, on its own screen that slides over the menu */
+  .btw-drawer-sub{position:absolute;inset:0;background:var(--panel);padding:inherit;display:flex;flex-direction:column;transform:translateX(100%);visibility:hidden;transition:transform .38s cubic-bezier(.22,1,.36,1),visibility 0s linear .38s;}
+  .btw-drawer-sub.open{transform:none;visibility:visible;transition:transform .38s cubic-bezier(.22,1,.36,1),visibility 0s;}
+  .btw-drawer-sublist{overflow-y:auto;overscroll-behavior:contain;margin:0 -8px;padding:0 8px 12px;}
+  .btw-drawer-sublist .btw-audsel-menu{display:flex !important;position:static;flex-direction:column;gap:1px;background:none;border:0;box-shadow:none;padding:0;max-height:none;max-width:none;width:100%;}
+  .btw-drawer-sublist .btw-audsel-item{font-size:15.5px;padding:11px 12px;border-radius:10px;}
+  .btw-drawer-sublist .btw-audsel-item:hover{background:color-mix(in srgb, var(--ink) 6%, transparent);}
+  .btw-drawer-sublist .btw-audsel-group{padding:16px 12px 6px;}
+  .btw-drawer-sublist .btw-audsel-group:first-child{padding-top:2px;}
+  @media (prefers-reduced-motion: reduce){ .btw-drawer,.btw-drawer-back,.btw-drawer-sub,.btw-drawer .btw-nav-btn,.btw-drawer-field,.btw-drawer-prefs{transition:none;} }
   .btw-auth-area{
     display:flex;
     align-items:center;
@@ -3333,36 +3385,9 @@
   <div class="btw-header" role="banner">
     <div>
       <div class="btw-title" id="btwBrandHome" role="button" tabindex="0" aria-label="Between home page" title="Home"><svg class="btw-logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg>Between<em>.</em><sup aria-hidden="true">™</sup></div>
-      <div class="btw-nav" role="navigation" aria-label="Menu">
-        <button class="btw-nav-btn active" id="btwNavHome">Home</button>
-        <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
-        <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
-        <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
-        <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
-        <a class="btw-nav-btn btw-nav-link" id="btwNavAbout" href="/about">About</a>
-      </div>
     </div>
     <div class="btw-auth-area">
       <span class="btw-auth-user" id="btwAuthUser" style="display:none;"></span>
-      <div class="btw-audsel btw-audnow" id="btwAudNow">
-        <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead forpfx">For: </span><strong id="btwAudSelLabel">Psychotherapist</strong><span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
-        <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu"></div>
-      </div>
-      <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
-        <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
-        <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
-      </div>
-      <div class="btw-submode" id="btwIndividualMode" role="group" aria-label="What you track">
-        <button type="button" class="btw-submode-btn" data-imode="mind">Mind</button>
-        <button type="button" class="btw-submode-btn" data-imode="body">Body</button>
-        <button type="button" class="btw-submode-btn" data-imode="sport">Sport</button>
-        <button type="button" class="btw-submode-btn" data-imode="eating">Eating</button>
-      </div>
-      <div class="btw-lang" role="group" aria-label="Language / Langue">
-        <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
-        <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
-      </div>
-      <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
       <button class="btw-nav-btn" id="btwLoginBtn">Log in</button>
       <button class="btw-nav-btn" id="btwSignupBtn" style="background:var(--moss);color:#fff;border-color:var(--moss);">Sign up</button>
       <div class="btw-account" style="position:relative;display:inline-block;">
@@ -3386,8 +3411,101 @@
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
       </div>
+      <button type="button" class="btw-menu-toggle" id="btwMenuToggle" aria-label="Menu" aria-controls="btwDrawer" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg><span class="btw-menu-toggle-l">Menu</span></button>
     </div>
   </div>
+  <div class="btw-drawer-back" id="btwDrawerBack"></div>
+  <aside class="btw-drawer" id="btwDrawer" aria-label="Menu" aria-hidden="true">
+    <div class="btw-drawer-head"><span class="btw-drawer-title">Menu</span><button type="button" class="btw-drawer-close" id="btwDrawerClose" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>
+        <div class="btw-nav" role="navigation" aria-label="Menu">
+          <button class="btw-nav-btn active" id="btwNavHome">Home</button>
+          <button class="btw-nav-btn" id="btwNavLearn">How it works</button>
+          <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
+          <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
+          <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
+          <a class="btw-nav-btn btw-nav-link" id="btwNavAbout" href="/about">About</a>
+        </div>
+      <div class="btw-drawer-sec btw-drawer-field">
+        <button type="button" class="btw-drawer-fieldrow" id="btwDrawerFieldRow" aria-haspopup="true"><span class="btw-drawer-fieldtxt"><span class="btw-drawer-l">Viewing Between for</span><strong id="btwDrawerFieldName">Psychotherapist</strong></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
+        <div class="btw-audsel btw-audnow" id="btwAudNow">
+          <button type="button" class="btw-audsel-btn" id="btwAudSelBtn" aria-haspopup="true" aria-expanded="false"><span class="btw-audsel-lead forpfx">For: </span><strong id="btwAudSelLabel">Psychotherapist</strong><span class="btw-audsel-caret" aria-hidden="true">▾</span></button>
+          <div class="btw-audsel-menu" id="btwAudSelMenu" role="menu"></div>
+        </div>
+        <div class="btw-submode" id="btwSchoolMode" role="group" aria-label="School use">
+          <button type="button" class="btw-submode-btn" data-mode="guidance">Guidance</button>
+          <button type="button" class="btw-submode-btn" data-mode="classroom">Classroom</button>
+        </div>
+        <div class="btw-submode" id="btwIndividualMode" role="group" aria-label="What you track">
+          <button type="button" class="btw-submode-btn" data-imode="mind">Mind</button>
+          <button type="button" class="btw-submode-btn" data-imode="body">Body</button>
+          <button type="button" class="btw-submode-btn" data-imode="sport">Sport</button>
+          <button type="button" class="btw-submode-btn" data-imode="eating">Eating</button>
+        </div>
+      </div>
+      <div class="btw-drawer-prefs"><div class="btw-drawer-row">
+        <div class="btw-lang" role="group" aria-label="Language / Langue">
+          <button type="button" class="btw-lang-btn active" data-lang="en">EN</button>
+          <button type="button" class="btw-lang-btn" data-lang="fr">FR</button>
+        </div>
+        <button type="button" class="btw-theme-btn" id="btwThemeBtn" aria-label="Switch light or dark mode" title="Light or dark mode"><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></button>
+      </div></div>
+      <div class="btw-drawer-sub" id="btwDrawerSub" aria-hidden="true">
+        <div class="btw-drawer-head"><button type="button" class="btw-drawer-back-btn" id="btwDrawerSubBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button><span class="btw-drawer-title">Choose your field</span><span style="width:36px"></span></div>
+        <div class="btw-drawer-sublist" id="btwDrawerSubList"></div>
+      </div>
+  </aside>
+  <script>
+  // Side menu: opens from the Menu button; closes with the X, a tap outside,
+  // Escape, or after picking a page or field. The field list has its own
+  // screen that slides over the menu.
+  (function(){
+    var d = document.getElementById('btwDrawer'), bk = document.getElementById('btwDrawerBack');
+    var tg = document.getElementById('btwMenuToggle'), cl = document.getElementById('btwDrawerClose');
+    var sub = document.getElementById('btwDrawerSub'), subList = document.getElementById('btwDrawerSubList');
+    var row = document.getElementById('btwDrawerFieldRow'), rowName = document.getElementById('btwDrawerFieldName');
+    var menu = document.getElementById('btwAudSelMenu');
+    if(!d || !tg) return;
+    if(menu && subList) subList.appendChild(menu);   // the list lives on its own screen
+    function sync(){
+      var f = d.querySelector('.btw-drawer-field'), a = document.getElementById('btwAudNow');
+      if(f && a) f.style.display = (getComputedStyle(a).display === 'none' && !a.closest('.btw-drawer')) ? 'none' : '';
+      var hidden = document.body.classList.contains('btw-gated-landing') || (document.body.classList.contains('btw-signed-in') && !document.body.classList.contains('btw-owner'));
+      if(f && hidden) f.style.display = 'none';
+      var lbl = document.getElementById('btwAudSelLabel');
+      if(lbl && rowName) rowName.textContent = lbl.textContent;
+    }
+    function showSub(on){
+      sub.classList.toggle('open', on); sub.setAttribute('aria-hidden', on ? 'false' : 'true');
+      if(on){ if(window.__btwRenderAudMenu) window.__btwRenderAudMenu(); setTimeout(function(){ var it = subList.querySelector('.btw-audsel-item.active') || subList.querySelector('.btw-audsel-item'); try { it && it.focus({ preventScroll:true }); } catch(e){} }, 200); }
+      else { try { row.focus({ preventScroll:true }); } catch(e){} }
+    }
+    function open(){
+      sync(); showSub(false);
+      d.classList.add('open'); bk.classList.add('open');
+      d.setAttribute('aria-hidden', 'false'); tg.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('btw-drawer-open');
+      setTimeout(function(){ try { cl.focus({ preventScroll:true }); } catch(e){} }, 120);
+    }
+    function close(){
+      if(!d.classList.contains('open')) return;
+      d.classList.remove('open'); bk.classList.remove('open');
+      d.setAttribute('aria-hidden', 'true'); tg.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('btw-drawer-open');
+      setTimeout(function(){ showSub(false); }, 420);
+    }
+    tg.addEventListener('click', function(){ d.classList.contains('open') ? close() : open(); });
+    cl.addEventListener('click', function(){ close(); try { tg.focus({ preventScroll:true }); } catch(e){} });
+    bk.addEventListener('click', close);
+    if(row) row.addEventListener('click', function(){ showSub(true); });
+    document.getElementById('btwDrawerSubBack').addEventListener('click', function(){ showSub(false); });
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape' || !d.classList.contains('open')) return;
+      if(sub.classList.contains('open')) showSub(false); else { close(); try { tg.focus({ preventScroll:true }); } catch(err){} }
+    });
+    d.addEventListener('click', function(e){ if(e.target.closest && e.target.closest('.btw-nav-btn, .btw-audsel-item')) setTimeout(close, 80); });
+    window.__btwCloseDrawer = close;
+  })();
+  </script>
 
   <main id="btwMain" tabindex="-1">
   <div class="btw-view active" id="btwViewHome">
@@ -5393,7 +5511,7 @@
     "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":
       "Une façon simple de voir comment vont vos clients entre les séances. Ils envoient une note quand quelque chose survient et vous recevez un court résumé avant le prochain rendez-vous.",
     "Home":"Accueil","Dashboard":"Tableau de bord","Pricing":"Tarifs",
-    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Occupational therapy":"Ergothérapie","Daily function and recovery between visits":"Fonction au quotidien et récupération entre les visites","Neuropsychology":"Neuropsychologie","Neuropsychologist":"Neuropsychologue","Neuropsychologists":"Neuropsychologues","Focus, memory and mood between sessions":"Concentration, mémoire et humeur entre les séances","Guidance":"Orientation","Classroom":"Classe",
+    "Therapy":"Thérapie","Psychotherapist":"Psychothérapeute","Physiotherapist":"Physiothérapeute","For myself":"Pour moi","Addiction":"Dépendance","Schools":"Écoles","Kinesiology":"Kinésiologie","Osteopathy":"Ostéopathie","Occupational therapy":"Ergothérapie","Daily function and recovery between visits":"Fonction au quotidien et récupération entre les visites","Neuropsychology":"Neuropsychologie","Neuropsychologist":"Neuropsychologue","Neuropsychologists":"Neuropsychologues","Focus, memory and mood between sessions":"Concentration, mémoire et humeur entre les séances","Guidance":"Orientation","Classroom":"Classe",
     "Mind":"Esprit","Body":"Corps","Sport":"Sport","Eating":"Alimentation",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :","Choose your field":"Choisissez votre domaine",
@@ -6030,6 +6148,9 @@
       "Les notifications sont livrées au mieux des efforts. Between ne remplace jamais les services d'urgence. Les patients voient toujours les ressources de crise directement. Cela ne dépend jamais du temps de réponse de qui que ce soit.",
     "Start your next session already knowing their week.":"Commencez votre prochaine séance en connaissant déjà leur semaine.",
     "About":"À propos",
+    "Menu":"Menu",
+    "Viewing Between for":"Vous consultez Between pour",
+    "Language and display":"Langue et affichage",
     "Quick to start":"Rapide à démarrer",
     "Worried about moving parts? There aren't any.":"Peur d'avoir trop d'éléments à gérer ? Il n'y en a aucun.",
     "Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. You can be up and running the same afternoon.":"Between n'est pas un nouveau système à adopter. Il fonctionne avec ce que vous utilisez déjà : aucune migration, aucun projet informatique et rien à réapprendre pour votre équipe. La plupart des cliniques sont opérationnelles le jour même.",
