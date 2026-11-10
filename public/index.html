@@ -14809,7 +14809,7 @@
     const lines = [];
     lines.push(t('Between | between-session check-in summary'));
     lines.push(t('Patient:') + ' ' + p.display_name);
-    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + (curLang === 'fr' ? ' au ' : ' to ') + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
+    if(n) lines.push(t('Period:') + ' ' + fmtDate(list[0].time) + '–' + fmtDate(list[n-1].time) + ' (' + n + ' ' + (n===1?t('check-in'):t('check-ins')) + ')');
     if(avg!=null) lines.push(scoreLblCap + ': ' + scoreWord(avg) + ' (' + nf(avg) + '/10)');
     if(topTags.length) lines.push(t('Top themes:') + ' ' + topTags.join(', '));
     if(riskN>0) lines.push(t('Flagged:') + ' ' + riskN + ' ' + (riskN===1?t('check-in'):t('check-ins')) + ' ' + t('with a possible safety concern'));
@@ -17629,7 +17629,7 @@
     if(ins.low != null){
       const wLow = scoreWord(ins.low), wHigh = scoreWord(ins.high);
       const rangeWord = wLow === wHigh ? wLow : wLow + (curLang === 'fr' ? ' à ' : ' to ') + wHigh;
-      cards.push(card(pm ? t('Pain range') : t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + (curLang === 'fr' ? ' à ' : ' to ') + ins.high + '/10)</span>', t('most recent') + ': ' + scoreWord(ins.latest) + ' (' + ins.latest + '/10)'));
+      cards.push(card(pm ? t('Pain range') : t('Mood range'), esc(rangeWord) + ' <span style="font-size:11px;font-weight:400;color:var(--ink-soft)">(' + ins.low + '–' + ins.high + '/10)</span>', t('most recent') + ': ' + scoreWord(ins.latest) + ' (' + ins.latest + '/10)'));
     }
     // Only talk about a rate once there's enough of a time window to mean
     // something, otherwise a couple of check-ins made minutes apart would
