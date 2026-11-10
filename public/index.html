@@ -2929,8 +2929,8 @@
   .btw-demo-link{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:none;border:none;padding:4px 0;color:var(--moss);font-family:var(--font-body);font-weight:600;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
   .btw-demo-link svg{flex:0 0 auto;}
   .btw-demo-link:hover{color:var(--ink);}
-  .btw-demo-line{text-align:center;margin:18px auto 0;font-size:14px;color:var(--ink-soft);}
-  .btw-demo-line .btw-demo-link{margin-top:0;}
+  .btw-demo-cta{text-align:center;margin:18px auto 16px;font-size:14px;line-height:1.5;color:var(--ink-soft);}
+  .btw-demo-cta .btw-demo-link{margin-top:0;}
   .btw-cta-banner .btw-cta-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;}
   [data-demo-only][hidden]{display:none !important;}
   .btw-demo-form{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
@@ -3023,6 +3023,7 @@
   .btw-drawer-row{display:flex;gap:10px;align-items:center;justify-content:space-between;}
   /* the field list, on its own screen that slides over the menu */
   .btw-drawer-sub{position:absolute;inset:0;background:var(--panel);padding:inherit;display:flex;flex-direction:column;transform:translateX(100%);visibility:hidden;transition:transform .38s cubic-bezier(.22,1,.36,1),visibility 0s linear .38s;}
+  .btw-drawer.btw-sub-open{overflow-y:hidden;}
   .btw-drawer-sub.open{transform:none;visibility:visible;transition:transform .38s cubic-bezier(.22,1,.36,1),visibility 0s;}
   .btw-drawer-sublist{overflow-y:auto;overscroll-behavior:contain;margin:0 -8px;padding:0 8px 12px;}
   .btw-drawer-sublist .btw-audsel-menu{display:flex !important;position:static;flex-direction:column;gap:1px;background:none;border:0;box-shadow:none;padding:0;max-height:none;max-width:none;width:100%;}
@@ -3541,6 +3542,8 @@
     bk.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive:false });
     d.addEventListener('touchmove', function(e){ var inList = e.target.closest && e.target.closest('.btw-drawer-sublist'); if(!inList && d.scrollHeight <= d.clientHeight + 1) e.preventDefault(); }, { passive:false });
     function showSub(on){
+      if(on) d.scrollTop = 0;
+      d.classList.toggle('btw-sub-open', on);
       sub.classList.toggle('open', on); sub.setAttribute('aria-hidden', on ? 'false' : 'true');
       if(on){ if(window.__btwRenderAudMenu) window.__btwRenderAudMenu(); setTimeout(function(){ var it = subList.querySelector('.btw-audsel-item.active') || subList.querySelector('.btw-audsel-item'); try { it && it.focus({ preventScroll:true }); } catch(e){} }, 200); }
       else { try { row.focus({ preventScroll:true }); } catch(e){} }
@@ -4694,7 +4697,7 @@
         </div>
       </div>
 
-      <p class="btw-demo-line" data-price-aud="pro" data-demo-only><span>Want to see it first?</span> <button type="button" class="btw-demo-link" data-demo-book><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>Book a 15-minute demo</span></button></p>
+      <p class="btw-demo-cta" data-price-aud="pro" data-demo-only><span>Want to see it first?</span> <button type="button" class="btw-demo-link" data-demo-book><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>Book a 15-minute demo</span></button></p>
 
       <div class="btw-pricing-segment" data-price-aud="indiv">For patients, use Between on your own <span class="btw-seg-mode" data-price-mode hidden></span></div>
       <div class="btw-pricing-cards" data-price-aud="indiv">
@@ -5357,6 +5360,23 @@
   }
 
   // --- tiny same-origin API helper (session cookie rides along automatically) ---
+  // Leaving the page (e.g. off to Stripe checkout): the browser cancels any
+  // request still in flight, and Safari reports that as "Load failed". That
+  // isn't a real failure, so once we're leaving, a cancelled request just
+  // stays quiet. A real network failure gets a plain-language message.
+  let btwLeaving = false;
+  window.addEventListener('pagehide', function(){ btwLeaving = true; });
+  window.addEventListener('beforeunload', function(){ btwLeaving = true; });
+  window.addEventListener('pageshow', function(){ btwLeaving = false; });
+  function btwGo(url){ btwLeaving = true; window.location.assign(url); }
+  async function btwFetch(url, opts){
+    try { return await fetch(url, opts); }
+    catch(e){
+      if(btwLeaving) return new Promise(function(){});
+      const err = new Error(t('Could not reach Between. Check your connection and try again.'));
+      err.network = true; throw err;
+    }
+  }
   async function api(method, url, body){
     const headers = {};
     if(body !== undefined) headers['Content-Type'] = 'application/json';
@@ -5364,7 +5384,7 @@
     // the AI tools answer as that kind of clinician (ignored for everyone else).
     const asField = ownerField();
     if(asField) headers['X-Btw-Field'] = asField;
-    const resp = await fetch(url, {
+    const resp = await btwFetch(url, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined
@@ -5388,7 +5408,7 @@
     const tk = pToken();
     if(tk) headers['Authorization'] = 'Bearer ' + tk;
     if(body !== undefined) headers['Content-Type'] = 'application/json';
-    const resp = await fetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+    const resp = await btwFetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
     let data = null;
     try { data = await resp.json(); } catch(e) {}
     if(!resp.ok){
@@ -6337,6 +6357,7 @@
       "Chaque forfait inclut les résumés par IA et les graphiques de tendances, le coût de traitement IA par suivi est assez faible pour qu'on ne le facture pas à l'unité. Utilisez-le autant que vos patients en ont besoin.",
     "Solo":"Solo","For individual practitioners":"Pour les praticiens individuels",
     "CAD per clinician, per month":"CAD par clinicien, par mois","Billed monthly.":"Facturé mensuellement.",
+    "Could not reach Between. Check your connection and try again.":"Impossible de joindre Between. Vérifiez votre connexion et réessayez.",
     "Prices are in Canadian dollars. Taxes, if applicable, are calculated at checkout.":"Les prix sont en dollars canadiens. Les taxes, le cas échéant, sont calculées au moment du paiement.",
     "Prices in USD are approximate. Billing is processed in Canadian dollars, with taxes (if applicable) calculated at checkout.":"Les prix en USD sont approximatifs. La facturation est traitée en dollars canadiens, les taxes (le cas échéant) étant calculées au moment du paiement.",
     "US customers are billed in US dollars, with taxes (if applicable) calculated at checkout.":"Les clients américains sont facturés en dollars américains, les taxes (le cas échéant) étant calculées au moment du paiement.",
@@ -12000,7 +12021,7 @@
   async function changePlan(plan){
     try{
       const r = await api('POST', '/api/auth/plan/change', { plan });
-      if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
+      if(r && r.checkoutUrl){ btwGo(r.checkoutUrl); return; }
       if(r && r.upgraded){
         if(r.clinician) state.me = { ...state.me, ...r.clinician };
         try { await loadPatients(); } catch(_){}
@@ -12497,10 +12518,10 @@
     try{
       if(isTherapist()){
         const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly', currency: btwCurrency });
-        if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+        if(r.checkoutUrl) btwGo(r.checkoutUrl);
       } else if(isPatient()){
         const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly', currency: btwCurrency });
-        if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+        if(r.checkoutUrl) btwGo(r.checkoutUrl);
       }
     }catch(e){ alert(e.message); }
   });
@@ -13140,7 +13161,7 @@
       const portalBtn = body.querySelector('#btwBillingPortal');
       if(portalBtn) portalBtn.addEventListener('click', async ()=>{
         portalBtn.disabled = true; const label = portalBtn.textContent; portalBtn.textContent = t('Opening…');
-        try{ const r = await api('POST', '/api/auth/billing-portal'); if(r && r.url){ window.location.href = r.url; } else { throw new Error('No portal URL'); } }
+        try{ const r = await api('POST', '/api/auth/billing-portal'); if(r && r.url){ btwGo(r.url); } else { throw new Error('No portal URL'); } }
         catch(e){ alert(e.message); portalBtn.disabled = false; portalBtn.textContent = label; }
       });
     }
@@ -13767,7 +13788,7 @@
   document.getElementById('btwBillingAction').addEventListener('click', async ()=>{
     try{
       const r = await api('POST', '/api/auth/checkout/start', { plan: (state.me && state.me.plan) || 'solo_monthly', currency: btwCurrency });
-      if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+      if(r.checkoutUrl) btwGo(r.checkoutUrl);
     }catch(e){ alert(e.message); }
   });
   document.getElementById('btwSecurityClose').addEventListener('click', ()=>{ securityOverlay.style.display = 'none'; });
@@ -13963,7 +13984,7 @@
         // Same as every plan: if billing is on, start the 14-day trial by
         // sending them to Stripe to put a card on file. The account is already
         // created and their session cookie is set, so they return signed in.
-        if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
+        if(data.checkoutUrl){ btwGo(data.checkoutUrl); return; }
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
         billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
@@ -14045,7 +14066,7 @@
       if(coachLicence){ body.discipline = curAudience; body.teamName = practiceName; } // physio | nutrition | neuropsych
       const data = await api('POST', coachLicence ? '/api/auth/coach/signup' : '/api/auth/signup', body);
       // A verified owner account may return a checkout link; honour it.
-      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
+      if(data.checkoutUrl){ btwGo(data.checkoutUrl); return; }
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
       billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
@@ -14124,7 +14145,7 @@
       document.getElementById('btwPsPassword').value = '';
       // If billing is on, send them to Stripe to pay; the account is already
       // created and they return signed in. Otherwise, straight to the dashboard.
-      if(data.checkoutUrl){ window.location.assign(data.checkoutUrl); return; }
+      if(data.checkoutUrl){ btwGo(data.checkoutUrl); return; }
       patientSignupOverlay.style.display = 'none';
       renderAuthState();
       await loadPatientCheckIns();
@@ -14303,7 +14324,7 @@
     wire('btwSubscribeBtn', async ()=>{
       try{
         const r = await pApi('POST', '/api/patient/checkout/start', { plan: (state.patient && state.patient.plan) || 'patient_monthly', currency: btwCurrency });
-        if(r.checkoutUrl) window.location.assign(r.checkoutUrl);
+        if(r.checkoutUrl) btwGo(r.checkoutUrl);
       }catch(e){ alert(e.message); }
     });
     wire('btwSubCancel', async ()=>{
@@ -17361,7 +17382,7 @@
   async function startPremiumUpgrade(){
     try{
       const r = await pApi('POST', '/api/patient/checkout/start', { plan: 'patient_premium', currency: btwCurrency });
-      if(r && r.checkoutUrl){ window.location.assign(r.checkoutUrl); return; }
+      if(r && r.checkoutUrl){ btwGo(r.checkoutUrl); return; }
       alert(t('Premium checkout is not set up on this server yet.'));
     }catch(e){ alert(e.message); }
   }

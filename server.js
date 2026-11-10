@@ -2017,9 +2017,10 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     return res.json({ checkoutUrl: url });
   } catch (err) {
     console.error('Error changing plan:', err);
-    // Surface the underlying billing error (e.g. Stripe "No such price") so a
-    // misconfigured price id is diagnosable instead of a generic failure.
-    res.status(502).json({ error: (err && err.message) ? ('Billing error: ' + err.message) : 'Could not change your plan.' });
+    // The owner/admin sees Stripe's own message (e.g. "No such price") so a
+    // misconfigured price is diagnosable; customers get a plain sentence.
+    const showRaw = req.clinician && isFreeAccess(req.clinician.email) && err && err.message;
+    res.status(502).json({ error: showRaw ? ('Billing error: ' + err.message) : 'Checkout for this plan is not available right now. Please try again later or contact us.' });
   }
 });
 
