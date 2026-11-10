@@ -1090,6 +1090,7 @@
     gap:6px;
     margin-top:4px;
   }
+  a.btw-nav-link,a.btw-nav-link:visited{text-decoration:none;display:inline-flex;align-items:center;}
   .btw-nav-btn{
     font-family:var(--font-body);
     font-size:12.5px;
@@ -2900,15 +2901,6 @@
   .btw-contact{margin-top:44px;text-align:center;}
   .btw-contact h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:8px 0 8px;}
   .btw-contact p{font-size:15px;color:var(--ink-soft);line-height:1.6;max-width:480px;margin:0 auto 20px;}
-  /* Founder note above the closing banner. */
-  .btw-founder{padding:8px 0 4px;}
-  .btw-founder-card{max-width:680px;margin:0 auto;padding:28px 30px;border:1px solid var(--line);border-radius:16px;background:var(--panel, #fff);}
-  .btw-founder-card .btw-section-label{margin-bottom:12px;border-top:0;padding-top:0;}
-  .btw-founder-card p{font-size:16px;line-height:1.65;color:var(--ink);margin:0 0 12px;}
-  .btw-founder-more{display:inline-block;margin-top:10px;font-size:14px;font-weight:600;color:var(--moss);text-decoration:none;}
-  .btw-founder-more:hover{text-decoration:underline;}
-  .btw-founder-sig{font-family:var(--font-display);font-size:17px;color:var(--ink);margin-top:6px;}
-  @media (max-width:600px){ .btw-founder-card{padding:22px 18px;} }
   .btw-contact-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;}
   a.btw-hero-btn,a.btw-hero-btn:hover,a.btw-hero-btn:visited{text-decoration:none;}
   /* Homepage product video */
@@ -3347,6 +3339,7 @@
         <button class="btw-nav-btn" id="btwNavProduct">Dashboard</button>
         <button class="btw-nav-btn" id="btwNavPricing">Pricing</button>
         <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
+        <a class="btw-nav-btn btw-nav-link" id="btwNavAbout" href="/about">About</a>
       </div>
     </div>
     <div class="btw-auth-area">
@@ -3882,18 +3875,6 @@
         </div>
         <p class="btw-setup-bring" id="btwSetupBring">Already have patients? You can upload their intake documents, referrals and assessments, and add their earlier records so trends aren't starting empty.</p>
         <p class="btw-setup-reassure"><strong>Nothing to unwind if you stop.</strong> Cancel anytime, and export or delete your data whenever you want.</p>
-      </section>
-
-      <!-- A short note from the founder, for professionals (hidden on "On your own"). -->
-      <section class="btw-founder" data-demo-only>
-        <div class="btw-founder-card">
-          <div class="btw-section-label">Why I built Between</div>
-          <p>I'm a psychology student in Montreal, and I love sports and nutrition. In all three, I kept seeing the same thing: the real progress happens between appointments, and most of it never reaches the person helping.</p>
-          <p>I built Between because I love helping people, and I wanted something that helps on both sides. Clients get an easy way to say how they're really doing, the moment it matters. Professionals get that time back: less catching up, less paperwork, and more of each visit spent on the person in front of them.</p>
-          <p>If it gives you back some time and helps someone feel heard between visits, it's doing its job.</p>
-          <div class="btw-founder-sig">Jack Hazan, psychology student and founder of Between, Montreal</div>
-          <a class="btw-founder-more" href="/about">More about me and Between</a>
-        </div>
       </section>
 
       <section class="btw-cta-banner">
@@ -6048,13 +6029,7 @@
     "Notifications are delivered on a best-effort basis. Between is never a substitute for emergency services. Patients always see crisis resources directly. That never depends on anyone else's response time.":
       "Les notifications sont livrées au mieux des efforts. Between ne remplace jamais les services d'urgence. Les patients voient toujours les ressources de crise directement. Cela ne dépend jamais du temps de réponse de qui que ce soit.",
     "Start your next session already knowing their week.":"Commencez votre prochaine séance en connaissant déjà leur semaine.",
-    "Why I built Between":"Pourquoi j'ai créé Between",
-    "I'm a psychology student in Montreal, and I love sports and nutrition. In all three, I kept seeing the same thing: the real progress happens between appointments, and most of it never reaches the person helping.":"Je suis étudiant en psychologie à Montréal, et j'adore le sport et la nutrition. Dans les trois, je voyais toujours la même chose : les vrais progrès se font entre les rendez-vous, et la plupart n'arrivent jamais jusqu'à la personne qui aide.",
-    "I built Between because I love helping people, and I wanted something that helps on both sides. Clients get an easy way to say how they're really doing, the moment it matters. Professionals get that time back: less catching up, less paperwork, and more of each visit spent on the person in front of them.":"J'ai créé Between parce que j'aime aider les gens, et je voulais quelque chose qui aide des deux côtés. Les clients ont une façon simple de dire comment ils vont vraiment, au moment où ça compte. Les professionnels récupèrent ce temps : moins de rattrapage, moins de paperasse, et plus de chaque rencontre consacrée à la personne devant eux.",
-    "If it gives you back some time and helps someone feel heard between visits, it's doing its job.":"Si Between vous redonne du temps et aide quelqu'un à se sentir entendu entre les rencontres, il fait son travail.",
     "About":"À propos",
-    "More about me and Between":"En savoir plus sur moi et sur Between",
-    "Jack Hazan, psychology student and founder of Between, Montreal":"Jack Hazan, étudiant en psychologie et fondateur de Between, Montréal",
     "Quick to start":"Rapide à démarrer",
     "Worried about moving parts? There aren't any.":"Peur d'avoir trop d'éléments à gérer ? Il n'y en a aucun.",
     "Between isn't a new system to switch to. It runs alongside whatever you already use, so there's no migration, no IT project and nothing for your team to relearn. You can be up and running the same afternoon.":"Between n'est pas un nouveau système à adopter. Il fonctionne avec ce que vous utilisez déjà : aucune migration, aucun projet informatique et rien à réapprendre pour votre équipe. La plupart des cliniques sont opérationnelles le jour même.",
