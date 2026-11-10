@@ -8806,6 +8806,18 @@
     Object.assign(SCHOOLS_CLASS_EN, schoolsEN); Object.assign(SCHOOLS_CLASS_FR, schoolsFR);
   })();
 
+  // What each plan really costs, matching Stripe (CAD). The pricing cards keep
+  // the therapist plan as their base; these swap in each profession's plan so
+  // the cards, the yearly note, the hero's "From $X" and the menu all agree.
+  //   Team (physio, kinesiology, osteopathy, OT, sports, neuropsychology,
+  //   nutrition): $99 a month, $948 a year ($79 a month), Premium $199.
+  //   Trainer (fitness): $49 a month, $468 a year ($39 a month), Premium $99.
+  (function(){
+    const TEAM = { "$99.99":"$99", "$79.99":"$79", "$149.99":"$199", "$959.88":"$948" };
+    const TRAINER = { "$99.99":"$49", "$79.99":"$39", "$149.99":"$99", "$959.88":"$468" };
+    [PHYSIO_EN, PHYSIO_FR, KIN_EN, KIN_FR, OST_EN, OST_FR, OCC_EN, OCC_FR, SPORTS_EN, SPORTS_FR, NEURO_EN, NEURO_FR, NUTRITION_EN, NUTRITION_FR].forEach(function(d){ Object.assign(d, TEAM); });
+    [FITNESS_EN, FITNESS_FR].forEach(function(d){ Object.assign(d, TRAINER); });
+  })();
   const HERO_THREAD = {
     therapy:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Rough week. Work stress and poor sleep. One good moment: she saw an old friend on the weekend.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
@@ -9442,11 +9454,19 @@
     const num = (Math.round(v * 100) % 100 === 0) ? String(Math.round(v)) : v.toFixed(2);
     return fr ? (num.replace('.', ',') + '\u00a0$') : ('$' + num);
   }
+  // The amount a card shows for the current profession (see the plan prices
+  // set per profession), falling back to the card's base price.
+  function cardCad(el){
+    const base = parseFloat(el.getAttribute('data-cad')); if(isNaN(base)) return NaN;
+    const shown = String(t('$' + el.getAttribute('data-cad')) || '');
+    const n = parseFloat(shown.replace(/[^\d.,]/g, '').replace(',', '.'));
+    return isNaN(n) ? base : n;
+  }
   function applyCurrency(){
     // Update text nodes in place (not textContent) so translateStatic keeps its
     // cached originals and the units still translate to French.
     document.querySelectorAll('#btwViewPricing [data-cad]').forEach(function(el){
-      const cad = parseFloat(el.getAttribute('data-cad')); if(isNaN(cad)) return;
+      const cad = cardCad(el); if(isNaN(cad)) return;
       if(el.firstChild && el.firstChild.nodeType === 3) el.firstChild.nodeValue = fmtMoney(cad);
       else el.textContent = fmtMoney(cad);
     });
@@ -13043,8 +13063,8 @@
       { plan:'solo_premium', label:'Premium', price:'$149.99 per month', note:'30+ patients' }
     ],
     coach: [
-      { plan:'team_monthly', label:'Team', price:'$99.99 per month' },
-      { plan:'team_annual',  label:'Team Annual', price:'$79.99 per month' },
+      { plan:'team_monthly', label:'Team', price:'$99 per month' },
+      { plan:'team_annual',  label:'Team Annual', price:'$79 per month', note:'Billed yearly ($948)' },
       { plan:'team_premium', label:'Premium', price:'$199 per month', note:'30+ players' }
     ],
     school: [
@@ -13053,9 +13073,9 @@
       { plan:'school_premium', label:'Premium', price:'$199 per month', note:'30+ students' }
     ],
     trainer: [
-      { plan:'trainer_monthly', label:'Trainer' },
-      { plan:'trainer_annual',  label:'Trainer Annual' },
-      { plan:'trainer_premium', label:'Premium', note:'20+ clients' }
+      { plan:'trainer_monthly', label:'Trainer', price:'$49 per month' },
+      { plan:'trainer_annual',  label:'Trainer Annual', price:'$39 per month', note:'Billed yearly ($468)' },
+      { plan:'trainer_premium', label:'Premium', price:'$99 per month', note:'20+ clients' }
     ],
     mentor: [
       { plan:'mentor_monthly', label:'Mentor' },
