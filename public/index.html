@@ -2448,6 +2448,35 @@
   .btw-hero-price strong{color:var(--ink);font-weight:600;}
   .btw-hero-price a{color:var(--moss);font-weight:600;text-decoration:none;margin-left:4px;white-space:nowrap;}
   .btw-hero-price a:hover{text-decoration:underline;}
+  /* Phones: logo and buttons on one row, full-width hero buttons, and the
+     price / links / fine print centred under them. */
+  @media (max-width:600px){
+    .btw-header{align-items:center;flex-wrap:nowrap;gap:8px;padding-bottom:12px;margin-bottom:8px;}
+    .btw-header > div:first-child{min-width:0;}
+    .btw-title{font-size:22px;white-space:nowrap;}
+    .btw-logo-mark{width:28px;height:28px;margin-right:8px;vertical-align:-6px;}
+    .btw-header .btw-auth-area{flex-wrap:nowrap;gap:6px;margin-left:auto;}
+    .btw-header .btw-auth-area > .btw-nav-btn{padding:8px 13px;font-size:13px;white-space:nowrap;}
+    .btw-header #btwLoginBtn{border-color:transparent;background:none;padding-left:6px;padding-right:6px;}
+    .btw-hero{padding-top:4px;}
+    .btw-hero-art-sm[src]{width:108px;height:108px;margin:0 0 4px -6px;}
+    .btw-hero-eyebrow{font-size:11.5px;line-height:1.5;}
+    .btw-hero-cta{flex-direction:column;gap:10px;margin-top:4px;}
+    .btw-hero-cta .btw-hero-btn{width:100%;padding:16px 14px;text-align:center;letter-spacing:.06em;}
+    .btw-hero-price{text-align:center;font-size:13.5px;line-height:1.5;margin-top:12px;}
+    .btw-hero-price a{display:inline-block;margin-left:0;}
+    .btw-hero-links{flex-direction:column;justify-content:center;gap:10px;margin:16px 0 12px;}
+    .btw-hero-links .btw-hero-solo-link{text-align:center;justify-content:center;max-width:300px;align-self:center;}
+    .btw-hero-meta{text-align:center;line-height:1.7;}
+  }
+  @media (max-width:380px){
+    .btw-header{gap:4px;}
+    .btw-title{font-size:20px;}
+    .btw-logo-mark{width:26px;height:26px;margin-right:7px;}
+    .btw-title sup{display:none;}
+    .btw-header .btw-auth-area > .btw-nav-btn{padding:7px 10px;font-size:12.5px;}
+    .btw-header #btwLoginBtn{padding-left:4px;padding-right:4px;}
+  }
   .btw-nav-hint{font:500 12.5px var(--font-body);color:var(--ink-soft);letter-spacing:0;margin-left:2px;}
   /* Visitors: Dashboard (a log-in box for them) and Guide (help for users) stay
      out of the menu. Signed-in people reach the guide from their settings. */
