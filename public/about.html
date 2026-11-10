@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>About | Between</title>
+<meta name="description" content="Between is built by Jack, a psychology student in Montreal who loves sports, nutrition and helping people. Why it exists and how it treats your data.">
+<link rel="canonical" href="https://betweenpsych.com/about">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1E4C86">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Between">
+<meta property="og:title" content="About | Between">
+<meta property="og:description" content="Who builds Between, why it exists, and how it treats your data.">
+<meta property="og:url" content="https://betweenpsych.com/about">
+<meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F4F1; --panel:#FFFFFF; --ink:#1A1E1C; --ink-soft:#5A6169;
+    --moss:#1E4C86; --moss-light:#DCE6F3; --line:#E4E3DD; --clay:#C0392B;
+    --font-display:'Newsreader', Georgia, serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; } }
+  :root[data-theme="dark"]{ --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:34px max(18px, env(safe-area-inset-right, 0px)) 80px max(18px, env(safe-area-inset-left, 0px));}
+  a{color:var(--moss);}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:30px;}
+  .back{font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .back:hover{text-decoration:underline;}
+  .langs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel);}
+  .langs button{border:0;background:none;font:600 12px var(--font-body);color:var(--ink-soft);padding:5px 11px;border-radius:999px;cursor:pointer;}
+  .langs button.on{background:var(--moss);color:var(--panel);}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--moss);}
+  .hello{display:flex;align-items:center;gap:24px;margin:0 0 30px;}
+  .hello img{width:132px;height:132px;border-radius:50%;object-fit:cover;flex:none;border:3px solid var(--panel);box-shadow:0 6px 24px rgba(0,0,0,.12);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.12;letter-spacing:-.01em;margin:8px 0 8px;text-wrap:balance;}
+  .lede{font-size:17px;color:var(--ink-soft);margin:0;max-width:52ch;}
+  section{margin:0 0 30px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:25px;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em;}
+  p{margin:0 0 12px;font-size:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;}
+  ul.points{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:10px;}
+  ul.points li{position:relative;padding-left:22px;font-size:15.5px;}
+  ul.points li::before{content:'';position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--moss);}
+  .sig{font-family:var(--font-display);font-size:18px;margin-top:4px;}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;font:600 14px var(--font-body);border-radius:10px;padding:10px 16px;text-decoration:none;cursor:pointer;border:1px solid var(--moss);}
+  .btn.pri{background:var(--moss);color:var(--panel);}
+  .btn.sec{background:var(--panel);color:var(--moss);}
+  .btn:focus-visible,.langs button:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px 16px;}
+  footer a{text-decoration:none;}
+  @media (max-width:560px){ .hello{flex-direction:column;align-items:flex-start;gap:16px;} .hello img{width:112px;height:112px;} .card{padding:18px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/"><svg width="18" height="18" viewBox="0 0 64 64" style="border-radius:5px;" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg><span data-en="← Between" data-fr="← Between">← Between</span></a>
+    <div class="langs" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button></div>
+  </div>
+
+  <div class="hello">
+    <img src="/media/jack.jpg" width="132" height="132" alt="Jack, founder of Between" data-en-alt="Jack, founder of Between" data-fr-alt="Jack, fondateur de Between">
+    <div>
+      <div class="eyebrow" data-en="About Between" data-fr="À propos de Between">About Between</div>
+      <h1 data-en="Hi, I'm Jack. I built Between." data-fr="Bonjour, je m'appelle Jack. J'ai créé Between.">Hi, I'm Jack. I built Between.</h1>
+      <p class="lede" data-en="I'm a psychology student in Montreal. I love sports, nutrition and helping people." data-fr="Je suis étudiant en psychologie à Montréal. J'adore le sport, la nutrition et aider les gens.">I'm a psychology student in Montreal. I love sports, nutrition and helping people.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2 data-en="Why Between exists" data-fr="Pourquoi Between existe">Why Between exists</h2>
+    <p data-en="In psychology, in sports and in nutrition, I kept seeing the same thing: the real progress happens between appointments. The hard night, the skipped meal, the sore knee, the week that finally clicked. Most of it never reaches the person helping, or it arrives a week later as a fuzzy memory." data-fr="En psychologie, en sport et en nutrition, je voyais toujours la même chose : les vrais progrès se font entre les rendez-vous. La nuit difficile, le repas sauté, le genou douloureux, la semaine où tout a enfin cliqué. La plupart du temps, ça n'arrive jamais jusqu'à la personne qui aide, ou alors une semaine plus tard, sous forme de souvenir flou.">In psychology, in sports and in nutrition, I kept seeing the same thing: the real progress happens between appointments. The hard night, the skipped meal, the sore knee, the week that finally clicked. Most of it never reaches the person helping, or it arrives a week later as a fuzzy memory.</p>
+    <p data-en="I wanted something that helps on both sides. Clients get an easy way to say how they're really doing, the moment it matters, by voice or text, in under a minute. Professionals get that time back: a short summary and the trend before the next visit, a drafted chart note, and more of each session spent on the person in front of them." data-fr="Je voulais quelque chose qui aide des deux côtés. Les clients ont une façon simple de dire comment ils vont vraiment, au moment où ça compte, par la voix ou par écrit, en moins d'une minute. Les professionnels récupèrent ce temps : un court résumé et la tendance avant la prochaine rencontre, une ébauche de note au dossier, et plus de chaque séance consacrée à la personne devant eux.">I wanted something that helps on both sides. Clients get an easy way to say how they're really doing, the moment it matters, by voice or text, in under a minute. Professionals get that time back: a short summary and the trend before the next visit, a drafted chart note, and more of each session spent on the person in front of them.</p>
+    <p data-en="If it gives you back some time and helps someone feel heard between visits, it's doing its job." data-fr="Si Between vous redonne du temps et aide quelqu'un à se sentir entendu entre les rencontres, il fait son travail.">If it gives you back some time and helps someone feel heard between visits, it's doing its job.</p>
+    <div class="sig" data-en="Jack" data-fr="Jack">Jack</div>
+  </section>
+
+  <section class="card">
+    <h2 data-en="How Between treats your data" data-fr="Comment Between traite vos données">How Between treats your data</h2>
+    <p data-en="Health information deserves care. These are the rules Between is built on:" data-fr="Les renseignements de santé méritent qu'on en prenne soin. Voici les règles sur lesquelles Between est bâti :">Health information deserves care. These are the rules Between is built on:</p>
+    <ul class="points">
+      <li data-en="Consent first. AI summaries stay off until the client turns them on, and they can turn them off anytime." data-fr="Le consentement d'abord. Les résumés par IA restent désactivés jusqu'à ce que le client les active, et il peut les désactiver en tout temps.">Consent first. AI summaries stay off until the client turns them on, and they can turn them off anytime.</li>
+      <li data-en="Each professional sees only their own clients. Nothing is shared across a clinic." data-fr="Chaque professionnel ne voit que ses propres clients. Rien n'est partagé au sein d'une clinique.">Each professional sees only their own clients. Nothing is shared across a clinic.</li>
+      <li data-en="Everyone can export or delete their data whenever they want." data-fr="Chacun peut exporter ou supprimer ses données quand il le veut.">Everyone can export or delete their data whenever they want.</li>
+      <li data-en="Built with Canadian privacy law in mind, including Quebec's Law 25. Professionals in regulated fields are licence-verified before their dashboard opens." data-fr="Conçu en tenant compte des lois canadiennes sur la vie privée, dont la Loi 25 du Québec. Les professionnels des domaines réglementés sont vérifiés avant l'ouverture de leur tableau de bord.">Built with Canadian privacy law in mind, including Quebec's Law 25. Professionals in regulated fields are licence-verified before their dashboard opens.</li>
+      <li data-en="Between is not a crisis service. Clients always see crisis resources directly, and never wait on anyone." data-fr="Between n'est pas un service de crise. Les clients voient toujours les ressources d'aide directement, sans attendre après personne.">Between is not a crisis service. Clients always see crisis resources directly, and never wait on anyone.</li>
+    </ul>
+    <p style="margin:14px 0 0;font-size:14px;"><a href="/privacy.html" data-en="Privacy policy" data-fr="Politique de confidentialité">Privacy policy</a> · <a href="/subprocessors.html" data-en="Where data is stored" data-fr="Où sont stockées les données">Where data is stored</a></p>
+  </section>
+
+  <section>
+    <h2 data-en="Made in Montreal, in English and French" data-fr="Fait à Montréal, en français et en anglais">Made in Montreal, in English and French</h2>
+    <p data-en="Between is small and independent, and I read every message myself. Questions, ideas, or something that could work better for your practice? Write to me." data-fr="Between est petit et indépendant, et je lis chaque message moi-même. Des questions, des idées, ou quelque chose qui pourrait mieux fonctionner pour votre pratique? Écrivez-moi.">Between is small and independent, and I read every message myself. Questions, ideas, or something that could work better for your practice? Write to me.</p>
+    <div class="cta">
+      <a class="btn pri" href="/" data-en="Start 14-day free trial" data-fr="Commencer l'essai gratuit de 14 jours">Start 14-day free trial</a>
+      <a class="btn sec" href="/#book-demo" data-en="Book a 15-minute demo" data-fr="Réserver une démo de 15 minutes">Book a 15-minute demo</a>
+      <a class="btn sec" href="mailto:owner@betweenpsych.com" data-en="Email me" data-fr="M'écrire">Email me</a>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Between</span><a href="/privacy.html" data-en="Privacy" data-fr="Confidentialité">Privacy</a><a href="/terms.html" data-en="Terms" data-fr="Conditions">Terms</a><a href="/subprocessors.html" data-en="Subprocessors" data-fr="Sous-traitants">Subprocessors</a><a href="/features" data-en="All features" data-fr="Toutes les fonctionnalités">All features</a>
+  </footer>
+</div>
+<script>
+(function(){
+  var qs = new URLSearchParams(location.search);
+  var lang = qs.get('lang') || (function(){ try { return localStorage.getItem('btw_lang'); } catch(e){ return null; } })() || ((navigator.language || '').slice(0, 2) === 'fr' ? 'fr' : 'en');
+  if (lang !== 'fr') lang = 'en';
+  function render(){
+    document.documentElement.lang = lang;
+    document.title = (lang === 'fr' ? 'À propos' : 'About') + ' | Between';
+    document.querySelectorAll('[data-en]').forEach(function(el){ el.textContent = el.getAttribute('data-' + lang); });
+    document.querySelectorAll('[data-en-alt]').forEach(function(el){ el.alt = el.getAttribute('data-' + lang + '-alt'); });
+    document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+  }
+  document.querySelectorAll('.langs button').forEach(function(b){ b.addEventListener('click', function(){ lang = b.dataset.lang; try { localStorage.setItem('btw_lang', lang); } catch(e){} render(); }); });
+  render();
+})();
+</script>
+</body>
+</html>

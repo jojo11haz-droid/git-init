@@ -117,14 +117,14 @@
     <div><h2 id="ctaH">See it for your clinic</h2><p id="ctaP"></p></div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
       <a class="btn pri" id="ctaBtn" href="/">Get started</a>
-      <a class="btn sec" id="ctaDemo" href="/#book-demo">Book a 15-min demo</a>
+      <a class="btn sec" id="ctaDemo" href="/#book-demo">Book a 15-minute demo</a>
     </div>
     <div class="print-only purl" id="pUrl"></div>
   </div>
   <p class="note" id="note"></p>
   <div class="print-only pfoot"><span id="pfootL">Between · betweenpsych.com · owner@betweenpsych.com</span><span id="pfootR"></span></div>
   <footer class="no-print">
-    <span>© 2026 Between</span><a href="/privacy.html" id="fPriv">Privacy</a><a href="/terms.html" id="fTerms">Terms</a><a href="/subprocessors.html" id="fSub">Subprocessors</a><a href="/guides/" id="fGuides">Guides</a>
+    <span>© 2026 Between</span><a href="/privacy.html" id="fPriv">Privacy</a><a href="/terms.html" id="fTerms">Terms</a><a href="/subprocessors.html" id="fSub">Subprocessors</a><a href="/about" id="fAbout">About</a><a href="/guides/" id="fGuides">Guides</a>
   </footer>
 </div>
 <script>
@@ -153,7 +153,7 @@
     en: {
       title:'Everything Between does', eyebrow:'All features', back:'← Between', fieldLbl:'Show it for', print:'Save as PDF',
       lede:'Between captures what happens between appointments and turns it into what you need for the next one: who needs you, a chart note, a program that adapts. Here is the full list, in your field’s words.',
-      ctaH:'See it for your {org}', ctaP:'Your {cs} check in by voice or text and you see the pattern before you walk in.', ctaB:'Get started', ctaD:'Book a 15-min demo',
+      ctaH:'See it for your {org}', ctaP:'Your {cs} check in by voice or text and you see the pattern before you walk in.', ctaB:'Get started', ctaD:'Book a 15-minute demo',
       note:'Features marked AI use AI only for {cs} who have turned AI summaries on. Voice check-ins, dictation and session recording need speech-to-text to be switched on for your account.',
       ai:'AI', prem:'Personal Premium',
       sections:[
@@ -333,7 +333,7 @@
       }
     } catch(e){}
     document.querySelectorAll('footer a').forEach(function(a){
-      var t = { fPriv:['Privacy','Confidentialité'], fTerms:['Terms','Conditions'], fSub:['Subprocessors','Sous-traitants'], fGuides:['Guides','Guides'] }[a.id];
+      var t = { fPriv:['Privacy','Confidentialité'], fTerms:['Terms','Conditions'], fSub:['Subprocessors','Sous-traitants'], fAbout:['About','À propos'], fGuides:['Guides','Guides'] }[a.id];
       if(t) a.textContent = t[lang === 'fr' ? 1 : 0];
     });
     sel.innerHTML = Object.keys(FIELDS).map(function(k){ return '<option value="' + k + '"' + (k === fk ? ' selected' : '') + '>' + esc(FIELDS[k][lang][0]) + '</option>'; }).join('');
