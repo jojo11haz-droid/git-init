@@ -2959,7 +2959,7 @@
   @media (max-width:520px){ .btw-menu-toggle-l{display:none;} .btw-menu-toggle{padding:9px;} }
   .btw-drawer-back{position:fixed;inset:0;background:rgba(15,20,25,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:900;}
   .btw-drawer-back.open{opacity:1;pointer-events:auto;}
-  .btw-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px,90vw);background:var(--panel);box-shadow:-24px 0 60px rgba(0,0,0,.16);transform:translateX(104%);visibility:hidden;transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s linear .42s;z-index:901;display:flex;flex-direction:column;padding:22px max(26px, env(safe-area-inset-right, 0px)) max(22px, env(safe-area-inset-bottom, 0px)) 26px;overflow:hidden;}
+  .btw-drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px,90vw);background:var(--panel);box-shadow:-24px 0 60px rgba(0,0,0,.16);transform:translateX(104%);visibility:hidden;transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s linear .42s;z-index:901;display:flex;flex-direction:column;padding:22px max(26px, env(safe-area-inset-right, 0px)) max(22px, env(safe-area-inset-bottom, 0px)) 26px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
   .btw-drawer.open{transform:none;visibility:visible;transition:transform .42s cubic-bezier(.22,1,.36,1),visibility 0s;}
   body.btw-drawer-open{overflow:hidden;}
   .btw-drawer-head{display:flex;justify-content:space-between;align-items:center;min-height:36px;margin-bottom:22px;}
@@ -3474,6 +3474,31 @@
       var lbl = document.getElementById('btwAudSelLabel');
       if(lbl && rowName) rowName.textContent = lbl.textContent;
     }
+    // Keep the page still behind the menu. iOS Safari ignores overflow:hidden
+    // for touch scrolling, so pin the body in place and put it back exactly
+    // where it was on close.
+    var lockedY = 0, locked = false;
+    function lockScroll(){
+      if(locked) return; locked = true;
+      lockedY = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var b = document.body.style;
+      b.position = 'fixed'; b.top = (-lockedY) + 'px'; b.left = '0'; b.right = '0'; b.width = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.classList.add('btw-drawer-open');
+    }
+    function unlockScroll(){
+      if(!locked) return; locked = false;
+      var b = document.body.style;
+      b.position = ''; b.top = ''; b.left = ''; b.right = ''; b.width = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('btw-drawer-open');
+      var html = document.documentElement, prev = html.style.scrollBehavior;
+      html.style.scrollBehavior = 'auto'; window.scrollTo(0, lockedY); html.style.scrollBehavior = prev;
+    }
+    // A finger dragging on the dimmed page or the panel's fixed parts never
+    // moves the page (the field list scrolls on its own).
+    bk.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive:false });
+    d.addEventListener('touchmove', function(e){ var inList = e.target.closest && e.target.closest('.btw-drawer-sublist'); if(!inList && d.scrollHeight <= d.clientHeight + 1) e.preventDefault(); }, { passive:false });
     function showSub(on){
       sub.classList.toggle('open', on); sub.setAttribute('aria-hidden', on ? 'false' : 'true');
       if(on){ if(window.__btwRenderAudMenu) window.__btwRenderAudMenu(); setTimeout(function(){ var it = subList.querySelector('.btw-audsel-item.active') || subList.querySelector('.btw-audsel-item'); try { it && it.focus({ preventScroll:true }); } catch(e){} }, 200); }
@@ -3483,14 +3508,14 @@
       sync(); showSub(false);
       d.classList.add('open'); bk.classList.add('open');
       d.setAttribute('aria-hidden', 'false'); tg.setAttribute('aria-expanded', 'true');
-      document.body.classList.add('btw-drawer-open');
+      lockScroll();
       setTimeout(function(){ try { cl.focus({ preventScroll:true }); } catch(e){} }, 120);
     }
     function close(){
       if(!d.classList.contains('open')) return;
       d.classList.remove('open'); bk.classList.remove('open');
       d.setAttribute('aria-hidden', 'true'); tg.setAttribute('aria-expanded', 'false');
-      document.body.classList.remove('btw-drawer-open');
+      unlockScroll();
       setTimeout(function(){ showSub(false); }, 420);
     }
     tg.addEventListener('click', function(){ d.classList.contains('open') ? close() : open(); });
