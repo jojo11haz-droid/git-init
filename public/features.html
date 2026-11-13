@@ -124,7 +124,7 @@
   <p class="note" id="note"></p>
   <div class="print-only pfoot"><span id="pfootL">Between · betweenpsych.com · owner@betweenpsych.com</span><span id="pfootR"></span></div>
   <footer class="no-print">
-    <span>© 2026 Between</span><a href="/privacy.html" id="fPriv">Privacy</a><a href="/terms.html" id="fTerms">Terms</a><a href="/subprocessors.html" id="fSub">Subprocessors</a><a href="/about" id="fAbout">About</a><a href="/guides/" id="fGuides">Guides</a>
+    <span>© 2026 Between</span><a href="/privacy.html" id="fPriv">Privacy</a><a href="/terms.html" id="fTerms">Terms</a><a href="/subprocessors.html" id="fSub">Subprocessors</a><a href="/about" id="fAbout">About</a><a href="/works-with-your-emr" id="fEmr">Works with your EMR</a><a href="/guides/" id="fGuides">Guides</a>
   </footer>
 </div>
 <script>
@@ -333,7 +333,7 @@
       }
     } catch(e){}
     document.querySelectorAll('footer a').forEach(function(a){
-      var t = { fPriv:['Privacy','Confidentialité'], fTerms:['Terms','Conditions'], fSub:['Subprocessors','Sous-traitants'], fAbout:['About','À propos'], fGuides:['Guides','Guides'] }[a.id];
+      var t = { fPriv:['Privacy','Confidentialité'], fTerms:['Terms','Conditions'], fSub:['Subprocessors','Sous-traitants'], fAbout:['About','À propos'], fEmr:['Works with your EMR','Avec votre logiciel de clinique'], fGuides:['Guides','Guides'] }[a.id];
       if(t) a.textContent = t[lang === 'fr' ? 1 : 0];
     });
     sel.innerHTML = Object.keys(FIELDS).map(function(k){ return '<option value="' + k + '"' + (k === fk ? ' selected' : '') + '>' + esc(FIELDS[k][lang][0]) + '</option>'; }).join('');

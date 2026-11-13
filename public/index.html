@@ -4411,7 +4411,7 @@
       <div class="btw-pane-desc" id="btwCaseloadDesc">Auto-updating as check-ins come in. Select a patient to see their timeline and trends.</div>
       <div id="btwImportRow" style="margin:0 0 14px;display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" id="btwImportBtn" class="btw-docs-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Add patients from a photo or list</button>
-        <input type="file" id="btwImportFile" accept="application/pdf,image/jpeg,image/png,image/webp" multiple style="display:none;">
+        <input type="file" id="btwImportFile" accept="application/pdf,image/jpeg,image/png,image/webp,.csv,.tsv,.txt,text/csv,text/plain" multiple style="display:none;">
         <button type="button" id="btwScheduleBtn" class="btw-docs-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span id="btwScheduleBtnLabel">Fill today from a schedule</span></button>
         <input type="file" id="btwScheduleFile" accept="application/pdf,image/jpeg,image/png,image/webp" style="display:none;">
       </div>
@@ -5394,6 +5394,7 @@
     <a href="/clinic-data-agreement.html" style="color:var(--moss);text-decoration:none;">Clinic agreement</a>
     <a href="/about" style="color:var(--moss);text-decoration:none;">About</a>
     <a href="/features" class="btw-features-link" style="color:var(--moss);text-decoration:none;">All features</a>
+    <a href="/works-with-your-emr" style="color:var(--moss);text-decoration:none;">Works with your EMR</a>
     <a href="/guides/" style="color:var(--moss);text-decoration:none;">Guides</a>
     <a href="mailto:owner@betweenpsych.com" style="color:var(--moss);text-decoration:none;">Contact</a>
     <span style="flex:1;"></span>
@@ -5982,7 +5983,7 @@
     "New message":"Nouveau message",
     "Show only the latest":"Afficher seulement le plus récent",
     "Earlier messages":"Messages précédents",
-    "All features":"Toutes les fonctionnalités",
+    "All features":"Toutes les fonctionnalités","Works with your EMR":"Avec votre logiciel de clinique",
     "See everything Between does":"Voir tout ce que fait Between",
     "See every feature that's included":"Voir toutes les fonctionnalités incluses",
     "The one number that decides the business: do clients keep checking in on their own. Retention is the share still checking in N weeks after their first check-in.":"Le chiffre qui décide de tout : les clients continuent-ils à faire leurs suivis d'eux-mêmes ? La rétention est la part qui fait encore des suivis N semaines après le premier.",
@@ -6091,6 +6092,9 @@
     "Improve my wording":"Améliorer ma formulation","Undo":"Annuler","Improving…":"Amélioration…",
     "Write your message first, then I can improve the wording.":"Écrivez d'abord votre message, puis je pourrai en améliorer la formulation.",
     "Reworded. Read it over before you send.":"Reformulé. Relisez-le avant de l'envoyer.",
+    "Could not read that file. Export the list as CSV and try again.":"Impossible de lire ce fichier. Exportez la liste en CSV et réessayez.",
+    "Showing the first 60.":"Les 60 premiers sont affichés.","more in this file: import it again to add the rest.":"de plus dans ce fichier : importez-le de nouveau pour ajouter les autres.",
+    "already on your caseload, left out.":"déjà dans votre clientèle, non repris.","Nobody new in this file.":"Personne de nouveau dans ce fichier.",
     "Checking the consent form…":"Vérification du formulaire de consentement…",
     "Consent form signed by both of you on":"Formulaire de consentement signé par vous deux le",
     "Valid until":"Valide jusqu'au",
@@ -15171,6 +15175,20 @@
       scans = []; listEl.innerHTML = ''; overlay.style.display = 'flex'; createBtn.disabled = true;
       setStatus(t('Reading your file…'), 'ok');
       for(const f of files){
+        // A client list exported from practice software (Jane, Clinicmaster or
+        // any other) as a spreadsheet file: read here in the browser. The file
+        // is never uploaded; only the first names you keep are sent.
+        if(isSheet(f)){
+          try{
+            const names = sheetFirstNames(await f.text());
+            const have = new Set((state.patients || []).map(function(p){ return String(p.display_name || '').trim().split(/\s+/)[0].toLowerCase(); }));
+            const fresh = names.filter(function(n){ return !have.has(n.toLowerCase()); });
+            // One import adds up to 60 people; a longer list is done in rounds
+            // (those already added are left out the next time).
+            scans.push({ filename: f.name, mime: 'text/csv', buf: null, names: fresh.slice(0, 60), multiple: true, already: names.length - fresh.length, more: Math.max(0, fresh.length - 60) });
+          }catch(e){ scans.push({ filename: f.name, mime: 'text/csv', buf: null, names: [], multiple: false, error: t('Could not read that file. Export the list as CSV and try again.') }); }
+          continue;
+        }
         try{
           const buf = await f.arrayBuffer();
           const resp = await fetch('/api/patients/scan-file', { method:'POST', headers:{ 'Content-Type': f.type || 'application/octet-stream' }, body: buf });
@@ -15184,13 +15202,51 @@
       renderReview();
     });
 
+    function isSheet(f){ return /\.(csv|tsv|txt)$/i.test(f.name || '') || /^text\/(csv|plain|tab-separated-values)$/.test(f.type || ''); }
+    // First names out of an exported client list. Finds the first-name column by
+    // its heading (English or French); failing that a full-name column ("Last,
+    // First" or "First Last"); failing that the first column.
+    function sheetFirstNames(text){
+      text = String(text || '').replace(/^\uFEFF/, '');
+      const head = text.split(/\r?\n/, 1)[0] || '';
+      const delim = [',', ';', '\t'].sort(function(a, b){ return head.split(b).length - head.split(a).length; })[0];
+      const rows = []; let row = [], cell = '', q = false;
+      for(let i = 0; i < text.length; i++){
+        const ch = text[i];
+        if(q){ if(ch === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else q = false; } else cell += ch; }
+        else if(ch === '"') q = true;
+        else if(ch === delim){ row.push(cell); cell = ''; }
+        else if(ch === '\n' || ch === '\r'){ if(ch === '\r' && text[i+1] === '\n') i++; row.push(cell); cell = ''; if(row.some(function(c){ return c.trim(); })) rows.push(row); row = []; }
+        else cell += ch;
+      }
+      row.push(cell); if(row.some(function(c){ return c.trim(); })) rows.push(row);
+      if(!rows.length) return [];
+      const norm = function(h){ return String(h || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]+/g, ' ').trim(); };
+      const hs = rows[0].map(norm);
+      let col = hs.findIndex(function(h){ return /^(first name|firstname|first|given name|prenom|preferred name|nom usuel)$/.test(h); });
+      let full = false, hasHead = col >= 0;
+      if(col < 0){ col = hs.findIndex(function(h){ return /^(name|full name|patient|patient name|client|client name|nom|nom complet|nom du patient|nom du client)$/.test(h); }); if(col >= 0){ full = true; hasHead = true; } }
+      if(col < 0){ col = 0; full = true; hasHead = hs.some(function(h){ return /(name|nom|email|courriel|phone|telephone|birth|naissance)/.test(h); }); }
+      const out = [], seen = new Set();
+      rows.slice(hasHead ? 1 : 0).forEach(function(r){
+        let v = String(r[col] || '').trim(); if(!v) return;
+        if(full && v.indexOf(',') >= 0) v = v.split(',')[1] || '';            // "Last, First"
+        v = v.trim().split(/\s+/)[0].replace(/[^\p{L}'’-]/gu, '').slice(0, 40);
+        if(v.length < 2 || /\d/.test(v)) return;
+        v = v.charAt(0).toUpperCase() + v.slice(1);
+        const k = v.toLowerCase(); if(seen.has(k)) return; seen.add(k); out.push(v);
+      });
+      return out;
+    }
     function renderReview(){
       const total = scans.reduce((n,s)=> n + s.names.length, 0);
       let html = '';
       scans.forEach(function(sc, si){
         html += '<div class="btw-imp-file"><div class="btw-imp-fname">'+esc(sc.filename)+(sc.multiple && sc.names.length?' · '+esc(t('list')):'')+'</div>';
         if(sc.error){ html += '<div style="color:var(--clay);font-size:12px;">'+esc(sc.error)+'</div></div>'; return; }
-        if(!sc.names.length){ html += '<div style="color:var(--ink-soft);font-size:12px;">'+esc(t('No names found.'))+'</div></div>'; return; }
+        if(sc.more){ html += '<div style="color:var(--ink-soft);font-size:12px;margin-bottom:6px;">'+esc(t('Showing the first 60.') + ' ' + sc.more + ' ' + t('more in this file: import it again to add the rest.'))+'</div>'; }
+        if(sc.already){ html += '<div style="color:var(--ink-soft);font-size:12px;margin-bottom:6px;">'+esc(sc.already + ' ' + t('already on your caseload, left out.'))+'</div>'; }
+        if(!sc.names.length){ html += '<div style="color:var(--ink-soft);font-size:12px;">'+esc(sc.already ? t('Nobody new in this file.') : t('No names found.'))+'</div></div>'; return; }
         sc.names.forEach(function(nm, ni){
           html += '<div class="btw-imp-row"><input type="checkbox" class="btw-imp-chk" data-si="'+si+'" data-ni="'+ni+'" checked><input type="text" class="btw-imp-name" data-si="'+si+'" data-ni="'+ni+'" value="'+esc(nm)+'" maxlength="40"></div>';
         });

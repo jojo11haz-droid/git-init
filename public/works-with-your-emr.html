@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>Works with your practice software | Between</title>
+<meta name="description" content="Use Between alongside Jane, Clinicmaster or any other practice software: bring your client list in from an export, and put each summary or chart note into the chart in one step.">
+<link rel="canonical" href="https://betweenpsych.com/works-with-your-emr">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1E4C86">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Between">
+<meta property="og:title" content="Works with your practice software | Between">
+<meta property="og:description" content="How Between fits alongside Jane, Clinicmaster or any other practice software.">
+<meta property="og:url" content="https://betweenpsych.com/works-with-your-emr">
+<meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F4F1; --panel:#FFFFFF; --ink:#1A1E1C; --ink-soft:#5A6169;
+    --moss:#1E4C86; --moss-light:#DCE6F3; --line:#E4E3DD; --clay:#C0392B;
+    --font-display:'Newsreader', Georgia, serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; } }
+  :root[data-theme="dark"]{ --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:34px max(18px, env(safe-area-inset-right, 0px)) 80px max(18px, env(safe-area-inset-left, 0px));}
+  a{color:var(--moss);}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:30px;}
+  .back{font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .back:hover{text-decoration:underline;}
+  .langs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel);}
+  .langs button{border:0;background:none;font:600 12px var(--font-body);color:var(--ink-soft);padding:5px 11px;border-radius:999px;cursor:pointer;}
+  .langs button.on{background:var(--moss);color:var(--panel);}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--moss);}
+  .hello{display:flex;align-items:center;gap:24px;margin:0 0 30px;}
+  .hello img{width:132px;height:132px;border-radius:50%;object-fit:cover;flex:none;border:3px solid var(--panel);box-shadow:0 6px 24px rgba(0,0,0,.12);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.12;letter-spacing:-.01em;margin:8px 0 8px;text-wrap:balance;}
+  .lede{font-size:17px;color:var(--ink-soft);margin:0;max-width:52ch;}
+  section{margin:0 0 30px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:25px;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em;}
+  p{margin:0 0 12px;font-size:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;}
+  ul.points{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:10px;}
+  ul.points li{position:relative;padding-left:22px;font-size:15.5px;}
+  ul.points li::before{content:'';position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--moss);}
+  .sig{font-family:var(--font-display);font-size:18px;margin-top:4px;}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;font:600 14px var(--font-body);border-radius:10px;padding:10px 16px;text-decoration:none;cursor:pointer;border:1px solid var(--moss);}
+  .btn.pri{background:var(--moss);color:var(--panel);}
+  .btn.sec{background:var(--panel);color:var(--moss);}
+  .btn:focus-visible,.langs button:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px 16px;}
+  footer a{text-decoration:none;}
+  @media (max-width:560px){ .hello{flex-direction:column;align-items:flex-start;gap:16px;} .hello img{width:112px;height:112px;} .card{padding:18px;} }
+  ol.steps{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:12px;counter-reset:s;}
+  ol.steps li{position:relative;padding-left:38px;font-size:15.5px;counter-increment:s;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:8px;background:var(--moss-light);color:var(--moss);font:600 13px var(--font-body);display:flex;align-items:center;justify-content:center;}
+  .note{font-size:13.5px;color:var(--ink-soft);margin:12px 0 0;}
+  .small{font-size:12.5px;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/"><svg width="18" height="18" viewBox="0 0 64 64" style="border-radius:5px;" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg><span data-en="← Between" data-fr="← Between">← Between</span></a>
+    <div class="langs" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button></div>
+  </div>
+
+  <div class="eyebrow" data-en="Works with your practice software" data-fr="Fonctionne avec votre logiciel de clinique">Works with your practice software</div>
+  <h1 data-en="Keep Jane, Clinicmaster or whatever you chart in. Between sits beside it." data-fr="Gardez Jane, Clinicmaster ou votre logiciel de dossiers. Between travaille à côté.">Keep Jane, Clinicmaster or whatever you chart in. Between sits beside it.</h1>
+  <p class="lede" style="margin-bottom:30px;" data-en="Between is not a new system to switch to. It covers the time between appointments, and what it produces goes into the chart you already keep. Nothing to install, no IT project." data-fr="Between n'est pas un nouveau système à adopter. Il couvre le temps entre les rendez-vous, et ce qu'il produit va dans le dossier que vous tenez déjà. Rien à installer, aucun projet informatique.">Between is not a new system to switch to. It covers the time between appointments, and what it produces goes into the chart you already keep. Nothing to install, no IT project.</p>
+
+  <section class="card">
+    <h2 data-en="1. Bring your client list in" data-fr="1. Importez votre liste de clients">1. Bring your client list in</h2>
+    <ol class="steps">
+      <li data-en="In your practice software, export your client or patient list as a spreadsheet file (CSV)." data-fr="Dans votre logiciel de clinique, exportez votre liste de clients ou de patients en fichier tableur (CSV).">In your practice software, export your client or patient list as a spreadsheet file (CSV).</li>
+      <li data-en="In Between, open your dashboard, choose the button that adds people from a photo or list, and pick that file." data-fr="Dans Between, ouvrez votre tableau de bord et choisissez le bouton pour ajouter à partir d&#39;une photo ou d&#39;une liste, puis sélectionnez ce fichier.">In Between, open your dashboard, choose the button that adds people from a photo or list, and pick that file.</li>
+      <li data-en="Check the first names, untick anyone you do not want, and add them. Each person gets a private invite link." data-fr="Vérifiez les prénoms, décochez les personnes à exclure, puis ajoutez-les. Chaque personne reçoit un lien d&#39;invitation privé.">Check the first names, untick anyone you do not want, and add them. Each person gets a private invite link.</li>
+    </ol>
+    <p class="note" data-en="The file is read on your own device and is never uploaded. Only the first names you keep are sent to Between. Emails, phone numbers, birth dates and everything else in the file stay with you." data-fr="Le fichier est lu sur votre propre appareil et n&#39;est jamais téléversé. Seuls les prénoms que vous conservez sont envoyés à Between. Les courriels, numéros de téléphone, dates de naissance et tout le reste du fichier restent chez vous.">The file is read on your own device and is never uploaded. Only the first names you keep are sent to Between. Emails, phone numbers, birth dates and everything else in the file stay with you.</p>
+  </section>
+
+  <section class="card">
+    <h2 data-en="2. Put the note in the chart" data-fr="2. Mettez la note au dossier">2. Put the note in the chart</h2>
+    <ol class="steps">
+      <li data-en="Before a visit, Between has a short summary and the trend ready. After it, dictate a few words and Between drafts the chart note in SOAP, DAP or ADIME." data-fr="Avant une visite, Between a un court résumé et la tendance déjà prêts. Après, dictez quelques mots et Between rédige la note au dossier en format SOAP, DAP ou ADIME.">Before a visit, Between has a short summary and the trend ready. After it, dictate a few words and Between drafts the chart note in SOAP, DAP or ADIME.</li>
+      <li data-en="Read it over and correct it. It is your note." data-fr="Relisez-la et corrigez-la. C&#39;est votre note.">Read it over and correct it. It is your note.</li>
+      <li data-en="Choose Copy to chart and paste it into the chart entry, or Save as PDF and attach the file to the chart, the same way you add any note or document." data-fr="Choisissez Copier dans le dossier et collez-la dans l&#39;entrée du dossier, ou Enregistrer en PDF et joignez le fichier au dossier, comme pour toute autre note ou tout autre document.">Choose Copy to chart and paste it into the chart entry, or Save as PDF and attach the file to the chart, the same way you add any note or document.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 data-en="A direct connection" data-fr="Une connexion directe">A direct connection</h2>
+    <p data-en="Today the two steps above are done by hand, and they take seconds. We would like summaries to land in the chart on their own, and we are asking practice software companies about it. If you want that for your clinic, the fastest way to make it happen is to tell your software provider you would use it, and tell us which software you use." data-fr="Aujourd&#39;hui, les deux étapes ci-dessus se font à la main et prennent quelques secondes. Nous aimerions que les résumés arrivent au dossier automatiquement, et nous en parlons aux entreprises de logiciels de clinique. Si vous le souhaitez pour votre clinique, le moyen le plus rapide est de dire à votre fournisseur de logiciel que vous l&#39;utiliseriez, et de nous dire quel logiciel vous utilisez.">Today the two steps above are done by hand, and they take seconds. We would like summaries to land in the chart on their own, and we are asking practice software companies about it. If you want that for your clinic, the fastest way to make it happen is to tell your software provider you would use it, and tell us which software you use.</p>
+    <div class="cta">
+      <a class="btn pri" href="/" data-en="Start 14-day free trial" data-fr="Commencer l'essai gratuit de 14 jours">Start 14-day free trial</a>
+      <a class="btn sec" href="/#book-demo" data-en="Book a 15-minute demo" data-fr="Réserver une démo de 15 minutes">Book a 15-minute demo</a>
+      <a class="btn sec" href="mailto:owner@betweenpsych.com?subject=Practice%20software" data-en="Tell us your software" data-fr="Dites-nous votre logiciel">Tell us your software</a>
+    </div>
+  </section>
+
+  <p class="small" data-en="Between is an independent product. It is not affiliated with, endorsed by or connected to Jane or Clinicmaster; those names belong to their owners and are used here only to say which software Between can be used beside." data-fr="Between est un produit indépendant. Il n&#39;est ni affilié à Jane ou à Clinicmaster, ni approuvé par eux, ni relié à eux; ces noms appartiennent à leurs propriétaires et ne sont utilisés ici que pour indiquer à côté de quels logiciels Between peut être utilisé.">Between is an independent product. It is not affiliated with, endorsed by or connected to Jane or Clinicmaster; those names belong to their owners and are used here only to say which software Between can be used beside.</p>
+
+  <footer>
+    <span>© 2026 Between</span><a href="/about" data-en="About" data-fr="À propos">About</a><a href="/privacy.html" data-en="Privacy" data-fr="Confidentialité">Privacy</a><a href="/terms.html" data-en="Terms" data-fr="Conditions">Terms</a><a href="/subprocessors.html" data-en="Subprocessors" data-fr="Sous-traitants">Subprocessors</a><a href="/features" data-en="All features" data-fr="Toutes les fonctionnalités">All features</a>
+  </footer>
+</div>
+<script>
+(function(){
+  var qs = new URLSearchParams(location.search);
+  var lang = qs.get('lang') || (function(){ try { return localStorage.getItem('btw_lang'); } catch(e){ return null; } })() || ((navigator.language || '').slice(0, 2) === 'fr' ? 'fr' : 'en');
+  if (lang !== 'fr') lang = 'en';
+  function render(){
+    document.documentElement.lang = lang;
+    document.title = (lang === 'fr' ? 'Fonctionne avec votre logiciel de clinique' : 'Works with your practice software') + ' | Between';
+    document.querySelectorAll('[data-en]').forEach(function(el){ el.textContent = el.getAttribute('data-' + lang); });
+    document.querySelectorAll('[data-en-alt]').forEach(function(el){ el.alt = el.getAttribute('data-' + lang + '-alt'); });
+    document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+  }
+  document.querySelectorAll('.langs button').forEach(function(b){ b.addEventListener('click', function(){ lang = b.dataset.lang; try { localStorage.setItem('btw_lang', lang); } catch(e){} render(); }); });
+  render();
+})();
+</script>
+</body>
+</html>
