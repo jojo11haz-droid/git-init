@@ -3718,15 +3718,6 @@
         <div class="btw-hero-thread" id="btwHeroThread"></div>
       </section>
 
-      <!-- 40-second product video, one per profession. Moved onto How it works at load. -->
-      <section class="btw-video" id="btwVideo" hidden>
-        <div class="btw-section-label">See it in under a minute</div>
-        <div class="btw-video-frame">
-          <video id="btwVideoEl" muted playsinline loop preload="none" controls aria-label="Between in 40 seconds: a check-in, then the summary, the trend and a drafted note in the dashboard"></video>
-        </div>
-        <p class="btw-video-note">No sound needed. Real screens from Between; everyone shown is a made-up demo person.</p>
-      </section>
-
       <section class="btw-recovery" id="btwRecovery" style="display:none;">
         <div class="btw-section-label">Your recovery, seen</div>
         <p class="btw-demo-lead">Patients don't just rate their pain. They watch it fade. Between shows each person their own recovery over time, something an exercise checklist never does.</p>
@@ -10115,7 +10106,7 @@
   // tab. Move the DOM nodes over once at load (keeps Home a quick scroll). The
   // "How it works" 3-step explainer belongs on that page too, so it leads it.
   if(viewLearn){
-    ['.btw-howitworks', '#btwVideo', '#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
+    ['.btw-howitworks', '#btwRecovery', '.btw-shots', '.btw-savetime', '.btw-forclinics'].forEach(function(sel){
       const el = document.querySelector(sel);
       if(el) viewLearn.appendChild(el);
     });
@@ -10243,8 +10234,7 @@
   // own' has none: its story is different (no professional's dashboard).
   const VIDEO_FIELDS = { physio:'physio', kinesiology:'kinesiology', osteo:'osteo', occupational:'occupational', sports:'sports', fitness:'fitness',
     therapy:'therapy', neuropsych:'neuropsych', recovery:'recovery', nutrition:'nutrition', schools:'schools' };
-  // Two players share one routine: the one on How it works, and the one on
-  // Home that stands in for the animated walk-through.
+  // The player on Home, where the video stands in for the animated walk-through.
   const videoNarrow = window.matchMedia ? window.matchMedia('(max-width:700px)') : null;
   const videoReduce = (function(){ try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
   const videoPlayers = [];
@@ -10285,8 +10275,6 @@
   window.__btwSyncVideo = syncVideo;
   if(videoNarrow && videoNarrow.addEventListener) videoNarrow.addEventListener('change', syncVideo);
   (function(){
-    const sec = document.getElementById('btwVideo');
-    addVideoPlayer(document.getElementById('btwVideoEl'), function(has){ if(sec) sec.hidden = !has; });
     const frame = document.getElementById('btwHomeVideo'), note = document.getElementById('btwHomeVideoNote');
     const demo = frame ? frame.closest('.btw-demo') : null;
     addVideoPlayer(document.getElementById('btwHomeVideoEl'), function(has){
@@ -10295,6 +10283,12 @@
       if(demo) demo.classList.toggle('has-video', has);
     });
   })();
+  // A link ending in #video (the demo confirmation email uses one) opens Home
+  // scrolled to the video.
+  window.addEventListener('load', function(){
+    if((location.hash || '').toLowerCase() !== '#video') return;
+    setTimeout(function(){ const d = document.querySelector('#btwViewHome .btw-demo'); if(d && d.getClientRects().length) d.scrollIntoView({ block:'start' }); }, 450);
+  });
 
   // "From $X" hint: read the lowest price the Pricing page shows for the
   // current profession and language (individuals: the personal plan), so it

@@ -5051,11 +5051,11 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
     // Let them know it arrived (their own language).
     if (emailConfigured()) {
       const fr = r.lang === 'fr';
-      // Each profession has a 40-second video on its How it works page: a quick look before the call.
+      // Each profession has a 40-second video on its home page (#video scrolls to it): a quick look before the call.
       const videoPath = DEMO_VIDEO_PATH[r.field];
       const video = videoPath
-        ? (fr ? `\n\nEn attendant, voici Between en 40 secondes : ${SITE_URL}${videoPath}?lang=fr#how-it-works`
-              : `\n\nIn the meantime, here's a 40-second look at Between: ${SITE_URL}${videoPath}#how-it-works`)
+        ? (fr ? `\n\nEn attendant, voici Between en 40 secondes : ${SITE_URL}${videoPath}?lang=fr#video`
+              : `\n\nIn the meantime, here's a 40-second look at Between: ${SITE_URL}${videoPath}#video`)
         : '';
       sendEmail({
         to: r.email,
