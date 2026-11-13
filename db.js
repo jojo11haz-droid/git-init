@@ -338,6 +338,24 @@ CREATE TABLE IF NOT EXISTS clinician_messages (
   read_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS clinician_messages_patient_idx ON clinician_messages(patient_id, created_at DESC);
+-- A signed consent form for recording sessions: the client and the
+-- professional both sign on screen before the first recording. The exact
+-- wording they signed is kept with the two signatures (PNG data URLs).
+CREATE TABLE IF NOT EXISTS recording_consents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  clinician_id UUID NOT NULL REFERENCES clinicians(id) ON DELETE CASCADE,
+  client_name TEXT NOT NULL,
+  clinician_name TEXT NOT NULL,
+  client_signature TEXT NOT NULL,
+  clinician_signature TEXT NOT NULL,
+  form_text TEXT NOT NULL,
+  lang TEXT NOT NULL DEFAULT 'en',
+  signed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS recording_consents_idx ON recording_consents(patient_id, clinician_id, signed_at DESC);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS check_in_mode_lock TEXT NOT NULL DEFAULT 'any';
 -- The body map's Man / Woman figure, remembered on the account (web + app).
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS body_sex TEXT;
@@ -2097,4 +2115,46 @@ export async function listDemoRequests(limit = 100) {
     [Math.min(Math.max(1, limit), 500)]
   );
   return rows;
+}
+
+// ---- Recording consent (signed by client and professional) ----
+export async function createRecordingConsent({ patientId, clinicianId, clientName, clinicianName, clientSignature, clinicianSignature, formText, lang, months = 12 }) {
+  const { rows } = await pool.query(
+    `INSERT INTO recording_consents (patient_id, clinician_id, client_name, clinician_name, client_signature, clinician_signature, form_text, lang, expires_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now() + ($9 || ' months')::interval)
+     RETURNING id, client_name, clinician_name, lang, signed_at, expires_at`,
+    [patientId, clinicianId, clientName, clinicianName, clientSignature, clinicianSignature, formText, lang, String(months)]
+  );
+  return rows[0];
+}
+
+// The form in force for this client with this professional: signed, not
+// withdrawn, not expired. Null when a new signature is needed.
+export async function getValidRecordingConsent(patientId, clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT id, client_name, clinician_name, lang, signed_at, expires_at
+     FROM recording_consents
+     WHERE patient_id = $1 AND clinician_id = $2 AND revoked_at IS NULL AND expires_at > now()
+     ORDER BY signed_at DESC LIMIT 1`,
+    [patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function getRecordingConsent(id, patientId, clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT id, client_name, clinician_name, client_signature, clinician_signature, form_text, lang, signed_at, expires_at, revoked_at
+     FROM recording_consents WHERE id = $1 AND patient_id = $2 AND clinician_id = $3`,
+    [id, patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+export async function revokeRecordingConsent(patientId, clinicianId) {
+  const { rowCount } = await pool.query(
+    `UPDATE recording_consents SET revoked_at = now()
+     WHERE patient_id = $1 AND clinician_id = $2 AND revoked_at IS NULL`,
+    [patientId, clinicianId]
+  );
+  return rowCount;
 }

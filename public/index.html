@@ -587,6 +587,15 @@
   .btw-acc-body{padding:2px 15px 15px;}
   .btw-acc:not(.btw-open) .btw-acc-body{display:none;}
   .btw-acc.btw-open .btw-acc-head .btw-acc-prev{display:none;}
+  /* A professional's sections for the selected client (program, session prep,
+     where it hurts) fold the same way. The cards inside keep their own frame,
+     so the folded box only adds the button. On the client's own screen these
+     are not folded: the button is hidden and the content always shows. */
+  .btw-acc-pro > .btw-acc-body{padding:0 12px 12px;}
+  .btw-acc-pro > .btw-acc-body > *:last-child{margin-bottom:0;}
+  .btw-role-patient .btw-acc-pro{border:0;background:none;border-radius:0;overflow:visible;margin:0;}
+  .btw-role-patient .btw-acc-pro > .btw-acc-head{display:none;}
+  .btw-role-patient .btw-acc-pro > .btw-acc-body{display:block !important;padding:0;}
   /* Check-in streak: a warm, gentle habit chip on the composer. */
   .btw-streak{display:inline-flex;align-items:center;gap:9px;background:var(--amber-bg);border:1px solid #EAD9BE;border-radius:999px;padding:7px 15px 7px 12px;margin:0 0 15px;}
   .btw-streak .fl{display:inline-flex;align-items:center;color:var(--amber);flex:none;}
@@ -1390,8 +1399,38 @@
   @media (max-width:720px){ .btw-prep-pair{grid-template-columns:1fr;} }
   .btw-scribe-who{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 8px;}
   .btw-scribe-who:empty{display:none;}
-  .btw-scribe-consent{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;margin:4px 0 10px;cursor:pointer;}
-  .btw-scribe-consent input{margin-top:2px;accent-color:var(--moss);}
+  /* Owner's billing check: one row per plan, a tick or what to fix. */
+  .btw-billcheck-lead{font-size:13.5px;line-height:1.55;color:var(--ink-soft);margin:0 0 12px;}
+  .btw-billcheck-h{font:600 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:16px 0 6px;}
+  .btw-billcheck-row{display:grid;grid-template-columns:20px 1fr;gap:4px 8px;padding:9px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.45;}
+  .btw-billcheck-row .mk{font-weight:700;color:var(--moss);}
+  .btw-billcheck-row.bad .mk{color:var(--clay);}
+  .btw-billcheck-row .nm{font-weight:600;color:var(--ink);}
+  .btw-billcheck-row .dt{color:var(--ink-soft);font-weight:400;}
+  .btw-billcheck-row .fix{grid-column:2;color:var(--ink);}
+  .btw-billcheck-row code{font-family:var(--font-mono);font-size:11.5px;background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:1px 5px;overflow-wrap:anywhere;}
+  /* Recording needs the form both people signed: its state, and the form itself. */
+  .btw-scribe-consentbox{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:13px;line-height:1.45;margin:4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);}
+  .btw-scribe-consentbox.ok{border-color:var(--moss);background:var(--moss-light);}
+  .btw-scribe-consentstate{flex:1 1 220px;min-width:0;}
+  .btw-scribe-consentacts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;}
+  .btw-scribe-link{background:none;border:0;padding:0;font:inherit;font-size:12.5px;color:var(--moss);text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+  .btw-recc-text{font-size:13.5px;line-height:1.6;color:var(--ink);margin:4px 0 14px;}
+  .btw-recc-text p{margin:0 0 9px;}
+  .btw-recc-signed{font-size:12.5px;color:var(--moss);font-weight:600;margin:0 0 12px;}
+  .btw-recc-sigs{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){ .btw-recc-sigs{grid-template-columns:1fr;} }
+  .btw-recc-siglabel{font-size:12px;color:var(--ink-soft);margin-bottom:5px;overflow-wrap:anywhere;}
+  .btw-recc-siglabel strong{color:var(--ink);}
+  /* The pad stays white in dark mode too: it is a piece of paper, and the ink is dark. */
+  .btw-recc-pad{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;position:relative;}
+  .btw-recc-pad::after{content:"";position:absolute;left:12px;right:12px;bottom:22%;border-bottom:1px dashed #C9CED6;pointer-events:none;}
+  .btw-recc-pad canvas,.btw-recc-pad img{display:block;width:100%;aspect-ratio:600/180;height:auto;}
+  .btw-recc-pad canvas{touch-action:none;cursor:crosshair;}
+  .btw-recc-hint{font-size:12px;color:var(--ink-soft);margin:10px 0 0;}
+  .btw-recc-err{font-size:12.5px;color:var(--clay);min-height:18px;margin-top:6px;}
+  .btw-recc-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:8px;}
+  .btw-recc-actions .btw-modal-continue{width:auto;margin:0;padding-left:22px;padding-right:22px;}
   .btw-scribe-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .btw-scribe-dot{width:11px;height:11px;border-radius:50%;background:var(--line);flex:none;}
   .btw-scribe.rec .btw-scribe-dot{background:var(--clay);box-shadow:0 0 0 5px rgba(192,57,43,.14);animation:btwScribePulse 1.4s ease-in-out infinite;}
@@ -3494,6 +3533,7 @@
           <button class="btw-nav-btn" id="btwNotifBtn" style="display:none;">Notifications</button>
           <button class="btw-nav-btn" id="btwAdminBtn" style="display:none;">Verify clinicians</button>
           <button class="btw-nav-btn" id="btwTrafficBtn" style="display:none;">Website traffic &amp; demos</button>
+          <button class="btw-nav-btn" id="btwBillCheckBtn" style="display:none;">Check billing setup</button>
           <button class="btw-nav-btn" id="btwEngagementBtn" style="display:none;">Engagement</button>
           <button class="btw-nav-btn" id="btwBillingBtn" style="display:none;">Billing &amp; subscription</button>
           <button class="btw-nav-btn" id="btwPracticeBtn" style="display:none;">My clinic</button>
@@ -4469,7 +4509,14 @@
       <div id="btwScribePanel" class="btw-ainote btw-scribe" style="display:none;">
         <div class="btw-ainote-label" id="btwScribeLabel">Record the session: Between writes the chart note from it</div>
         <div class="btw-scribe-who" id="btwScribeWho"></div>
-        <label class="btw-scribe-consent"><input type="checkbox" id="btwScribeConsent"> <span>The client agreed to this session being recorded.</span></label>
+        <div class="btw-scribe-consentbox" id="btwScribeConsentBox">
+          <span class="btw-scribe-consentstate" id="btwScribeConsentState">Checking the consent form…</span>
+          <span class="btw-scribe-consentacts">
+            <button type="button" id="btwScribeSign" class="btw-emr-btn" style="display:none;"><span>Sign the consent form</span></button>
+            <button type="button" id="btwScribeViewForm" class="btw-scribe-link" style="display:none;">View the signed form</button>
+            <button type="button" id="btwScribeWithdraw" class="btw-scribe-link" style="display:none;">Withdraw consent</button>
+          </span>
+        </div>
         <div class="btw-scribe-ctrl">
           <span class="btw-scribe-dot" id="btwScribeDot" aria-hidden="true"></span>
           <span class="btw-scribe-time" id="btwScribeTime">0:00</span>
@@ -4523,7 +4570,7 @@
         <div class="btw-ainote-label" id="btwEncourageLabel">Message to your client. They read it in Between</div>
         <div class="btw-msg-to" id="btwMsgTo"></div>
         <textarea id="btwEncourageText" class="btw-ainote-text" rows="5" maxlength="1200" spellcheck="true" placeholder="A short note: how they're doing, what to focus on this week."></textarea>
-        <div class="btw-msg-tools"><button type="button" id="btwMsgDraft" class="btw-emr-btn"><span>Draft with AI</span></button><span id="btwEncourageMeta"></span></div>
+        <div class="btw-msg-tools"><button type="button" id="btwMsgDraft" class="btw-emr-btn"><span>Draft with AI</span></button><button type="button" id="btwMsgPolish" class="btw-emr-btn" title="Says what you wrote more clearly and warmly, without adding anything"><span>Improve my wording</span></button><button type="button" id="btwMsgUndo" class="btw-scribe-link" style="display:none;">Undo</button><span id="btwEncourageMeta"></span></div>
         <div class="btw-msg-ex" id="btwMsgEx"></div>
         <div class="btw-ainote-foot">
           <span class="btw-msg-status" id="btwMsgStatus" role="status" aria-live="polite"></span>
@@ -5289,6 +5336,45 @@
     </div>
   </div>
 
+  <div class="btw-modal-overlay" id="btwBillCheckOverlay" style="display:none;">
+    <div class="btw-modal" style="max-width:600px;">
+      <button class="btw-modal-close" data-close="btwBillCheckOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Owner</div>
+      <h2>Billing setup check</h2>
+      <p class="btw-billcheck-lead" id="btwBillCheckLead">Reading each plan's price from Stripe…</p>
+      <div id="btwBillCheckList"></div>
+      <div style="text-align:right;margin-top:12px;"><button type="button" class="btw-nav-btn" id="btwBillCheckAgain">Check again</button></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwRecConsentOverlay" style="display:none;">
+    <div class="btw-modal btw-recc" style="max-width:560px;">
+      <button class="btw-modal-close" data-close="btwRecConsentOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow">Session recording</div>
+      <h2 id="btwReccTitle">Consent to record a session</h2>
+      <div class="btw-recc-text" id="btwReccText"></div>
+      <div class="btw-recc-signed" id="btwReccSigned" style="display:none;"></div>
+      <div class="btw-recc-sigs">
+        <div class="btw-recc-sig">
+          <div class="btw-recc-siglabel"><span id="btwReccClientLabel">Client or patient</span> · <strong id="btwReccClientName"></strong></div>
+          <div class="btw-recc-pad"><canvas id="btwReccClientPad" width="600" height="180" aria-label="Client signature"></canvas><img id="btwReccClientImg" alt="Client signature" style="display:none;"></div>
+          <button type="button" class="btw-scribe-link" id="btwReccClientClear">Clear</button>
+        </div>
+        <div class="btw-recc-sig">
+          <div class="btw-recc-siglabel"><span id="btwReccProLabel">Professional</span> · <strong id="btwReccProName"></strong></div>
+          <div class="btw-recc-pad"><canvas id="btwReccProPad" width="600" height="180" aria-label="Professional signature"></canvas><img id="btwReccProImg" alt="Professional signature" style="display:none;"></div>
+          <button type="button" class="btw-scribe-link" id="btwReccProClear">Clear</button>
+        </div>
+      </div>
+      <p class="btw-recc-hint" id="btwReccHint">Each person signs in their own box with a finger, a stylus or the mouse.</p>
+      <div class="btw-recc-err" id="btwReccErr" role="alert"></div>
+      <div class="btw-recc-actions">
+        <button type="button" class="btw-nav-btn" id="btwReccPrint" style="display:none;">Print</button>
+        <button type="button" class="btw-modal-continue" id="btwReccSave">Save the signed form</button>
+      </div>
+    </div>
+  </div>
+
   <div class="btw-modal-overlay" id="btwBillingOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:420px;">
       <button class="btw-modal-close" data-close="btwBillingOverlay" type="button" aria-label="Close">✕</button>
@@ -5685,7 +5771,7 @@
     "Mind":"Esprit","Body":"Corps","Sport":"Sport","Eating":"Alimentation",
     "Or just for yourself":"Ou simplement pour vous","Your own private check-ins, no clinician needed":"Vos propres suivis privés, sans clinicien",
     "For:":"Pour :","Choose your field":"Choisissez votre domaine",
-    "Who's it for?":"Pour qui ?",
+    "Who's it for?":"Pour qui ?","Program":"Programme",
     "Know how the people you help are doing between visits.":"Sachez comment vont les personnes que vous aidez entre les rendez-vous.",
     "They check in by voice or text in under a minute. Between gives you a short summary, the trend and a drafted note before you see them next.":"Elles font un suivi par la voix ou par écrit en moins d'une minute. Between vous donne un court résumé, la tendance et une ébauche de note avant de les revoir.",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
@@ -6002,7 +6088,24 @@
     "You can still dictate or type your session notes above, or record the session.":"Vous pouvez quand même dicter ou taper vos notes de séance ci-dessus, ou enregistrer la séance.",
     "Record session":"Enregistrer la séance",
     "Record the session: Between writes the chart note from it":"Enregistrez la séance : Between en rédige la note au dossier",
-    "The client agreed to this session being recorded.":"Le client a accepté que cette séance soit enregistrée.",
+    "Improve my wording":"Améliorer ma formulation","Undo":"Annuler","Improving…":"Amélioration…",
+    "Write your message first, then I can improve the wording.":"Écrivez d'abord votre message, puis je pourrai en améliorer la formulation.",
+    "Reworded. Read it over before you send.":"Reformulé. Relisez-le avant de l'envoyer.",
+    "Checking the consent form…":"Vérification du formulaire de consentement…",
+    "Consent form signed by both of you on":"Formulaire de consentement signé par vous deux le",
+    "Valid until":"Valide jusqu'au",
+    "Before recording, the client and you both sign a consent form on this screen.":"Avant d'enregistrer, le client et vous signez tous les deux un formulaire de consentement sur cet écran.",
+    "Sign the consent form":"Signer le formulaire de consentement","View the signed form":"Voir le formulaire signé","Withdraw consent":"Retirer le consentement",
+    "Signed. You can start recording.":"Signé. Vous pouvez commencer l'enregistrement.",
+    "Withdraw this consent? Recording stays locked for this client until a new form is signed.":"Retirer ce consentement? L'enregistrement reste verrouillé pour ce client jusqu'à la signature d'un nouveau formulaire.",
+    "Consent withdrawn.":"Consentement retiré.",
+    "Session recording":"Enregistrement de séance","Consent to record a session":"Consentement à l'enregistrement d'une séance",
+    "Client or patient":"Client ou patient","Professional":"Professionnel","Clear":"Effacer","Print":"Imprimer",
+    "Each person signs in their own box with a finger, a stylus or the mouse.":"Chaque personne signe dans sa propre case avec le doigt, un stylet ou la souris.",
+    "Save the signed form":"Enregistrer le formulaire signé",
+    "Both signatures are needed: the client and the professional.":"Les deux signatures sont nécessaires\u00a0: celle du client et celle du professionnel.",
+    "Signed on":"Signé le","Withdrawn on":"Retiré le",
+    "Could not load the consent form.":"Impossible de charger le formulaire de consentement.","Could not save the signed form.":"Impossible d'enregistrer le formulaire signé.",
     "Start recording":"Commencer l'enregistrement",
     "Pause":"Pause",
     "Resume":"Reprendre",
@@ -12509,6 +12612,8 @@
     if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const trafficBtn = document.getElementById('btwTrafficBtn');
     if(trafficBtn) trafficBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    const billCheckBtn = document.getElementById('btwBillCheckBtn');
+    if(billCheckBtn) billCheckBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const engBtn = document.getElementById('btwEngagementBtn');
     if(engBtn) engBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const notifBtn = document.getElementById('btwNotifBtn');
@@ -14075,6 +14180,121 @@
   document.querySelectorAll('.btw-modal-overlay').forEach(el=>{
     el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });
+
+  // Owner only: check every plan's Stripe price against how the site sells it.
+  (function(){
+    const btn = document.getElementById('btwBillCheckBtn'), ov = document.getElementById('btwBillCheckOverlay');
+    if(!btn || !ov) return;
+    const lead = document.getElementById('btwBillCheckLead'), list = document.getElementById('btwBillCheckList');
+    const per = iv => iv === 'year' ? 'per year' : iv === 'month' ? 'per month' : (iv ? 'per ' + iv : 'one time');
+    function fix(r){
+      const want = r.wantInterval === 'year' ? 'yearly' : 'monthly';
+      const how = ' In Stripe, add a ' + want + ' recurring price in ' + r.currency + ' to this product, copy its ID (it starts with price_), and put it in Render as <code>' + esc(r.setting) + '</code>.';
+      if(r.problem === 'missing') return 'No price is set for this plan, so it cannot be bought.' + how;
+      if(r.problem === 'not_found') return 'Stripe does not know the price saved in Render (wrong ID, or a test-mode ID).' + how;
+      if(r.problem === 'one_time') return 'This price is a one-time charge. A subscription needs a recurring price, so checkout fails.' + how;
+      if(r.problem === 'wrong_interval') return 'This plan is sold ' + want + ' but its Stripe price bills ' + per(r.interval) + '.' + how;
+      if(r.problem === 'archived') return 'This price is archived in Stripe, so new customers cannot use it. Un-archive it, or:' + how;
+      if(r.problem === 'wrong_currency') return 'This price is in ' + esc(r.priceCurrency || '?') + ' but this setting is for ' + r.currency + '.' + how;
+      return 'Stripe did not answer for this price' + (r.detail ? ' (' + esc(r.detail) + ')' : '') + '. Try again in a minute.';
+    }
+    function row(r){
+      const money = r.amount != null ? ' <span class="dt">· $' + esc(Number(r.amount).toFixed(2)) + ' ' + esc(r.priceCurrency || r.currency) + ' ' + esc(per(r.interval)) + '</span>' : '';
+      return '<div class="btw-billcheck-row' + (r.ok ? '' : ' bad') + '"><span class="mk">' + (r.ok ? '✓' : '✗') + '</span><span><span class="nm">' + esc(r.label) + (r.currency === 'USD' ? ' (USD)' : '') + '</span>' + money + '</span>' + (r.ok ? '' : '<span class="fix">' + fix(r) + '</span>') + '</div>';
+    }
+    async function run(){
+      lead.textContent = "Reading each plan's price from Stripe…"; list.innerHTML = '';
+      try {
+        const d = await api('GET', '/api/admin/billing-check');
+        if(!d.configured){ lead.textContent = 'Stripe is not connected on this server (no secret key), so nothing can be charged.'; return; }
+        const bad = d.plans.filter(r => !r.ok), good = d.plans.filter(r => r.ok);
+        lead.textContent = bad.length ? bad.length + ' of ' + d.plans.length + ' plans need fixing. The rest are set up correctly. Compare the amounts with your Pricing page too.' : 'All ' + d.plans.length + ' plans are set up correctly in Stripe. Compare the amounts below with your Pricing page.';
+        list.innerHTML = (bad.length ? '<div class="btw-billcheck-h">Needs fixing</div>' + bad.map(row).join('') : '') + (good.length ? '<div class="btw-billcheck-h">Set up correctly</div>' + good.map(row).join('') : '');
+      } catch(e){ lead.textContent = (e && e.message) || 'Could not check the billing setup just now.'; }
+    }
+    btn.addEventListener('click', function(){ ov.style.display = 'flex'; run(); });
+    document.getElementById('btwBillCheckAgain').addEventListener('click', run);
+  })();
+
+  // Recording consent form: two signature pads (client, professional), or the
+  // saved form with both signatures to view and print.
+  (function(){
+    const ov = document.getElementById('btwRecConsentOverlay'); if(!ov) return;
+    const $ = id => document.getElementById(id);
+    const text = $('btwReccText'), signed = $('btwReccSigned'), err = $('btwReccErr'), hint = $('btwReccHint');
+    const save = $('btwReccSave'), print = $('btwReccPrint');
+    let cur = null, viewing = null;
+    function pad(canvas, clearBtn){
+      const ctx = canvas.getContext('2d'); let down = false, ink = 0, last = null;
+      function blank(){ ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ink = 0; }
+      function at(e){ const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height }; }
+      canvas.addEventListener('pointerdown', function(e){ e.preventDefault(); down = true; last = at(e); try { canvas.setPointerCapture(e.pointerId); } catch(_){} });
+      canvas.addEventListener('pointermove', function(e){
+        if(!down) return; e.preventDefault();
+        const p = at(e); ctx.strokeStyle = '#16233A'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        ink += Math.hypot(p.x - last.x, p.y - last.y); last = p; err.textContent = '';
+      });
+      const up = function(){ down = false; };
+      canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+      clearBtn.addEventListener('click', blank);
+      blank();
+      return { blank: blank, signed: function(){ return ink > 120; }, png: function(){ return canvas.toDataURL('image/png'); } };
+    }
+    const cPad = pad($('btwReccClientPad'), $('btwReccClientClear')), pPad = pad($('btwReccProPad'), $('btwReccProClear'));
+    function fill(form, names){
+      $('btwReccTitle').textContent = form.title;
+      text.innerHTML = '';
+      (form.paragraphs || []).forEach(function(p){ const el = document.createElement('p'); el.textContent = p; text.appendChild(el); });
+      $('btwReccClientLabel').textContent = form.clientLabel; $('btwReccProLabel').textContent = form.proLabel;
+      $('btwReccClientName').textContent = names.client; $('btwReccProName').textContent = names.pro;
+    }
+    function mode(view){
+      ['Client', 'Pro'].forEach(function(k){
+        $('btwRecc' + k + 'Pad').style.display = view ? 'none' : ''; $('btwRecc' + k + 'Img').style.display = view ? '' : 'none'; $('btwRecc' + k + 'Clear').style.display = view ? 'none' : '';
+      });
+      hint.style.display = view ? 'none' : ''; save.style.display = view ? 'none' : ''; print.style.display = view ? '' : 'none';
+      signed.style.display = view ? '' : 'none';
+    }
+    window.__btwOpenRecConsent = async function(o){
+      cur = o; viewing = null; err.textContent = ''; save.disabled = false;
+      if(o.viewId){
+        try {
+          const d = await api('GET', '/api/patients/' + encodeURIComponent(o.pid) + '/recording-consent/' + encodeURIComponent(o.viewId));
+          viewing = d;
+          fill(d.form || { title: t('Consent to record a session'), paragraphs: [], clientLabel: t('Client or patient'), proLabel: t('Professional') }, { client: d.clientName, pro: d.clinicianName });
+          $('btwReccClientImg').src = d.clientSignature; $('btwReccProImg').src = d.clinicianSignature;
+          const day = function(iso){ return new Date(iso).toLocaleString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { dateStyle:'long', timeStyle:'short' }); };
+          signed.textContent = t('Signed on') + ' ' + day(d.signedAt) + (d.revokedAt ? ' · ' + t('Withdrawn on') + ' ' + day(d.revokedAt) : '');
+          mode(true); ov.style.display = 'flex';
+        } catch(e){ alert((e && e.message) || t('Could not load the consent form.')); }
+        return;
+      }
+      fill(o.form, o.names); cPad.blank(); pPad.blank(); mode(false); ov.style.display = 'flex';
+    };
+    save.addEventListener('click', async function(){
+      if(!cur || cur.viewId) return;
+      if(!cPad.signed() || !pPad.signed()){ err.textContent = t('Both signatures are needed: the client and the professional.'); return; }
+      save.disabled = true; err.textContent = '';
+      try {
+        const d = await api('POST', '/api/patients/' + encodeURIComponent(cur.pid) + '/recording-consent', { clientSignature: cPad.png(), clinicianSignature: pPad.png() });
+        ov.style.display = 'none'; cPad.blank(); pPad.blank();
+        if(cur.onSaved) cur.onSaved(d.consent);
+      } catch(e){ err.textContent = (e && e.message) || t('Could not save the signed form.'); }
+      save.disabled = false;
+    });
+    print.addEventListener('click', function(){
+      if(!viewing) return;
+      const w = window.open('', '_blank'); if(!w) return;
+      const f = viewing.form || { title: '', paragraphs: [], clientLabel: '', proLabel: '' };
+      const sig = function(label, name, src){ return '<div style="flex:1"><div style="font-size:12px;color:#555">' + esc(label) + ' · <b>' + esc(name) + '</b></div><img src="' + esc(src) + '" style="width:100%;border:1px solid #ccc;border-radius:8px;margin-top:6px"></div>'; };
+      w.document.write('<!doctype html><meta charset="utf-8"><title>' + esc(f.title) + '</title><body style="font-family:Georgia,serif;max-width:640px;margin:40px auto;padding:0 20px;line-height:1.6;color:#111">'
+        + '<h1 style="font-size:22px">' + esc(f.title) + '</h1>' + (f.paragraphs || []).map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('')
+        + '<p style="font-size:13px;color:#333">' + esc(signed.textContent) + '</p><div style="display:flex;gap:20px;margin-top:18px">'
+        + sig(f.clientLabel, viewing.clientName, viewing.clientSignature) + sig(f.proLabel, viewing.clinicianName, viewing.clinicianSignature) + '</div></body>');
+      w.document.close(); setTimeout(function(){ try { w.focus(); w.print(); } catch(e){} }, 300);
+    });
+  })();
 
   // Keep the page still behind any open pop-up (billing, security, sign up,
   // a photo...). Only scrolling by hand is blocked: the page's own position is
@@ -16162,7 +16382,50 @@
     (function(){
       var btn = document.getElementById('btwScribeBtn'), panel = document.getElementById('btwScribePanel');
       if(!btn || !panel) return;
-      var consent = document.getElementById('btwScribeConsent'), who = document.getElementById('btwScribeWho');
+      var who = document.getElementById('btwScribeWho');
+      // Recording is unlocked by the form the client and the professional both
+      // signed (kept with the client's record), not by a tick box.
+      var cBox = document.getElementById('btwScribeConsentBox'), cState = document.getElementById('btwScribeConsentState');
+      var cSign = document.getElementById('btwScribeSign'), cView = document.getElementById('btwScribeViewForm'), cWithdraw = document.getElementById('btwScribeWithdraw');
+      var consentFor = null, consentInfo = null, consentForm = null, consentNames = null, consentLoading = false;
+      var consent = { get checked(){ var p = selectedPatient(); return !!(p && consentFor === p.id && consentInfo); } };
+      function fmtDay(iso){ try { return new Date(iso).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { year:'numeric', month:'long', day:'numeric' }); } catch(e){ return ''; } }
+      function paintConsent(){
+        var p = selectedPatient(), mine = !!(p && consentFor === p.id);
+        var locked = !!(rec && rec.state !== 'inactive') || busy || !!blob;
+        cBox.classList.toggle('ok', mine && !!consentInfo);
+        if(!p){ cState.textContent = ''; }
+        else if(!mine || consentLoading){ cState.textContent = t('Checking the consent form…'); }
+        else if(consentInfo){ cState.textContent = t('Consent form signed by both of you on') + ' ' + fmtDay(consentInfo.signedAt) + '. ' + t('Valid until') + ' ' + fmtDay(consentInfo.expiresAt) + '.'; }
+        else { cState.textContent = t('Before recording, the client and you both sign a consent form on this screen.'); }
+        show(cSign, mine && !consentLoading && !consentInfo);
+        show(cView, mine && !!consentInfo);
+        show(cWithdraw, mine && !!consentInfo && !locked);
+      }
+      async function loadConsent(){
+        var p = selectedPatient(); if(!p) return;
+        var id = p.id; consentFor = id; consentInfo = null; consentLoading = true; paintConsent();
+        try {
+          var d = await api('GET', '/api/patients/' + encodeURIComponent(id) + '/recording-consent');
+          if(consentFor !== id) return;
+          consentInfo = d.consent || null; consentForm = d.form || null; consentNames = { client: d.clientName || '', pro: d.clinicianName || '' };
+        } catch(e){ if(consentFor === id){ consentInfo = null; setMsg((e && e.message) || ''); } }
+        if(consentFor === id){ consentLoading = false; sync(); }
+      }
+      // Another client was picked while the panel is open: show that client's form.
+      window.__btwScribeSync = function(){
+        if(panel.style.display === 'none') return;
+        var p = selectedPatient();
+        if(p && consentFor !== p.id && !(rec && rec.state !== 'inactive') && !busy && !blob) loadConsent(); else paintConsent();
+      };
+      cSign.addEventListener('click', function(){ if(consentForm && window.__btwOpenRecConsent) window.__btwOpenRecConsent({ pid: consentFor, form: consentForm, names: consentNames, onSaved: function(c){ consentInfo = c; sync(); setMsg(t('Signed. You can start recording.')); } }); });
+      cView.addEventListener('click', function(){ if(consentInfo && window.__btwOpenRecConsent) window.__btwOpenRecConsent({ pid: consentFor, viewId: consentInfo.id }); });
+      cWithdraw.addEventListener('click', async function(){
+        if(!consentFor || !confirm(t('Withdraw this consent? Recording stays locked for this client until a new form is signed.'))) return;
+        try { await api('DELETE', '/api/patients/' + encodeURIComponent(consentFor) + '/recording-consent'); consentInfo = null; setMsg(t('Consent withdrawn.')); }
+        catch(e){ setMsg((e && e.message) || ''); }
+        sync();
+      });
       var bStart = document.getElementById('btwScribeStart'), bPause = document.getElementById('btwScribePause'), bStop = document.getElementById('btwScribeStop');
       var bRetry = document.getElementById('btwScribeRetry'), bDiscard = document.getElementById('btwScribeDiscard');
       var timeEl = document.getElementById('btwScribeTime'), msg = document.getElementById('btwScribeMsg');
@@ -16182,7 +16445,7 @@
         show(bPause, r || pz); bPause.querySelector('span').textContent = pz ? t('Resume') : t('Pause');
         show(bStop, r || pz);
         show(bRetry, !!blob && !busy); show(bDiscard, !!blob && !busy);
-        consent.disabled = !!(r || pz || busy || blob);
+        paintConsent();
         who.textContent = (r || pz || busy || blob) && pname ? t('Recording for') + ' ' + pname : '';
         timeEl.textContent = fmt(ms());
       }
@@ -16201,9 +16464,8 @@
         var open = panel.style.display === 'none';
         if(!open && active()){ panel.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
         panel.style.display = open ? '' : 'none';
-        if(open){ setMsg(''); sync(); }
+        if(open){ setMsg(''); sync(); loadConsent(); }
       });
-      consent.addEventListener('change', sync);
       bStart.addEventListener('click', async function(){
         var p = selectedPatient(); if(!p || !consent.checked) return;
         if(!window.MediaRecorder || !navigator.mediaDevices){ setMsg(t('Recording is not supported in this browser.')); return; }
@@ -16259,7 +16521,7 @@
             d.transcript.forEach(function(tn){ var row = document.createElement('div'); var b = document.createElement('b'); b.textContent = t('Speaker') + ' ' + (tn.speaker + 1); row.appendChild(b); row.appendChild(document.createTextNode(tn.text)); txBody.appendChild(row); });
             tx.style.display = ''; tx.open = false;
           }
-          consent.checked = false; elapsed = 0;
+          elapsed = 0;
           setMsg(t('Done. The note is below: check it, add anything missing, then save it as a PDF or copy it into your chart.'));
           if(typeof loadTimeSaved === 'function') loadTimeSaved().catch(function(){});
         } catch(e){
@@ -17253,6 +17515,48 @@
     var open = acc.classList.toggle('btw-open');
     head.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  // The professional's per-client sections become fold-away boxes too, each
+  // behind its own button: the program, session prep (with the AI read), and
+  // where it hurts. Which ones are open is remembered on this device.
+  (function(){
+    var CHEV = '<svg class="btw-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    var ICON = {
+      hep: '<path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"></path>',
+      prep: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path>',
+      body: '<circle cx="12" cy="5" r="2.2"></circle><path d="M12 7.5v7M8 10h8M9.5 21l2.5-6.5 2.5 6.5"></path>'
+    };
+    var boxes = [];
+    function wrap(key, els, title){
+      els = els.filter(Boolean); if(!els.length) return;
+      var box = document.createElement('div'); box.className = 'btw-acc btw-acc-pro'; box.id = 'btwAccPro_' + key; box.style.display = 'none';
+      var open = false; try { open = localStorage.getItem('btw_acc_' + key) === '1'; } catch(e){}
+      box.innerHTML = '<button type="button" class="btw-acc-head" aria-expanded="' + (open ? 'true' : 'false') + '"><span class="btw-acc-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[key] + '</svg><span class="btw-acc-tt"></span></span>' + CHEV + '</button><div class="btw-acc-body"></div>';
+      if(open) box.classList.add('btw-open');
+      els[0].parentNode.insertBefore(box, els[0]);
+      var body = box.querySelector('.btw-acc-body'); els.forEach(function(el){ body.appendChild(el); });
+      box.querySelector('.btw-acc-head').addEventListener('click', function(){ setTimeout(function(){ try { localStorage.setItem('btw_acc_' + key, box.classList.contains('btw-open') ? '1' : '0'); } catch(e){} }, 0); });
+      boxes.push({ box: box, els: els, title: title });
+      try { var mo = new MutationObserver(sync); els.forEach(function(el){ mo.observe(el, { attributes:true, attributeFilter:['style'], childList:true }); }); } catch(e){}
+    }
+    // A box shows only while something inside it has content to show.
+    function shows(el){ if(el.style.display === 'none') return false; var kids = el.children; if(el.classList.contains('btw-prep-pair')){ for(var i = 0; i < kids.length; i++){ if(kids[i].style.display !== 'none') return true; } return false; } return true; }
+    function sync(){
+      boxes.forEach(function(b){
+        var on = b.els.some(shows);
+        if((b.box.style.display !== 'none') !== on) b.box.style.display = on ? '' : 'none';
+        var tt = b.box.querySelector('.btw-acc-tt'), txt = b.title();
+        if(tt.textContent !== txt) tt.textContent = txt;
+      });
+    }
+    var pair = document.querySelector('#btwDashGrid .btw-prep-pair');
+    wrap('hep', [document.getElementById('btwHep')], function(){ var l = document.querySelector('#btwHep .btw-hep-t'); return (l && l.textContent.trim()) || t('Program'); });
+    wrap('prep', [pair], function(){ return t('Session prep'); });
+    wrap('body', [document.getElementById('btwBodyOverview')], function(){ return t('Where it hurts'); });
+    if(pair){ try { var mo2 = new MutationObserver(sync); [].forEach.call(pair.children, function(k){ mo2.observe(k, { attributes:true, attributeFilter:['style'] }); }); } catch(e){} }
+    window.__btwSyncProAccs = sync;
+    window.__btwOpenProAccs = function(){ boxes.forEach(function(b){ b.box.classList.add('btw-open'); b.box.querySelector('.btw-acc-head').setAttribute('aria-expanded', 'true'); }); };
+    sync();
+  })();
   // Label the two zones for whoever's signed in, show the detail zone only when
   // there's something to show, and keep the heavy sections to one-line rows
   // until expanded.
@@ -18164,7 +18468,8 @@
     // patient's summary for the clinician — not folded into "Health & body"
     // where it was easy to miss (the app shows it openly on My progress too).
     const trendsAcc = document.getElementById('btwAccTrends');
-    if(trendsAcc && host.nextSibling !== trendsAcc) trendsAcc.parentNode.insertBefore(host, trendsAcc);
+    const hostBox = host.closest('.btw-acc-pro') || host;   // it sits inside its fold-away box
+    if(trendsAcc && hostBox.nextSibling !== trendsAcc) trendsAcc.parentNode.insertBefore(hostBox, trendsAcc);
     const list = state.checkIns || [];
     if(!painMapContext() || !list.length){ host.style.display='none'; host.innerHTML=''; return; }
     const merged = {}, freq = {};
@@ -18616,7 +18921,7 @@
     function startSteps(s){ steps = s; idx = 0; active = true; overlay.classList.remove('btw-tour-ready'); overlay.classList.add('show'); render(); }
     // Only steps whose target is actually on screen (a therapist's client has no
     // body map; nobody has messages on day one).
-    function shownSteps(list){ return list.filter(function(st){ return !st.sel || visible(document.querySelector(st.keepIf || st.sel)); }); }
+    function shownSteps(list){ try { if(window.__btwOpenProAccs) window.__btwOpenProAccs(); } catch(e){} return list.filter(function(st){ return !st.sel || visible(document.querySelector(st.keepIf || st.sel)); }); }
     function start(){
       // Clinician with clients but none open: open the first so the per-client
       // tools (note, recording, program, prep) can be shown.
@@ -18716,6 +19021,8 @@
   }
 
   function renderAll(){
+    try { if(window.__btwScribeSync) setTimeout(window.__btwScribeSync, 0); } catch(e){}
+    try { if(window.__btwSyncProAccs) setTimeout(window.__btwSyncProAccs, 0); } catch(e){}
     btwApplyAccountBodySex();
     try { btwApplyAccent(); btwApplyPrefs(); renderBrandCard(); } catch(e){}
     if(isPatient()){
@@ -18908,6 +19215,26 @@
     var send = document.getElementById('btwMsgSend');
     var draft = document.getElementById('btwMsgDraft');
     var forPid = null, picked = new Set();
+    // "Improve my wording": the professional's own words, said more clearly
+    // and warmly. Only what is in the box is sent; Undo puts their version back.
+    (function(){
+      var polish = document.getElementById('btwMsgPolish'), undo = document.getElementById('btwMsgUndo'), before = null;
+      if(!polish || !undo) return;
+      polish.addEventListener('click', async function(){
+        var txt = ta.value.trim();
+        if(txt.length < 8){ status.textContent = t('Write your message first, then I can improve the wording.'); return; }
+        var lbl = polish.querySelector('span'), old = lbl.textContent;
+        polish.disabled = true; lbl.textContent = t('Improving…'); status.textContent = '';
+        try {
+          var d = await api('POST', '/api/clinician/polish-message', { text: txt });
+          before = ta.value; ta.value = d.message; undo.style.display = '';
+          status.textContent = t('Reworded. Read it over before you send.');
+        } catch(e){ status.textContent = (e && e.message) || ''; }
+        polish.disabled = false; lbl.textContent = old;
+      });
+      undo.addEventListener('click', function(){ if(before != null){ ta.value = before; before = null; } undo.style.display = 'none'; status.textContent = ''; });
+      ta.addEventListener('input', function(){ if(before != null){ before = null; undo.style.display = 'none'; } });
+    })();
     function drawEx(p){
       var ex = ((state.hepCache[p.id] || {}).exercises) || [];
       if(!ex.length){ exBox.innerHTML = '<div class="btw-msg-exnone">' + esc(t('Add exercises to their program to attach them to a message.')) + '</div>'; return; }

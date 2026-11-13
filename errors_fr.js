@@ -9,6 +9,16 @@
 // tests fail if a message in server.js has no entry here (or in LEFT_IN_ENGLISH).
 
 const FR = {
+  "Could not check the billing setup just now.": "Impossible de vérifier la configuration de la facturation pour le moment.",
+  "The wording helper is unavailable right now.": "L'aide à la formulation n'est pas disponible pour le moment.",
+  "Could not improve the wording just now. Please try again.": "Impossible d'améliorer la formulation pour le moment. Veuillez réessayer.",
+  "Could not load the consent form.": "Impossible de charger le formulaire de consentement.",
+  "Consent form not found.": "Formulaire de consentement introuvable.",
+  "Both signatures are needed: the client and the professional.": "Les deux signatures sont nécessaires\u00a0: celle du client et celle du professionnel.",
+  "The two signatures are identical. Each person signs in their own box.": "Les deux signatures sont identiques. Chaque personne signe dans sa propre case.",
+  "Could not save the signed form.": "Impossible d'enregistrer le formulaire signé.",
+  "Could not withdraw the consent.": "Impossible de retirer le consentement.",
+  "A recording consent form signed by the client and by you is needed first.": "Il faut d'abord un formulaire de consentement à l'enregistrement signé par le client et par vous.",
   "Check-in text is too long.": "Le texte du suivi est trop long.",
   "The live demo is unavailable right now.": "La démo en direct n'est pas disponible pour le moment.",
   "Type a sentence about your day to try it.": "Écrivez une phrase sur votre journée pour l'essayer.",
@@ -144,7 +154,6 @@ const FR = {
   "Could not send the message.": "Impossible d'envoyer le message.",
   "Could not load your messages.": "Impossible de charger vos messages.",
   "Could not update.": "Impossible de mettre à jour.",
-  "Confirm the client agreed to the recording first.": "Confirmez d'abord que le client a accepté l'enregistrement.",
   "Session recording isn't set up yet (speech-to-text is off).": "L'enregistrement de séance n'est pas encore configuré (la transcription vocale est désactivée).",
   "The AI draft note is unavailable right now.": "Le brouillon de note par IA n'est pas disponible pour le moment.",
   "Couldn't make out the recording. Check the microphone and try again.": "Nous n'avons pas bien compris l'enregistrement. Vérifiez le microphone et réessayez.",
