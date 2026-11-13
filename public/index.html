@@ -8892,6 +8892,38 @@
       "N'importe qui peut l'utiliser comme journal privé. Faites un suivi dès que votre concentration, votre mémoire ou votre énergie change et observez vos tendances cognitives et d'humeur au fil du temps. Lors d'une journée difficile, il vous montre une note laissée un meilleur jour. Vos données restent privées, que vous ayez un neuropsychologue ou non."
   });
 
+  // Mental-health fields (psychotherapy, neuropsychology, addiction support)
+  // never read rehab wording: no "home program", "dose", "discomfort" or
+  // "progress or ease off". Between-session practice is breathing, thought
+  // records, journaling; notes are DAP/SOAP progress notes. Recovery keeps any
+  // wording of its own it already has.
+  (function(){
+    var M = [
+      ["Programs that adapt", "Practice between sessions", "De la pratique entre les séances"],
+      ["Build a home program in a minute from AI suggestions, each with a short how-to. People tick off what they did, and Between suggests when to progress or ease off.",
+        "Suggest between-session practices in a minute, like a breathing exercise, a thought record or a journal prompt, each with a short how-to. Clients tick off what they tried, and Between shows which ones help on the harder days.",
+        "Suggérez des pratiques entre les séances en une minute, comme un exercice de respiration, un registre des pensées ou une question de journal, chacune avec une courte explication. Les clients cochent ce qu'ils ont essayé, et Between montre ce qui aide lors des journées plus difficiles."],
+      ["Dictate a few words after the visit and Between writes the chart note from the check-ins, in SOAP, DAP or ADIME. Reports and letters too. Save it as a PDF or copy it into your charting.",
+        "Dictate a few words after the session and Between writes the progress note from the check-ins, in DAP or SOAP. Reports and letters too. Save it as a PDF or copy it into your file.",
+        "Dictez quelques mots après la séance et Between rédige la note d'évolution à partir des suivis, en format DAP ou SOAP. Les rapports et les lettres aussi. Enregistrez-la en PDF ou copiez-la dans votre dossier."],
+      ["Your chart note and home program are drafted for you to check", "Your progress note and between-session practice are drafted for you to check", "Votre note d'évolution et la pratique entre les séances sont rédigées, vous n'avez qu'à les vérifier"],
+      ["Their program", "Their between-session practice", "Sa pratique entre les séances"],
+      ["Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.",
+        "Suggest practices for between sessions from their check-ins, like breathing, a thought record or journaling, each with a short how-to. They tick off what they tried when they check in.",
+        "Suggérez des pratiques pour entre les séances à partir de ses suivis, comme la respiration, un registre des pensées ou le journal, chacune avec une courte explication. Il coche ce qu'il a essayé lors de ses suivis."],
+      ["Every note, brief and program Between drafts for you adds up here.", "Every note, brief and practice Between drafts for you adds up here.", "Chaque note, résumé et pratique que Between rédige pour vous s'additionne ici."],
+      ["Attach from their program", "Attach from their practices", "Joindre de ses pratiques"],
+      ["or review the program", "or review their practices", "ou réviser ses pratiques"]
+    ];
+    var NEURO_PATIENT = function(s){ return s.replace(/\bClients\b/g, 'Patients').replace(/\bclients\b/g, 'patients'); };
+    M.forEach(function(r){
+      THERAPY_EN[r[0]] = r[1]; THERAPY_FR[r[0]] = r[2];
+      NEURO_EN[r[0]] = NEURO_PATIENT(r[1]); NEURO_FR[r[0]] = r[2].replace(/\bclients\b/g, 'patients');
+      if(!RECOVERY_EN[r[0]]) RECOVERY_EN[r[0]] = r[1];
+      if(!RECOVERY_FR[r[0]]) RECOVERY_FR[r[0]] = r[2];
+    });
+  })();
+
   // The "Clients see their progress" feature paragraph is physio by default
   // ("sore spots easing week by week"). Give every non-physical field its own
   // progress wording so a psychotherapist, nutritionist, neuropsychologist,
