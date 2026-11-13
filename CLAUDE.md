@@ -37,8 +37,15 @@ French to `errors_fr.js` too: the unit tests fail if one is missing.
   `pg_ctl -D /home/pgtest/pg2 -o "-k /home/pgtest/pg2 -p 5434" start`.
   Run app code against it with `DATABASE_SSL=disable`.
 - **Mobile has no Dart/Flutter toolchain in this environment**, so app code is
-  not compile-verified here. Hand-check it (bracket balance, theme tokens, call
-  sites) and tell the user to run `flutter analyze` before shipping.
+  not compile-verified locally. Hand-check it (bracket balance, theme tokens,
+  call sites) — then push: CI (`.github/workflows/ci.yml`, `app` job) runs
+  `flutter analyze` on every push to a `claude/**` branch, so it's the real
+  compile-check. Watch that run (GitHub Actions tools) and fix what it flags.
+  Note `flutter analyze` fails on **any** issue, including info-level lints.
+  CI pins Flutter **3.47.9** (`flutter-version` in `ci.yml`). Flutter 3.50
+  deprecates `package:flutter/material.dart` in favour of `package:material_ui`,
+  which fails the check in every file; moving the app to it is a deliberate,
+  separate change (bump the pin and the imports together).
 
 ## Branch
 Develop on `claude/between-clinician-auth-vvl9zb`. Don't open a PR unless asked.
