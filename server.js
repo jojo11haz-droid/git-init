@@ -62,7 +62,7 @@ import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTag
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
-  createBillingPortalSession, auditPrices
+  createBillingPortalSession, auditPrices, cancelSubscriptionNow
 } from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -2047,6 +2047,13 @@ app.post('/api/auth/subscription/cancel', requireDb, requireAuth, async (req, re
     const reactivate = !!(req.body && req.body.reactivate);
     const s = await getClinicianStripe(req.clinician.id);
     if (!s || !s.stripe_subscription_id) return res.status(400).json({ error: 'No subscription on file.' });
+    // A failed payment leaves no paid period to run out: end it now, so
+    // Stripe stops retrying the card and nothing more is charged.
+    if (!reactivate && SUB_LAPSED.includes(req.clinician.subscription_status)) {
+      await cancelSubscriptionNow(s.stripe_subscription_id);
+      const ended = await updateClinicianSubscription(req.clinician.id, { status: 'canceled' });
+      return res.json({ clinician: ended || req.clinician });
+    }
     await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, !reactivate);
     const updated = await updateClinicianSubscription(req.clinician.id, { status: reactivate ? 'active' : 'canceling' });
     res.json({ clinician: updated || req.clinician });
@@ -3739,6 +3746,8 @@ function billingCurrency(req) {
 // 'canceling' still grants access (they keep the period they paid for) until
 // the webhook flips it to 'canceled'. Invited patients (no self-serve plan)
 // are covered by their therapist's seat and are never gated.
+// A subscription whose last payment failed: still open in Stripe, no access.
+const SUB_LAPSED = ['past_due', 'unpaid'];
 function subActive(status) {
   return status === 'active' || status === 'trialing' || status === 'canceling';
 }
@@ -4023,6 +4032,11 @@ app.post('/api/patient/subscription/cancel', requireDb, requirePatientAuth, asyn
     const reactivate = !!(req.body && req.body.reactivate);
     const s = await getPatientStripe(req.patient.id);
     if (!s || !s.stripe_subscription_id) return res.status(400).json({ error: 'No subscription on file.' });
+    if (!reactivate && SUB_LAPSED.includes(req.patient.subscription_status)) {
+      await cancelSubscriptionNow(s.stripe_subscription_id);
+      const ended = await updatePatientSubscription(req.patient.id, { status: 'canceled' });
+      return res.json({ patient: publicPatient(await withClinicianInfo(ended || req.patient, req.patient)) });
+    }
     await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, !reactivate);
     const updated = await updatePatientSubscription(req.patient.id, { status: reactivate ? 'active' : 'canceling' });
     res.json({ patient: publicPatient(await withClinicianInfo(updated || req.patient, req.patient)) });

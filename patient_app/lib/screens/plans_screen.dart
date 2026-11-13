@@ -127,7 +127,11 @@ class _ManageSubscriptionState extends State<_ManageSubscription> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(s.cancelSubTitle),
-          content: Text(s.cancelSubBody, style: const TextStyle(height: 1.5)),
+          content: Text(
+              (app.patient?.subscriptionLapsed ?? false)
+                  ? s.cancelSubBodyLapsed
+                  : s.cancelSubBody,
+              style: const TextStyle(height: 1.5)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
@@ -172,7 +176,12 @@ class _ManageSubscriptionState extends State<_ManageSubscription> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(canceling ? s.subCanceling : s.subActive,
+          Text(
+              canceling
+                  ? s.subCanceling
+                  : (app.patient?.subscriptionLapsed ?? false)
+                      ? s.subLapsed
+                      : s.subActive,
               style: const TextStyle(
                   fontSize: 13.5, height: 1.45, color: BtwColors.ink)),
           Align(

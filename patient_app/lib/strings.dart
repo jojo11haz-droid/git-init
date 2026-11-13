@@ -193,6 +193,11 @@ class S {
   String get cancelSubBody => _(
       'You keep access until the end of your current billing period, and you will not be charged again.',
       'Vous gardez l\'accès jusqu\'à la fin de votre période de facturation en cours, et vous ne serez plus facturé.');
+  String get subLapsed => _('Your last payment did not go through.',
+      "Votre dernier paiement n'a pas été accepté.");
+  String get cancelSubBodyLapsed => _(
+      'Your subscription ends now and you will not be charged again.',
+      'Votre abonnement prend fin maintenant et vous ne serez plus facturé.');
   String get managedOnWeb => _(
       'Plans are set up on the website. You\'ll finish securely in your browser, then sign in here with the same email.',
       'Les forfaits se configurent sur le site web. Vous terminerez en toute sécurité dans votre navigateur, puis vous vous connecterez ici avec le même courriel.');
