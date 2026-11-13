@@ -33,6 +33,10 @@ class Patient {
           .contains(subscriptionStatus);
   bool get subscriptionCanceling =>
       plan != null && subscriptionStatus == 'canceling';
+  // The last payment failed: cancelling ends it at once, with nothing more charged.
+  bool get subscriptionLapsed =>
+      plan != null &&
+      const {'past_due', 'unpaid'}.contains(subscriptionStatus);
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;

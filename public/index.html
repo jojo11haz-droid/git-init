@@ -4214,6 +4214,7 @@
     <div class="btw-hero-cta" style="justify-content:center;">
       <button class="btw-hero-btn primary" id="btwPaywallSubscribe">Subscribe now</button>
     </div>
+    <div id="btwPaywallLapsed" style="display:none;margin-top:14px;font-size:13px;color:var(--ink-soft);line-height:1.6;"></div>
     <div id="btwPaywallCrisis" style="margin-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto;">
       This isn't a crisis service. If you're in immediate danger or thinking about suicide, contact <strong>988</strong> (Suicide &amp; Crisis Lifeline) or your local emergency number. This is always available, subscription or not.
     </div>
@@ -6998,7 +6999,11 @@
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Update payment method":"Modifier le mode de paiement","Opening…":"Ouverture…",
-    "Your last payment did not go through.":"Votre dernier paiement n'a pas été accepté.","Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
+    "Your last payment did not go through.":"Votre dernier paiement n'a pas été accepté.",
+    "Your subscription is on hold until the payment goes through. You can update your card, or cancel.":"Votre abonnement est en pause jusqu'à ce que le paiement soit accepté. Vous pouvez mettre votre carte à jour ou annuler.",
+    "Your subscription is on hold. You can cancel it here, and you will not be charged again.":"Votre abonnement est en pause. Vous pouvez l'annuler ici, et vous ne serez plus facturé.",
+    "Cancel your subscription? You will not be charged again.":"Annuler votre abonnement? Vous ne serez plus facturé.",
+    "Your subscription is cancelled. You will not be charged again.":"Votre abonnement est annulé. Vous ne serez plus facturé.","Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Current":"Actuel","Switch":"Changer","Switch to this plan?":"Passer à ce forfait ?",
     "Choose":"Choisir","Choose your plan":"Choisissez votre forfait",
     "Choose a plan to start your 14-day free trial. Nothing is charged for 14 days and you can cancel anytime before then.":"Choisissez un forfait pour commencer votre essai gratuit de 14 jours. Rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps avant.",
@@ -12740,6 +12745,31 @@
       ? t('Your trial or subscription isn\'t active. Start it to keep using your dashboard.')
       : t('Your subscription isn\'t active yet. Start it to send check-ins and see your trends.');
     if(btn) btn.textContent = therapist ? t('Start 14-day free trial') : t('Subscribe now');
+    // A payment that failed leaves the old subscription open in Stripe. Say
+    // so, and let them end it right here (or fix the card) without subscribing again.
+    const lapsed = document.getElementById('btwPaywallLapsed');
+    const st = therapist ? (state.me && state.me.subscription_status) : (state.patient && state.patient.subscription_status);
+    if(lapsed){
+      const on = (st === 'past_due' || st === 'unpaid');
+      lapsed.style.display = on ? '' : 'none';
+      if(on){
+        if(title) title.textContent = t('Your last payment did not go through.');
+        if(desc) desc.textContent = therapist ? t('Your subscription is on hold until the payment goes through. You can update your card, or cancel.') : t('Your subscription is on hold. You can cancel it here, and you will not be charged again.');
+        if(btn) btn.style.display = 'none';
+        lapsed.innerHTML = (therapist ? '<button type="button" id="btwPaywallCard" style="' + LINK_BTN + '">' + esc(t('Update payment method')) + '</button> · ' : '')
+          + '<button type="button" id="btwPaywallCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
+        const card = document.getElementById('btwPaywallCard');
+        if(card) card.addEventListener('click', async function(){ try{ const r = await api('POST', '/api/auth/billing-portal'); if(r && r.url) btwGo(r.url); }catch(e){ alert(e.message); } });
+        document.getElementById('btwPaywallCancel').addEventListener('click', async function(){
+          if(!confirm(t('Cancel your subscription? You will not be charged again.'))) return;
+          try{
+            if(therapist){ const r = await api('POST', '/api/auth/subscription/cancel'); state.me = {...state.me, ...r.clinician}; }
+            else { const r = await pApi('POST', '/api/patient/subscription/cancel'); state.patient = {...state.patient, ...r.patient}; }
+            lapsed.textContent = t('Your subscription is cancelled. You will not be charged again.');
+          }catch(e){ alert(e.message); }
+        });
+      } else if(btn) btn.style.display = '';
+    }
   }
   document.getElementById('btwPaywallSubscribe').addEventListener('click', async ()=>{
     try{

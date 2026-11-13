@@ -132,6 +132,12 @@ export async function setSubscriptionCancelAtPeriodEnd(subscriptionId, cancel) {
 
 // A Stripe-hosted page where the customer updates their card, sees invoices and
 // manages their subscription. We never see or store card details ourselves.
+// End a subscription right now (no further invoices or payment retries). Used
+// when the last payment failed: there is no paid period left to run out.
+export async function cancelSubscriptionNow(subscriptionId) {
+  return stripeRequest('DELETE', '/v1/subscriptions/' + encodeURIComponent(subscriptionId));
+}
+
 export async function createBillingPortalSession(customerId, returnUrl) {
   return stripeRequest('POST', '/v1/billing_portal/sessions', {
     customer: customerId,
