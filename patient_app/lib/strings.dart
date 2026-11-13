@@ -331,6 +331,18 @@ class S {
   String patternTheme(String tag) => _(
       'Check-ins about $tag tend to land on lower days.',
       'Les suivis au sujet de $tag arrivent souvent lors de journées plus difficiles.');
+  // The same three callouts for accounts that rate pain, not mood.
+  String patternWeekdayPain(String day) => _(
+      '${day}s tend to be higher-pain days for you.',
+      'Le $day est souvent une journée où la douleur est plus forte.');
+  String patternThemePain(String tag) => _(
+      'Check-ins about $tag tend to land on higher-pain days.',
+      'Les suivis au sujet de $tag arrivent souvent lors de journées où la douleur est plus forte.');
+  String get patternPainDown => _('Your pain is down from last week.',
+      'Votre douleur est en baisse par rapport à la semaine dernière.');
+  String get patternPainUp => _(
+      'Your pain is up from last week. Be gentle with yourself.',
+      'Votre douleur est en hausse par rapport à la semaine dernière. Soyez indulgent envers vous-même.');
   String get patternUp => _('Your mood is up from last week.',
       'Votre humeur est en hausse par rapport à la semaine dernière.');
   String get patternDown => _(
@@ -675,6 +687,7 @@ class S {
   String get aNoteYouLeft => _(
       'A note you left yourself', 'Un mot que vous vous êtes laissé');
   String get moodOverTime => _('Mood over time', 'Humeur au fil du temps');
+  String get painOverTime => _('Pain over time', 'Douleur au fil du temps');
   String checkedInDays(int n) => isFr
       ? 'Suivi fait $n ${n == 1 ? 'jour' : 'jours'} sur les 7 derniers.'
       : 'Checked in on $n of the last 7 days.';

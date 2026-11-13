@@ -10,7 +10,7 @@ silently.
 
 The two surfaces:
 - **Website / backend**: `public/index.html` (SPA: marketing site + clinician
-  & patient dashboards), `server.js`, `db.js`, `stripe.js`, `email.js`.
+  & patient dashboards), `server.js`, `db.js`, `stripe.js`, `email.js`, `errors_fr.js`.
 - **Mobile**: `patient_app/` (Flutter, patient-facing only). Key files:
   `lib/screens/home_screen.dart` (check-in composer), `lib/body_map.dart`,
   `lib/app_state.dart` (API + models), `lib/api.dart`, `lib/strings.dart`
@@ -21,6 +21,14 @@ whole way: `db.js` column + `createCheckIn`, `server.js` sanitizer + the two
 check-in endpoints (`/api/patients/:id/check-ins` and `/api/patient/check-ins`)
 + serializers, web `public/index.html`, and the app (`sendCheckIn` payload +
 `CheckIn` getter + the relevant screens).
+
+## Error messages in French
+Server error text is written in English in `server.js`. `errors_fr.js` holds the
+French for each one, and its `localizeErrors` middleware swaps it in whenever a
+request carries `X-Btw-Lang: fr` (the website adds that header to every `/api/`
+call while the page is in French; the app adds it in `lib/api.dart`). Adding or
+rewording an `error:` string, or a rate limiter `message:`, means adding its
+French to `errors_fr.js` too: the unit tests fail if one is missing.
 
 ## Verifying
 - Backend/web: `npm test`, and for DB work use the ephemeral Postgres cluster
