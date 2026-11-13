@@ -6998,7 +6998,7 @@
     // --- clinician billing ---
     "Billing":"Facturation","Your subscription":"Votre abonnement","Start subscription":"Commencer l'abonnement","Change plan":"Changer de forfait",
     "Update payment method":"Modifier le mode de paiement","Opening…":"Ouverture…",
-    "Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
+    "Your last payment did not go through.":"Votre dernier paiement n'a pas été accepté.","Cancel subscription":"Annuler l'abonnement","Keep my subscription":"Conserver mon abonnement",
     "Current":"Actuel","Switch":"Changer","Switch to this plan?":"Passer à ce forfait ?",
     "Choose":"Choisir","Choose your plan":"Choisissez votre forfait",
     "Choose a plan to start your 14-day free trial. Nothing is charged for 14 days and you can cancel anytime before then.":"Choisissez un forfait pour commencer votre essai gratuit de 14 jours. Rien n'est facturé pendant 14 jours, et vous pouvez annuler en tout temps avant.",
@@ -13348,6 +13348,8 @@
       // subscription yet, every plan gets a "Choose" that starts checkout for
       // THAT plan — so a stored plan can never force the price.
       const activeSub = (st === 'active' || st === 'trialing');
+      // A subscription whose payment failed is still a subscription: it can be cancelled too.
+      const lapsedSub = (st === 'past_due' || st === 'unpaid');
       const cur = state.me && state.me.plan;
       const rows = opts.map(function(o){
         const isCur = activeSub && o.plan === cur;
@@ -13370,7 +13372,8 @@
         + rows
         + (activeSub ? '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">' + esc(t('Switching takes effect now; your next invoice is adjusted for the difference.')) + '</div>' : '')
         + (activeSub ? '<button id="btwClinCancel" style="margin-top:14px;' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>'
-            + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">' + esc(t('If you cancel, you keep access until the end of your current billing period.')) + '</div>' : '');
+            + '<div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">' + esc(t('If you cancel, you keep access until the end of your current billing period.')) + '</div>' : '')
+        + (lapsedSub ? '<div style="margin-top:14px;">' + esc(t('Your last payment did not go through.')) + ' <button id="btwClinCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button></div>' : '');
       body.querySelectorAll('[data-switch]').forEach(function(b){
         b.addEventListener('click', async function(){
           const plan = b.getAttribute('data-switch');
@@ -13383,7 +13386,7 @@
     // Update card / view invoices on Stripe's hosted portal — shown whenever a
     // subscription (and so a Stripe customer) exists. insertAdjacentHTML keeps
     // the listeners already bound above.
-    if(st === 'active' || st === 'trialing' || st === 'canceling'){
+    if(st === 'active' || st === 'trialing' || st === 'canceling' || st === 'past_due' || st === 'unpaid'){
       body.insertAdjacentHTML('beforeend', '<button id="btwBillingPortal" style="margin-top:14px;' + LINK_BTN + '">' + esc(t('Update payment method')) + '</button>');
       const portalBtn = body.querySelector('#btwBillingPortal');
       if(portalBtn) portalBtn.addEventListener('click', async ()=>{
@@ -14727,6 +14730,9 @@
     } else if(st === 'canceling'){
       el.innerHTML = '<strong>' + esc(t('Subscription: cancels at the end of your billing period')) + '</strong> · ' + esc(planName) + '. '
         + '<button id="btwSubReactivate" style="' + LINK_BTN + '">' + esc(t('Keep my subscription')) + '</button>';
+    } else if(st === 'past_due' || st === 'unpaid'){
+      el.innerHTML = '<strong>' + esc(t('Your last payment did not go through.')) + '</strong> · ' + esc(planName) + '. '
+        + '<button id="btwSubCancel" style="' + LINK_BTN_CLAY + '">' + esc(t('Cancel subscription')) + '</button>';
     } else {
       el.innerHTML = '<strong>' + esc(t('Subscription: not active yet')) + '</strong>, '
         + '<button id="btwSubscribeBtn" style="' + LINK_BTN + '">' + esc(t('Subscribe now')) + '</button>';
