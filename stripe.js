@@ -162,3 +162,45 @@ export function constructWebhookEvent(rawBody, signatureHeader, secret, toleranc
   }
   return JSON.parse(Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody);
 }
+
+// ---- Owner check: is every plan's Stripe price set up the way the site sells it? ----
+// Reads each configured price from Stripe (read-only) and reports, in plain
+// words, anything that would break checkout: no price set, a price Stripe does
+// not know, a one-time price where a subscription is needed, the wrong billing
+// period, an archived price, or the wrong currency. No price ids are returned.
+const PLAN_LABEL = {
+  patient_monthly: 'Personal, monthly', patient_annual: 'Personal, yearly',
+  patient_premium: 'Personal Premium, monthly', patient_premium_annual: 'Personal Premium, yearly',
+  solo_monthly: 'Solo, monthly', solo_annual: 'Solo, yearly', solo_premium: 'Solo Premium, monthly',
+  team_monthly: 'Team, monthly', team_annual: 'Team, yearly', team_premium: 'Team Premium, monthly',
+  school_monthly: 'School, monthly', school_annual: 'School, yearly', school_premium: 'School Premium, monthly',
+  trainer_monthly: 'Trainer, monthly', trainer_annual: 'Trainer, yearly', trainer_premium: 'Trainer Premium, monthly',
+  mentor_monthly: 'Mentor (addiction support), monthly', mentor_annual: 'Mentor (addiction support), yearly'
+};
+export async function auditPrices() {
+  const rows = [];
+  for (const [plan, base] of Object.entries(PLAN_PRICE_VAR)) {
+    const wantInterval = /_annual$/.test(plan) ? 'year' : 'month';
+    for (const cur of ['CAD', 'USD']) {
+      const envVar = cur === 'USD' ? base + '_USD' : base;
+      const id = process.env[envVar];
+      if (!id && cur === 'USD') continue;            // USD prices are optional
+      const row = { plan, label: PLAN_LABEL[plan] || plan, currency: cur, setting: envVar, wantInterval, ok: false, problem: null, amount: null, interval: null };
+      rows.push(row);
+      if (!id) { row.problem = 'missing'; continue; }
+      let price;
+      try { price = await stripeRequest('GET', '/v1/prices/' + encodeURIComponent(id)); }
+      catch (err) { row.problem = (err && err.status === 404) ? 'not_found' : 'stripe_error'; row.detail = String((err && err.message) || '').slice(0, 200); continue; }
+      row.amount = typeof price.unit_amount === 'number' ? price.unit_amount / 100 : null;
+      row.priceCurrency = String(price.currency || '').toUpperCase();
+      row.interval = price.recurring ? price.recurring.interval : null;
+      const every = price.recurring ? (price.recurring.interval_count || 1) : 1;
+      if (price.type !== 'recurring' || !price.recurring) row.problem = 'one_time';
+      else if (row.interval !== wantInterval || every !== 1) row.problem = 'wrong_interval';
+      else if (price.active === false) row.problem = 'archived';
+      else if (row.priceCurrency !== cur) row.problem = 'wrong_currency';
+      else row.ok = true;
+    }
+  }
+  return rows;
+}

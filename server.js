@@ -29,6 +29,7 @@ import {
   getPatientDocContext, createDocumentUploadToken, consumeDocumentUploadToken,
   storePatientDocument, setDocumentInterpretation, listPatientDocuments,
   listPatientDocumentsForClinician, getDocumentBytes, getDocumentForPatient,
+  createRecordingConsent, getValidRecordingConsent, getRecordingConsent, revokeRecordingConsent,
   getDocumentForClinician, deleteDocumentForPatient, deleteDocumentForClinician,
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
@@ -61,7 +62,7 @@ import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTag
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
-  createBillingPortalSession
+  createBillingPortalSession, auditPrices
 } from './stripe.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1663,6 +1664,17 @@ app.get('/api/admin/contact-messages', requireDb, requireAuth, requireOwner, asy
 
 // Storage usage: database size and how much of it is photos vs voice memos,
 // so the owner knows when to upgrade the Postgres plan.
+// Owner only: every plan's Stripe price, checked against how the site sells it.
+app.get('/api/admin/billing-check', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    if (!stripeConfigured()) return res.json({ configured: false, plans: [] });
+    res.json({ configured: true, plans: await auditPrices() });
+  } catch (err) {
+    console.error('Billing check error:', err.message);
+    res.status(502).json({ error: 'Could not check the billing setup just now.' });
+  }
+});
+
 app.get('/api/admin/storage', requireDb, requireAuth, requireOwner, async (req, res) => {
   try {
     res.json(await storageStats());
@@ -3022,16 +3034,125 @@ app.post('/api/patient/messages/read', requireDb, requirePatientAuth, async (req
 // transcript and dropped from memory. Nothing of the audio is stored; the
 // transcript goes back to the clinician's screen only, never into the database.
 const SESSION_MAX_BYTES = 60 * 1024 * 1024;   // ~90 min at the browser's 24-48 kbps
+
+// ---- Recording consent form ----
+// Before a session is recorded, the client and the professional both sign this
+// form on screen. The wording lives here (not in the page) so what gets stored
+// with the signatures is exactly what the server showed. {pro} is the
+// professional's name. It must stay true to what session-scribe does below.
+const RECORDING_CONSENT_MONTHS = 12;
+const RECORDING_CONSENT_FORM = {
+  en: {
+    title: 'Consent to record a session',
+    paragraphs: [
+      'I agree that my sessions with {pro} may be audio recorded so that Between can prepare a draft of the session note.',
+      'The recording is sent to a speech-to-text service and turned into text. An AI service then writes a draft note from that text. Between does not keep the audio or the transcript. {pro} reads and corrects the draft before it is used.',
+      'Saying no changes nothing about my care. I can ask for the recording to be stopped at any time during a session.',
+      'This consent covers sessions with {pro} for 12 months from today. I can withdraw it at any time by telling {pro}.'
+    ],
+    client: 'Client or patient', pro: 'Professional'
+  },
+  fr: {
+    title: "Consentement à l'enregistrement d'une séance",
+    paragraphs: [
+      "J'accepte que mes séances avec {pro} soient enregistrées (audio) afin que Between prépare une ébauche de la note de séance.",
+      "L'enregistrement est envoyé à un service de transcription et converti en texte. Un service d'IA rédige ensuite une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription. {pro} lit et corrige l'ébauche avant qu'elle soit utilisée.",
+      "Un refus ne change rien à mes soins. Je peux demander l'arrêt de l'enregistrement à tout moment pendant une séance.",
+      "Ce consentement couvre les séances avec {pro} pendant 12 mois à compter d'aujourd'hui. Je peux le retirer à tout moment en le disant à {pro}."
+    ],
+    client: 'Client ou patient', pro: 'Professionnel'
+  }
+};
+function recordingConsentForm(lang, proName) {
+  const f = RECORDING_CONSENT_FORM[lang === 'fr' ? 'fr' : 'en'];
+  const name = String(proName || '').trim() || (lang === 'fr' ? 'mon professionnel' : 'my professional');
+  return { title: f.title, paragraphs: f.paragraphs.map((p) => p.split('{pro}').join(name)), clientLabel: f.client, proLabel: f.pro };
+}
+const reqLang = (req) => (String(req.get('X-Btw-Lang') || '').toLowerCase() === 'fr' ? 'fr' : 'en');
+// A drawn signature: a small PNG from the page's signature pad.
+function cleanSignature(v) {
+  if (typeof v !== 'string' || v.length < 400 || v.length > 45000) return null;
+  return /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(v) ? v : null;
+}
+const publicConsent = (c) => c && ({ id: c.id, clientName: c.client_name, clinicianName: c.clinician_name, signedAt: c.signed_at, expiresAt: c.expires_at });
+
+// The form to sign, and the signed one in force (if any).
+app.get('/api/patients/:id/recording-consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const consent = await getValidRecordingConsent(patient.id, req.clinician.id);
+    res.json({ form: recordingConsentForm(reqLang(req), req.clinician.name), clientName: patient.display_name, clinicianName: req.clinician.name, consent: publicConsent(consent) });
+  } catch (err) {
+    console.error('Recording consent load error:', err.message);
+    res.status(500).json({ error: 'Could not load the consent form.' });
+  }
+});
+
+// One signed form, with both signatures, to view or print.
+app.get('/api/patients/:id/recording-consent/:consentId', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.consentId)) return res.status(404).json({ error: 'Consent form not found.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const c = await getRecordingConsent(req.params.consentId, patient.id, req.clinician.id);
+    if (!c) return res.status(404).json({ error: 'Consent form not found.' });
+    let form = null; try { form = JSON.parse(c.form_text); } catch (_) {}
+    res.json({ ...publicConsent(c), revokedAt: c.revoked_at, form, clientSignature: c.client_signature, clinicianSignature: c.clinician_signature });
+  } catch (err) {
+    console.error('Recording consent view error:', err.message);
+    res.status(500).json({ error: 'Could not load the consent form.' });
+  }
+});
+
+app.post('/api/patients/:id/recording-consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const clientSignature = cleanSignature((req.body || {}).clientSignature);
+    const clinicianSignature = cleanSignature((req.body || {}).clinicianSignature);
+    if (!clientSignature || !clinicianSignature) return res.status(400).json({ error: 'Both signatures are needed: the client and the professional.' });
+    if (clientSignature === clinicianSignature) return res.status(400).json({ error: 'The two signatures are identical. Each person signs in their own box.' });
+    const lang = reqLang(req);
+    const form = recordingConsentForm(lang, req.clinician.name);
+    const saved = await createRecordingConsent({
+      patientId: patient.id, clinicianId: req.clinician.id,
+      clientName: patient.display_name || '', clinicianName: req.clinician.name || '',
+      clientSignature, clinicianSignature, formText: JSON.stringify(form), lang, months: RECORDING_CONSENT_MONTHS
+    });
+    logClinicianEvent(req.clinician.id, 'recording_consent_signed', 1).catch(() => {});
+    res.json({ consent: publicConsent(saved) });
+  } catch (err) {
+    console.error('Recording consent save error:', err.message);
+    res.status(500).json({ error: 'Could not save the signed form.' });
+  }
+});
+
+// The client changed their mind: recording is locked again until a new form is signed.
+app.delete('/api/patients/:id/recording-consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    await revokeRecordingConsent(patient.id, req.clinician.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Recording consent withdraw error:', err.message);
+    res.status(500).json({ error: 'Could not withdraw the consent.' });
+  }
+});
 app.post('/api/patients/:id/session-scribe',
   express.raw({ type: () => true, limit: SESSION_MAX_BYTES }),
   requireDb, requireAuth, requireVerifiedClinician, prepLimiter,
   async (req, res) => {
     try {
-      if (req.query.consent !== '1') return res.status(400).json({ error: "Confirm the client agreed to the recording first." });
-      if (!transcriptionConfigured()) return res.status(503).json({ error: "Session recording isn't set up yet (speech-to-text is off)." });
-      if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
       const patient = await getPatient(req.clinician.id, req.params.id);
       if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+      // No recording is written up without the form both people signed.
+      if (!(await getValidRecordingConsent(patient.id, req.clinician.id))) {
+        return res.status(403).json({ error: 'A recording consent form signed by the client and by you is needed first.' });
+      }
+      if (!transcriptionConfigured()) return res.status(503).json({ error: "Session recording isn't set up yet (speech-to-text is off)." });
+      if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
       const mime = (req.headers['content-type'] || '').split(';')[0].trim();
       if (!AUDIO_MIMES.includes(mime)) return res.status(415).json({ error: 'Unsupported audio format.' });
       if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
@@ -3308,6 +3429,40 @@ app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifi
   } catch (err) {
     console.error('Encouragement error:', err.message);
     res.status(502).json({ error: 'Could not draft a message just now. Please try again.' });
+  }
+});
+
+// "Improve my wording": the professional's own draft message, said more
+// clearly and warmly. Only the text they typed is sent (no check-ins, no
+// client record), and nothing is added that they did not say.
+app.post('/api/clinician/polish-message', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The wording helper is unavailable right now.' });
+    const text = String((req.body || {}).text || '').trim();
+    if (text.length < 8) return res.status(400).json({ error: 'Write a few words first.' });
+    if (text.length > 1200) return res.status(400).json({ error: 'That message is too long.' });
+    const langName = reqLang(req) === 'fr' ? 'French' : 'English';
+    const focus = documentFocusForProfession({ discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type });
+    const system = `A ${focus.role} wrote the message below to send to someone they work with. Rewrite it so it reads the way an experienced, warm professional would say it: clear, kind, plain words, respectful, never cold or clinical jargon.
+Rules:
+- Keep exactly what they mean. Do not add facts, advice, instructions, promises, diagnoses or anything they did not say. Do not remove anything important.
+- Keep it about the same length, in the second person, plain text, no markdown, no greeting line or sign-off unless the draft has one.
+- Fix grammar and spelling. Write it in ${langName}.
+- Reply with the rewritten message only.`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 600, system: system + STYLE_RULE, messages: [{ role: 'user', content: text }] })
+    });
+    if (!response.ok) { console.error('Anthropic API error (polish):', response.status); throw new Error('polish failed'); }
+    const data = await response.json();
+    const message = (data.content || []).map((b) => b.text || '').join('').trim().slice(0, 1200);
+    if (!message) throw new Error('empty');
+    countWork(req.clinician.id, 'encourage');
+    res.json({ message });
+  } catch (err) {
+    console.error('Polish message error:', err.message);
+    res.status(502).json({ error: 'Could not improve the wording just now. Please try again.' });
   }
 });
 
