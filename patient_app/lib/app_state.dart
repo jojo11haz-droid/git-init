@@ -23,6 +23,17 @@ class Patient {
   String? get clinicianAccountType => raw['clinician_account_type'] as String?;
   String? get clinicianDiscipline => raw['clinician_discipline'] as String?;
   bool get isPremium => raw['is_premium'] == true;
+  // A paid personal plan and where its subscription stands ('active',
+  // 'trialing', 'canceling', 'past_due'…). Null for a client whose
+  // professional covers them.
+  String? get plan => raw['plan'] as String?;
+  String? get subscriptionStatus => raw['subscription_status'] as String?;
+  bool get hasLiveSubscription =>
+      plan != null &&
+      const {'active', 'trialing', 'past_due', 'unpaid'}
+          .contains(subscriptionStatus);
+  bool get subscriptionCanceling =>
+      plan != null && subscriptionStatus == 'canceling';
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
@@ -433,6 +444,16 @@ class AppState extends ChangeNotifier {
   // Save the individual's own intentions/goals (up to two short lines).
   Future<void> saveGoals(List<String> goals) async {
     final data = await _api.put('/api/patient/goals', {'goals': goals});
+    patient = Patient(
+        ((data as Map)['patient'] as Map).cast<String, dynamic>());
+    notifyListeners();
+  }
+
+  /// Cancel the subscription at the end of the paid period (access stays
+  /// until then), or undo a pending cancellation with [reactivate].
+  Future<void> cancelSubscription({bool reactivate = false}) async {
+    final data = await _api.post(
+        '/api/patient/subscription/cancel', {'reactivate': reactivate});
     patient = Patient(
         ((data as Map)['patient'] as Map).cast<String, dynamic>());
     notifyListeners();

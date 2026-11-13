@@ -51,6 +51,12 @@ class PlansScreen extends StatelessWidget {
                     fontSize: 14.5, height: 1.5, color: BtwColors.inkSoft)),
             const SizedBox(height: 16),
             if (signedIn) _StatusChip(isPremium: isPremium, s: s),
+            if (signedIn &&
+                ((app.patient?.hasLiveSubscription ?? false) ||
+                    (app.patient?.subscriptionCanceling ?? false))) ...[
+              const SizedBox(height: 10),
+              const _ManageSubscription(),
+            ],
             const SizedBox(height: 10),
             _PlanCard(
               tier: s.planPersonalTier,
@@ -92,6 +98,100 @@ class PlansScreen extends StatelessWidget {
             const CrisisFooter(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Cancel (or keep) a paid plan without leaving the app. Cancelling takes
+/// effect at the end of the paid period, same as on the website.
+class _ManageSubscription extends StatefulWidget {
+  const _ManageSubscription();
+
+  @override
+  State<_ManageSubscription> createState() => _ManageSubscriptionState();
+}
+
+class _ManageSubscriptionState extends State<_ManageSubscription> {
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _change({required bool reactivate}) async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    if (!reactivate) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: BtwColors.cream,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(s.cancelSubTitle),
+          content: Text(s.cancelSubBody, style: const TextStyle(height: 1.5)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(s.keepSubscription,
+                  style: const TextStyle(color: BtwColors.moss)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(s.cancelSubscription,
+                  style: const TextStyle(color: BtwColors.clay)),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await app.cancelSubscription(reactivate: reactivate);
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    final s = app.s;
+    final canceling = app.patient?.subscriptionCanceling ?? false;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: BtwColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(canceling ? s.subCanceling : s.subActive,
+              style: const TextStyle(
+                  fontSize: 13.5, height: 1.45, color: BtwColors.ink)),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _busy ? null : () => _change(reactivate: canceling),
+              style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  foregroundColor: canceling ? BtwColors.moss : BtwColors.clay),
+              child: Text(canceling ? s.keepSubscription : s.cancelSubscription),
+            ),
+          ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(_error!,
+                  style: const TextStyle(fontSize: 12.5, color: BtwColors.clay)),
+            ),
+        ],
       ),
     );
   }

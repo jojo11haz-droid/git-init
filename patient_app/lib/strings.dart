@@ -182,6 +182,17 @@ class S {
       'Paid yearly, it\'s even less: about \$9.99/mo on Personal and \$19.99/mo on Premium.',
       'Payé à l\'année, c\'est encore moins : environ 9,99 \$/mois sur Personnel et 19,99 \$/mois sur Premium.');
   String get subscribeOnWeb => _('Choose a plan on betweenpsych.com', 'Choisir un forfait sur betweenpsych.com');
+  // Cancelling a paid plan, right in the app.
+  String get subActive => _('Your subscription is active.', 'Votre abonnement est actif.');
+  String get subCanceling => _(
+      'Your subscription ends at the end of your billing period. You keep access until then.',
+      "Votre abonnement prend fin à la fin de votre période de facturation. Vous gardez l'accès jusque-là.");
+  String get cancelSubscription => _('Cancel subscription', "Annuler l'abonnement");
+  String get keepSubscription => _('Keep my subscription', 'Conserver mon abonnement');
+  String get cancelSubTitle => _('Cancel your subscription?', 'Annuler votre abonnement?');
+  String get cancelSubBody => _(
+      'You keep access until the end of your current billing period, and you will not be charged again.',
+      'Vous gardez l\'accès jusqu\'à la fin de votre période de facturation en cours, et vous ne serez plus facturé.');
   String get managedOnWeb => _(
       'Plans are set up on the website. You\'ll finish securely in your browser, then sign in here with the same email.',
       'Les forfaits se configurent sur le site web. Vous terminerez en toute sécurité dans votre navigateur, puis vous vous connecterez ici avec le même courriel.');
