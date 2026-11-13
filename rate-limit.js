@@ -28,7 +28,7 @@ export function rateLimit({ windowMs, max, keyFn, message }) {
       const retryAfterSec = Math.ceil((entry.windowStart + windowMs - now) / 1000);
       res.setHeader('Retry-After', String(retryAfterSec));
       return res.status(429).json({
-        error: message || 'Too many requests — please wait a moment and try again.'
+        error: message || 'Too many requests. Please wait a moment and try again.'
       });
     }
     next();

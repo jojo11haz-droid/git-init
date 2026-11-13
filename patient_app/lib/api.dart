@@ -39,9 +39,15 @@ class ApiException implements Exception {
 class ApiClient {
   String? token;
 
+  /// The app's current language code ('en' or 'fr'), read on every call. In
+  /// French the server is told so (X-Btw-Lang) and answers errors in French.
+  String Function()? langOf;
+  bool get _fr => langOf?.call() == 'fr';
+
   Map<String, String> _headers({bool json = false}) => {
         if (json) 'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
+        if (_fr) 'X-Btw-Lang': 'fr',
       };
 
   Future<dynamic> _send(String method, String path, [Object? body]) async {
@@ -62,7 +68,9 @@ class ApiClient {
     if (response.statusCode >= 400) {
       final message = (data is Map && data['error'] is String)
           ? data['error'] as String
-          : 'Something went wrong (${response.statusCode}). Please try again.';
+          : (_fr
+              ? 'Un problème est survenu (${response.statusCode}). Veuillez réessayer.'
+              : 'Something went wrong (${response.statusCode}). Please try again.');
       throw ApiException(response.statusCode, message);
     }
     return data;
@@ -77,7 +85,10 @@ class ApiClient {
         .timeout(const Duration(seconds: 30));
     if (response.statusCode >= 400) {
       throw ApiException(
-          response.statusCode, 'Could not load (${response.statusCode}).');
+          response.statusCode,
+          _fr
+              ? 'Chargement impossible (${response.statusCode}).'
+              : 'Could not load (${response.statusCode}).');
     }
     return response.bodyBytes;
   }
@@ -94,7 +105,12 @@ class ApiClient {
       {Map<String, String>? headers}) async {
     final response = await http
         .put(resolveApiUri(path),
-            headers: {'Content-Type': mime, ...?headers}, body: bytes)
+            headers: {
+              'Content-Type': mime,
+              if (_fr) 'X-Btw-Lang': 'fr',
+              ...?headers,
+            },
+            body: bytes)
         .timeout(const Duration(seconds: 60));
     dynamic data;
     try {
@@ -105,7 +121,9 @@ class ApiClient {
     if (response.statusCode >= 400) {
       final message = (data is Map && data['error'] is String)
           ? data['error'] as String
-          : 'Upload failed (${response.statusCode}). Please try again.';
+          : (_fr
+              ? 'Le téléversement a échoué (${response.statusCode}). Veuillez réessayer.'
+              : 'Upload failed (${response.statusCode}). Please try again.');
       throw ApiException(response.statusCode, message);
     }
     return data;

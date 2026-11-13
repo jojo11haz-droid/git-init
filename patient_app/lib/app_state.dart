@@ -230,7 +230,10 @@ class SendResult {
 class AppState extends ChangeNotifier {
   AppState({ApiClient? api, FlutterSecureStorage? storage})
       : _api = api ?? ApiClient(),
-        _storage = storage ?? const FlutterSecureStorage();
+        _storage = storage ?? const FlutterSecureStorage() {
+    // Every request carries the app's language, so server messages match it.
+    _api.langOf = () => langCode(lang);
+  }
 
   static const _tokenKey = 'between_patient_token';
   static const _langKey = 'between_patient_lang';

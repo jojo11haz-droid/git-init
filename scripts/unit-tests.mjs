@@ -201,5 +201,31 @@ eq(sanitizeStat({ e:'visit' }, 'Googlebot/2.1'), null, 'stat: bots ignored');
 eq(sanitizeStat({ e:'view', f:"x'; drop table", p:'<script>' }, 'Mozilla'), { event:'view', field:'', page:'', source:'', lang:'en', device:'' }, 'stat: junk field/page dropped');
 eq([cleanSource('https://www.google.ca/search?q=x'), cleanSource('https://l.instagram.com/?u=1'), cleanSource('https://betweenpsych.com/physio'), cleanSource(''), cleanSource('Kinatex Newsletter!')], ['google', 'instagram', 'direct', 'direct', 'kinatexnewsletter'], 'stat: sources grouped and cleaned');
 eq(sanitizeStat({ e:'visit', s:'https://www.linkedin.com/feed' }, 'Mozilla').source, 'linkedin', 'stat: a visit keeps where it came from');
+console.log('French error messages');
+{
+  const { frError, hasFrError, LEFT_IN_ENGLISH, localizeErrors } = await import('../errors_fr.js');
+  eq(frError('Incorrect email or password.'), 'Courriel ou mot de passe incorrect.', 'errors: a known message comes back in French');
+  eq(frError('Some brand new message.'), 'Some brand new message.', 'errors: an unknown message is left as it is');
+  eq(frError("You've reached the 30-patient limit on your plan."), 'Vous avez atteint la limite de 30 patients de votre forfait.', 'errors: a message with a number keeps the number');
+  eq([frError(''), frError(null), frError(undefined)], ['', null, undefined], 'errors: empty input is passed through');
+  // The middleware only touches replies for a French page, and only the error text.
+  const reply = (lang, body) => { let sent; const res = { json: (b) => { sent = b; return res; } }; localizeErrors({ get: (h) => (h === 'X-Btw-Lang' ? lang : undefined) }, res, () => {}); res.json(body); return sent; };
+  eq(reply('fr', { error: 'Patient not found.', code: 'x' }), { error: 'Patient introuvable.', code: 'x' }, 'errors: French page gets the French message, other fields untouched');
+  eq(reply('en', { error: 'Patient not found.' }), { error: 'Patient not found.' }, 'errors: English page is not changed');
+  eq(reply(undefined, { error: 'Patient not found.' }), { error: 'Patient not found.' }, 'errors: no language header means English');
+  eq(reply('fr', { ok: true, patients: [] }), { ok: true, patients: [] }, 'errors: a normal reply is not touched');
+  // Every message the server can send has French (or is deliberately left in English).
+  const src = readFileSync(new URL('../server.js', import.meta.url), 'utf8');
+  const found = new Set();
+  for (const m of src.matchAll(/\berror:\s*'((?:\\.|[^'\\\n])*)'\s*[,})]/g)) found.add(m[1].replace(/\\'/g, "'"));
+  for (const m of src.matchAll(/\berror:\s*"((?:\\.|[^"\\\n])*)"\s*[,})]/g)) found.add(m[1]);
+  // ...and what each rate limiter says when someone goes too fast.
+  for (const block of src.matchAll(/rateLimit\(\{[\s\S]*?\}\)/g)) {
+    for (const m of block[0].matchAll(/\bmessage:\s*'((?:\\.|[^'\\\n])*)'/g)) found.add(m[1].replace(/\\'/g, "'"));
+  }
+  const untranslated = [...found].filter((msg) => !hasFrError(msg) && !LEFT_IN_ENGLISH.has(msg));
+  eq(found.size > 200, true, 'errors: the scan finds the server messages (' + found.size + ')');
+  eq(untranslated, [], 'errors: every server message has a French version in errors_fr.js');
+}
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');

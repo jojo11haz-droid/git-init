@@ -56,6 +56,7 @@ import {
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
+import { localizeErrors } from './errors_fr.js';
 import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion , sanitizeExerciseStatus, sanitizeAppName } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
@@ -162,6 +163,10 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) =
     res.status(500).json({ error: 'Webhook handler failed.' });
   }
 });
+
+// A French page or app (X-Btw-Lang: fr) gets its error messages in French.
+// Registered before every route and rate limiter so all of them are covered.
+app.use(localizeErrors);
 
 app.use(express.json());
 
@@ -3403,7 +3408,7 @@ const CRISIS_RESOURCES = {
 // same-origin only.
 app.use('/api/patient', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Btw-Lang');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();

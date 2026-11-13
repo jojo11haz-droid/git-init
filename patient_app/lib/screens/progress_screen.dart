@@ -33,6 +33,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
   String? _error;
   List<CheckIn> _history = [];
 
+  // Physical rehab accounts rate pain (higher is worse), everyone else mood
+  // (higher is better). Set in build(); read wherever the score is described.
+  bool _painScale = false;
+
   // Weekly AI reflection (Premium), generated on demand.
   String? _reflection;
   String? _reflectError;
@@ -212,6 +216,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final s = context.watch<AppState>().s;
     final patient = context.read<AppState>().patient!;
     final profile = profileFor(patient);
+    _painScale = profile.isPainScale;
     return Scaffold(
       appBar: AppBar(title: Text(s.myProgress)),
       body: SafeArea(child: _body(s, profile.isBody)),
@@ -295,8 +300,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   // Cheap, automatic insight from the person's own check-ins (mirrors the web):
-  // a lower-mood weekday, a theme that tracks with lower days, and the
-  // week-over-week trend. No AI, no server call.
+  // a harder weekday, a theme that tracks with harder days, and the
+  // week-over-week trend. "Harder" is lower mood, or higher pain on a pain
+  // scale. No AI, no server call.
   List<String> _computePatterns(S s) {
     final moods = _history.where((c) => c.mood != null).toList();
     if (moods.length < 5) return [];
@@ -313,15 +319,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
     double? loA, hiA;
     int loD = -1;
+    int hiD = -1;
     for (var i = 0; i < 7; i++) {
       if (cnt[i] >= 2) {
         final a = sum[i] / cnt[i];
         if (loA == null || a < loA) { loA = a; loD = i; }
-        if (hiA == null || a > hiA) { hiA = a; }
+        if (hiA == null || a > hiA) { hiA = a; hiD = i; }
       }
     }
-    if (loA != null && hiA != null && loD >= 0 && (hiA - loA) >= 1.5) {
-      out.add(s.patternWeekday(wd[loD]));
+    if (loA != null && hiA != null && loD >= 0 && hiD >= 0 && loD != hiD && (hiA - loA) >= 1.5) {
+      out.add(_painScale ? s.patternWeekdayPain(wd[hiD]) : s.patternWeekday(wd[loD]));
     }
     final overall =
         moods.map((c) => c.mood!).reduce((a, b) => a + b) / moods.length;
@@ -334,14 +341,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
       }
     }
     String? worst;
-    double worstA = 999;
+    double worstA = _painScale ? -999.0 : 999.0;
     tagCnt.forEach((tg, n) {
       if (n >= 3) {
         final a = tagSum[tg]! / n;
-        if (a <= overall - 1 && a < worstA) { worstA = a; worst = tg; }
+        final harder = _painScale
+            ? (a >= overall + 1 && a > worstA)
+            : (a <= overall - 1 && a < worstA);
+        if (harder) { worstA = a; worst = tg; }
       }
     });
-    if (worst != null) out.add(s.patternTheme(worst!));
+    if (worst != null) {
+      out.add(_painScale ? s.patternThemePain(worst!) : s.patternTheme(worst!));
+    }
     final now = DateTime.now();
     final thisW = moods
         .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 7))))
@@ -354,7 +366,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
     if (thisW.length >= 2 && lastW.length >= 2) {
       final ta = thisW.map((c) => c.mood!).reduce((a, b) => a + b) / thisW.length;
       final la = lastW.map((c) => c.mood!).reduce((a, b) => a + b) / lastW.length;
-      if (ta - la >= 1) {
+      if (_painScale) {
+        if (la - ta >= 1) {
+          out.add(s.patternPainDown);
+        } else if (ta - la >= 1) {
+          out.add(s.patternPainUp);
+        }
+      } else if (ta - la >= 1) {
         out.add(s.patternUp);
       } else if (la - ta >= 1) {
         out.add(s.patternDown);
@@ -434,7 +452,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
     if (moods.isNotEmpty) {
       final avg =
           moods.map((c) => c.mood!).reduce((a, b2) => a + b2) / moods.length;
-      final label = f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ';
+      final label = _painScale
+          ? (f ? 'Douleur moyenne autoévaluée : ' : 'Average self-rated pain: ')
+          : (f ? 'Humeur moyenne autoévaluée : ' : 'Average self-rated mood: ');
       // French writes decimals with a comma (5,3/10).
       final avgTxt = f
           ? avg.toStringAsFixed(1).replaceAll('.', ',')
@@ -715,7 +735,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CardLabel(s.moodOverTime),
+          _CardLabel(_painScale ? s.painOverTime : s.moodOverTime),
           const SizedBox(height: 14),
           SizedBox(
             height: 76,
