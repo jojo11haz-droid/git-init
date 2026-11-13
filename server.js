@@ -5310,6 +5310,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', 'features.html')));
 // Who builds Between and how it treats data (public/about.html).
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public', 'about.html')));
+app.get('/works-with-your-emr', (req, res) => res.sendFile(path.join(__dirname, 'public', 'works-with-your-emr.html')));
 
 // The old web build of the patient app lived at /app. It was removed (the site
 // itself is the patient web app), so send any saved /app link to the homepage,
