@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +16,7 @@ import '../app_state.dart';
 import '../body_map.dart';
 import '../discipline.dart';
 import '../recording_bytes.dart';
+import '../reminders.dart';
 import '../strings.dart';
 import '../theme.dart';
 import 'coach_tour.dart';
@@ -99,6 +101,13 @@ class _HomeScreenState extends State<HomeScreen>
   bool _tourActive = false;
   int _streak = 0;
   int _openTopics = 0; // things waiting for the next session
+  // "Your first week" card: distinct days with a check-in (-1 = not loaded),
+  // whether a reminder is on, and whether they hid the card.
+  int _checkInDays = -1;
+  bool _hasCheckIn = false;
+  bool _appReminderOn = false;
+  bool _firstWeekHidden = false;
+  static const _firstWeekKey = 'btw_firstweek_hidden';
 
   @override
   void initState() {
@@ -453,11 +462,115 @@ class _HomeScreenState extends State<HomeScreen>
     final app = context.read<AppState>();
     try {
       final items = await app.fetchHistory();
+      final reminder = await LocalReminders.instance.load();
+      final hidden =
+          await const FlutterSecureStorage().read(key: _firstWeekKey) == '1';
       if (!mounted) return;
-      setState(() => _streak = _computeStreak(items));
+      final days = items
+          .map((c) => DateTime(
+              c.submittedAt.year, c.submittedAt.month, c.submittedAt.day))
+          .toSet()
+          .length;
+      setState(() {
+        _streak = _computeStreak(items);
+        _checkInDays = days;
+        _hasCheckIn = items.isNotEmpty;
+        _appReminderOn = reminder.enabled;
+        _firstWeekHidden = hidden;
+      });
     } catch (_) {
       // The streak is a nicety; a failed history fetch just hides the chip.
     }
+  }
+
+  Future<void> _hideFirstWeek() async {
+    setState(() => _firstWeekHidden = true);
+    try {
+      await const FlutterSecureStorage().write(key: _firstWeekKey, value: '1');
+    } catch (_) {
+      // Hidden for now; it may show again next launch.
+    }
+  }
+
+  Widget _firstWeekCard(S s, Patient patient) {
+    final remind = _appReminderOn || patient.textRemindersOn;
+    Widget step(bool done, String text, {Widget? trailing}) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Icon(
+                  done
+                      ? Icons.check_box_rounded
+                      : Icons.check_box_outline_blank_rounded,
+                  size: 20,
+                  color: done ? BtwColors.moss : BtwColors.inkSoft),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(text,
+                    style: TextStyle(
+                        fontSize: 14,
+                        height: 1.35,
+                        color: done ? BtwColors.inkSoft : BtwColors.ink,
+                        decoration: done ? TextDecoration.lineThrough : null)),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+        );
+    final pro = patient.hasClinician
+        ? (patient.clinicianName ?? s.yourProfessional)
+        : null;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 10, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: BtwColors.moss),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(s.firstWeekTitle,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+              TextButton(onPressed: _hideFirstWeek, child: Text(s.hideLabel)),
+            ],
+          ),
+          step(_hasCheckIn, s.fwStepFirst),
+          step(_checkInDays >= 3, s.fwStepDays,
+              trailing: Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Text('${_checkInDays.clamp(0, 3)}/3',
+                    style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: BtwColors.moss)),
+              )),
+          step(remind, s.fwStepReminder,
+              trailing: remind
+                  ? null
+                  : TextButton(
+                      onPressed: () async {
+                        await Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => const SettingsScreen()));
+                        if (mounted) _loadStreak();
+                      },
+                      child: Text(s.fwSetUp),
+                    )),
+          const SizedBox(height: 2),
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Text(pro != null ? s.fwFootPro(pro) : s.fwFootSolo,
+                style: const TextStyle(
+                    fontSize: 12.5, color: BtwColors.inkSoft, height: 1.45)),
+          ),
+        ],
+      ),
+    );
   }
 
   // Consecutive calendar days with at least one check-in, with a one-day grace
@@ -901,6 +1014,8 @@ class _HomeScreenState extends State<HomeScreen>
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => SentScreen(result: result)),
       );
+      // Refresh the streak and the first-week ticks with the new check-in.
+      if (mounted) _loadStreak();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -1042,6 +1157,12 @@ class _HomeScreenState extends State<HomeScreen>
                     style: const TextStyle(
                         fontSize: 13.5, color: BtwColors.inkSoft, height: 1.45),
                   ),
+                  if (_checkInDays >= 0 &&
+                      _checkInDays < 3 &&
+                      !_firstWeekHidden) ...[
+                    const SizedBox(height: 14),
+                    _firstWeekCard(s, patient),
+                  ],
                   if (_streak >= 1 && !patient.hides('streak')) ...[
                     const SizedBox(height: 14),
                     _streakChip(s),

@@ -426,6 +426,24 @@ class S {
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
 
+  // "Your first week" card on the home screen.
+  String get firstWeekTitle => _('Your first week', 'Votre première semaine');
+  String get hideLabel => _('Hide', 'Masquer');
+  String get yourProfessional => _('Your professional', 'Votre professionnel(le)');
+  String get fwStepFirst =>
+      _('Send your first check-in', 'Envoyer votre premier suivi');
+  String get fwStepDays =>
+      _('Check in on 3 different days', 'Faire un suivi 3 jours différents');
+  String get fwStepReminder =>
+      _('Turn on a daily reminder', 'Activer un rappel quotidien');
+  String get fwSetUp => _('Set it up', 'Le configurer');
+  String fwFootPro(String pro) => _(
+      '$pro sees your check-ins before your next session: how you’re doing, what you wrote and the themes. Notes for a harder day stay private.',
+      '$pro voit vos suivis avant votre prochain rendez-vous : comment vous allez, ce que vous avez écrit et les thèmes. Les notes pour un jour plus difficile restent privées.');
+  String get fwFootSolo => _(
+      'Only you see your check-ins. After three days, Between starts showing your patterns in My progress.',
+      'Vous seul(e) voyez vos suivis. Après trois jours, Between commence à afficher vos tendances dans Mes progrès.');
+
   // The app's own daily check-in reminder (Settings).
   String get reminderCardTitle => _('Daily reminder', 'Rappel quotidien');
   String get reminderCardSub => _(

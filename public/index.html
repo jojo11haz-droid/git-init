@@ -678,6 +678,18 @@
   .btw-pro-btn:hover{opacity:.92;}
   .btw-pro-status{font-size:11.5px;color:var(--ink-soft);}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
+  .btw-firstweek{border:1px solid var(--moss);border-radius:14px;padding:13px 16px;margin-bottom:12px;background:var(--panel);}
+  .btw-fw-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .btw-fw-head b{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--ink);}
+  .btw-fw-hide,.btw-fw-link{font:inherit;font-size:12.5px;background:none;border:0;color:var(--moss);cursor:pointer;padding:0;font-weight:600;}
+  .btw-fw-link{text-decoration:underline;}
+  .btw-fw-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .btw-fw-steps li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4;color:var(--ink);}
+  .btw-fw-steps li.done > span:last-child{color:var(--ink-soft);text-decoration:line-through;}
+  .btw-fw-box{flex:none;width:18px;height:18px;border:1.5px solid var(--line);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-top:1px;}
+  .btw-fw-steps li.done .btw-fw-box{background:var(--moss);border-color:var(--moss);}
+  .btw-fw-n{font-family:var(--font-mono);font-size:11.5px;color:var(--moss);}
+  .btw-fw-foot{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-top:10px;}
   .btw-week-summary.btw-since{background:var(--panel);border:1px solid var(--line);}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
@@ -4527,6 +4539,7 @@
 
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
+      <div class="btw-firstweek" id="btwFirstWeek" style="display:none;"></div>
       <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
       <div class="btw-week-summary btw-since" id="btwSinceStart" style="display:none;"></div>
 
@@ -6080,6 +6093,14 @@
     "Earlier messages":"Messages précédents",
     "Reply":"Répondre",
     "Since you started":"Depuis vos débuts",
+    "Your first week":"Votre première semaine",
+    "Hide":"Masquer",
+    "Send your first check-in":"Envoyer votre premier suivi",
+    "Check in on 3 different days":"Faire un suivi 3 jours différents",
+    "Turn on a daily reminder":"Activer un rappel quotidien",
+    "Set it up":"Le configurer",
+    "{pro} sees your check-ins before your next session: how you’re doing, what you wrote and the themes. Notes for a harder day stay private.":"{pro} voit vos suivis avant votre prochain rendez-vous : comment vous allez, ce que vous avez écrit et les thèmes. Les notes pour un jour plus difficile restent privées.",
+    "Only you see your check-ins. After three days, Between starts showing your patterns here.":"Vous seul(e) voyez vos suivis. Après trois jours, Between commence à afficher vos tendances ici.",
     "Your pain has eased:":"Votre douleur a diminué :",
     "Your mood has lifted:":"Votre humeur s'est améliorée :",
     "on average, comparing your first two weeks with the last two.":"en moyenne, entre vos deux premières semaines et les deux dernières.",
@@ -19459,6 +19480,7 @@
       renderStreak();
       renderSupport();
       renderCapNote();
+      try { renderFirstWeek(); } catch(e){}
       renderWeekSummary();
       try { renderSinceStart(); } catch(e){}
       renderWeeklyReflection();
@@ -19805,6 +19827,41 @@
     if(flagged) parts.push(`<strong>${flagged}</strong> ${esc(flagged===1?t('check-in flagged'):t('check-ins flagged'))}`);
     el.innerHTML = `<div class="btw-week-label">${esc(t('This week'))}</div><div class="btw-week-body">${parts.join(' · ')}</div>`;
     el.style.display = '';
+  }
+
+  // "Your first week": three small steps for a new client, until they've
+  // checked in on three different days (or hide it). Says plainly who sees
+  // their check-ins, so the first one doesn't feel like writing into a void.
+  function renderFirstWeek(){
+    const el = document.getElementById('btwFirstWeek'); if(!el) return;
+    const hide = function(){ el.style.display = 'none'; el.innerHTML = ''; };
+    if(!isPatient() || _ownerPreview || !state.patient) return hide();
+    try { if(localStorage.getItem('btw_firstweek_hidden') === '1') return hide(); } catch(e){}
+    const days = new Set((state.checkIns || []).filter(c => c.time).map(c => new Date(c.time).toDateString())).size;
+    if(days >= 3) return hide();
+    const n = (state.checkIns || []).length;
+    const remind = !!state.patient.reminders_enabled;
+    const pro = state.patient.clinician_account_type ? (state.patient.clinician_name || t('Your professional')) : null;
+    const tick = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const step = function(done, text, extra){ return '<li class="' + (done ? 'done' : '') + '"><span class="btw-fw-box">' + (done ? tick : '') + '</span><span>' + esc(text) + (extra || '') + '</span></li>'; };
+    el.innerHTML = '<div class="btw-fw-head"><b>' + esc(t('Your first week')) + '</b><button type="button" class="btw-fw-hide">' + esc(t('Hide')) + '</button></div>'
+      + '<ul class="btw-fw-steps">'
+      + step(n >= 1, t('Send your first check-in'))
+      + step(days >= 3, t('Check in on 3 different days'), ' <span class="btw-fw-n">' + Math.min(days, 3) + '/3</span>')
+      + step(remind, t('Turn on a daily reminder'), remind ? '' : ' <button type="button" class="btw-fw-link">' + esc(t('Set it up')) + '</button>')
+      + '</ul>'
+      + '<div class="btw-fw-foot">' + esc(pro
+          ? t('{pro} sees your check-ins before your next session: how you’re doing, what you wrote and the themes. Notes for a harder day stay private.').replace('{pro}', pro)
+          : t('Only you see your check-ins. After three days, Between starts showing your patterns here.')) + '</div>';
+    el.style.display = '';
+    el.querySelector('.btw-fw-hide').addEventListener('click', function(){ try { localStorage.setItem('btw_firstweek_hidden', '1'); } catch(e){} hide(); });
+    const link = el.querySelector('.btw-fw-link');
+    if(link) link.addEventListener('click', function(){
+      const b = document.getElementById('btwReminderNudgeBtn');
+      const nudge = document.getElementById('btwReminderNudge');
+      if(b && nudge && nudge.style.display !== 'none'){ nudge.scrollIntoView({ block:'center', behavior:'smooth' }); b.focus({ preventScroll:true }); }
+      else if(b) b.click();
+    });
   }
 
   // A calmer client page: the stat tiles live inside the Trends fold-out
