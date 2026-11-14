@@ -5456,6 +5456,10 @@ app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 // Who builds Between and how it treats data (public/about.html).
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public', 'about.html')));
 app.get('/works-with-your-emr', (req, res) => res.sendFile(path.join(__dirname, 'public', 'works-with-your-emr.html')));
+// The link in check-in reminders: opens the client's check-in box (the page
+// asks them to sign in first if they aren't). No token in the link, so a
+// forwarded text can't open anyone's account.
+app.get('/checkin', (req, res) => res.redirect(302, '/?go=checkin#dashboard'));
 
 // The old web build of the patient app lived at /app. It was removed (the site
 // itself is the patient web app), so send any saved /app link to the homepage,
@@ -5564,10 +5568,10 @@ async function deliverReminder(p, base) {
       await sendSms({
         to: p.phone,
         text: fr
-          ? `Bonjour${name ? ' ' + name : ''} : un petit rappel pour faire votre suivi dans Between. Aucune pression : quand vous aurez un moment, même quelques mots sur ${phrase} aident. ${base}/\n` +
+          ? `Bonjour${name ? ' ' + name : ''} : un petit rappel pour faire votre suivi dans Between. Aucune pression : quand vous aurez un moment, même quelques mots sur ${phrase} aident. ${base}/checkin\n` +
             `Pas pour les urgences, si vous avez besoin d'aide maintenant, appelez ou textez le 988, ou composez le 911.\n` +
             `Arrêter les rappels : ${unsub}`
-          : `Hi ${name}: a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/\n` +
+          : `Hi ${name}: a gentle reminder to check in on Between. No pressure: whenever you have a moment, even a few words on ${phrase} helps. ${base}/checkin\n` +
             `Not for emergencies: if you need help now, call or text 988, or call 911.\n` +
             `Turn off reminders: ${unsub}`
       });
@@ -5580,7 +5584,7 @@ async function deliverReminder(p, base) {
           ? `Bonjour${name ? ' ' + name : ''},\n\n` +
             `Voici votre rappel de suivi de Between. Aucune pression : quand vous aurez un moment, ` +
             `même une courte note sur ${phrase} donne un point de départ à votre prochain rendez-vous.\n\n` +
-            `Ouvrir Between : ${base}/\n\n` +
+            `Faire mon suivi : ${base}/checkin\n\n` +
             `Between n'est pas fait pour les problèmes urgents. Si vous avez besoin d'aide maintenant, composez le 988 ou le 911.\n\n` +
             `L'équipe Between\n\n` +
             `Vous ne voulez plus ces rappels? Désabonnez-vous ici : ${unsub}`
@@ -5588,7 +5592,7 @@ async function deliverReminder(p, base) {
           `This is your check-in reminder from Between. No pressure at all, whenever you have a ` +
           `moment, even a short note about ${phrase} gives your next appointment something ` +
           `to start from.\n\n` +
-          `Open Between: ${base}/\n\n` +
+          `Check in now: ${base}/checkin\n\n` +
           `Between isn't for urgent or emergency issues. If you need help right now, call 988 or 911.\n\n` +
           `The Between team\n\n` +
           `Don't want these reminders? Unsubscribe here: ${unsub}`
