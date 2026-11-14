@@ -65,7 +65,9 @@ class _HomeScreenState extends State<HomeScreen>
   Map<String, int> _painMap = {}; // "view:region" -> 1..10, physical disciplines
   Map<String, String> _painSens = {}; // "view:region" -> sensation code
   List<HomeExercise> _exercises = []; // home program from the clinician
-  List<ClinicianMessage> _messages = []; // notes from the professional
+  List<ClinicianMessage> _messages = []; // notes from the professional + replies
+  List<ClinicianMessage> get _proMessages =>
+      _messages.where((m) => !m.fromClient).toList();
   bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   String? _exStatus; // program in another app: 'yes' | 'some' | 'no'
@@ -296,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (!mounted) return;
       setState(() => _messages = list);
       // Shown now, so mark them read (the professional sees "Read").
-      if (list.any((m) => !m.isRead)) {
+      if (list.any((m) => !m.fromClient && !m.isRead)) {
         await app.markMessagesRead();
       }
     } catch (_) {
@@ -304,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Widget _messageCard(ClinicianMessage m, S s) {
+  Widget _messageCard(ClinicianMessage m, S s, {bool canReply = false}) {
     final when = m.createdAt;
     final whenText = when == null
         ? ''
@@ -369,9 +371,82 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ],
+          // Their own replies to this message, oldest first.
+          for (final r in _messages.reversed
+              .where((x) => x.fromClient && x.replyTo == m.id)) ...[
+            const SizedBox(height: 8),
+            _replyBubble(r, s),
+          ],
+          if (canReply)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => _openReply(m, s),
+                icon: const Icon(Icons.reply_rounded, size: 18),
+                label: Text(s.reply),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Widget _replyBubble(ClinicianMessage r, S s) {
+    final when = r.createdAt;
+    final whenText = when == null
+        ? ''
+        : '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+        color: BtwColors.cream,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${s.you.toUpperCase()} · $whenText${r.isRead ? ' · ${s.seen}' : ''}',
+            style: const TextStyle(
+                fontSize: 10.5,
+                letterSpacing: 0.5,
+                fontWeight: FontWeight.w600,
+                color: BtwColors.inkSoft),
+          ),
+          const SizedBox(height: 3),
+          Text(r.body, style: const TextStyle(fontSize: 14, height: 1.4)),
+        ],
+      ),
+    );
+  }
+
+  /// A sheet to write a reply to one of the professional's messages.
+  Future<void> _openReply(ClinicianMessage m, S s) async {
+    final app = context.read<AppState>();
+    final result = await showModalBottomSheet<ReplyResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _ReplySheet(app: app, replyTo: m.id, s: s),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _messages = [result.message, ..._messages]);
+    if (result.showCrisis) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(s.replyCrisisTitle),
+          content: Text(s.replyCrisisBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(s.ok),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _loadStreak() async {
@@ -928,14 +1003,14 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 18),
                   ],
                   // The latest message from their professional, on top.
-                  if (_messages.isNotEmpty) ...[
+                  if (_proMessages.isNotEmpty) ...[
                     for (final m in (_allMessages
-                        ? _messages.take(10)
-                        : _messages.take(1))) ...[
-                      _messageCard(m, s),
+                        ? _proMessages.take(10)
+                        : _proMessages.take(1))) ...[
+                      _messageCard(m, s, canReply: patient.hasClinician),
                       const SizedBox(height: 10),
                     ],
-                    if (_messages.length > 1)
+                    if (_proMessages.length > 1)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton(
@@ -943,7 +1018,7 @@ class _HomeScreenState extends State<HomeScreen>
                               setState(() => _allMessages = !_allMessages),
                           child: Text(_allMessages
                               ? s.showOnlyLatest
-                              : s.earlierMessages(_messages.length - 1)),
+                              : s.earlierMessages(_proMessages.length - 1)),
                         ),
                       ),
                     const SizedBox(height: 8),
@@ -1483,6 +1558,105 @@ class _MiniToggle extends StatelessWidget {
             color: active ? BtwColors.moss : BtwColors.inkSoft,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Writing a reply to one of the professional's messages. Pops with the
+/// [ReplyResult] once it's sent.
+class _ReplySheet extends StatefulWidget {
+  const _ReplySheet({required this.app, required this.replyTo, required this.s});
+  final AppState app;
+  final String replyTo;
+  final S s;
+
+  @override
+  State<_ReplySheet> createState() => _ReplySheetState();
+}
+
+class _ReplySheetState extends State<_ReplySheet> {
+  final _ctrl = TextEditingController();
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final body = _ctrl.text.trim();
+    if (body.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final r = await widget.app.sendReply(body, replyTo: widget.replyTo);
+      if (!mounted) return;
+      Navigator.of(context).pop(r);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.s;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 0, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(s.replyTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            maxLength: 1000,
+            minLines: 3,
+            maxLines: 6,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: s.replyHint,
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          Text(s.replyNote,
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.4, color: BtwColors.inkSoft)),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!,
+                style: const TextStyle(fontSize: 13, color: BtwColors.clay)),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              FilledButton(
+                onPressed: _sending ? null : _send,
+                child: Text(s.sendReply),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: _sending ? null : () => Navigator.of(context).pop(),
+                child: Text(s.cancel),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

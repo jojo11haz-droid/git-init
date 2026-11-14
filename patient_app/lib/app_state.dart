@@ -194,11 +194,23 @@ class ClinicianMessage {
   String get id => raw['id'] as String;
   String get body => (raw['body'] as String?) ?? '';
   bool get isRead => raw['read_at'] != null;
+  /// True for the client's own reply (then [isRead] means their professional
+  /// has seen it).
+  bool get fromClient => raw['sender'] == 'client';
+  String? get replyTo => raw['reply_to'] as String?;
   DateTime? get createdAt =>
       DateTime.tryParse((raw['created_at'] as String?) ?? '')?.toLocal();
   List<HomeExercise> get exercises => ((raw['exercises'] as List?) ?? const [])
       .map((e) => HomeExercise((e as Map).cast<String, dynamic>()))
       .toList();
+}
+
+/// The result of sending a reply: the saved reply, and whether the words in
+/// it mean crisis lines should be shown right away.
+class ReplyResult {
+  ReplyResult(this.message, this.showCrisis);
+  final ClinicianMessage message;
+  final bool showCrisis;
 }
 
 /// Something the person wants to bring up at their next session. Their
@@ -544,6 +556,19 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> deleteTopic(String id) => _api.delete('/api/patient/topics/$id');
+
+  /// Reply to one of the professional's messages. Text only, up to 1000 chars.
+  Future<ReplyResult> sendReply(String body, {String? replyTo}) async {
+    final data = await _api.post('/api/patient/messages', <String, dynamic>{
+      'body': body,
+      if (replyTo != null) 'replyTo': replyTo,
+    });
+    final map = data as Map;
+    return ReplyResult(
+      ClinicianMessage((map['message'] as Map).cast<String, dynamic>()),
+      map['crisis'] != null,
+    );
+  }
 
   Future<void> markMessagesRead() async {
     await _api.post('/api/patient/messages/read', <String, dynamic>{});
