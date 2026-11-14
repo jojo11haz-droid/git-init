@@ -3017,8 +3017,12 @@ app.post('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedCl
     // Nudge the client without putting health details in an email or text.
     let notified = false;
     const who = req.clinician.name || 'Your professional';
+    // What's attached, in the field's own word (same rule as the website).
+    const c = req.clinician;
+    const attachedWord = ['physio', 'kinesiology', 'osteo', 'occupational', 'sports'].includes(c.discipline) || c.account_type === 'trainer'
+      ? 'exercises' : c.discipline === 'nutrition' ? 'habits' : c.account_type === 'school' ? 'strategies' : 'practices';
     if (patient.email && emailConfigured()) {
-      const text = `Hi${patient.display_name ? ' ' + patient.display_name.split(' ')[0] : ''},\n\n${who} sent you a message in Between${ids.length ? ' with exercises attached' : ''}.\n\nRead it here: ${SITE_URL}/\n\nBetween is not a crisis service. If you are in danger, call 988 or 911.`;
+      const text = `Hi${patient.display_name ? ' ' + patient.display_name.split(' ')[0] : ''},\n\n${who} sent you a message in Between${ids.length ? ` with ${attachedWord} attached` : ''}.\n\nRead it here: ${SITE_URL}/\n\nBetween is not a crisis service. If you are in danger, call 988 or 911.`;
       sendEmail({ to: patient.email, subject: `New message from ${who}`, text }).catch(err => console.error('Message email failed:', err && err.message));
       notified = true;
     }

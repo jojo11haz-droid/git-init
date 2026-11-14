@@ -6074,6 +6074,9 @@
     "Draft with AI":"Rédiger avec l'IA",
     "Attach from their program":"Joindre de son programme",
     "Add exercises to their program to attach them to a message.":"Ajoutez des exercices à son programme pour pouvoir les joindre à un message.",
+    "Add practices to their plan to attach them to a message.":"Ajoutez des pratiques à son plan pour pouvoir les joindre à un message.",
+    "Add habits to their plan to attach them to a message.":"Ajoutez des habitudes à son plan pour pouvoir les joindre à un message.",
+    "Add strategies to their plan to attach them to a message.":"Ajoutez des stratégies à son plan pour pouvoir les joindre à un message.",
     "Send":"Envoyer",
     "Sending…":"Envoi…",
     "Read":"Lu",
@@ -19687,7 +19690,11 @@
     })();
     function drawEx(p){
       var ex = ((state.hepCache[p.id] || {}).exercises) || [];
-      if(!ex.length){ exBox.innerHTML = '<div class="btw-msg-exnone">' + esc(t('Add exercises to their program to attach them to a message.')) + '</div>'; return; }
+      if(!ex.length){
+        var m0 = meAs(), kind = hepKind(m0.at, m0.disc);
+        var none = { practice:'Add practices to their plan to attach them to a message.', recovery:'Add practices to their plan to attach them to a message.', habit:'Add habits to their plan to attach them to a message.', school:'Add strategies to their plan to attach them to a message.' }[kind] || 'Add exercises to their program to attach them to a message.';
+        exBox.innerHTML = '<div class="btw-msg-exnone">' + esc(t(none)) + '</div>'; return;
+      }
       exBox.innerHTML = '<div class="btw-msg-exl">' + esc(t('Attach from their program')) + '</div>' + ex.map(function(e){
         return '<label class="btw-msg-chip' + (picked.has(e.id) ? ' on' : '') + '"><input type="checkbox" value="' + esc(e.id) + '"' + (picked.has(e.id) ? ' checked' : '') + '><span>' + esc(e.name) + (e.dosage ? ' · ' + esc(e.dosage) : '') + '</span></label>';
       }).join('');
