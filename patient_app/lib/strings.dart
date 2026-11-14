@@ -433,6 +433,8 @@ class S {
       'Notez tout ce dont vous voulez parler. Votre professionnel les voit avant votre rencontre.');
   String get topicsHint => _('e.g. how the week went with my sister',
       "p. ex. comment s'est passée la semaine avec ma sœur");
+  String get topicsHintBody => _('e.g. my knee is worse on stairs',
+      'p. ex. mon genou est pire dans les escaliers');
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
   String get topicsNone => _('Nothing yet. Add something whenever it comes to mind.',

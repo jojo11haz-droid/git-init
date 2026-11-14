@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
+import '../discipline.dart';
 import '../theme.dart';
 
 /// Things to bring up at the next session, the same list as on the website.
@@ -83,7 +84,10 @@ class _TopicsScreenState extends State<TopicsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = context.watch<AppState>().s;
+    final app = context.watch<AppState>();
+    final s = app.s;
+    final patient = app.patient;
+    final isBody = patient != null && profileFor(patient).isBody;
     final open = _topics.where((t) => !t.discussed).toList();
     final done = _topics.where((t) => t.discussed).take(5).toList();
     return Scaffold(
@@ -105,7 +109,7 @@ class _TopicsScreenState extends State<TopicsScreen> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _add(),
                     decoration: InputDecoration(
-                      hintText: s.topicsHint,
+                      hintText: isBody ? s.topicsHintBody : s.topicsHint,
                       counterText: '',
                       filled: true,
                       fillColor: Colors.white,

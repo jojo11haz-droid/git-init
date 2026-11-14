@@ -6153,6 +6153,7 @@
     "For your next session":"Pour votre prochaine séance",
     "Jot down anything you want to bring up. Your professional sees these before you meet.":"Notez tout ce dont vous voulez parler. Votre professionnel les voit avant votre rencontre.",
     "e.g. how the week went with my sister":"p. ex. comment s'est passée la semaine avec ma sœur",
+    "e.g. my knee is worse on stairs":"p. ex. mon genou est pire dans les escaliers",
     "A topic for your next session":"Un sujet pour votre prochaine séance","Add":"Ajouter","Remove":"Retirer","Talked about":"Abordé",
     "They want to bring up":"Sujets qu'il veut aborder","topic from them":"sujet de sa part","topics from them":"sujets de sa part",
     "Checking the consent form…":"Vérification du formulaire de consentement…",
@@ -14374,7 +14375,7 @@
     const open = _topics.filter(x => !x.discussed_at), done = _topics.filter(x => x.discussed_at).slice(0, 5);
     el.innerHTML = '<div class="btw-topics-h">' + esc(t('For your next session')) + '</div>'
       + '<p class="btw-topics-sub">' + esc(t('Jot down anything you want to bring up. Your professional sees these before you meet.')) + '</p>'
-      + '<form class="btw-topics-add" id="btwTopicsForm"><input type="text" id="btwTopicsInput" maxlength="300" placeholder="' + esc(t('e.g. how the week went with my sister')) + '" aria-label="' + esc(t('A topic for your next session')) + '"><button type="submit" class="btw-nav-btn">' + esc(t('Add')) + '</button></form>'
+      + '<form class="btw-topics-add" id="btwTopicsForm"><input type="text" id="btwTopicsInput" maxlength="300" placeholder="' + esc((typeof physicalField === 'function' && physicalField()) ? t('e.g. my knee is worse on stairs') : t('e.g. how the week went with my sister')) + '" aria-label="' + esc(t('A topic for your next session')) + '"><button type="submit" class="btw-nav-btn">' + esc(t('Add')) + '</button></form>'
       + '<div class="btw-topics-err" id="btwTopicsErr" role="alert"></div>'
       + ((open.length || done.length) ? '<ul class="btw-topics-list">'
         + open.map(x => '<li><span class="tx">' + esc(x.body) + '</span><button type="button" class="btw-topics-x" data-del="' + esc(x.id) + '" aria-label="' + esc(t('Remove')) + '">✕</button></li>').join('')
