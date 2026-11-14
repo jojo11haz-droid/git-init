@@ -36,7 +36,7 @@ import {
   storeContactMessage, listContactMessages,
   bumpSiteStat, siteStatsSummary, storeDemoRequest, listDemoRequests,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sanitizeStat } from './sitestats.js';
 import { sendEmail, emailConfigured, emailFrom } from './email.js';
@@ -2240,7 +2240,10 @@ app.get('/api/patients', requireDb, requireAuth, requireVerifiedClinician, async
     // a purge failure must never block the clinician from seeing their list.
     purgeExpiredPatients(PATIENT_LEFT_GRACE_DAYS)
       .catch(err => console.error('Expired-patient purge failed:', err && err.message));
-    res.json(await listPatients(req.clinician.id));
+    const rows = await listPatients(req.clinician.id);
+    // How many replies from each client the professional hasn't opened yet.
+    const unread = await countUnreadReplies(req.clinician.id).catch(() => ({}));
+    res.json(Array.isArray(rows) ? rows.map(p => (unread[p.id] ? { ...p, unread_replies: unread[p.id] } : p)) : rows);
   } catch (err) {
     console.error('Error listing patients:', err);
     res.status(500).json({ error: 'Could not list patients.' });
@@ -2979,15 +2982,22 @@ function messageExercises(ids, program) {
     .map(e => ({ id: e.id, name: e.name, dosage: e.dosage, description: e.description }));
 }
 function publicMessage(m, program) {
-  return { id: m.id, body: m.body, created_at: m.created_at, read_at: m.read_at, exercises: messageExercises(m.exercise_ids, program) };
+  return { id: m.id, body: m.body, created_at: m.created_at, read_at: m.read_at, sender: m.sender || 'clinician', reply_to: m.reply_to || null, exercises: messageExercises(m.exercise_ids, program) };
 }
+// Replies never go to the AI (no consent for that), so a plain word check is
+// what lets a client who writes something alarming see crisis lines right away.
+// It isn't monitoring: the professional is told the same as for any reply.
+const CRISIS_WORDS = /\b(suicid\w*|kill (my ?self|myself)|end my life|end it all|want to die|hurt (my ?self|myself)|self[- ]harm|overdose|me tuer|me suicider|en finir avec la vie|envie de mourir|me faire du mal)\b/i;
 const messageLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, message: 'Too many messages for now. Try again in a little while.' });
 app.get('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const program = await listAllExercises(patient.id);
-    res.json({ messages: (await listClinicianMessages(patient.id)).map(m => publicMessage(m, program)), connected: patient.invite_status === 'accepted' });
+    const list = await listClinicianMessages(patient.id);
+    // Opening the thread is reading the client's replies.
+    if (list.some(m => m.sender === 'client' && !m.read_at)) await markClientRepliesRead(patient.id);
+    res.json({ messages: list.map(m => publicMessage(m, program)), connected: patient.invite_status === 'accepted' });
   } catch (err) {
     console.error('List messages error:', err);
     res.status(500).json({ error: 'Could not load messages.' });
@@ -3034,6 +3044,35 @@ app.get('/api/patient/messages', requireDb, requirePatientAuth, async (req, res)
 app.post('/api/patient/messages/read', requireDb, requirePatientAuth, async (req, res) => {
   try { await markClinicianMessagesRead(req.patient.id); res.json({ ok: true }); }
   catch (err) { console.error('Mark read error:', err); res.status(500).json({ error: 'Could not update.' }); }
+});
+// The client replies to their professional. Short, text only. Their
+// professional gets an email saying there's a reply, with nothing of it inside.
+const replyLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, message: 'You have sent a lot of replies this hour. Try again a little later.' });
+app.post('/api/patient/messages', requireDb, requirePatientAuth, replyLimiter, async (req, res) => {
+  try {
+    if (!req.patient.clinician_id) return res.status(400).json({ error: 'You are not connected to a professional yet.' });
+    const body = typeof (req.body && req.body.body) === 'string' ? req.body.body.replace(/\r/g, '').trim().slice(0, 1000) : '';
+    if (!body) return res.status(400).json({ error: 'Write a reply first.' });
+    const replyTo = typeof req.body.replyTo === 'string' && /^[0-9a-f-]{36}$/i.test(req.body.replyTo) ? req.body.replyTo : null;
+    const msg = await addClientReply(req.patient.id, req.patient.clinician_id, body, replyTo);
+    const out = { message: publicMessage(msg, []) };
+    if (CRISIS_WORDS.test(body)) out.crisis = CRISIS_RESOURCES;
+    res.status(201).json(out);
+    try {
+      const clinician = await getClinicianById(req.patient.clinician_id);
+      if (clinician && clinician.email && emailConfigured()) {
+        const name = req.patient.display_name || 'A client';
+        sendEmail({
+          to: clinician.email,
+          subject: `${name} replied in Between`,
+          text: `${name} replied to your message in Between.\n\nRead it on their page: ${SITE_URL}/#dashboard\n\n(Between is a documentation tool, not a monitoring service. No response is required through Between.)`
+        }).catch(err => console.error('Reply email failed:', err && err.message));
+      }
+    } catch (err) { console.error('Reply notify error:', err); }
+  } catch (err) {
+    console.error('Client reply error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Could not send your reply.' });
+  }
 });
 
 // --- Session scribe: record the appointment (with the client's consent), get

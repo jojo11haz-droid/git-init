@@ -437,6 +437,23 @@ class S {
       'p. ex. mon genou est pire dans les escaliers');
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
+
+  // Replying to a message from their professional.
+  String get reply => _('Reply', 'Répondre');
+  String get you => _('You', 'Vous');
+  String get seen => _('Seen', 'Lu');
+  String get ok => _('OK', 'OK');
+  String get sendReply => _('Send', 'Envoyer');
+  String get replyHint => _('Write your reply', 'Écrivez votre réponse');
+  String get replyTitle => _('Reply to your professional', 'Répondre à votre professionnel(le)');
+  String get replyNote => _(
+      "Between isn't for emergencies. If you're in danger, call 988 or 911.",
+      "Between n'est pas fait pour les urgences. Si vous êtes en danger, appelez le 988 ou le 911.");
+  String get replyCrisisTitle => _('This sounds like a lot to carry right now.',
+      'Ça semble lourd à porter en ce moment.');
+  String get replyCrisisBody => _(
+      "Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.",
+      'Votre professionnel(le) ne le verra peut-être pas tout de suite. Si vous êtes en danger ou pensez au suicide, appelez ou textez le 988, ou appelez le 911.');
   String get topicsNone => _('Nothing yet. Add something whenever it comes to mind.',
       "Rien pour l'instant. Ajoutez quelque chose dès que ça vous vient.");
   String topicsWaiting(int n) => n == 0

@@ -338,6 +338,11 @@ CREATE TABLE IF NOT EXISTS clinician_messages (
   read_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS clinician_messages_patient_idx ON clinician_messages(patient_id, created_at DESC);
+-- Clients can reply: sender is 'clinician' or 'client'. read_at means "read by
+-- the other side" (the client for the professional's notes, the professional
+-- for the client's replies).
+ALTER TABLE clinician_messages ADD COLUMN IF NOT EXISTS sender TEXT NOT NULL DEFAULT 'clinician';
+ALTER TABLE clinician_messages ADD COLUMN IF NOT EXISTS reply_to UUID;
 -- Things a client wants to bring up at their next session.
 CREATE TABLE IF NOT EXISTS session_topics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -2069,22 +2074,47 @@ export async function updateExercise(patientId, exerciseId, { name, description,
 export async function addClinicianMessage(patientId, clinicianId, body, exerciseIds) {
   const { rows } = await pool.query(
     `INSERT INTO clinician_messages (patient_id, clinician_id, body, exercise_ids) VALUES ($1, $2, $3, $4)
-     RETURNING id, body, exercise_ids, created_at, read_at`,
+     RETURNING id, body, exercise_ids, created_at, read_at, sender, reply_to`,
     [patientId, clinicianId, body, exerciseIds && exerciseIds.length ? JSON.stringify(exerciseIds) : null]
+  );
+  return rows[0];
+}
+// A reply from the client to their professional. replyTo must be one of the
+// professional's messages to this same client, else it's dropped.
+export async function addClientReply(patientId, clinicianId, body, replyTo) {
+  const { rows } = await pool.query(
+    `INSERT INTO clinician_messages (patient_id, clinician_id, body, sender, reply_to)
+     VALUES ($1, $2, $3, 'client',
+       (SELECT id FROM clinician_messages WHERE id = $4::uuid AND patient_id = $1 AND sender = 'clinician'))
+     RETURNING id, body, exercise_ids, created_at, read_at, sender, reply_to`,
+    [patientId, clinicianId, body, replyTo || null]
   );
   return rows[0];
 }
 export async function listClinicianMessages(patientId, limit = 30) {
   const { rows } = await pool.query(
-    `SELECT id, body, exercise_ids, created_at, read_at FROM clinician_messages
+    `SELECT id, body, exercise_ids, created_at, read_at, sender, reply_to FROM clinician_messages
      WHERE patient_id = $1 ORDER BY created_at DESC LIMIT $2`,
     [patientId, limit]
   );
   return rows;
 }
-// Marks the client's own messages read (only theirs; ids optional = all).
+// The client has read their professional's messages.
 export async function markClinicianMessagesRead(patientId) {
-  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND read_at IS NULL`, [patientId]);
+  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND sender = 'clinician' AND read_at IS NULL`, [patientId]);
+}
+// The professional has read the client's replies.
+export async function markClientRepliesRead(patientId) {
+  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND sender = 'client' AND read_at IS NULL`, [patientId]);
+}
+// Unread replies per client for one professional (for the client list badge).
+export async function countUnreadReplies(clinicianId) {
+  const { rows } = await pool.query(
+    `SELECT patient_id, COUNT(*)::int AS n FROM clinician_messages
+     WHERE clinician_id = $1 AND sender = 'client' AND read_at IS NULL GROUP BY patient_id`,
+    [clinicianId]
+  );
+  return Object.fromEntries(rows.map(r => [r.patient_id, r.n]));
 }
 
 // --- Personalization ---
