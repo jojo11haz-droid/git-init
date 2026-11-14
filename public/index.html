@@ -5615,9 +5615,9 @@
       try{
         const url = typeof input === 'string' ? input : ((input && input.url) || '');
         const ours = url.indexOf('/api/') === 0 || url.indexOf(location.origin + '/api/') === 0;
-        if(ours && curLang === 'fr'){
+        if(ours && (curLang === 'fr' || curLang === 'en')){
           const h = new Headers((init && init.headers) || (typeof input !== 'string' && input && input.headers) || undefined);
-          if(!h.has('X-Btw-Lang')) h.set('X-Btw-Lang', 'fr');
+          if(!h.has('X-Btw-Lang')) h.set('X-Btw-Lang', curLang);
           init = Object.assign({}, init, { headers: h });
         }
       }catch(e){}
@@ -13305,13 +13305,16 @@
     try{
       let payload;
       if(isPatient()){
-        const [me, checkIns, notes] = await Promise.all([
+        const [me, checkIns, notes, msgs, topics] = await Promise.all([
           pApi('GET', '/api/patient/me').catch(()=>null),
           pApi('GET', '/api/patient/check-ins').catch(()=>[]),
-          pApi('GET', '/api/patient/future-notes').catch(()=>[])
+          pApi('GET', '/api/patient/future-notes').catch(()=>[]),
+          pApi('GET', '/api/patient/messages').catch(()=>null),
+          pApi('GET', '/api/patient/topics').catch(()=>null)
         ]);
         payload = { exported_at: new Date().toISOString(), account_type: 'patient',
-          profile: (me && me.patient) || null, check_ins: checkIns || [], future_notes: notes || [] };
+          profile: (me && me.patient) || null, check_ins: checkIns || [], future_notes: notes || [],
+          messages: (msgs && msgs.messages) || [], session_topics: (topics && topics.topics) || [] };
       } else if(isTherapist()){
         const [me, caseload] = await Promise.all([
           api('GET', '/api/auth/me').catch(()=>null),

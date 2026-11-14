@@ -308,6 +308,8 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_q TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_external BOOLEAN NOT NULL DEFAULT false;
 -- The language reminders (texts and emails) go out in: 'en' or 'fr'.
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS lang TEXT;
+-- The language a professional last used Between in, for their emails.
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS lang TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_app TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercise_status TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_a TEXT;
@@ -417,7 +419,7 @@ export async function initDb() {
 
 // --- Clinicians & sessions ---
 
-const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, needs_digest_enabled, brand, created_at';
+const CLINICIAN_PUBLIC_COLS = 'id, name, email, licence_number, licence_order, licence_verified, licence_reviewed_at, province, practice_name, account_type, discipline, mfa_enabled, plan, subscription_status, billing_currency, practice_owner_id, needs_digest_enabled, brand, lang, created_at';
 
 export async function createClinician({ name, email, passwordHash, licenceNumber, licenceOrder, province, practiceName, plan }) {
   const { rows } = await pool.query(
@@ -822,7 +824,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, lang, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -1977,7 +1979,7 @@ export async function setClinicianNeedsDigest(clinicianId, enabled) {
 
 export async function listNeedsDigestClinicians() {
   const { rows } = await pool.query(
-    `SELECT id, name, email, account_type, discipline, needs_digest_last_sent::text AS needs_digest_last_sent FROM clinicians
+    `SELECT id, name, email, account_type, discipline, lang, needs_digest_last_sent::text AS needs_digest_last_sent FROM clinicians
      WHERE needs_digest_enabled = true AND licence_verified = true AND email IS NOT NULL`
   );
   return rows;
@@ -2070,6 +2072,15 @@ export async function updateExercise(patientId, exerciseId, { name, description,
   return rows[0] || null;
 }
 
+// The language someone last used Between in ('en' / 'fr'), so emails that
+// another person's action triggers (a message, a reply) arrive in it.
+export async function setPatientLang(patientId, lang) {
+  await pool.query(`UPDATE patients SET lang = $2 WHERE id = $1 AND lang IS DISTINCT FROM $2`, [patientId, lang]);
+}
+export async function setClinicianLang(clinicianId, lang) {
+  await pool.query(`UPDATE clinicians SET lang = $2 WHERE id = $1 AND lang IS DISTINCT FROM $2`, [clinicianId, lang]);
+}
+
 // --- Messages from the professional to a client ---
 export async function addClinicianMessage(patientId, clinicianId, body, exerciseIds) {
   const { rows } = await pool.query(
@@ -2085,17 +2096,19 @@ export async function addClientReply(patientId, clinicianId, body, replyTo) {
   const { rows } = await pool.query(
     `INSERT INTO clinician_messages (patient_id, clinician_id, body, sender, reply_to)
      VALUES ($1, $2, $3, 'client',
-       (SELECT id FROM clinician_messages WHERE id = $4::uuid AND patient_id = $1 AND sender = 'clinician'))
+       (SELECT id FROM clinician_messages WHERE id = $4::uuid AND patient_id = $1 AND clinician_id = $2 AND sender = 'clinician'))
      RETURNING id, body, exercise_ids, created_at, read_at, sender, reply_to`,
     [patientId, clinicianId, body, replyTo || null]
   );
   return rows[0];
 }
-export async function listClinicianMessages(patientId, limit = 30) {
+// clinicianId (optional) limits it to one professional's conversation, so a
+// client's new professional never sees messages from a previous one.
+export async function listClinicianMessages(patientId, limit = 30, clinicianId = null) {
   const { rows } = await pool.query(
     `SELECT id, body, exercise_ids, created_at, read_at, sender, reply_to FROM clinician_messages
-     WHERE patient_id = $1 ORDER BY created_at DESC LIMIT $2`,
-    [patientId, limit]
+     WHERE patient_id = $1 AND ($3::uuid IS NULL OR clinician_id = $3) ORDER BY created_at DESC LIMIT $2`,
+    [patientId, limit, clinicianId]
   );
   return rows;
 }
@@ -2104,8 +2117,8 @@ export async function markClinicianMessagesRead(patientId) {
   await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND sender = 'clinician' AND read_at IS NULL`, [patientId]);
 }
 // The professional has read the client's replies.
-export async function markClientRepliesRead(patientId) {
-  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND sender = 'client' AND read_at IS NULL`, [patientId]);
+export async function markClientRepliesRead(patientId, clinicianId) {
+  await pool.query(`UPDATE clinician_messages SET read_at = now() WHERE patient_id = $1 AND clinician_id = $2 AND sender = 'client' AND read_at IS NULL`, [patientId, clinicianId]);
 }
 // Unread replies per client for one professional (for the client list badge).
 export async function countUnreadReplies(clinicianId) {
