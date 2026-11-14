@@ -40,6 +40,8 @@ class Patient {
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
+  // Daily text/email reminders turned on from the website.
+  bool get textRemindersOn => raw['reminders_enabled'] == true;
   // Their program lives in another exercise app (Wibbi, Physitrack…): the
   // check-in asks "did you do your exercises?" instead of listing them.
   bool get exercisesExternal => raw['exercises_external'] == true;
@@ -479,6 +481,16 @@ class AppState extends ChangeNotifier {
   Future<void> cancelSubscription({bool reactivate = false}) async {
     final data = await _api.post(
         '/api/patient/subscription/cancel', {'reactivate': reactivate});
+    patient = Patient(
+        ((data as Map)['patient'] as Map).cast<String, dynamic>());
+    notifyListeners();
+  }
+
+  /// Stop the website's daily text/email reminders (when the app's own
+  /// reminder replaces them).
+  Future<void> turnOffTextReminders() async {
+    final data =
+        await _api.post('/api/patient/reminders', {'enabled': false});
     patient = Patient(
         ((data as Map)['patient'] as Map).cast<String, dynamic>());
     notifyListeners();
