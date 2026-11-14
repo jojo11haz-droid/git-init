@@ -9,6 +9,15 @@
 // tests fail if a message in server.js has no entry here (or in LEFT_IN_ENGLISH).
 
 const FR = {
+  "Could not load your topics.": "Impossible de charger vos sujets.",
+  "Topics are shared with your professional, and you are using Between on your own.": "Les sujets sont partagés avec votre professionnel, et vous utilisez Between seul.",
+  "Keep it short: a line or two is plenty.": "Restez bref : une ligne ou deux suffisent.",
+  "You already have 20 topics waiting. Remove one first.": "Vous avez déjà 20 sujets en attente. Retirez-en un d'abord.",
+  "Could not save that topic.": "Impossible d'enregistrer ce sujet.",
+  "Topic not found.": "Sujet introuvable.",
+  "Could not remove that topic.": "Impossible de retirer ce sujet.",
+  "Could not load the topics.": "Impossible de charger les sujets.",
+  "Could not update the topic.": "Impossible de mettre à jour le sujet.",
   "Could not check the billing setup just now.": "Impossible de vérifier la configuration de la facturation pour le moment.",
   "The wording helper is unavailable right now.": "L'aide à la formulation n'est pas disponible pour le moment.",
   "Could not improve the wording just now. Please try again.": "Impossible d'améliorer la formulation pour le moment. Veuillez réessayer.",

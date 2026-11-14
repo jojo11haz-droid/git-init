@@ -1399,6 +1399,39 @@
   @media (max-width:720px){ .btw-prep-pair{grid-template-columns:1fr;} }
   .btw-scribe-who{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 8px;}
   .btw-scribe-who:empty{display:none;}
+  /* "Do it now": a practice or exercise with its how-to and a timer. */
+  .btw-hep-check{position:relative;}
+  .btw-hep-go{flex:none;align-self:center;border:1px solid var(--moss);background:var(--panel);color:var(--moss);border-radius:999px;font:600 12px var(--font-body);padding:6px 11px;cursor:pointer;white-space:nowrap;}
+  .btw-hep-go:hover{background:var(--moss-light);}
+  .btw-donow-dose{font-size:13px;color:var(--moss);font-weight:600;margin:-4px 0 8px;}
+  .btw-donow-how{font-size:14px;line-height:1.6;color:var(--ink);margin:0 0 14px;white-space:pre-line;}
+  .btw-donow-time{font:600 44px/1 var(--font-body);text-align:center;font-variant-numeric:tabular-nums;color:var(--ink);margin:6px 0 14px;}
+  .btw-donow-btns{display:flex;gap:10px;justify-content:center;margin-bottom:14px;}
+  .btw-donow-pace{display:none;position:relative;height:130px;align-items:center;justify-content:center;margin:4px 0 6px;}
+  .btw-donow-pace.on{display:flex;}
+  .btw-donow-pace .ring{position:absolute;width:70px;height:70px;border-radius:50%;background:var(--moss-light);border:2px solid var(--moss);transition:transform 4s ease-in-out;}
+  .btw-donow-pace.in .ring{transform:scale(1.7);}
+  .btw-donow-pace .word{position:relative;font:600 13px var(--font-body);color:var(--moss);}
+  @media (prefers-reduced-motion:reduce){ .btw-donow-pace .ring{transition:none;} }
+  /* Things to bring up next session: the client's list, and the professional's view. */
+  .btw-topics{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 18px;margin:0 0 16px;}
+  .btw-topics-h{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--ink);margin:0 0 4px;}
+  .btw-topics-sub{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px;}
+  .btw-topics-add{display:flex;gap:8px;}
+  .btw-topics-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:var(--paper);color:var(--ink);}
+  .btw-topics-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;}
+  .btw-topics-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.45;padding:8px 10px;border-radius:10px;background:var(--paper);color:var(--ink);overflow-wrap:anywhere;}
+  .btw-topics-list li .tx{flex:1;min-width:0;}
+  .btw-topics-list li.done{color:var(--ink-soft);}
+  .btw-topics-list li.done .tx{text-decoration:line-through;text-decoration-color:var(--line);}
+  .btw-topics-list li .meta{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;}
+  .btw-topics-x{background:none;border:0;color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;}
+  .btw-topics-err{font-size:12.5px;color:var(--clay);margin-top:6px;min-height:0;}
+  .btw-topics-pro{border:1px solid var(--moss);background:var(--moss-light);border-radius:12px;padding:12px 14px;margin:0 0 12px;}
+  .btw-topics-pro .btw-topics-h{font-size:15px;}
+  .btw-topics-pro .btw-topics-list li{background:var(--panel);}
+  .btw-topics-pro label{display:flex;align-items:flex-start;gap:9px;flex:1;min-width:0;cursor:pointer;}
+  .btw-topics-pro input{margin-top:3px;accent-color:var(--moss);}
   /* Owner's billing check: one row per plan, a tick or what to fix. */
   .btw-billcheck-lead{font-size:13.5px;line-height:1.55;color:var(--ink-soft);margin:0 0 12px;}
   .btw-billcheck-h{font:600 10.5px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:16px 0 6px;}
@@ -4583,6 +4616,7 @@
       <div class="btw-hep" id="btwHep" style="display:none;"></div>
 
       <div class="btw-alert-banner" id="btwAlertBanner">New check-in flagged for possible safety concern, reviewed above patient's usual pattern.</div>
+      <div class="btw-topics-pro" id="btwTopicsPro" style="display:none;"></div>
       <div class="btw-prep-pair">
       <div class="btw-prep" id="btwPrep" style="display:none;">
         <div class="btw-prep-head">
@@ -4609,6 +4643,7 @@
 
       <div class="btw-digest" id="btwDigest"></div>
 
+      <div class="btw-topics" id="btwTopics" style="display:none;"></div>
       <div class="btw-reflection" id="btwWeeklyReflection" style="display:none;"></div>
       <div class="btw-goals" id="btwGoals" style="display:none;"></div>
       <div class="btw-patterns" id="btwPatterns" style="display:none;"></div>
@@ -5334,6 +5369,23 @@
       <div class="btw-form-error" id="btwInvError"></div>
       <button class="btw-modal-continue" id="btwInvSubmit" disabled>Set up my account</button>
       <div style="font-size:11.5px;color:var(--ink-soft);margin-top:12px;text-align:center;">Already set up? <button id="btwInvToLogin" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--moss);text-decoration:underline;cursor:pointer;">Log in</button></div>
+    </div>
+  </div>
+
+  <div class="btw-modal-overlay" id="btwDoNowOverlay" style="display:none;">
+    <div class="btw-modal btw-donow" style="max-width:440px;">
+      <button class="btw-modal-close" data-close="btwDoNowOverlay" type="button" aria-label="Close">✕</button>
+      <div class="btw-modal-eyebrow" id="btwDoNowEyebrow">Do it now</div>
+      <h2 id="btwDoNowName"></h2>
+      <div class="btw-donow-dose" id="btwDoNowDose"></div>
+      <p class="btw-donow-how" id="btwDoNowHow"></p>
+      <div class="btw-donow-pace" id="btwDoNowPace" aria-hidden="true"><span class="ring"></span><span class="word" id="btwDoNowPaceWord"></span></div>
+      <div class="btw-donow-time" id="btwDoNowTime" aria-live="off">0:00</div>
+      <div class="btw-donow-btns">
+        <button type="button" class="btw-nav-btn" id="btwDoNowStart">Start</button>
+        <button type="button" class="btw-nav-btn" id="btwDoNowReset">Reset</button>
+      </div>
+      <button type="button" class="btw-modal-continue" id="btwDoNowDone">Done, tick it off</button>
     </div>
   </div>
 
@@ -6096,6 +6148,13 @@
     "Could not read that file. Export the list as CSV and try again.":"Impossible de lire ce fichier. Exportez la liste en CSV et réessayez.",
     "Showing the first 60.":"Les 60 premiers sont affichés.","more in this file: import it again to add the rest.":"de plus dans ce fichier : importez-le de nouveau pour ajouter les autres.",
     "already on your caseload, left out.":"déjà dans votre clientèle, non repris.","Nobody new in this file.":"Personne de nouveau dans ce fichier.",
+    "Do it now":"Faire maintenant","Start":"Démarrer","Pause":"Pause","Resume":"Reprendre","Reset":"Réinitialiser","Time is up":"Temps écoulé",
+    "Done, tick it off":"Fait, je le coche","Breathe in":"Inspirez","Breathe out":"Expirez",
+    "For your next session":"Pour votre prochaine séance",
+    "Jot down anything you want to bring up. Your professional sees these before you meet.":"Notez tout ce dont vous voulez parler. Votre professionnel les voit avant votre rencontre.",
+    "e.g. how the week went with my sister":"p. ex. comment s'est passée la semaine avec ma sœur",
+    "A topic for your next session":"Un sujet pour votre prochaine séance","Add":"Ajouter","Remove":"Retirer","Talked about":"Abordé",
+    "They want to bring up":"Sujets qu'il veut aborder","topic from them":"sujet de sa part","topics from them":"sujets de sa part",
     "Checking the consent form…":"Vérification du formulaire de consentement…",
     "Consent form signed by both of you on":"Formulaire de consentement signé par vous deux le",
     "Valid until":"Valide jusqu'au",
@@ -14250,6 +14309,118 @@
     el.addEventListener('click', (e)=>{ if(e.target === el) el.style.display = 'none'; });
   });
 
+  // "Do it now": one practice or exercise, its how-to, and a timer. A dose that
+  // names minutes ("5 min") counts down; anything else counts up. Breathing
+  // practices get a slow in-and-out guide. Done ticks it in the check-in.
+  (function(){
+    const ov = document.getElementById('btwDoNowOverlay'); if(!ov) return;
+    const $ = id => document.getElementById(id);
+    const timeEl = $('btwDoNowTime'), start = $('btwDoNowStart'), reset = $('btwDoNowReset'), pace = $('btwDoNowPace'), paceWord = $('btwDoNowPaceWord');
+    let item = null, onDone = null, total = 0, left = 0, up = 0, tick = null, paceTick = null, running = false, chime = false;
+    const fmt = n => Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0');
+    function minutesIn(dose){ const m = String(dose || '').match(/(\d+(?:[.,]\d+)?)\s*(min|minute|mn)/i); return m ? Math.round(parseFloat(m[1].replace(',', '.')) * 60) : 0; }
+    function draw(){ timeEl.textContent = fmt(total ? left : up); start.textContent = running ? t('Pause') : ((total ? left < total : up > 0) ? t('Resume') : t('Start')); }
+    function stopPace(){ clearInterval(paceTick); paceTick = null; pace.classList.remove('in'); paceWord.textContent = ''; }
+    function runPace(){
+      if(!pace.classList.contains('on')) return;
+      let inhale = true;
+      const step = () => { pace.classList.toggle('in', inhale); paceWord.textContent = inhale ? t('Breathe in') : t('Breathe out'); inhale = !inhale; };
+      step(); paceTick = setInterval(step, 4000);
+    }
+    function stop(){ running = false; clearInterval(tick); tick = null; stopPace(); draw(); }
+    function go(){
+      if(running){ stop(); return; }
+      if(total && left <= 0) left = total;
+      running = true; runPace();
+      tick = setInterval(function(){
+        if(total){ left = Math.max(0, left - 1); if(left === 0){ stop(); timeEl.textContent = t('Time is up'); if(chime) try { navigator.vibrate && navigator.vibrate(200); } catch(e){} } else draw(); }
+        else { up++; draw(); }
+      }, 1000);
+      draw();
+    }
+    start.addEventListener('click', go);
+    reset.addEventListener('click', function(){ stop(); left = total; up = 0; draw(); });
+    $('btwDoNowDone').addEventListener('click', function(){ stop(); ov.style.display = 'none'; if(onDone) onDone(); });
+    ov.querySelector('.btw-modal-close').addEventListener('click', stop);
+    ov.addEventListener('click', function(e){ if(e.target === ov) stop(); });
+    window.__btwDoNow = function(e, done){
+      item = e; onDone = done;
+      $('btwDoNowEyebrow').textContent = t('Do it now');
+      $('btwDoNowName').textContent = e.name || '';
+      $('btwDoNowDose').textContent = e.dosage || '';
+      $('btwDoNowHow').textContent = e.description || '';
+      $('btwDoNowDone').textContent = t('Done, tick it off');
+      total = minutesIn(e.dosage); left = total; up = 0; chime = true;
+      pace.classList.toggle('on', /breath|respir/i.test((e.name || '') + ' ' + (e.description || '')));
+      stop(); ov.style.display = 'flex';
+    };
+  })();
+
+  // Things to bring up next session. The client keeps a short list; their
+  // professional sees the open topics in Session prep and ticks them off.
+  let _topics = null, _topicsLoading = false;
+  async function loadTopics(force){
+    if(!isPatient() || _topicsLoading || (_topics && !force)) return;
+    _topicsLoading = true;
+    try { const d = await pApi('GET', '/api/patient/topics'); _topics = d.topics || []; } catch(e){ _topics = _topics || []; }
+    _topicsLoading = false; renderTopics();
+  }
+  function renderTopics(){
+    const el = document.getElementById('btwTopics'); if(!el) return;
+    const pt = state.patient;
+    if(!isPatient() || !pt || !pt.clinician_account_type || _ownerPreview){ el.style.display = 'none'; return; }
+    if(_topics === null){ el.style.display = 'none'; loadTopics(); return; }
+    el.style.display = '';
+    const open = _topics.filter(x => !x.discussed_at), done = _topics.filter(x => x.discussed_at).slice(0, 5);
+    el.innerHTML = '<div class="btw-topics-h">' + esc(t('For your next session')) + '</div>'
+      + '<p class="btw-topics-sub">' + esc(t('Jot down anything you want to bring up. Your professional sees these before you meet.')) + '</p>'
+      + '<form class="btw-topics-add" id="btwTopicsForm"><input type="text" id="btwTopicsInput" maxlength="300" placeholder="' + esc(t('e.g. how the week went with my sister')) + '" aria-label="' + esc(t('A topic for your next session')) + '"><button type="submit" class="btw-nav-btn">' + esc(t('Add')) + '</button></form>'
+      + '<div class="btw-topics-err" id="btwTopicsErr" role="alert"></div>'
+      + ((open.length || done.length) ? '<ul class="btw-topics-list">'
+        + open.map(x => '<li><span class="tx">' + esc(x.body) + '</span><button type="button" class="btw-topics-x" data-del="' + esc(x.id) + '" aria-label="' + esc(t('Remove')) + '">✕</button></li>').join('')
+        + done.map(x => '<li class="done"><span class="tx">' + esc(x.body) + '</span><span class="meta">' + esc(t('Talked about')) + '</span></li>').join('')
+        + '</ul>' : '');
+    const form = document.getElementById('btwTopicsForm'), input = document.getElementById('btwTopicsInput'), err = document.getElementById('btwTopicsErr');
+    form.addEventListener('submit', async function(ev){
+      ev.preventDefault();
+      const body = input.value.trim(); if(!body) return;
+      form.querySelector('button').disabled = true; err.textContent = '';
+      try { const d = await pApi('POST', '/api/patient/topics', { body: body }); _topics = [d.topic].concat(_topics); renderTopics(); const i2 = document.getElementById('btwTopicsInput'); if(i2) i2.focus(); }
+      catch(e){ err.textContent = (e && e.message) || ''; form.querySelector('button').disabled = false; }
+    });
+    el.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click', async function(){
+      try { await pApi('DELETE', '/api/patient/topics/' + encodeURIComponent(b.dataset.del)); _topics = _topics.filter(x => x.id !== b.dataset.del); renderTopics(); }
+      catch(e){ err.textContent = (e && e.message) || ''; }
+    }); });
+  }
+  const _proTopics = {};
+  async function renderTopicsPro(){
+    const el = document.getElementById('btwTopicsPro'); if(!el) return;
+    const p = isTherapist() ? selectedPatient() : null;
+    if(!p){ el.style.display = 'none'; return; }
+    const pid = p.id;
+    if(!_proTopics[pid]){
+      _proTopics[pid] = { loading: true, topics: [] };
+      try { const d = await api('GET', '/api/patients/' + encodeURIComponent(pid) + '/topics'); _proTopics[pid] = { topics: d.topics || [] }; }
+      catch(e){ _proTopics[pid] = { topics: [] }; }
+    }
+    if(_proTopics[pid].loading || (selectedPatient() || {}).id !== pid) return;
+    const list = _proTopics[pid].topics, open = list.filter(x => !x.discussed_at), done = list.filter(x => x.discussed_at).slice(0, 3);
+    if(!open.length && !done.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.style.display = '';
+    const day = iso => { try { return new Date(iso).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { month:'short', day:'numeric' }); } catch(e){ return ''; } };
+    el.innerHTML = '<div class="btw-topics-h">' + esc(t('They want to bring up')) + (open.length ? ' (' + open.length + ')' : '') + '</div>'
+      + '<ul class="btw-topics-list">'
+      + open.concat(done).map(x => '<li class="' + (x.discussed_at ? 'done' : '') + '"><label><input type="checkbox" data-tid="' + esc(x.id) + '"' + (x.discussed_at ? ' checked' : '') + '><span class="tx">' + esc(x.body) + '</span></label><span class="meta">' + esc(x.discussed_at ? t('Talked about') : day(x.created_at)) + '</span></li>').join('')
+      + '</ul>';
+    el.querySelectorAll('input[data-tid]').forEach(function(cb){ cb.addEventListener('change', async function(){
+      try {
+        const d = await api('POST', '/api/patients/' + encodeURIComponent(pid) + '/topics/' + encodeURIComponent(cb.dataset.tid) + '/discussed', { discussed: cb.checked });
+        _proTopics[pid].topics = _proTopics[pid].topics.map(x => x.id === d.topic.id ? d.topic : x); renderTopicsPro();
+      } catch(e){ cb.checked = !cb.checked; alert((e && e.message) || ''); }
+    }); });
+  }
+
   // Owner only: check every plan's Stripe price against how the site sells it.
   (function(){
     const btn = document.getElementById('btwBillCheckBtn'), ov = document.getElementById('btwBillCheckOverlay');
@@ -17370,7 +17541,12 @@
       main.innerHTML = '<span class="btw-hep-name">' + esc(e.name) + '</span>' + (e.dosage ? '<span class="btw-hep-dose">' + esc(e.dosage) + '</span>' : '')
         + (e.description ? '<div class="btw-hep-desc">' + esc(e.description) + '</div>' : '');
       cb.addEventListener('change', function(){ if(cb.checked) doneSet.add(e.id); else doneSet.delete(e.id); row.classList.toggle('on', cb.checked); });
-      row.appendChild(cb); row.appendChild(main); list.appendChild(row);
+      row.appendChild(cb); row.appendChild(main);
+      // "Do it now": open it with its how-to and a timer; Done ticks it.
+      var go = document.createElement('button'); go.type = 'button'; go.className = 'btw-hep-go'; go.textContent = t('Do it now');
+      go.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); if(window.__btwDoNow) window.__btwDoNow(e, function(){ doneSet.add(e.id); cb.checked = true; row.classList.add('on'); }); });
+      row.appendChild(go);
+      list.appendChild(row);
     });
   }
   function renderNextSessionBar(){
@@ -17684,7 +17860,7 @@
     }
     var pair = document.querySelector('#btwDashGrid .btw-prep-pair');
     wrap('hep', [document.getElementById('btwHep')], function(){ var l = document.querySelector('#btwHep .btw-hep-t'); return (l && l.textContent.trim()) || t('Program'); });
-    wrap('prep', [pair], function(){ return t('Session prep'); });
+    wrap('prep', [document.getElementById('btwTopicsPro'), pair], function(){ var n = ((document.getElementById('btwTopicsPro') || {}).querySelectorAll || function(){ return []; }).call(document.getElementById('btwTopicsPro'), 'input[data-tid]:not(:checked)').length; return t('Session prep') + (n ? ' · ' + n + ' ' + (n === 1 ? t('topic from them') : t('topics from them')) : ''); });
     wrap('body', [document.getElementById('btwBodyOverview')], function(){ return t('Where it hurts'); });
     if(pair){ try { var mo2 = new MutationObserver(sync); [].forEach.call(pair.children, function(k){ mo2.observe(k, { attributes:true, attributeFilter:['style'] }); }); } catch(e){} }
     window.__btwSyncProAccs = sync;
@@ -19157,6 +19333,7 @@
   function renderAll(){
     try { if(window.__btwScribeSync) setTimeout(window.__btwScribeSync, 0); } catch(e){}
     try { if(window.__btwSyncProAccs) setTimeout(window.__btwSyncProAccs, 0); } catch(e){}
+    try { renderTopics(); renderTopicsPro(); } catch(e){}
     btwApplyAccountBodySex();
     try { btwApplyAccent(); btwApplyPrefs(); renderBrandCard(); } catch(e){}
     if(isPatient()){

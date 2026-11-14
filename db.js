@@ -338,6 +338,15 @@ CREATE TABLE IF NOT EXISTS clinician_messages (
   read_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS clinician_messages_patient_idx ON clinician_messages(patient_id, created_at DESC);
+-- Things a client wants to bring up at their next session.
+CREATE TABLE IF NOT EXISTS session_topics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  discussed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS session_topics_idx ON session_topics(patient_id, created_at DESC);
 -- A signed consent form for recording sessions: the client and the
 -- professional both sign on screen before the first recording. The exact
 -- wording they signed is kept with the two signatures (PNG data URLs).
@@ -1859,6 +1868,58 @@ export async function deleteFutureNote(id, patientId) {
     [id, patientId]
   );
   return rows[0] || null;
+}
+
+// --- Things to bring up next session ---
+// Topics a client jots down between sessions ("talk about my sister", "knee
+// worse on stairs"). Their professional sees the open ones in Session prep
+// and can mark them discussed. Written by the client, shared with their own
+// professional only.
+export async function createSessionTopic(patientId, body) {
+  const { rows } = await pool.query(
+    `INSERT INTO session_topics (patient_id, body) VALUES ($1, $2) RETURNING id, body, created_at, discussed_at`,
+    [patientId, body]
+  );
+  return rows[0];
+}
+
+export async function listSessionTopics(patientId) {
+  const { rows } = await pool.query(
+    `SELECT id, body, created_at, discussed_at FROM session_topics
+     WHERE patient_id = $1 AND (discussed_at IS NULL OR discussed_at > now() - interval '30 days')
+     ORDER BY (discussed_at IS NOT NULL), created_at DESC LIMIT 40`,
+    [patientId]
+  );
+  return rows;
+}
+
+export async function countOpenSessionTopics(patientId) {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM session_topics WHERE patient_id = $1 AND discussed_at IS NULL`,
+    [patientId]
+  );
+  return rows[0].n;
+}
+
+export async function deleteSessionTopic(id, patientId) {
+  const { rows } = await pool.query(
+    `DELETE FROM session_topics WHERE id = $1 AND patient_id = $2 RETURNING id`,
+    [id, patientId]
+  );
+  return rows[0] || null;
+}
+
+export async function setSessionTopicDiscussed(id, patientId, discussed) {
+  const { rows } = await pool.query(
+    `UPDATE session_topics SET discussed_at = CASE WHEN $3 THEN now() ELSE NULL END
+     WHERE id = $1 AND patient_id = $2 RETURNING id, body, created_at, discussed_at`,
+    [id, patientId, !!discussed]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteAllSessionTopics(patientId) {
+  await pool.query(`DELETE FROM session_topics WHERE patient_id = $1`, [patientId]);
 }
 
 
