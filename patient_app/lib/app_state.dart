@@ -725,15 +725,26 @@ class AppState extends ChangeNotifier {
       _api.get('/api/patient/me').catchError((_) => null),
       _api.get('/api/patient/check-ins').catchError((_) => const <dynamic>[]),
       _api.get('/api/patient/future-notes').catchError((_) => const <dynamic>[]),
+      _api.get('/api/patient/messages').catchError((_) => null),
+      _api.get('/api/patient/topics').catchError((_) => null),
     ]);
     final me = results[0];
     final profile = (me is Map && me['patient'] is Map) ? me['patient'] : null;
+    final msgs = results[3];
+    final topics = results[4];
     final payload = <String, dynamic>{
       'exported_at': DateTime.now().toUtc().toIso8601String(),
       'account_type': 'patient',
       'profile': profile,
       'check_ins': results[1] is List ? results[1] : const <dynamic>[],
       'future_notes': results[2] is List ? results[2] : const <dynamic>[],
+      // Messages with their professional (both ways) and next-session topics.
+      'messages': (msgs is Map && msgs['messages'] is List)
+          ? msgs['messages']
+          : const <dynamic>[],
+      'session_topics': (topics is Map && topics['topics'] is List)
+          ? topics['topics']
+          : const <dynamic>[],
     };
     return const JsonEncoder.withIndent('  ').convert(payload);
   }

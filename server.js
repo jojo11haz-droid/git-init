@@ -36,7 +36,7 @@ import {
   storeContactMessage, listContactMessages,
   bumpSiteStat, siteStatsSummary, storeDemoRequest, listDemoRequests,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies, setPatientLang, setClinicianLang , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sanitizeStat } from './sitestats.js';
 import { sendEmail, emailConfigured, emailFrom } from './email.js';
@@ -1040,6 +1040,17 @@ function requireDb(req, res, next) {
   next();
 }
 
+// Remember the language someone is using (the site and app send X-Btw-Lang
+// on every API call), so emails another person triggers reach them in it.
+// Writes only when it changes; never holds up the request.
+function noteLang(req, row, save) {
+  const hl = String(req.get('X-Btw-Lang') || '').toLowerCase();
+  if ((hl === 'fr' || hl === 'en') && row.lang !== hl) {
+    row.lang = hl;
+    save(row.id, hl).catch(() => {});
+  }
+}
+
 async function requireAuth(req, res, next) {
   try {
     const token = readSessionCookie(req);
@@ -1047,6 +1058,7 @@ async function requireAuth(req, res, next) {
       const clinician = await getClinicianBySession(hashSessionToken(token));
       if (clinician) {
         req.clinician = clinician;
+        noteLang(req, clinician, setClinicianLang);
         return next();
       }
     }
@@ -2081,6 +2093,19 @@ app.post('/api/auth/billing-portal', requireDb, requireAuth, async (req, res) =>
   }
 });
 
+// The password-reset email, in the language the request came in.
+function resetEmail(lang, link) {
+  return lang === 'fr'
+    ? { subject: 'Réinitialiser votre mot de passe Between',
+        text: `Quelqu'un (vous, on l'espère) a demandé à réinitialiser le mot de passe de ce compte Between.\n\n` +
+          `Ouvrez ce lien dans les ${RESET_TTL_MINUTES} minutes pour choisir un nouveau mot de passe :\n` +
+          `${link}\n\nSi ce n'était pas vous, vous pouvez ignorer ce courriel.` }
+    : { subject: 'Reset your Between password',
+        text: `Someone (hopefully you) asked to reset the password for this Between account.\n\n` +
+          `Open this link within ${RESET_TTL_MINUTES} minutes to choose a new password:\n` +
+          `${link}\n\nIf this wasn't you, you can ignore this email.` };
+}
+
 // --- Clinician password reset ---
 // Token flow: request → emailed link (or server console in dev, when no email
 // provider is configured) → confirm with new password. Responses never reveal
@@ -2103,14 +2128,7 @@ app.post('/api/auth/password/reset-request', requireDb, resetRequestLimiter, asy
     if (clinician) {
       const token = generateSessionToken();
       await createPasswordReset(hashSessionToken(token), clinician.id, RESET_TTL_MINUTES);
-      const origin = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
-      await sendEmail({
-        to: clinician.email,
-        subject: 'Reset your Between password',
-        text: `Someone (hopefully you) asked to reset the password for this Between account.\n\n` +
-          `Open this link within ${RESET_TTL_MINUTES} minutes to choose a new password:\n` +
-          `${origin}/?reset=${token}\n\nIf this wasn't you, you can ignore this email.`
-      });
+      await sendEmail({ to: clinician.email, ...resetEmail(reqLang(req), `${emailLinkOrigin(req)}/?reset=${token}`) });
     }
     // Same response either way — no account enumeration.
     res.json({ ok: true, emailConfigured: emailConfigured() });
@@ -2152,14 +2170,7 @@ app.post('/api/patient/password/reset-request', requireDb, resetRequestLimiter, 
     if (patient && patient.password_hash && !patient.left_at) {
       const token = generateSessionToken();
       await createPatientPasswordReset(hashSessionToken(token), patient.id, RESET_TTL_MINUTES);
-      const origin = `${req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
-      await sendEmail({
-        to: patient.email,
-        subject: 'Reset your Between password',
-        text: `Someone (hopefully you) asked to reset the password for this Between account.\n\n` +
-          `Open this link within ${RESET_TTL_MINUTES} minutes to choose a new password:\n` +
-          `${origin}/?preset=${token}\n\nIf this wasn't you, you can ignore this email.`
-      });
+      await sendEmail({ to: patient.email, ...resetEmail(reqLang(req), `${emailLinkOrigin(req)}/?preset=${token}`) });
     }
     res.json({ ok: true, emailConfigured: emailConfigured() });
   } catch (err) {
@@ -2367,6 +2378,9 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const checkIns = await listCheckIns(patient.id);
+    // The message thread with this professional, and the client's next-session topics.
+    const thread = await listClinicianMessages(patient.id, 500, req.clinician.id).catch(() => []);
+    const topics = await listSessionTopics(patient.id).catch(() => []);
     const record = {
       exported_at: new Date().toISOString(),
       source: 'Between',
@@ -2399,7 +2413,9 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         exercise_status: c.exercise_status || null,
         followup_q: c.followup_q || null,
         followup_a: c.followup_a || null
-      }))
+      })),
+      messages: thread.slice().reverse().map(m => ({ sent_at: m.created_at, from: m.sender === 'client' ? 'client' : 'professional', body: m.body, read_at: m.read_at || null })),
+      session_topics: topics.map(t => ({ added_at: t.created_at, body: t.body, discussed_at: t.discussed_at || null }))
     };
     const safeName = String(patient.display_name || 'patient')
       .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'patient';
@@ -2411,7 +2427,10 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
       // leading BOM makes Excel read the accented characters as UTF-8.
       const cell = v => {
         if (v == null) return '';
-        const s = Array.isArray(v) ? v.join('; ') : String(v);
+        let s = Array.isArray(v) ? v.join('; ') : String(v);
+        // A client's own words could start with = + - @: spreadsheet apps would
+        // run that as a formula. A leading apostrophe keeps it plain text.
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
         return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
       };
       const header = ['submitted_at', 'mood_score', 'mood_inferred', 'manual_tags', 'auto_tags', 'summary_text', 'raw_text', 'risk_flag', 'has_voice_memo', 'via_questions'];
@@ -2472,12 +2491,17 @@ async function raiseRiskAlert(patient, checkIn) {
     const clinician = patient.clinician_id ? await getClinicianById(patient.clinician_id) : null;
     if (clinician) {
       channel = 'email';
+      const fr = clinician.lang === 'fr';
       const { delivered } = await sendEmail({
         to: clinician.email,
-        subject: `Between: check-in flagged for ${patient.display_name}`,
-        text: `A check-in from ${patient.display_name} was flagged for possible safety concern.\n\n` +
-          `Open your Between dashboard to review it. The patient has already been shown crisis resources in the app.\n\n` +
-          `(No response is required through Between. It is a documentation tool, not a monitoring service.)`
+        subject: fr ? `Between : suivi signalé pour ${patient.display_name}` : `Between: check-in flagged for ${patient.display_name}`,
+        text: fr
+          ? `Un suivi de ${patient.display_name} a été signalé pour une possible préoccupation de sécurité.\n\n` +
+            `Ouvrez votre tableau de bord Between pour le consulter. Les ressources de crise ont déjà été montrées à la personne dans l'application.\n\n` +
+            `(Aucune réponse n'est requise dans Between. C'est un outil de documentation, pas un service de surveillance.)`
+          : `A check-in from ${patient.display_name} was flagged for possible safety concern.\n\n` +
+            `Open your Between dashboard to review it. The patient has already been shown crisis resources in the app.\n\n` +
+            `(No response is required through Between. It is a documentation tool, not a monitoring service.)`
       });
       if (delivered) deliveredAt = new Date();
       await createAlert({ checkInId: checkIn.id, clinicianId: clinician.id, deliveryChannel: channel, deliveredAt });
@@ -2994,9 +3018,9 @@ app.get('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedCli
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const program = await listAllExercises(patient.id);
-    const list = await listClinicianMessages(patient.id);
+    const list = await listClinicianMessages(patient.id, 30, req.clinician.id);
     // Opening the thread is reading the client's replies.
-    if (list.some(m => m.sender === 'client' && !m.read_at)) await markClientRepliesRead(patient.id);
+    if (list.some(m => m.sender === 'client' && !m.read_at)) await markClientRepliesRead(patient.id, req.clinician.id);
     res.json({ messages: list.map(m => publicMessage(m, program)), connected: patient.invite_status === 'accepted' });
   } catch (err) {
     console.error('List messages error:', err);
@@ -3016,18 +3040,24 @@ app.post('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedCl
     const msg = await addClinicianMessage(patient.id, req.clinician.id, body, ids);
     // Nudge the client without putting health details in an email or text.
     let notified = false;
-    const who = req.clinician.name || 'Your professional';
+    // In the client's language (the one they last used Between in).
+    const fr = patient.lang === 'fr';
+    const who = req.clinician.name || (fr ? 'Votre professionnel(le)' : 'Your professional');
     // What's attached, in the field's own word (same rule as the website).
     const c = req.clinician;
-    const attachedWord = ['physio', 'kinesiology', 'osteo', 'occupational', 'sports'].includes(c.discipline) || c.account_type === 'trainer'
+    const kind = ['physio', 'kinesiology', 'osteo', 'occupational', 'sports'].includes(c.discipline) || c.account_type === 'trainer'
       ? 'exercises' : c.discipline === 'nutrition' ? 'habits' : c.account_type === 'school' ? 'strategies' : 'practices';
+    const attachedWord = fr ? { exercises: 'des exercices', habits: 'des habitudes', strategies: 'des stratégies', practices: 'des pratiques' }[kind] : kind;
+    const first = patient.display_name ? ' ' + patient.display_name.split(' ')[0] : '';
     if (patient.email && emailConfigured()) {
-      const text = `Hi${patient.display_name ? ' ' + patient.display_name.split(' ')[0] : ''},\n\n${who} sent you a message in Between${ids.length ? ` with ${attachedWord} attached` : ''}.\n\nRead it here: ${SITE_URL}/\n\nBetween is not a crisis service. If you are in danger, call 988 or 911.`;
-      sendEmail({ to: patient.email, subject: `New message from ${who}`, text }).catch(err => console.error('Message email failed:', err && err.message));
+      const text = fr
+        ? `Bonjour${first},\n\n${who} vous a envoyé un message dans Between${ids.length ? `, avec ${attachedWord} en pièce jointe` : ''}.\n\nLe lire ici : ${SITE_URL}/\n\nBetween n'est pas un service de crise. Si vous êtes en danger, appelez le 988 ou le 911.`
+        : `Hi${first},\n\n${who} sent you a message in Between${ids.length ? ` with ${attachedWord} attached` : ''}.\n\nRead it here: ${SITE_URL}/\n\nBetween is not a crisis service. If you are in danger, call 988 or 911.`;
+      sendEmail({ to: patient.email, subject: fr ? `Nouveau message de ${who}` : `New message from ${who}`, text }).catch(err => console.error('Message email failed:', err && err.message));
       notified = true;
     }
     if (patient.phone && smsConfigured()) {
-      sendSms({ to: patient.phone, text: `${who} sent you a message in Between: ${SITE_URL}/` }).catch(() => {});
+      sendSms({ to: patient.phone, text: fr ? `${who} vous a envoyé un message dans Between : ${SITE_URL}/` : `${who} sent you a message in Between: ${SITE_URL}/` }).catch(() => {});
       notified = true;
     }
     res.status(201).json({ message: publicMessage(msg, program), notified, connected: patient.invite_status === 'accepted' });
@@ -3039,7 +3069,9 @@ app.post('/api/patients/:id/messages', requireDb, requireAuth, requireVerifiedCl
 app.get('/api/patient/messages', requireDb, requirePatientAuth, async (req, res) => {
   try {
     const program = await listAllExercises(req.patient.id);
-    res.json({ messages: (await listClinicianMessages(req.patient.id)).map(m => publicMessage(m, program)) });
+    // With a professional: just the conversation with them (a previous
+    // professional's notes don't come along, and can't be replied to).
+    res.json({ messages: (await listClinicianMessages(req.patient.id, 30, req.patient.clinician_id || null)).map(m => publicMessage(m, program)) });
   } catch (err) {
     console.error('Patient messages error:', err);
     res.status(500).json({ error: 'Could not load your messages.' });
@@ -3065,11 +3097,15 @@ app.post('/api/patient/messages', requireDb, requirePatientAuth, replyLimiter, a
     try {
       const clinician = await getClinicianById(req.patient.clinician_id);
       if (clinician && clinician.email && emailConfigured()) {
-        const name = req.patient.display_name || 'A client';
+        // In the professional's language (the one they last used Between in).
+        const fr = clinician.lang === 'fr';
+        const name = req.patient.display_name || (fr ? 'Un(e) client(e)' : 'A client');
         sendEmail({
           to: clinician.email,
-          subject: `${name} replied in Between`,
-          text: `${name} replied to your message in Between.\n\nRead it on their page: ${SITE_URL}/#dashboard\n\n(Between is a documentation tool, not a monitoring service. No response is required through Between.)`
+          subject: fr ? `${name} a répondu dans Between` : `${name} replied in Between`,
+          text: fr
+            ? `${name} a répondu à votre message dans Between.\n\nLa lire sur sa page : ${SITE_URL}/#dashboard\n\n(Between est un outil de documentation, pas un service de surveillance. Aucune réponse n'est requise dans Between.)`
+            : `${name} replied to your message in Between.\n\nRead it on their page: ${SITE_URL}/#dashboard\n\n(Between is a documentation tool, not a monitoring service. No response is required through Between.)`
         }).catch(err => console.error('Reply email failed:', err && err.message));
       }
     } catch (err) { console.error('Reply notify error:', err); }
@@ -3652,6 +3688,7 @@ async function requirePatientAuth(req, res, next) {
       const patient = await getPatientBySession(hashSessionToken(token));
       if (patient && !patient.left_at) {
         req.patient = patient;
+        noteLang(req, patient, setPatientLang);
         return next();
       }
     }
@@ -3801,6 +3838,15 @@ async function startClinicianCheckout(clinician, plan, origin, currency) {
 
 function siteOrigin(req) {
   return process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+}
+// For links that go out by email: never built from the request's Host header,
+// which a caller can set to anything (a password-reset link pointing at
+// someone else's site would hand them the token). Local dev keeps localhost.
+function emailLinkOrigin(req) {
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/+$/, '');
+  const host = String(req.headers.host || '');
+  if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return 'http://' + host;
+  return SITE_URL;
 }
 
 // The billing currency the visitor picked on the pricing page (CAD or USD).
@@ -5658,18 +5704,32 @@ async function runNeedsDigest(base) {
     const items = await needsListFor(c);
     if (!(await claimNeedsDigest(c.id, now.date))) continue; // another tick got it
     if (!items.length) continue; // quiet day: nothing to send
-    const firstName = (p) => (String(p.name || '').trim().split(/\s+/)[0]) || 'A patient';
-    const lines = items.slice(0, 25).map(p => `• ${firstName(p)} : ${p.reasons.map(r => r.en).join('; ')}`).join('\n');
-    const more = items.length > 25 ? `\n…and ${items.length - 25} more.` : '';
+    // In their language, and "patients" only for the fields that say patients.
+    const fr = c.lang === 'fr';
+    const pts = PAIN_DISCIPLINES.includes(c.discipline || '') || c.discipline === 'neuropsych';
+    const one = pts ? 'patient' : 'client'; // same word in English and French
+    const many = one + 's';
+    const firstName = (p) => (String(p.name || '').trim().split(/\s+/)[0]) || (fr ? `Un(e) ${one}` : `A ${one}`);
+    const lines = items.slice(0, 25).map(p => `• ${firstName(p)} : ${p.reasons.map(r => (fr ? r.fr : r.en) || r.en).join('; ')}`).join('\n');
+    const more = items.length > 25 ? (fr ? `\n…et ${items.length - 25} autres.` : `\n…and ${items.length - 25} more.`) : '';
+    const hi = c.name ? ' ' + String(c.name).split(/\s+/)[0] : '';
     try {
       await sendEmail({
         to: c.email,
-        subject: `${items.length} ${items.length === 1 ? 'patient needs' : 'patients need'} you today | Between`,
-        text: `Good morning${c.name ? ' ' + String(c.name).split(/\s+/)[0] : ''},\n\n` +
-          `Only the people who need you today:\n\n${lines}${more}\n\n` +
-          `Everyone else is checking in fine. Nothing to do for them.\n\n` +
-          `Open your dashboard: ${base}/\n\n` +
-          `The Between team\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
+        subject: fr
+          ? `${items.length} ${items.length === 1 ? `${one} a besoin` : `${many} ont besoin`} de vous aujourd'hui | Between`
+          : `${items.length} ${items.length === 1 ? `${one} needs` : `${many} need`} you today | Between`,
+        text: fr
+          ? `Bonjour${hi},\n\n` +
+            `Seulement les personnes qui ont besoin de vous aujourd'hui :\n\n${lines}${more}\n\n` +
+            `Pour tous les autres, les suivis vont bien. Rien à faire de leur côté.\n\n` +
+            `Ouvrir votre tableau de bord : ${base}/\n\n` +
+            `L'équipe Between\n\nVous recevez ce courriel parce que « M'envoyer cette liste chaque matin » est activé. Désactivez-le depuis la carte « Ont besoin de vous aujourd'hui » de votre tableau de bord.`
+          : `Good morning${hi},\n\n` +
+            `Only the people who need you today:\n\n${lines}${more}\n\n` +
+            `Everyone else is checking in fine. Nothing to do for them.\n\n` +
+            `Open your dashboard: ${base}/\n\n` +
+            `The Between team\n\nYou get this because "Email me this list each morning" is on. Turn it off from the "Needs you today" card on your dashboard.`
       });
       countWork(c.id, 'needs_email');
     } catch (err) { console.error('Needs digest email failed for a clinician:', err); }
