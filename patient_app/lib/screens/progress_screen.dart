@@ -278,6 +278,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _goalsCard(s),
           const SizedBox(height: 16),
         ],
+        if (_sinceLines(s, patient?.hasClinician ?? false).isNotEmpty) ...[
+          _sinceCard(s, _sinceLines(s, patient?.hasClinician ?? false)),
+          const SizedBox(height: 16),
+        ],
         if (pats.isNotEmpty) ...[
           _patternsCard(s, pats),
           const SizedBox(height: 16),
@@ -379,6 +383,92 @@ class _ProgressScreenState extends State<ProgressScreen> {
       }
     }
     return out.take(3).toList();
+  }
+
+  /// "Since you started" (same as the website): after three weeks and six
+  /// check-ins, their first two weeks against their last two, in plain words.
+  /// Their own check-ins only, and never worded as a diagnosis.
+  List<String> _sinceLines(S s, bool hasPro) {
+    final list = _history.toList()
+      ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
+    if (list.length < 6) return const [];
+    final start = list.first.submittedAt;
+    final now = DateTime.now();
+    if (now.difference(start).inDays < 21) return const [];
+    final early = list
+        .where((c) => c.submittedAt.isBefore(start.add(const Duration(days: 14))))
+        .toList();
+    final late = list
+        .where((c) => c.submittedAt.isAfter(now.subtract(const Duration(days: 14))))
+        .toList();
+    double? avg(List<CheckIn> xs) {
+      final r = xs.where((c) => c.mood != null).map((c) => c.mood!).toList();
+      if (r.length < 2) return null;
+      return r.reduce((x, y) => x + y) / r.length;
+    }
+
+    String fmt(double v) {
+      final t = v.toStringAsFixed(1);
+      return s.isFr ? t.replaceAll('.', ',') : t;
+    }
+
+    final out = <String>[];
+    final a = avg(early), b = avg(late);
+    if (a != null && b != null) {
+      final d = b - a;
+      final better = _painScale ? d <= -0.8 : d >= 0.8;
+      final worse = _painScale ? d >= 0.8 : d <= -0.8;
+      final span = '${fmt(a)} → ${fmt(b)} / 10';
+      if (better) {
+        out.add(s.sinceBetter(_painScale, span));
+      } else if (worse) {
+        out.add(s.sinceWorse(_painScale, span, hasPro));
+      } else {
+        out.add(s.sinceSteady(_painScale, span));
+      }
+    }
+    String? top(List<CheckIn> xs) {
+      final c = <String, int>{};
+      for (final x in xs) {
+        for (final t in x.tags) {
+          c[t] = (c[t] ?? 0) + 1;
+        }
+      }
+      if (c.isEmpty) return null;
+      return (c.entries.toList()..sort((x, y) => y.value.compareTo(x.value)))
+          .first
+          .key;
+    }
+
+    final t1 = top(early), t2 = top(late);
+    if (t1 != null && t2 != null && t1 != t2) {
+      out.add(s.sinceThemes(s.tagLabel(t1), s.tagLabel(t2)));
+    }
+    if (out.isEmpty) return const [];
+    return [s.sinceTitle(start, list.length), ...out];
+  }
+
+  Widget _sinceCard(S s, List<String> lines) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(17, 15, 17, 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: BtwColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(lines.first,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          for (final l in lines.skip(1)) ...[
+            const SizedBox(height: 8),
+            Text(l, style: const TextStyle(fontSize: 13.5, height: 1.5)),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _patternsCard(S s, List<String> items) {

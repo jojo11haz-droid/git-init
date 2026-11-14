@@ -678,6 +678,7 @@
   .btw-pro-btn:hover{opacity:.92;}
   .btw-pro-status{font-size:11.5px;color:var(--ink-soft);}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
+  .btw-week-summary.btw-since{background:var(--panel);border:1px solid var(--line);}
   .btw-week-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--moss);margin-bottom:5px;}
   .btw-week-body{font-size:14px;line-height:1.55;color:var(--ink);}
   .btw-reflection{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#fff 0%,var(--moss-light) 140%);padding:15px 16px;margin-bottom:16px;}
@@ -4527,6 +4528,7 @@
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
       <div class="btw-week-summary" id="btwWeekSummary" style="display:none;"></div>
+      <div class="btw-week-summary btw-since" id="btwSinceStart" style="display:none;"></div>
 
       <!-- ============ ZONE: selected patient / your progress ============ -->
       <div class="btw-zone" id="btwZoneDetail"><span class="btw-zone-pin">◆</span><span id="btwZoneDetailLabel">Selected patient</span><span id="btwZoneDetailName" class="btw-zone-sel"></span></div>
@@ -5643,6 +5645,27 @@
   const PTOKEN_KEY = 'btw_ptoken';
   function pToken(){ try { return localStorage.getItem(PTOKEN_KEY) || null; } catch(e){ return null; } }
   function setPToken(tk){ try { tk ? localStorage.setItem(PTOKEN_KEY, tk) : localStorage.removeItem(PTOKEN_KEY); } catch(e){} }
+  // The reminder text links to /checkin (→ ?go=checkin): land the client on the
+  // check-in box, signing in first if needed. The flag is dropped from the URL
+  // so a refresh doesn't jump again.
+  let _goCheckin = false;
+  try {
+    const _gsp = new URLSearchParams(location.search);
+    if(_gsp.get('go') === 'checkin'){
+      _goCheckin = true; _gsp.delete('go');
+      const _gs = _gsp.toString();
+      history.replaceState(null, '', location.pathname + (_gs ? '?' + _gs : '') + location.hash);
+    }
+  } catch(e){}
+  function maybeGoCheckin(){
+    if(!_goCheckin || state.role !== 'patient') return;
+    _goCheckin = false;
+    setTimeout(function(){
+      const area = document.getElementById('btwComposeArea'), tx = document.getElementById('btwText');
+      if(area && area.offsetParent) area.scrollIntoView({ block:'start', behavior:'smooth' });
+      if(tx && tx.offsetParent){ try { tx.focus({ preventScroll:true }); } catch(e){} }
+    }, 450);
+  }
   async function pApi(method, url, body){
     const headers = {};
     const tk = pToken();
@@ -6056,6 +6079,18 @@
     "Show only the latest":"Afficher seulement le plus récent",
     "Earlier messages":"Messages précédents",
     "Reply":"Répondre",
+    "Since you started":"Depuis vos débuts",
+    "Your pain has eased:":"Votre douleur a diminué :",
+    "Your mood has lifted:":"Votre humeur s'est améliorée :",
+    "on average, comparing your first two weeks with the last two.":"en moyenne, entre vos deux premières semaines et les deux dernières.",
+    "Your pain has been higher lately:":"Votre douleur est plus forte ces temps-ci :",
+    "Your mood has been lower lately:":"Votre humeur est plus basse ces temps-ci :",
+    "Worth bringing up at your next session.":"À mentionner à votre prochain rendez-vous.",
+    "Worth keeping an eye on, and talking to someone if it keeps up.":"À surveiller, et à en parler à quelqu'un si ça continue.",
+    "Your pain has stayed about the same since your first weeks":"Votre douleur est restée à peu près la même depuis vos premières semaines",
+    "Your mood has stayed about the same since your first weeks":"Votre humeur est restée à peu près la même depuis vos premières semaines",
+    "Early on,":"Au début,",
+    "came up most; lately it’s":"revenait le plus souvent; ces temps-ci, c'est",
     "You":"Vous",
     "Seen":"Lu",
     "New":"Nouveau",
@@ -12916,8 +12951,10 @@
         billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
         renderAuthState();
         await loadPatientCheckIns();
-        { const rv = viewFromHash(); goToView(rv ? rv[0] : navProduct, rv ? rv[1] : viewProduct); } // the page they were on, else their dashboard
+        if(_goCheckin) goToView(navProduct, viewProduct);
+        else { const rv = viewFromHash(); goToView(rv ? rv[0] : navProduct, rv ? rv[1] : viewProduct); } // the page they were on, else their dashboard
         try { document.body.classList.remove('btw-resolving'); } catch(e){}
+        maybeGoCheckin();
         return;
       }catch(err){
         setPToken(null); state.patient = null; state.role = null; // stale/expired token
@@ -12947,7 +12984,10 @@
         document.body.classList.remove('btw-resolving');
         setHomeGate(true);
       }
+      // From the reminder link but signed out: ask them to sign in first.
+      if(_goCheckin){ try { openLogin('patient'); } catch(e){} }
     }
+    if(state.me) _goCheckin = false; // a professional opened the link: nothing to do
   }
 
   async function loadPatientCheckIns(){
@@ -13403,6 +13443,7 @@
     renderAuthState();
     await loadPatientCheckIns();
     goToView(navProduct, viewProduct);
+    maybeGoCheckin();
   }
 
   document.getElementById('btwLoginSubmit').addEventListener('click', async ()=>{
@@ -19419,6 +19460,7 @@
       renderSupport();
       renderCapNote();
       renderWeekSummary();
+      try { renderSinceStart(); } catch(e){}
       renderWeeklyReflection();
       renderGoals();
       renderComposeHep();
@@ -19760,6 +19802,40 @@
     const flagged = week.filter(c=>c.risk).length;
     if(flagged) parts.push(`<strong>${flagged}</strong> ${esc(flagged===1?t('check-in flagged'):t('check-ins flagged'))}`);
     el.innerHTML = `<div class="btw-week-label">${esc(t('This week'))}</div><div class="btw-week-body">${parts.join(' · ')}</div>`;
+    el.style.display = '';
+  }
+
+  // "Since you started": after three weeks, compare their first two weeks with
+  // their last two, in plain words. Built from their own check-ins only (no AI,
+  // nothing sent anywhere) and worded as what they reported, never a diagnosis.
+  function renderSinceStart(){
+    const el = document.getElementById('btwSinceStart'); if(!el) return;
+    const hide = function(){ el.style.display = 'none'; el.innerHTML = ''; };
+    if(!isPatient() || _ownerPreview) return hide();
+    const list = (state.checkIns || []).filter(c => c.time).slice().sort((a, b) => a.time - b.time);
+    if(list.length < 6) return hide();
+    const start = list[0].time, now = Date.now(), DAY = 86400000;
+    if(now - start < 21 * DAY) return hide();
+    const early = list.filter(c => c.time < start + 14 * DAY);
+    const late = list.filter(c => c.time >= now - 14 * DAY);
+    const avg = function(arr){ const r = arr.filter(c => c.mood != null); return r.length >= 2 ? r.reduce((s, c) => s + c.mood, 0) / r.length : null; };
+    const a = avg(early), b = avg(late);
+    const pain = painMode();
+    const when = new Date(start).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { month:'long', day:'numeric' });
+    const parts = [];
+    if(a != null && b != null){
+      const d = b - a;
+      const better = pain ? d <= -0.8 : d >= 0.8, worse = pain ? d >= 0.8 : d <= -0.8;
+      const span = `<strong>${esc(scoreWord(a))} (${nf(a.toFixed(1))})</strong> → <strong>${esc(scoreWord(b))} (${nf(b.toFixed(1))})</strong>`;
+      if(better) parts.push(esc(pain ? t('Your pain has eased:') : t('Your mood has lifted:')) + ' ' + span + ' ' + esc(t('on average, comparing your first two weeks with the last two.')));
+      else if(worse) parts.push(esc(pain ? t('Your pain has been higher lately:') : t('Your mood has been lower lately:')) + ' ' + span + '. ' + esc(state.patient && state.patient.clinician_account_type ? t('Worth bringing up at your next session.') : t('Worth keeping an eye on, and talking to someone if it keeps up.')));
+      else parts.push(esc(pain ? t('Your pain has stayed about the same since your first weeks') : t('Your mood has stayed about the same since your first weeks')) + ` (${span}).`);
+    }
+    const topOf = function(arr){ const c = {}; arr.forEach(x => (x.tags || []).forEach(tg => c[tg] = (c[tg] || 0) + 1)); const e = Object.entries(c).sort((x, y) => y[1] - x[1])[0]; return e ? e[0] : null; };
+    const t1 = topOf(early), t2 = topOf(late);
+    if(t1 && t2 && t1 !== t2) parts.push(esc(t('Early on,')) + ` <strong>${esc(themeName(t1))}</strong> ` + esc(t('came up most; lately it’s')) + ` <strong>${esc(themeName(t2))}</strong>.`);
+    if(!parts.length) return hide();
+    el.innerHTML = `<div class="btw-week-label">${esc(t('Since you started'))} · ${esc(when)} · ${list.length} ${esc(t('check-ins'))}</div><div class="btw-week-body">${parts.join(' ')}</div>`;
     el.style.display = '';
   }
 

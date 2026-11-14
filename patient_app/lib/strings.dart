@@ -438,6 +438,42 @@ class S {
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
 
+  // "Since you started" on the Progress screen.
+  String sinceTitle(DateTime start, int n) {
+    const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December'];
+    const fr = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+      'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    return isFr
+        ? 'Depuis vos débuts, le ${start.day} ${fr[start.month - 1]} · $n suivis'
+        : 'Since you started, ${en[start.month - 1]} ${start.day} · $n check-ins';
+  }
+
+  String sinceBetter(bool pain, String span) => pain
+      ? _('Your pain has eased: $span on average, comparing your first two weeks with the last two.',
+          'Votre douleur a diminué : $span en moyenne, entre vos deux premières semaines et les deux dernières.')
+      : _('Your mood has lifted: $span on average, comparing your first two weeks with the last two.',
+          "Votre humeur s'est améliorée : $span en moyenne, entre vos deux premières semaines et les deux dernières.");
+  String sinceWorse(bool pain, String span, bool hasPro) =>
+      (pain
+          ? _('Your pain has been higher lately: $span. ',
+              'Votre douleur est plus forte ces temps-ci : $span. ')
+          : _('Your mood has been lower lately: $span. ',
+              'Votre humeur est plus basse ces temps-ci : $span. ')) +
+      (hasPro
+          ? _('Worth bringing up at your next session.',
+              'À mentionner à votre prochain rendez-vous.')
+          : _('Worth keeping an eye on, and talking to someone if it keeps up.',
+              "À surveiller, et à en parler à quelqu'un si ça continue."));
+  String sinceSteady(bool pain, String span) => pain
+      ? _('Your pain has stayed about the same since your first weeks ($span).',
+          'Votre douleur est restée à peu près la même depuis vos premières semaines ($span).')
+      : _('Your mood has stayed about the same since your first weeks ($span).',
+          'Votre humeur est restée à peu près la même depuis vos premières semaines ($span).');
+  String sinceThemes(String early, String late) => _(
+      'Early on, $early came up most; lately it’s $late.',
+      "Au début, $early revenait le plus souvent; ces temps-ci, c'est $late.");
+
   // Replying to a message from their professional.
   String get reply => _('Reply', 'Répondre');
   String get you => _('You', 'Vous');
