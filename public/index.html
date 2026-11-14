@@ -10943,7 +10943,8 @@
           return;
         }
         if(dSummary && data.summary){
-          dSummary.textContent = data.summary;
+          // "The patient…" in the field's own word (client, player, member…).
+          dSummary.textContent = (typeof fieldNoun === 'function') ? fieldNoun(data.summary) : data.summary;
           if(dSummaryLabel) dSummaryLabel.textContent = fr ? 'RÉSUMÉ IA · VOTRE SUIVI' : 'AI SUMMARY · YOUR CHECK-IN';
         }
         // Only let the AI move the slider when the visitor asked it to.
