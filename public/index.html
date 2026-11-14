@@ -8126,7 +8126,20 @@
       "Between fonctionne sur une infrastructure infonuagique tierce (actuellement Render) et peut stocker des données aux États-Unis. Lorsque des renseignements sont transférés hors du Québec, nous les traitons en tenant compte de la Loi 25 du Québec. Vos données vous appartiennent, et vous pouvez les exporter ou les supprimer en tout temps. Consultez la politique de confidentialité pour les détails."
   };
 
+  // For myself: the hero paragraph follows what they keep track of.
+  const IND_HERO_KEY = "Your clients tell you about the hard night the moment it happens, by voice or text, in under a minute. Between turns it into a short summary, a mood trend and a drafted chart note, waiting in your dashboard before the next session. You skip the catch-up and start where it matters.";
+  const IND_HERO_MODE = {
+    body:   { en:"Note where it hurts and how it feels the moment it happens, by voice or text, in under a minute. Between turns it into a clear pain trend and the spots that keep coming back, so you can see what helps and what flares it up. Bring the summary to your next appointment.",
+              fr:"Notez où ça fait mal et comment vous le ressentez dès que ça arrive, par la voix ou par écrit, en moins d'une minute. Between en fait une tendance de douleur claire et les endroits qui reviennent, pour voir ce qui aide et ce qui aggrave. Apportez le résumé à votre prochain rendez-vous." },
+    sport:  { en:"Log how training and games felt, by voice or text, in under a minute. Between turns it into a clear trend of how you're feeling, where it's sore and the themes that keep coming back, so you can see when to push and when to rest.",
+              fr:"Notez comment se sont passés l'entraînement et les matchs, par la voix ou par écrit, en moins d'une minute. Between en fait une tendance claire de votre état, des endroits sensibles et des thèmes qui reviennent, pour savoir quand pousser et quand récupérer." },
+    eating: { en:"Note your meals, energy and cravings as the day goes, by voice or text, in under a minute. Between turns them into a clear energy trend and the patterns that keep coming back, so you can see what fuels a good day and what leads to a crash.",
+              fr:"Notez vos repas, votre énergie et vos envies au fil de la journée, par la voix ou par écrit, en moins d'une minute. Between en fait une tendance d'énergie claire et les habitudes qui reviennent, pour voir ce qui donne une bonne journée et ce qui mène à un coup de fatigue." }
+  };
   function pickCopy(key){
+    if(key === IND_HERO_KEY && curAudience === 'individual' && typeof curIndividualMode !== 'undefined' && IND_HERO_MODE[curIndividualMode]){
+      return IND_HERO_MODE[curIndividualMode][curLang === 'fr' ? 'fr' : 'en'];
+    }
     const d = audDicts();
     if(d){
       if(curLang === 'fr' && d[1][key]) return d[1][key];
@@ -10310,6 +10323,7 @@
     // The mode also picks the emergency wording, the check-in question and
     // the topics (Body/Sport/Eating are physical; Eating uses nutrition's).
     try { applyCrisisCopy(); applyRoleLabels(); syncComposerTags(); } catch(e){}
+    try { translateStatic(); } catch(e){} // the hero paragraph follows the mode
     try { renderAll(); } catch(e){}
   }
   document.querySelectorAll('#btwIndividualMode .btw-submode-btn, #btwIndModeTop .btw-submode-btn').forEach(b=>{
