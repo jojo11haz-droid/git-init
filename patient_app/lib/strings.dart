@@ -438,6 +438,25 @@ class S {
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
 
+  // New steps in the app's walkthrough.
+  String get coachMessagesTitle =>
+      _('Messages from your professional', 'Messages de votre professionnel(le)');
+  String get coachMessagesBody => _(
+      'Their notes show at the top. Tap Reply to write back. It isn’t for emergencies.',
+      'Ses mots s’affichent en haut. Touchez Répondre pour lui écrire. Ce n’est pas pour les urgences.');
+  String get coachFirstWeekBody => _(
+      'Three small steps to get going: your first check-in, three different days, and a daily reminder.',
+      'Trois petites étapes pour commencer : votre premier suivi, trois jours différents et un rappel quotidien.');
+  String get coachDoItNowBody => _(
+      'On each item of your program, “Do it now” opens the how-to and a timer, then ticks it off.',
+      'Sur chaque élément de votre programme, « Faire maintenant » ouvre l’explication et une minuterie, puis le coche.');
+  String get coachTopicsBody => _(
+      'Below the check-in, jot down what you want to talk about next time. Your professional sees it before you meet.',
+      'Sous le suivi, notez ce dont vous voulez parler la prochaine fois. Votre professionnel(le) le voit avant votre rencontre.');
+  String get coachReminderBody => _(
+      'In My data & settings, turn on a daily reminder at the time you choose. Tapping it opens your check-in.',
+      'Dans Mes données et réglages, activez un rappel quotidien à l’heure de votre choix. Le toucher ouvre votre suivi.');
+
   // "Your first week" card on the home screen.
   String get firstWeekTitle => _('Your first week', 'Votre première semaine');
   String get hideLabel => _('Hide', 'Masquer');

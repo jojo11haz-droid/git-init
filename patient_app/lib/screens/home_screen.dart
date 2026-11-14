@@ -98,6 +98,8 @@ class _HomeScreenState extends State<HomeScreen>
   final _kProgress = GlobalKey();
   final _kHistory = GlobalKey();
   final _kHelp = GlobalKey();
+  final _kMessage = GlobalKey();
+  final _kFirstWeek = GlobalKey();
   bool _tourActive = false;
   int _streak = 0;
   int _openTopics = 0; // things waiting for the next session
@@ -764,10 +766,26 @@ class _HomeScreenState extends State<HomeScreen>
 
   List<CoachStep> _buildSteps(S s, String? providerKey) => [
         CoachStep(title: s.coachWelcomeTitle, body: s.coachWelcomeBody),
+        // Only the steps for what this person actually has on screen.
+        if (_proMessages.isNotEmpty)
+          CoachStep(
+              targetKey: _kMessage,
+              title: s.coachMessagesTitle,
+              body: s.coachMessagesBody),
+        if (_checkInDays >= 0 && _checkInDays < 3 && !_firstWeekHidden)
+          CoachStep(
+              targetKey: _kFirstWeek,
+              title: s.firstWeekTitle,
+              body: s.coachFirstWeekBody),
         CoachStep(
             targetKey: _kComposer,
             title: s.coachComposerTitle,
             body: s.coachComposerBody),
+        if (_exercises.isNotEmpty)
+          CoachStep(title: s.doItNow, body: s.coachDoItNowBody),
+        if (providerKey != null)
+          CoachStep(title: s.topicsTitle, body: s.coachTopicsBody),
+        CoachStep(title: s.reminderCardTitle, body: s.coachReminderBody),
         CoachStep(
             targetKey: _kProgress,
             title: s.coachProgressTitle,
@@ -1122,7 +1140,12 @@ class _HomeScreenState extends State<HomeScreen>
                     for (final m in (_allMessages
                         ? _proMessages.take(10)
                         : _proMessages.take(1))) ...[
-                      _messageCard(m, s, canReply: patient.hasClinician),
+                      identical(m, _proMessages.first)
+                          ? KeyedSubtree(
+                              key: _kMessage,
+                              child: _messageCard(m, s,
+                                  canReply: patient.hasClinician))
+                          : _messageCard(m, s, canReply: patient.hasClinician),
                       const SizedBox(height: 10),
                     ],
                     if (_proMessages.length > 1)
@@ -1161,7 +1184,8 @@ class _HomeScreenState extends State<HomeScreen>
                       _checkInDays < 3 &&
                       !_firstWeekHidden) ...[
                     const SizedBox(height: 14),
-                    _firstWeekCard(s, patient),
+                    KeyedSubtree(
+                        key: _kFirstWeek, child: _firstWeekCard(s, patient)),
                   ],
                   if (_streak >= 1 && !patient.hides('streak')) ...[
                     const SizedBox(height: 14),
