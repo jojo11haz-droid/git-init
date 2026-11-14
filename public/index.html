@@ -17646,6 +17646,7 @@
     var CHEV = '<svg class="btw-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
     var ICON = {
       hep: '<path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11"></path>',
+      hepMind: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>',
       prep: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path>',
       body: '<circle cx="12" cy="5" r="2.2"></circle><path d="M12 7.5v7M8 10h8M9.5 21l2.5-6.5 2.5 6.5"></path>'
     };
@@ -17670,6 +17671,15 @@
         if((b.box.style.display !== 'none') !== on) b.box.style.display = on ? '' : 'none';
         var tt = b.box.querySelector('.btw-acc-tt'), txt = b.title();
         if(tt.textContent !== txt) tt.textContent = txt;
+        // A dumbbell suits physical fields only; mental-health and other
+        // non-physical work gets a leaf for its between-session practice.
+        if(b.box.id === 'btwAccPro_hep'){
+          var disc = (typeof painDiscipline === 'function') ? painDiscipline() : null;
+          var gym = ['physio','kinesiology','osteo','occupational','sports','fitness'].indexOf(disc) >= 0 || curAudience === 'fitness' || (state.me && state.me.account_type === 'trainer');
+          var ic = gym ? ICON.hep : ICON.hepMind;
+          var svg = b.box.querySelector('.btw-acc-t svg');
+          if(svg && svg.innerHTML !== ic) svg.innerHTML = ic;
+        }
       });
     }
     var pair = document.querySelector('#btwDashGrid .btw-prep-pair');
