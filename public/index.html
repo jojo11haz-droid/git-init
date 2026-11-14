@@ -5757,6 +5757,7 @@
       // soloIndividual() and the individual-side copy/billing on.
       clinician_account_type: individual ? null : (field ? field.at : (me.account_type || 'therapist')),
       clinician_discipline: individual ? null : (field ? field.disc : (me.discipline || null)),
+      clinician_name: individual ? null : (me.name || null),
       check_in_mode_lock: 'any', weekly_checkin_cap: 999,
       reminders_enabled: false, reminder_time: null, reminder_days: null, phone: null
     };
@@ -6098,6 +6099,16 @@
     "Since you started":"Depuis vos débuts",
     "Private and secure by default. Patients see and control their own data and AI analysis is opt-in and off.":"Privé et sécurisé par défaut. Les patients voient et contrôlent leurs propres données, et l'analyse par l'IA est facultative et désactivée au départ.",
     "Your first week":"Votre première semaine",
+    "My knee is worse on stairs":"Mon genou est pire dans les escaliers",
+    "Can I go back to running?":"Est-ce que je peux recommencer à courir?",
+    "How the week went with my sister":"Comment la semaine s’est passée avec ma sœur",
+    "Trouble sleeping on Sunday nights":"Du mal à dormir le dimanche soir",
+    "Cravings after dinner":"Les envies après le souper",
+    "Ideas for quick lunches":"Des idées de dîners rapides",
+    "A trigger at a family party":"Un déclencheur à une fête de famille",
+    "Finding a new meeting":"Trouver un nouveau groupe",
+    "Stress before exams":"Le stress avant les examens",
+    "A group project with friends":"Un projet d’équipe avec des amis",
     "Hide":"Masquer",
     "Send your first check-in":"Envoyer votre premier suivi",
     "Check in on 3 different days":"Faire un suivi 3 jours différents",
@@ -14459,7 +14470,7 @@
 
   // Things to bring up next session. The client keeps a short list; their
   // professional sees the open topics in Session prep and ticks them off.
-  let _topics = null, _topicsLoading = false;
+  let _topics = null, _topicsLoading = false, _prevTopics = null, _prevTopicsKey = '';
   async function loadTopics(force){
     if(!isPatient() || _topicsLoading || (_topics && !force)) return;
     _topicsLoading = true;
@@ -14469,8 +14480,21 @@
   function renderTopics(){
     const el = document.getElementById('btwTopics'); if(!el) return;
     const pt = state.patient;
-    if(!isPatient() || !pt || !pt.clinician_account_type || _ownerPreview){ el.style.display = 'none'; return; }
-    if(_topics === null){ el.style.display = 'none'; loadTopics(); return; }
+    if(!isPatient() || !pt || !pt.clinician_account_type){ el.style.display = 'none'; return; }
+    // Owner preview: two sample topics in the field's words; adding and
+    // removing work on this screen only.
+    if(_ownerPreview){
+      const k = hepKind(pt.clinician_account_type, pt.clinician_discipline) + '|' + curLang;
+      if(_prevTopicsKey !== k){
+        const S = { exercise:['My knee is worse on stairs', 'Can I go back to running?'], practice:['How the week went with my sister', 'Trouble sleeping on Sunday nights'],
+          habit:['Cravings after dinner', 'Ideas for quick lunches'], recovery:['A trigger at a family party', 'Finding a new meeting'], school:['Stress before exams', 'A group project with friends'] }[hepKind(pt.clinician_account_type, pt.clinician_discipline)] || ['How the week went with my sister', 'Trouble sleeping on Sunday nights'];
+        _prevTopics = [{ id:'prevt1', body: t(S[0]) }, { id:'prevt2', body: t(S[1]), discussed_at: new Date().toISOString() }];
+        _prevTopicsKey = k;
+      }
+    }
+    const _list = _ownerPreview ? _prevTopics : _topics;
+    if(_list === null){ el.style.display = 'none'; loadTopics(); return; }
+    if(_ownerPreview) _topics = _prevTopics; // the render below reads _topics
     el.style.display = '';
     const open = _topics.filter(x => !x.discussed_at), done = _topics.filter(x => x.discussed_at).slice(0, 5);
     el.innerHTML = '<div class="btw-topics-h">' + esc(t('For your next session')) + '</div>'
@@ -14485,11 +14509,13 @@
     form.addEventListener('submit', async function(ev){
       ev.preventDefault();
       const body = input.value.trim(); if(!body) return;
+      if(_ownerPreview){ _prevTopics = [{ id:'prevt' + Date.now(), body: body }].concat(_prevTopics); renderTopics(); return; }
       form.querySelector('button').disabled = true; err.textContent = '';
       try { const d = await pApi('POST', '/api/patient/topics', { body: body }); _topics = [d.topic].concat(_topics); renderTopics(); const i2 = document.getElementById('btwTopicsInput'); if(i2) i2.focus(); }
       catch(e){ err.textContent = (e && e.message) || ''; form.querySelector('button').disabled = false; }
     });
     el.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click', async function(){
+      if(_ownerPreview){ _prevTopics = _prevTopics.filter(x => x.id !== b.dataset.del); renderTopics(); return; }
       try { await pApi('DELETE', '/api/patient/topics/' + encodeURIComponent(b.dataset.del)); _topics = _topics.filter(x => x.id !== b.dataset.del); renderTopics(); }
       catch(e){ err.textContent = (e && e.message) || ''; }
     }); });
@@ -17534,9 +17560,41 @@
   }
   (function(){ const bb = document.getElementById('btwBrandBtn'); if(bb) bb.addEventListener('click', function(){ const m = document.getElementById('btwNavMenu'); if(m) m.style.display = 'none'; openBrandPanel(); }); })();
 
+  // Owner preview of the client side: a sample note from the professional,
+  // with a sample reply, in the field's own words. Replies typed here stay on
+  // this screen (nothing is sent).
+  const PREVIEW_THREAD = {
+    exercise: { en:['Nice work this week. How is the knee feeling after the new exercises?', 'Better on the stairs, still a bit stiff in the morning.'],
+                fr:['Beau travail cette semaine. Comment va le genou avec les nouveaux exercices?', 'Mieux dans les escaliers, encore un peu raide le matin.'] },
+    practice: { en:['Good to see you checking in. How did the breathing practice go before work?', 'It helped on Tuesday. Harder on Friday, I forgot to do it.'],
+                fr:['Content de voir vos suivis. Comment s’est passée la respiration avant le travail?', 'Ça m’a aidé mardi. Plus difficile vendredi, j’ai oublié.'] },
+    habit:    { en:['Great job keeping up with breakfast. How has your energy been in the afternoons?', 'Better most days. Still a dip around 3 pm.'],
+                fr:['Bravo pour le déjeuner chaque matin. Comment est votre énergie l’après-midi?', 'Mieux la plupart des jours. Encore un creux vers 15 h.'] },
+    recovery: { en:['Proud of you for checking in every day. How were the evenings this week?', 'Two hard evenings, but I called my sponsor both times.'],
+                fr:['Fier de vous pour vos suivis chaque jour. Comment étaient les soirées cette semaine?', 'Deux soirées difficiles, mais j’ai appelé mon parrain les deux fois.'] },
+    school:   { en:['Nice work this week. How did the study plan go before the test?', 'I did it three days. The test felt less stressful.'],
+                fr:['Beau travail cette semaine. Comment s’est passé le plan d’étude avant l’examen?', 'Je l’ai suivi trois jours. L’examen m’a semblé moins stressant.'] }
+  };
+  let _prevThread = null, _prevThreadKey = '';
+  function previewMessages(){
+    const pt = state.patient || {};
+    if(!pt.clinician_account_type) return [];
+    const kind = hepKind(pt.clinician_account_type, pt.clinician_discipline);
+    const key = kind + '|' + curLang;
+    if(_prevThreadKey !== key){
+      const tx = (PREVIEW_THREAD[kind] || PREVIEW_THREAD.practice)[curLang === 'fr' ? 'fr' : 'en'];
+      const now = Date.now();
+      _prevThread = [
+        { id:'prevr1', sender:'client', reply_to:'prevm1', body:tx[1], created_at:new Date(now - 3 * 3600e3).toISOString(), read_at:new Date(now - 3600e3).toISOString() },
+        { id:'prevm1', sender:'clinician', body:tx[0], created_at:new Date(now - 26 * 3600e3).toISOString(), read_at:new Date(now - 25 * 3600e3).toISOString(), exercises:[] }
+      ];
+      _prevThreadKey = key;
+    }
+    return _prevThread;
+  }
   function renderInbox(){
     var box = document.getElementById('btwInbox'); if(!box) return;
-    var list = (isPatient() && !_ownerPreview) ? (state.messages || []) : [];
+    var list = !isPatient() ? [] : (_ownerPreview ? previewMessages() : (state.messages || []));
     if(!list.length){ box.style.display = 'none'; box.innerHTML = ''; return; }
     box.style.display = '';
     var who = (state.patient && state.patient.clinician_name) || t('Your professional');
@@ -17580,6 +17638,11 @@
       var ta = box.querySelector('.btw-inbox-compose textarea'), er = box.querySelector('.btw-inbox-err');
       var body = (ta.value || '').trim(); if(!body){ ta.focus(); return; }
       send.disabled = true; er.textContent = '';
+      if(_ownerPreview){
+        // Preview: show it on this screen only; nothing is sent.
+        _prevThread = [{ id:'prevr' + Date.now(), sender:'client', reply_to:send.dataset.id, body:body, created_at:new Date().toISOString(), read_at:null }].concat(_prevThread || []);
+        _inboxCrisis = false; _inboxReplyTo = null; renderInbox(); return;
+      }
       try{
         var r = await pApi('POST', '/api/patient/messages', { body: body, replyTo: send.dataset.id });
         if(r && r.message) state.messages = [r.message].concat(state.messages || []);
@@ -17587,7 +17650,7 @@
         _inboxReplyTo = null; renderInbox();
       }catch(x){ send.disabled = false; er.textContent = x.message; }
     });
-    if(!_inboxMarked && list.some(function(m){ return m.sender !== 'client' && !m.read_at; })){
+    if(!_ownerPreview && !_inboxMarked && list.some(function(m){ return m.sender !== 'client' && !m.read_at; })){
       _inboxMarked = true;
       pApi('POST', '/api/patient/messages/read', {}).then(function(){ list.forEach(function(m){ if(!m.read_at) m._seen = true; }); }).catch(function(){ _inboxMarked = false; });
     }
@@ -19846,8 +19909,9 @@
   function renderFirstWeek(){
     const el = document.getElementById('btwFirstWeek'); if(!el) return;
     const hide = function(){ el.style.display = 'none'; el.innerHTML = ''; };
-    if(!isPatient() || _ownerPreview || !state.patient) return hide();
-    try { if(localStorage.getItem('btw_firstweek_hidden') === '1') return hide(); } catch(e){}
+    if(!isPatient() || !state.patient) return hide();
+    // (Shown in the owner preview too: it's what a brand-new client sees.)
+    try { if(!_ownerPreview && localStorage.getItem('btw_firstweek_hidden') === '1') return hide(); } catch(e){}
     const days = new Set((state.checkIns || []).filter(c => c.time).map(c => new Date(c.time).toDateString())).size;
     if(days >= 3) return hide();
     const n = (state.checkIns || []).length;
@@ -19865,7 +19929,7 @@
           ? t('{pro} sees your check-ins before your next session: how you’re doing, what you wrote and the themes. Notes for a harder day stay private.').replace('{pro}', pro)
           : t('Only you see your check-ins. After three days, Between starts showing your patterns here.')) + '</div>';
     el.style.display = '';
-    el.querySelector('.btw-fw-hide').addEventListener('click', function(){ try { localStorage.setItem('btw_firstweek_hidden', '1'); } catch(e){} hide(); });
+    el.querySelector('.btw-fw-hide').addEventListener('click', function(){ if(!_ownerPreview){ try { localStorage.setItem('btw_firstweek_hidden', '1'); } catch(e){} } hide(); });
     const link = el.querySelector('.btw-fw-link');
     if(link) link.addEventListener('click', function(){
       const b = document.getElementById('btwReminderNudgeBtn');
