@@ -438,6 +438,32 @@ class S {
   String get topicsAdd => _('Add', 'Ajouter');
   String get topicsTalkedAbout => _('Talked about', 'Abordé');
 
+  // The app's own daily check-in reminder (Settings).
+  String get reminderCardTitle => _('Daily reminder', 'Rappel quotidien');
+  String get reminderCardSub => _(
+      'A notification from Between at the time you choose. Tap it and you land on your check-in.',
+      "Une notification de Between à l'heure de votre choix. Touchez-la pour arriver à votre suivi.");
+  String get reminderTitle => _('Time for a quick check-in', "C'est l'heure d'un petit suivi");
+  String get reminderBody => _(
+      'No pressure: even a few words help.',
+      'Aucune pression : même quelques mots aident.');
+  String get reminderChannel => _('Check-in reminders', 'Rappels de suivi');
+  String get reminderSaved => _('Saved. You can change it any time.',
+      'Enregistré. Vous pouvez le changer en tout temps.');
+  String get reminderDenied => _(
+      "Notifications are off for Between. Turn them on in your phone's settings, then try again.",
+      'Les notifications sont désactivées pour Between. Activez-les dans les réglages de votre téléphone, puis réessayez.');
+  String get reminderAlsoTexts => _(
+      'You also get reminder texts or emails, set up on the website.',
+      'Vous recevez aussi des rappels par texto ou courriel, réglés sur le site.');
+  String get reminderTurnOffTexts =>
+      _('Turn off the texts and emails', 'Arrêter les textos et courriels');
+  String weekdayShort(int d) {
+    const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const fr = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
+    return (isFr ? fr : en)[(d - 1).clamp(0, 6)];
+  }
+
   // "Since you started" on the Progress screen.
   String sinceTitle(DateTime start, int n) {
     const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July',

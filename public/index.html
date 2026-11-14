@@ -19476,8 +19476,10 @@
       renderMoodChart();
       renderPie();
       renderZones();
+      try { tidyClientPage(); } catch(e){}
       return;
     }
+    try { tidyClientPage(); } catch(e){}
     renderPatientList();
     renderPatientPane();
     renderCaseDigest();
@@ -19803,6 +19805,25 @@
     if(flagged) parts.push(`<strong>${flagged}</strong> ${esc(flagged===1?t('check-in flagged'):t('check-ins flagged'))}`);
     el.innerHTML = `<div class="btw-week-label">${esc(t('This week'))}</div><div class="btw-week-body">${parts.join(' · ')}</div>`;
     el.style.display = '';
+  }
+
+  // A calmer client page: the stat tiles live inside the Trends fold-out
+  // (closed by default), and the one-line "so far" digest is hidden when the
+  // This week / Since you started cards already say it. Professionals keep the
+  // tiles where they were.
+  function tidyClientPage(){
+    const ins = document.getElementById('btwInsights');
+    const trends = document.getElementById('btwAccTrends');
+    const body = trends && trends.querySelector('.btw-acc-body');
+    if(ins && body){
+      if(isPatient()){ if(ins.parentNode !== body) body.insertBefore(ins, body.firstChild); }
+      else if(ins.parentNode === body) trends.parentNode.insertBefore(ins, trends);
+    }
+    const dg = document.getElementById('btwDigest');
+    if(dg){
+      const shown = function(id){ const e = document.getElementById(id); return !!(e && e.style.display !== 'none' && e.innerHTML); };
+      dg.style.display = (isPatient() && (shown('btwWeekSummary') || shown('btwSinceStart'))) ? 'none' : '';
+    }
   }
 
   // "Since you started": after three weeks, compare their first two weeks with

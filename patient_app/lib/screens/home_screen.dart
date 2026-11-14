@@ -1050,10 +1050,6 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 16),
                     _supportCard(s),
                   ],
-                  if (patient.hasClinician) ...[
-                    const SizedBox(height: 14),
-                    _topicsTile(s),
-                  ],
                   const SizedBox(height: 18),
                   // Write/speak vs. answer a few guided questions — the same
                   // choice the website offers, flavoured per discipline.
@@ -1436,6 +1432,11 @@ class _HomeScreenState extends State<HomeScreen>
                         ? s.sending
                         : s.sendToProvider(profile.providerKey)),
                   ),
+                  // Below the check-in so the check-in stays first.
+                  if (patient.hasClinician) ...[
+                    const SizedBox(height: 18),
+                    _topicsTile(s),
+                  ],
                 ],
               ),
               ),

@@ -11,6 +11,7 @@ import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'personalize_screen.dart';
 import 'plans_screen.dart';
+import 'reminder_card.dart';
 import 'welcome_screen.dart';
 
 /// My data & settings: the patient's controls over their own information —
@@ -314,6 +315,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 12),
+            const ReminderCard(),
             const SizedBox(height: 12),
             _Section(
               child: ListTile(
