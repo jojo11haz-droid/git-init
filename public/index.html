@@ -1263,6 +1263,9 @@
     background:var(--moss-light);
   }
   .btw-submode.on{ display:inline-flex; }
+  .btw-indtop{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0 0 18px;}
+  .btw-indtop[hidden]{display:none;}
+  .btw-indtop-l{font-size:13.5px;font-weight:600;color:var(--ink-soft);}
   .btw-submode-btn{
     border:none;
     background:transparent;
@@ -2328,6 +2331,7 @@
   .btw-chooser-pitch{font-family:var(--font-display);font-weight:600;font-size:clamp(25px,3.3vw,35px);line-height:1.13;letter-spacing:-.02em;color:var(--ink);margin:0 auto 12px;max-width:18em;text-wrap:balance;}
   .btw-chooser-pitchsub{font-size:15.5px;line-height:1.6;color:var(--ink-soft);margin:0 auto 26px;max-width:35em;text-wrap:pretty;}
   .btw-chooser-pitchsub + .btw-chooser-title{font-size:22px;}
+  .btw-solo-link{color:var(--moss);font-weight:600;text-decoration:underline;text-underline-offset:3px;white-space:nowrap;}
   @media (max-width:640px){
     .btw-chooser-pitchsub{font-size:15px;margin-bottom:22px;}
   }
@@ -3754,9 +3758,9 @@
       <section class="btw-chooser" id="btwChooser" aria-label="Who's it for?">
         <div class="btw-chooser-head">
           <p class="btw-chooser-pitch" role="heading" aria-level="1">Know how the people you help are doing between visits.</p>
-          <p class="btw-chooser-pitchsub">They check in by voice or text in under a minute. Between gives you a short summary, the trend and a drafted note before you see them next.</p>
+          <p class="btw-chooser-pitchsub">They check in by voice or text in under a minute. Between gives you a short summary, the trend and a drafted note before you see them next. <a href="/individual" class="btw-solo-link" id="btwSoloLink">Or use it solo, just for yourself.</a></p>
           <h2 class="btw-chooser-title">Who's it for?</h2>
-          <p class="btw-chooser-sub">Pick your field to see Between built for it.</p>
+          <p class="btw-chooser-sub">Pick your field, or use it solo.</p>
           <p class="btw-chooser-login" id="btwChooserLogin">Already have an account? <button type="button" class="btw-chooser-login-link" id="btwChooserLoginBtn">Log in</button></p>
         </div>
         <div class="btw-chooser-groups btw-accordion">
@@ -3804,6 +3808,15 @@
         <div class="btw-hero-top">
         <div class="btw-hero-copy">
           <img class="btw-hero-art-sm" id="btwHeroArtSm" alt="" width="560" height="560" decoding="async" aria-hidden="true">
+          <div class="btw-indtop" id="btwIndModeTop" hidden>
+            <span class="btw-indtop-l">What do you want to keep track of?</span>
+            <div class="btw-submode on" role="group" aria-label="What you track">
+              <button type="button" class="btw-submode-btn" data-imode="mind">Mind</button>
+              <button type="button" class="btw-submode-btn" data-imode="body">Body</button>
+              <button type="button" class="btw-submode-btn" data-imode="sport">Sport</button>
+              <button type="button" class="btw-submode-btn" data-imode="eating">Eating</button>
+            </div>
+          </div>
           <div class="btw-hero-eyebrow">For therapists and counsellors</div>
           <h1 id="btwHeroH1">What happens<br><em>between</em> sessions<br>doesn't have to<br>stay a mystery.</h1>
           <p class="btw-hero-sub">Your clients tell you about the hard night the moment it happens, by voice or text, in under a minute. Between turns it into a short summary, a mood trend and a drafted chart note, waiting in your dashboard before the next session. You skip the catch-up and start where it matters.</p>
@@ -5885,6 +5898,9 @@
     "Know how the people you help are doing between visits.":"Sachez comment vont les personnes que vous aidez entre les rendez-vous.",
     "They check in by voice or text in under a minute. Between gives you a short summary, the trend and a drafted note before you see them next.":"Elles font un suivi par la voix ou par écrit en moins d'une minute. Between vous donne un court résumé, la tendance et une ébauche de note avant de les revoir.",
     "Pick your field to see Between built for it.":"Choisissez votre domaine pour voir Between conçu pour vous.",
+    "What do you want to keep track of?":"Que voulez-vous suivre?",
+    "Pick your field, or use it solo.":"Choisissez votre domaine, ou utilisez-le en solo.",
+    "Or use it solo, just for yourself.":"Ou utilisez-le en solo, juste pour vous.",
     "Mood check-ins between sessions":"Des suivis d'humeur entre les séances",
     "Pain and a body map between visits":"La douleur et une carte du corps entre les visites",
     "Movement and pain between sessions":"Le mouvement et la douleur entre les séances",
@@ -9969,8 +9985,11 @@
   function updateIndividualModeUI(){
     const picker = document.getElementById('btwIndividualMode');
     if(picker) picker.classList.toggle('on', curAudience === 'individual');
+    // The same switch at the top of the For-myself page (only there).
+    const top = document.getElementById('btwIndModeTop');
+    if(top) top.hidden = curAudience !== 'individual';
     if(window.__btwSyncDemoButtons) window.__btwSyncDemoButtons();
-    document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.imode === curIndividualMode));
+    document.querySelectorAll('#btwIndividualMode .btw-submode-btn, #btwIndModeTop .btw-submode-btn').forEach(b=>b.classList.toggle('active', b.dataset.imode === curIndividualMode));
     updatePriceModeLabels();
   }
   // On the "use Between on your own" pricing cards, show what the person is
@@ -10177,6 +10196,8 @@
     }
     b.addEventListener('click', ()=> setAudience(b.dataset.aud));
   });
+  // "Or use it solo" in the picker intro: same as the For-myself card.
+  (function(){ const l = document.getElementById('btwSoloLink'); if(l) l.addEventListener('click', function(e){ e.preventDefault(); setAudience('individual'); }); })();
   // Mobile-only accordion for the chooser: on a phone each category collapses so
   // the whole list isn't open at once, with the current field's group open.
   // Desktop always shows every card. The markup already carries btw-accordion so
@@ -10291,7 +10312,7 @@
     try { applyCrisisCopy(); applyRoleLabels(); syncComposerTags(); } catch(e){}
     try { renderAll(); } catch(e){}
   }
-  document.querySelectorAll('#btwIndividualMode .btw-submode-btn').forEach(b=>{
+  document.querySelectorAll('#btwIndividualMode .btw-submode-btn, #btwIndModeTop .btw-submode-btn').forEach(b=>{
     b.addEventListener('click', ()=> setIndividualMode(b.dataset.imode));
   });
   // A signed-in coach/mentor always sees their own wording, whatever the toggle said.
