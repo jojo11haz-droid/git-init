@@ -201,6 +201,16 @@ class ClinicianMessage {
       .toList();
 }
 
+/// Something the person wants to bring up at their next session. Their
+/// professional sees it in Session prep and marks it talked about.
+class SessionTopic {
+  SessionTopic(this.raw);
+  final Map<String, dynamic> raw;
+  String get id => raw['id'] as String;
+  String get body => (raw['body'] as String?) ?? '';
+  bool get discussed => raw['discussed_at'] != null;
+}
+
 class PatientDocument {
   PatientDocument(this.raw);
 
@@ -518,6 +528,22 @@ class AppState extends ChangeNotifier {
         .map((m) => ClinicianMessage((m as Map).cast<String, dynamic>()))
         .toList();
   }
+
+  Future<List<SessionTopic>> fetchTopics() async {
+    final data = await _api.get('/api/patient/topics');
+    final list = ((data as Map)['topics'] as List?) ?? const [];
+    return list
+        .map((t) => SessionTopic((t as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  Future<SessionTopic> addTopic(String body) async {
+    final data = await _api.post('/api/patient/topics', {'body': body});
+    return SessionTopic(
+        ((data as Map)['topic'] as Map).cast<String, dynamic>());
+  }
+
+  Future<void> deleteTopic(String id) => _api.delete('/api/patient/topics/$id');
 
   Future<void> markMessagesRead() async {
     await _api.post('/api/patient/messages/read', <String, dynamic>{});

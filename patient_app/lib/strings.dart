@@ -404,6 +404,32 @@ class S {
   String get homeExercises =>
       _('Your home exercises', 'Vos exercices à domicile');
   // The same checklist, named for the field (mirrors the website).
+  // "Do it now": a practice or exercise with its how-to and a timer.
+  String get doItNow => _('Do it now', 'Faire maintenant');
+  String get timerStart => _('Start', 'Démarrer');
+  String get timerPause => _('Pause', 'Pause');
+  String get timerResume => _('Resume', 'Reprendre');
+  String get timerReset => _('Reset', 'Réinitialiser');
+  String get timeIsUp => _('Time is up', 'Temps écoulé');
+  String get doneTickIt => _('Done, tick it off', 'Fait, je le coche');
+  String get breatheIn => _('Breathe in', 'Inspirez');
+  String get breatheOut => _('Breathe out', 'Expirez');
+  // Things to bring up next session.
+  String get topicsTitle => _('For your next session', 'Pour votre prochaine séance');
+  String get topicsSub => _(
+      'Jot down anything you want to bring up. Your professional sees these before you meet.',
+      'Notez tout ce dont vous voulez parler. Votre professionnel les voit avant votre rencontre.');
+  String get topicsHint => _('e.g. how the week went with my sister',
+      "p. ex. comment s'est passée la semaine avec ma sœur");
+  String get topicsAdd => _('Add', 'Ajouter');
+  String get topicsTalkedAbout => _('Talked about', 'Abordé');
+  String get topicsNone => _('Nothing yet. Add something whenever it comes to mind.',
+      "Rien pour l'instant. Ajoutez quelque chose dès que ça vous vient.");
+  String topicsWaiting(int n) => n == 0
+      ? _('Add a topic', 'Ajouter un sujet')
+      : n == 1
+          ? _('1 topic waiting', '1 sujet en attente')
+          : _('$n topics waiting', '$n sujets en attente');
   String get practiceBetween => _('Your practice between sessions',
       'Votre pratique entre les séances');
   String get habitsToPractise =>

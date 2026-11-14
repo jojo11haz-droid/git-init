@@ -18,12 +18,14 @@ import '../recording_bytes.dart';
 import '../strings.dart';
 import '../theme.dart';
 import 'coach_tour.dart';
+import 'do_it_now_sheet.dart';
 import 'documents_screen.dart';
 import 'guide_screen.dart';
 import 'history_screen.dart';
 import 'progress_screen.dart';
 import 'sent_screen.dart';
 import 'settings_screen.dart';
+import 'topics_screen.dart';
 
 /// Shrink a photo before upload: scale the long edge to 1600px and re-encode as
 /// JPEG, so a multi-MB phone photo becomes a few hundred KB. Keeps the backend
@@ -94,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
   final _kHelp = GlobalKey();
   bool _tourActive = false;
   int _streak = 0;
+  int _openTopics = 0; // things waiting for the next session
 
   @override
   void initState() {
@@ -108,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen>
     _loadStreak();
     _loadExercises();
     _loadMessages();
+    _loadTopics();
     // New messages from their professional show up when the app comes back
     // to the foreground (and on pull-to-refresh), not only on a fresh start.
     WidgetsBinding.instance.addObserver(this);
@@ -136,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Widget _exerciseTile(HomeExercise e) {
+  Widget _exerciseTile(HomeExercise e, S s) {
     final on = _exDone.contains(e.id);
     final desc = e.description;
     final dose = e.dosage;
@@ -190,6 +194,23 @@ class _HomeScreenState extends State<HomeScreen>
                                 color: BtwColors.inkSoft,
                                 height: 1.4)),
                       ],
+                      // Open it with its how-to and a timer; Done ticks it.
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              visualDensity: VisualDensity.compact,
+                              foregroundColor: BtwColors.moss),
+                          icon: const Icon(Icons.play_circle_outline_rounded,
+                              size: 18),
+                          label: Text(s.doItNow),
+                          onPressed: () async {
+                            final done = await showDoItNow(context, e, s);
+                            if (done && mounted) setState(() => _exDone.add(e.id));
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -214,6 +235,58 @@ class _HomeScreenState extends State<HomeScreen>
     } catch (_) {
       // No program (or offline): the checklist just stays hidden.
     }
+  }
+
+  // How many topics are waiting for the next session. Best-effort.
+  Future<void> _loadTopics() async {
+    final app = context.read<AppState>();
+    if (!(app.patient?.hasClinician ?? false)) return;
+    try {
+      final list = await app.fetchTopics();
+      if (!mounted) return;
+      setState(() => _openTopics = list.where((t) => !t.discussed).length);
+    } catch (_) {/* the tile just shows "Add a topic" */}
+  }
+
+  Widget _topicsTile(S s) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const TopicsScreen()),
+        );
+        if (!mounted) return;
+        _loadTopics();
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: BtwColors.line),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.forum_outlined, size: 20, color: BtwColors.moss),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s.topicsTitle,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  Text(s.topicsWaiting(_openTopics),
+                      style: const TextStyle(
+                          fontSize: 12.5, color: BtwColors.inkSoft)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: BtwColors.inkSoft),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loadMessages() async {
@@ -902,6 +975,10 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(height: 16),
                     _supportCard(s),
                   ],
+                  if (patient.hasClinician) ...[
+                    const SizedBox(height: 14),
+                    _topicsTile(s),
+                  ],
                   const SizedBox(height: 18),
                   // Write/speak vs. answer a few guided questions — the same
                   // choice the website offers, flavoured per discipline.
@@ -1085,7 +1162,7 @@ class _HomeScreenState extends State<HomeScreen>
                         style: const TextStyle(
                             fontSize: 12.5, color: BtwColors.inkSoft)),
                     const SizedBox(height: 8),
-                    for (final e in _exercises) _exerciseTile(e),
+                    for (final e in _exercises) _exerciseTile(e, s),
                     const SizedBox(height: 12),
                   ],
                   // Physical disciplines: a tap-where-it-hurts body map.

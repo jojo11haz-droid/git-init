@@ -15,6 +15,7 @@ import {
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   createFutureNote, listFutureNotes, deleteFutureNote,
+  createSessionTopic, listSessionTopics, countOpenSessionTopics, deleteSessionTopic, setSessionTopicDiscussed, deleteAllSessionTopics,
   getClinicianById, createPasswordReset, getValidPasswordReset, consumePasswordReset,
   createPatientPasswordReset, getValidPatientPasswordReset, consumePatientPasswordReset,
   resetPatientAccess, deletePatient, markPatientLeft, purgeExpiredPatients,
@@ -5027,6 +5028,71 @@ app.delete('/api/patient/future-notes/:id', requireDb, requirePatientAuth, async
   }
 });
 
+// --- Things to bring up next session ---
+// The client jots topics between sessions; their professional sees the open
+// ones in Session prep. Only for a client who has a professional.
+const SESSION_TOPIC_MAX = 300, SESSION_TOPIC_OPEN_MAX = 20;
+app.get('/api/patient/topics', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    res.json({ topics: await listSessionTopics(req.patient.id) });
+  } catch (err) {
+    console.error('Error listing topics:', err.message);
+    res.status(500).json({ error: 'Could not load your topics.' });
+  }
+});
+
+app.post('/api/patient/topics', requireDb, requirePatientAuth, requirePatientSubscription, async (req, res) => {
+  try {
+    if (!req.patient.clinician_id) return res.status(400).json({ error: 'Topics are shared with your professional, and you are using Between on your own.' });
+    const body = (req.body && typeof req.body.body === 'string') ? req.body.body.trim().replace(/\s+/g, ' ') : '';
+    if (!body) return res.status(400).json({ error: 'Write a few words first.' });
+    if (body.length > SESSION_TOPIC_MAX) return res.status(400).json({ error: 'Keep it short: a line or two is plenty.' });
+    if ((await countOpenSessionTopics(req.patient.id)) >= SESSION_TOPIC_OPEN_MAX) return res.status(400).json({ error: 'You already have 20 topics waiting. Remove one first.' });
+    res.status(201).json({ topic: await createSessionTopic(req.patient.id, body) });
+  } catch (err) {
+    console.error('Error saving topic:', err.message);
+    res.status(500).json({ error: 'Could not save that topic.' });
+  }
+});
+
+app.delete('/api/patient/topics/:id', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return res.status(404).json({ error: 'Topic not found.' });
+    const gone = await deleteSessionTopic(req.params.id, req.patient.id);
+    if (!gone) return res.status(404).json({ error: 'Topic not found.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error deleting topic:', err.message);
+    res.status(500).json({ error: 'Could not remove that topic.' });
+  }
+});
+
+// The professional's side: this client's topics, and marking one discussed.
+app.get('/api/patients/:id/topics', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ topics: await listSessionTopics(patient.id) });
+  } catch (err) {
+    console.error('Error listing client topics:', err.message);
+    res.status(500).json({ error: 'Could not load the topics.' });
+  }
+});
+
+app.post('/api/patients/:id/topics/:topicId/discussed', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    if (!/^[0-9a-f-]{36}$/i.test(req.params.topicId)) return res.status(404).json({ error: 'Topic not found.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const topic = await setSessionTopicDiscussed(req.params.topicId, patient.id, (req.body || {}).discussed !== false);
+    if (!topic) return res.status(404).json({ error: 'Topic not found.' });
+    res.json({ topic });
+  } catch (err) {
+    console.error('Error updating topic:', err.message);
+    res.status(500).json({ error: 'Could not update the topic.' });
+  }
+});
+
 // Grace-period undo: a patient can delete a just-sent check-in within
 // CHECK_IN_GRACE_MINUTES, unless it raised a risk flag (the safety record
 // stays). Full-history deletion below is the Law 25 erasure path and is not
@@ -5055,6 +5121,7 @@ app.delete('/api/patient/check-ins', requireDb, requirePatientAuth, async (req, 
     await deleteAllCheckIns(req.patient.id);
     // Erasure covers synced health data too — it's part of their record.
     await deleteAllHealth(req.patient.id);
+    await deleteAllSessionTopics(req.patient.id);
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting patient history:', err);
