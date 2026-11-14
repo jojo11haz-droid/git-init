@@ -3070,8 +3070,33 @@ const RECORDING_CONSENT_FORM = {
     client: 'Client ou patient', pro: 'Professionnel'
   }
 };
-function recordingConsentForm(lang, proName) {
-  const f = RECORDING_CONSENT_FORM[lang === 'fr' ? 'fr' : 'en'];
+// Mental-health work (psychotherapy, neuropsychology, addiction support): the
+// same form, worded for therapy, with confidentiality and pausing spelled out.
+const RECORDING_CONSENT_FORM_MIND = {
+  en: {
+    title: 'Consent to record a therapy session',
+    paragraphs: [
+      'I agree that my sessions with {pro} may be audio recorded so that Between can prepare a draft of the session note.',
+      'What I share in session stays confidential. The recording is sent to a speech-to-text service and turned into text, and an AI service writes a draft note from that text. Between does not keep the audio or the transcript, and no one listens to the recording. {pro} reads and corrects the draft before it goes in my file.',
+      'Saying no changes nothing about my care. At any point I can ask {pro} to pause or stop the recording, or not to record a session or a topic.',
+      'This consent covers sessions with {pro} for 12 months from today. I can withdraw it at any time by telling {pro}.'
+    ],
+    client: 'Client or patient', pro: 'Professional'
+  },
+  fr: {
+    title: "Consentement à l'enregistrement d'une séance de thérapie",
+    paragraphs: [
+      "J'accepte que mes séances avec {pro} soient enregistrées (audio) afin que Between prépare une ébauche de la note de séance.",
+      "Ce que je partage en séance reste confidentiel. L'enregistrement est envoyé à un service de transcription et converti en texte, puis un service d'IA rédige une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription, et personne n'écoute l'enregistrement. {pro} lit et corrige l'ébauche avant qu'elle soit versée à mon dossier.",
+      "Un refus ne change rien à mes soins. À tout moment, je peux demander à {pro} de mettre l'enregistrement en pause ou de l'arrêter, ou de ne pas enregistrer une séance ou un sujet.",
+      "Ce consentement couvre les séances avec {pro} pendant 12 mois à compter d'aujourd'hui. Je peux le retirer à tout moment en le disant à {pro}."
+    ],
+    client: 'Client ou patient', pro: 'Professionnel'
+  }
+};
+const isMindField = (c) => !!c && (c.account_type === 'therapist' || c.account_type === 'mentor' || c.discipline === 'neuropsych');
+function recordingConsentForm(lang, proName, mind) {
+  const f = (mind ? RECORDING_CONSENT_FORM_MIND : RECORDING_CONSENT_FORM)[lang === 'fr' ? 'fr' : 'en'];
   const name = String(proName || '').trim() || (lang === 'fr' ? 'mon professionnel' : 'my professional');
   return { title: f.title, paragraphs: f.paragraphs.map((p) => p.split('{pro}').join(name)), clientLabel: f.client, proLabel: f.pro };
 }
@@ -3089,7 +3114,7 @@ app.get('/api/patients/:id/recording-consent', requireDb, requireAuth, requireVe
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const consent = await getValidRecordingConsent(patient.id, req.clinician.id);
-    res.json({ form: recordingConsentForm(reqLang(req), req.clinician.name), clientName: patient.display_name, clinicianName: req.clinician.name, consent: publicConsent(consent) });
+    res.json({ form: recordingConsentForm(reqLang(req), req.clinician.name, isMindField(fieldOf(req))), clientName: patient.display_name, clinicianName: req.clinician.name, consent: publicConsent(consent) });
   } catch (err) {
     console.error('Recording consent load error:', err.message);
     res.status(500).json({ error: 'Could not load the consent form.' });
@@ -3121,7 +3146,7 @@ app.post('/api/patients/:id/recording-consent', requireDb, requireAuth, requireV
     if (!clientSignature || !clinicianSignature) return res.status(400).json({ error: 'Both signatures are needed: the client and the professional.' });
     if (clientSignature === clinicianSignature) return res.status(400).json({ error: 'The two signatures are identical. Each person signs in their own box.' });
     const lang = reqLang(req);
-    const form = recordingConsentForm(lang, req.clinician.name);
+    const form = recordingConsentForm(lang, req.clinician.name, isMindField(fieldOf(req)));
     const saved = await createRecordingConsent({
       patientId: patient.id, clinicianId: req.clinician.id,
       clientName: patient.display_name || '', clinicianName: req.clinician.name || '',
