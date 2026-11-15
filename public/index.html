@@ -3212,6 +3212,15 @@
   .btw-drawer-sublist .btw-audsel-group{padding:16px 12px 6px;}
   .btw-drawer-sublist .btw-audsel-group:first-child{padding-top:2px;}
   @media (prefers-reduced-motion: reduce){ .btw-drawer,.btw-drawer-back,.btw-drawer-sub,.btw-drawer .btw-nav-btn,.btw-drawer-field,.btw-drawer-prefs{transition:none;} }
+  /* Phones, signed out: the header keeps Sign up, the language and Menu;
+     Log in moves into the menu so nothing overlaps the logo. */
+  .btw-drawer-login{display:none;}
+  @media (max-width:520px){
+    body:not(.btw-signed-in) #btwLoginBtn{display:none !important;}
+    body:not(.btw-signed-in) .btw-drawer-login{display:block;margin-top:6px;}
+  }
+  .btw-lang-quick{font:inherit;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--moss);background:none;border:1px solid var(--line);border-radius:100px;min-width:40px;height:36px;padding:0 10px;cursor:pointer;flex:0 0 auto;}
+  .btw-lang-quick:hover{border-color:var(--moss);}
   .btw-auth-area{
     display:flex;
     align-items:center;
@@ -3623,6 +3632,7 @@
           <button class="btw-nav-btn" id="btwLogoutBtn" style="display:none;">Log out</button>
         </div>
       </div>
+      <button type="button" class="btw-lang-quick" id="btwLangQuick" data-noattr lang="fr" aria-label="Français" title="Français">FR</button>
       <button type="button" class="btw-menu-toggle" id="btwMenuToggle" aria-label="Menu" aria-controls="btwDrawer" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg><span class="btw-menu-toggle-l">Menu</span></button>
     </div>
   </div>
@@ -3637,6 +3647,7 @@
           <button class="btw-nav-btn" id="btwNavGuide">Guide</button>
           <a class="btw-nav-btn btw-nav-link" id="btwNavAbout" href="/about">About</a>
         </div>
+        <button type="button" class="btw-nav-btn btw-drawer-login" id="btwDrawerLogin">Log in</button>
       <div class="btw-drawer-acct" id="btwDrawerAcct"><div class="btw-drawer-who" id="btwDrawerWho"></div><div class="btw-drawer-acctlist" id="btwDrawerAcctList"></div></div>
       <div class="btw-drawer-sec btw-drawer-field">
         <button type="button" class="btw-drawer-fieldrow" id="btwDrawerFieldRow" aria-haspopup="true"><span class="btw-drawer-fieldtxt"><span class="btw-drawer-l">Viewing Between for</span><strong id="btwDrawerFieldName">Psychotherapist</strong></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
@@ -9795,7 +9806,7 @@
   // Screen-reader labels and tooltips follow the language too.
   const _origAttr = new WeakMap();
   function translateAttrs(){
-    document.querySelectorAll('[aria-label],[title]').forEach(function(el){
+    document.querySelectorAll('[aria-label]:not([data-noattr]),[title]:not([data-noattr])').forEach(function(el){
       var o = _origAttr.get(el);
       if(!o){ o = { a: el.getAttribute('aria-label'), t: el.getAttribute('title') }; _origAttr.set(el, o); }
       if(o.a){ var ta = curLang === 'fr' ? (FR[o.a] || o.a) : o.a; if(el.getAttribute('aria-label') !== ta) el.setAttribute('aria-label', ta); }
@@ -9978,6 +9989,8 @@
     try { localStorage.setItem('btw_lang', curLang); } catch(e){}
     document.documentElement.lang = curLang;
     document.querySelectorAll('.btw-lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang === curLang));
+    // The quick switch in the header always offers the other language.
+    { const q = document.getElementById('btwLangQuick'); if(q){ const other = curLang === 'fr' ? 'en' : 'fr'; q.textContent = other.toUpperCase(); q.setAttribute('lang', other); const nm = other === 'fr' ? 'Français' : 'English'; q.setAttribute('aria-label', nm); q.title = nm; } }
     translateStatic();
     if(window.__btwDemoRefresh) window.__btwDemoRefresh();
     if(window.__btwMoodRefresh) window.__btwMoodRefresh();
@@ -9995,6 +10008,8 @@
     if(window.__btwChatRelocalize) window.__btwChatRelocalize();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
+  { const dl = document.getElementById('btwDrawerLogin'); if(dl) dl.addEventListener('click', ()=>{ const c = document.getElementById('btwDrawerClose'); if(c) c.click(); const l = document.getElementById('btwLoginBtn'); if(l) l.click(); }); }
+  { const lq = document.getElementById('btwLangQuick'); if(lq) lq.addEventListener('click', ()=> setLang(curLang === 'fr' ? 'en' : 'fr')); }
   document.querySelectorAll('.btw-lang-btn').forEach(b=>{
     b.addEventListener('click', ()=> setLang(b.dataset.lang));
   });
