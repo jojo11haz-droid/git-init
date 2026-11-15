@@ -182,7 +182,7 @@
     <p>Pour une liste formelle des sous-traitants, une entente de traitement des données, ou des détails sur le lieu de stockage de vos données, écrivez à <a href="mailto:owner@betweenpsych.com">owner@betweenpsych.com</a>. Consultez aussi la <a href="/privacy.html">politique de confidentialité</a>.</p>
   </section>
 
-  <footer>© 2026 Between. <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></footer>
+  <footer id="ftr">© 2026 Between. <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></footer>
 </div>
 <script>
   (function(){
@@ -193,13 +193,17 @@
       fr.hidden = !isFr; en.hidden = isFr;
       bFr.classList.toggle('active', isFr); bEn.classList.toggle('active', !isFr);
       document.documentElement.lang = isFr ? 'fr' : 'en';
+      document.title = isFr ? 'Sous-traitants et lieu de traitement | Between' : 'Subprocessors & data location | Between';
+      var back = document.querySelector('.back'); if(back){ back.setAttribute('href', isFr ? '/fr' : '/'); back.lastChild.textContent = isFr ? '← Retour à Between' : '← Back to Between'; }
+      var ft = document.getElementById('ftr'); if(ft) ft.innerHTML = isFr ? '© 2026 Between. <a href="/privacy.html">Confidentialité</a> · <a href="/terms.html">Conditions</a>' : '© 2026 Between. <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>';
       try { localStorage.setItem('btw_lang', lang); } catch(e){}
     }
     bEn.addEventListener('click', function(){ set('en'); });
     bFr.addEventListener('click', function(){ set('fr'); });
-    var start = 'en';
-    try { if(localStorage.getItem('btw_lang') === 'fr') start = 'fr'; } catch(e){}
-    if(start === 'en' && (navigator.language || '').toLowerCase().indexOf('fr') === 0) start = 'fr';
+    var start = null;
+    try { var ql = new URLSearchParams(location.search).get('lang'); if(ql === 'fr' || ql === 'en') start = ql; } catch(e){}
+    if(!start){ try { var st = localStorage.getItem('btw_lang'); if(st === 'fr' || st === 'en') start = st; } catch(e){} }
+    if(!start) start = (navigator.language || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en';
     set(start);
   })();
 </script>
