@@ -68,6 +68,7 @@ const FR = {
   "Could not load clinicians.": "Impossible de charger les cliniciens.",
   "Could not load engagement stats.": "Impossible de charger les statistiques d'engagement.",
   "Could not load the account overview.": "Impossible de charger l'aperçu des comptes.",
+  "Could not load engagement by professional.": "Impossible de charger l'engagement par professionnel.",
   "Could not load notifications.": "Impossible de charger les notifications.",
   "Could not load contact messages.": "Impossible de charger les messages de contact.",
   "Could not load storage stats.": "Impossible de charger les statistiques de stockage.",
