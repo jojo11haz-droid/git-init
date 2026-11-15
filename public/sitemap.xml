@@ -1,62 +1,194 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://betweenpsych.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/individual</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/individual"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/individual"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/individual"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/physio</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/physio"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/physio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/physio"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/kinesiology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/kinesiology"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/kinesiology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/kinesiology"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/osteopathy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/osteopathy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/osteopathy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/osteopathy"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/occupational-therapy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/occupational-therapy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/occupational-therapy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/occupational-therapy"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/neuropsychology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/neuropsychology"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/neuropsychology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/neuropsychology"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/sports</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/sports"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/sports"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/sports"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/fitness</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/fitness"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/fitness"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/fitness"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/addiction</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/addiction"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/addiction"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/addiction"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/schools</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/schools"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/schools"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/schools"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://betweenpsych.com/nutrition</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/nutrition"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/nutrition"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/nutrition"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/individual</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/individual"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/individual"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/individual"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/physio</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/physio"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/physio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/physio"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/kinesiology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/kinesiology"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/kinesiology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/kinesiology"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/osteopathy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/osteopathy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/osteopathy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/osteopathy"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/occupational-therapy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/occupational-therapy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/occupational-therapy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/occupational-therapy"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/neuropsychology</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/neuropsychology"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/neuropsychology"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/neuropsychology"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/sports</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/sports"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/sports"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/sports"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/fitness</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/fitness"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/fitness"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/fitness"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/addiction</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/addiction"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/addiction"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/addiction"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/schools</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/schools"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/schools"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/schools"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/nutrition</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/nutrition"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/nutrition"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/nutrition"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

@@ -7,6 +7,9 @@
 <title>Between | Between-session check-ins for therapy</title>
 <meta name="description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session. Private, consent-first and not a crisis service.">
 <link rel="canonical" href="https://betweenpsych.com/">
+<link rel="alternate" hreflang="en" href="https://betweenpsych.com/">
+<link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr">
+<link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="robots" content="index, follow">
@@ -15,6 +18,7 @@
 <!-- Social / link previews -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Between">
+<meta property="og:locale" content="en_CA">
 <meta property="og:title" content="Between | Between-session check-ins for therapy">
 <meta property="og:description" content="Clients send a quick note between sessions, AI summarizes it and psychotherapists see the pattern before the next session.">
 <meta property="og:url" content="https://betweenpsych.com/">
@@ -3307,7 +3311,7 @@
    The main script reconciles the real state and clears these classes. */
 (function(){try{
   var d=document.documentElement;
-  var p=(location.pathname||'/').replace(/\/+$/,'')||'/';
+  var p=(location.pathname||'/').replace(/\/+$/,'').replace(/^\/fr(?=\/|$)/,'')||'/';
   var FP={'/therapy':1,'/individual':1,'/physio':1,'/kinesiology':1,'/osteopathy':1,'/occupational-therapy':1,'/neuropsychology':1,'/sports':1,'/fitness':1,'/addiction':1,'/schools':1,'/nutrition':1};
   var forP=''; try{forP=new URLSearchParams(location.search).get('for')||'';}catch(e){}
   var urlField=!!FP[p]||!!forP;
@@ -10005,6 +10009,9 @@
     try { if(composeBodyMap && composeBodyMap.refresh) composeBodyMap.refresh(); } catch(e){}
     if(window.__btwScoreMode) window.__btwScoreMode();
     if(typeof syncAudSelLabel === 'function') syncAudSelLabel();
+    // Head tags and address follow the language: /physio ↔ /fr/physio.
+    try { applyFieldHead(); } catch(e){}
+    try { syncUrlForLang(); } catch(e){}
     if(window.__btwChatRelocalize) window.__btwChatRelocalize();
     if(!(opts && opts.initial)){ try { renderAll(); renderAuthState(); } catch(e){} }
   }
@@ -10061,13 +10068,26 @@
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
   const AUD_TO_PATH = { therapy:'/therapy', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
   const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/occupational-therapy':'occupational', '/neuropsychology':'neuropsych', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
-  function audFromPath(){ const p = (location.pathname || '/').replace(/\/+$/, '') || '/'; return PATH_TO_AUD[p] || null; }
+  // French pages live under /fr (/fr, /fr/physio, …): same app, French first.
+  function basePath(){ return (location.pathname || '/').replace(/\/+$/, '').replace(/^\/fr(?=\/|$)/, '') || '/'; }
+  function langPrefix(){ return curLang === 'fr' ? '/fr' : ''; }
+  function audFromPath(){ return PATH_TO_AUD[basePath()] || null; }
+  // On a marketing URL ("/" or a field page), move between /x and /fr/x when
+  // the language changes, so the address (and a shared link) matches the page.
+  function syncUrlForLang(){
+    try {
+      const b = basePath();
+      if(b !== '/' && !PATH_TO_AUD[b]) return;
+      const want = (b === '/') ? (langPrefix() || '/') : (langPrefix() + b);
+      if(location.pathname !== want) history.replaceState(history.state, '', want + location.search + location.hash);
+    } catch(e){}
+  }
   // Keep the address bar on the current field. push=true adds a history entry
   // (a real navigation the visitor did); otherwise it just corrects the URL.
   function syncUrlForAudience(push){
     // On the chooser landing no field has been picked yet: leave the URL alone.
     if(typeof _homeGated !== 'undefined' && _homeGated) return;
-    const want = AUD_TO_PATH[curAudience] || '/';
+    const want = langPrefix() + (AUD_TO_PATH[curAudience] || '/');
     let search = location.search;
     try { const sp = new URLSearchParams(location.search); sp.delete('for'); const s = sp.toString(); search = s ? ('?' + s) : ''; } catch(e){}
     if(location.pathname === want && search === location.search) return;
@@ -10091,19 +10111,40 @@
     schools: { title: 'Between | Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
     nutrition: { title: 'Between | Between-session check-ins for nutritionists', desc: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
   };
+  // French copy, served at /fr/… (must match FIELD_META_FR in server.js).
+  const FIELD_HEAD_FR = {
+    therapy: { title: 'Between | Suivis entre les séances pour la psychothérapie', desc: 'Les clients envoient une courte note entre les séances, l’IA la résume et les psychothérapeutes voient la tendance avant la prochaine séance. Privé, basé sur le consentement et pas un service de crise.' },
+    individual: { title: 'Between | Suivis privés pour vous-même', desc: 'Faites vos propres suivis entre les journées qui comptent. Between les rassemble en une tendance d’humeur et en thèmes qui reviennent, pour qu’une période difficile devienne visible. Visible par vous seulement et pas un service de crise.' },
+    physio: { title: 'Between | Suivis de la douleur entre les visites en physiothérapie', desc: 'Les patients indiquent où ils ont mal sur une carte du corps entre les visites. Between le résume et les physiothérapeutes voient l’évolution de la douleur avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+    kinesiology: { title: 'Between | Suivis entre les séances en kinésiologie', desc: 'Les clients suivent leurs mouvements et leur douleur entre les séances. Between le résume et les kinésiologues voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+    osteo: { title: 'Between | Suivis entre les visites en ostéopathie', desc: 'Les patients notent leur douleur et leur récupération entre les traitements. Between le résume et les ostéopathes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+    occupational: { title: 'Between | Suivis entre les visites en ergothérapie', desc: 'Les patients notent comment vont leurs activités quotidiennes et leur récupération entre les visites, sur une carte du corps. Between le résume et les ergothérapeutes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+    neuropsych: { title: 'Between | Suivis entre les séances en neuropsychologie', desc: 'Les patients notent comment vont leur concentration, leur mémoire, leur fatigue mentale et leur humeur entre les évaluations et les séances. Between le résume et les neuropsychologues voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+    sports: { title: 'Between | Suivis entre les pratiques pour les équipes sportives', desc: 'Les joueurs envoient un court suivi entre les pratiques, les matchs et les tournois. Between le résume et les entraîneurs voient comment va l’équipe avant la prochaine séance. Privé et basé sur le consentement.' },
+    fitness: { title: 'Between | Suivis entre les séances pour les entraîneurs personnels', desc: 'Les clients font un suivi entre leurs entraînements. Between le résume et les entraîneurs personnels voient comment ils vont avant la prochaine séance. Privé et basé sur le consentement.' },
+    recovery: { title: 'Between | Suivis entre les rencontres pour les programmes de rétablissement', desc: 'Les participants font un suivi entre les rencontres. Between le résume et les mentors voient comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
+    schools: { title: 'Between | Suivis entre les séances pour les écoles', desc: 'Les élèves font un suivi entre les séances. Between le résume et le personnel scolaire voit comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
+    nutrition: { title: 'Between | Suivis entre les séances pour les nutritionnistes', desc: 'Les clients font le point sur leur énergie, leurs envies et le déroulement du plan entre les séances. Between le résume et les nutritionnistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' }
+  };
   function applyFieldHead(){
-    const m = FIELD_HEAD[curAudience] || FIELD_HEAD.therapy;
+    const fr = curLang === 'fr';
+    const m = (fr ? (FIELD_HEAD_FR[curAudience] || FIELD_HEAD_FR.therapy) : (FIELD_HEAD[curAudience] || FIELD_HEAD.therapy));
     // Link-preview card: public/og/<path>.png ("/" uses therapy.png).
     const img = SITE_ORIGIN + '/og/' + ((AUD_TO_PATH[curAudience] || '/').slice(1) || 'therapy') + '.png';
+    // This page's English and French URLs (therapy is the home page).
+    const fieldPath = curAudience === 'therapy' ? '' : (AUD_TO_PATH[curAudience] || '');
+    const enUrl = SITE_ORIGIN + (fieldPath || '/'), frUrl = SITE_ORIGIN + '/fr' + fieldPath;
     try {
+      [['en', enUrl], ['fr', frUrl], ['x-default', enUrl]].forEach(function(a){ const el = document.querySelector('link[rel="alternate"][hreflang="' + a[0] + '"]'); if(el) el.setAttribute('href', a[1]); });
+      const ol = document.querySelector('meta[property="og:locale"]'); if(ol) ol.setAttribute('content', fr ? 'fr_CA' : 'en_CA');
       ['meta[property="og:image"]', 'meta[name="twitter:image"]'].forEach(function(s){ const el = document.querySelector(s); if(el) el.setAttribute('content', img); });
       const oa = document.querySelector('meta[property="og:image:alt"]'); if(oa) oa.setAttribute('content', m.title);
       document.title = m.title;
       const d = document.querySelector('meta[name="description"]'); if(d) d.setAttribute('content', m.desc);
-      const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', SITE_ORIGIN + (curAudience === 'therapy' ? '/' : (AUD_TO_PATH[curAudience] || '/')));
+      const c = document.querySelector('link[rel="canonical"]'); if(c) c.setAttribute('href', fr ? frUrl : enUrl);
       const ot = document.querySelector('meta[property="og:title"]'); if(ot) ot.setAttribute('content', m.title);
       const od = document.querySelector('meta[property="og:description"]'); if(od) od.setAttribute('content', m.desc);
-      const ou = document.querySelector('meta[property="og:url"]'); if(ou) ou.setAttribute('content', SITE_ORIGIN + (curAudience === 'therapy' ? '/' : (AUD_TO_PATH[curAudience] || '/')));
+      const ou = document.querySelector('meta[property="og:url"]'); if(ou) ou.setAttribute('content', fr ? frUrl : enUrl);
       const tt = document.querySelector('meta[name="twitter:title"]'); if(tt) tt.setAttribute('content', m.title);
       const td = document.querySelector('meta[name="twitter:description"]'); if(td) td.setAttribute('content', m.desc);
     } catch(e){}
@@ -20528,6 +20569,9 @@
     const stored = localStorage.getItem('btw_lang');
     _startLang = stored || ((navigator.language||'').toLowerCase().startsWith('fr') ? 'fr' : 'en');
   } catch(e){}
+  // A French URL (/fr, /fr/physio, …) opens in French: that's what Google
+  // indexed it as, whatever the visitor last picked.
+  if(/^\/fr(\/|$)/.test(location.pathname || '')) _startLang = 'fr';
   // A ?lang=fr / ?lang=en link (e.g. from a French email) wins.
   try { const ql = new URLSearchParams(location.search).get('lang'); if(ql === 'fr' || ql === 'en') _startLang = ql; } catch(e){}
   try { document.getElementById('btwFooterYear').textContent = new Date().getFullYear(); } catch(e){}

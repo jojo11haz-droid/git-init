@@ -242,6 +242,31 @@ try {
       if (img.endsWith('/og/therapy.png') && card.status === 200) ok('GET / → default preview card /og/therapy.png');
       else fail('GET / preview card — og:image "' + img + '" → ' + card.status);
     }
+    // French pages (/fr, /fr/physio, …): French head, lang="fr", canonical on
+    // the /fr URL, hreflang pairs both ways, copy in sync with FIELD_HEAD_FR.
+    for (const p of ['/', ...Object.keys(FIELDS)]) {
+      const frPath = '/fr' + (p === '/' ? '' : p);
+      const r = await get(frPath);
+      const [head, body] = split(r.body);
+      const title = tag(head, /<title>([^<]*)<\/title>/);
+      const desc = tag(head, /<meta name="description" content="([^"]*)"/);
+      const en = 'https://betweenpsych.com' + p, fr = 'https://betweenpsych.com' + frPath;
+      const problems = [];
+      if (r.status !== 200) problems.push('status ' + r.status);
+      if (!/^<!DOCTYPE html>\s*<html lang="fr"/i.test(r.body)) problems.push('not <html lang="fr">');
+      if (!/Suivi/i.test(title || '')) problems.push('title not French: ' + title);
+      if (tag(head, /<link rel="canonical" href="([^"]*)"/) !== fr || tag(head, /<meta property="og:url" content="([^"]*)"/) !== fr) problems.push('canonical/og:url ≠ ' + fr);
+      if (tag(head, /<link rel="alternate" hreflang="en" href="([^"]*)"/) !== en || tag(head, /<link rel="alternate" hreflang="fr" href="([^"]*)"/) !== fr) problems.push('hreflang pair wrong');
+      if (tag(head, /<meta property="og:locale" content="([^"]*)"/) !== 'fr_CA') problems.push('og:locale ≠ fr_CA');
+      if (!indexSrc.includes("title: '" + title + "'") || !indexSrc.includes("desc: '" + desc + "'")) problems.push('copy out of sync with FIELD_HEAD_FR in index.html');
+      if (body !== baseBody) problems.push('page body was rewritten');
+      if (p !== '/') {
+        const e = split((await get(p)).body)[0];
+        if (tag(e, /<link rel="alternate" hreflang="fr" href="([^"]*)"/) !== fr) problems.push('English page ' + p + ' has no hreflang fr → ' + fr);
+      }
+      if (problems.length) fail(`GET ${frPath} French head — ${problems.join('; ')}`);
+      else ok(`GET ${frPath} → French title, lang, canonical, hreflang`);
+    }
     const t = await get('/therapy');
     if (t.status === 200 && t.body === indexSrc) ok('GET /therapy → base page (canonical "/")');
     else fail('GET /therapy → ' + t.status + ' (expected the unmodified base page)');
