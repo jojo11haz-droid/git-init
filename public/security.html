@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>Privacy &amp; security for clinics | Between</title>
+<meta name="description" content="Where Between stores data, who can see a client's check-ins, how consent and AI work, and how accounts are protected. Plain answers for clinics, in English and French.">
+<link rel="canonical" href="https://betweenpsych.com/security">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1E4C86">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Between">
+<meta property="og:title" content="Privacy &amp; security for clinics | Between">
+<meta property="og:description" content="Plain answers to the questions clinics ask about data, consent and AI.">
+<meta property="og:url" content="https://betweenpsych.com/security">
+<meta property="og:image" content="https://betweenpsych.com/og/therapy.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F4F1; --panel:#FFFFFF; --ink:#1A1E1C; --ink-soft:#5A6169;
+    --moss:#1E4C86; --moss-light:#DCE6F3; --line:#E4E3DD; --clay:#C0392B;
+    --font-display:'Newsreader', Georgia, serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; } }
+  :root[data-theme="dark"]{ --paper:#12161B; --panel:#1A2027; --ink:#E7ECF1; --ink-soft:#9AA6B2; --moss:#7FAEE6; --moss-light:#223348; --line:#2A333D; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:34px max(18px, env(safe-area-inset-right, 0px)) 80px max(18px, env(safe-area-inset-left, 0px));}
+  a{color:var(--moss);}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:30px;}
+  .back{font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .back:hover{text-decoration:underline;}
+  .langs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel);}
+  .langs button{border:0;background:none;font:600 12px var(--font-body);color:var(--ink-soft);padding:5px 11px;border-radius:999px;cursor:pointer;}
+  .langs button.on{background:var(--moss);color:var(--panel);}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--moss);}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.12;letter-spacing:-.01em;margin:8px 0 10px;text-wrap:balance;}
+  .lede{font-size:17px;color:var(--ink-soft);margin:0 0 26px;max-width:56ch;}
+  .short{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px;margin:0 0 30px;padding:0;list-style:none;}
+  .short li{background:var(--moss-light);border-radius:12px;padding:12px 14px;font-size:14.5px;font-weight:500;}
+  .qa{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:6px 22px;margin:0 0 30px;}
+  .qa h2{font-family:var(--font-display);font-weight:600;font-size:20px;line-height:1.25;margin:18px 0 6px;}
+  .qa p{margin:0 0 16px;font-size:15.5px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+  .qa p:last-child{border-bottom:0;}
+  h3{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0 0 10px;}
+  .docs{display:grid;gap:8px;margin:0 0 26px;padding:0;list-style:none;}
+  .docs a{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-decoration:none;font-weight:600;font-size:15px;}
+  .docs a span{display:block;font-weight:400;font-size:13.5px;color:var(--ink-soft);}
+  .docs a:hover{border-color:var(--moss);}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;}
+  .btn{display:inline-flex;align-items:center;font:600 14px var(--font-body);border-radius:10px;padding:10px 16px;text-decoration:none;border:1px solid var(--moss);}
+  .btn.pri{background:var(--moss);color:var(--panel);}
+  .btn.sec{background:var(--panel);color:var(--moss);}
+  .btn:focus-visible,.langs button:focus-visible,.docs a:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px 16px;}
+  footer a{text-decoration:none;}
+  @media (max-width:560px){ .qa{padding:4px 16px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/"><svg width="18" height="18" viewBox="0 0 64 64" style="border-radius:5px;" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1E4C86"/><defs><clipPath id="blens64"><circle cx="26" cy="32" r="13"/></clipPath></defs><circle cx="38" cy="32" r="13" fill="#C0392B" clip-path="url(#blens64)"/><circle cx="26" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/><circle cx="38" cy="32" r="13" fill="none" stroke="#F5F4F1" stroke-width="5"/></svg><span>← Between</span></a>
+    <div class="langs" role="group" aria-label="Language / Langue"><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="fr" lang="fr">FR</button></div>
+  </div>
+
+  <div class="eyebrow" data-en="For clinics" data-fr="Pour les cliniques">For clinics</div>
+  <h1 data-en="Privacy & security, in plain words" data-fr="Confidentialité et sécurité, en mots simples">Privacy &amp; security, in plain words</h1>
+  <p class="lede" data-en="The questions clinics ask before they invite their first client, with straight answers. The legal versions are linked at the bottom." data-fr="Les questions que les cliniques posent avant d’inviter leur premier client, avec des réponses claires. Les versions juridiques sont en lien au bas de la page.">The questions clinics ask before they invite their first client, with straight answers. The legal versions are linked at the bottom.</p>
+
+  <ul class="short">
+    <li data-en="AI is off until the client turns it on" data-fr="L’IA reste désactivée jusqu’à ce que le client l’active">AI is off until the client turns it on</li>
+    <li data-en="Each professional sees only their own clients" data-fr="Chaque professionnel ne voit que ses propres clients">Each professional sees only their own clients</li>
+    <li data-en="Never sold, never used to train AI" data-fr="Jamais vendu, jamais utilisé pour entraîner l’IA">Never sold, never used to train AI</li>
+    <li data-en="Built with Law 25 and PIPEDA in mind" data-fr="Conçu en tenant compte de la Loi 25 et de la LPRPDE">Built with Law 25 and PIPEDA in mind</li>
+  </ul>
+
+  <div class="qa">
+    <h2 data-en="Where is the data stored?" data-fr="Où les données sont-elles conservées?">Where is the data stored?</h2>
+    <p data-en="In the United States. The application runs on Render and the database is hosted by Neon. Because that is outside Quebec and Canada, we handle it with Quebec's Law 25 and the federal PIPEDA in mind. Every provider, what it does and where it processes data is listed on the subprocessors page." data-fr="Aux États-Unis. L’application est exécutée par Render et la base de données est hébergée par Neon. Comme c’est à l’extérieur du Québec et du Canada, nous en tenons compte en vertu de la Loi 25 du Québec et de la LPRPDE fédérale. Chaque fournisseur, son rôle et l’endroit où il traite les données sont indiqués sur la page des sous-traitants.">In the United States. The application runs on Render and the database is hosted by Neon. Because that is outside Quebec and Canada, we handle it with Quebec's Law 25 and the federal PIPEDA in mind. Every provider, what it does and where it processes data is listed on the subprocessors page.</p>
+
+    <h2 data-en="Who can see a client's check-ins?" data-fr="Qui peut voir les suivis d’un client?">Who can see a client's check-ins?</h2>
+    <p data-en="Only the professional who invited that client. Data is kept separate for each professional's account and is not shared across a clinic. The client sees and controls their own data. Between accesses it only when needed to run, support or secure the service." data-fr="Seulement le professionnel qui a invité ce client. Les données sont cloisonnées par compte de professionnel et ne sont pas partagées dans la clinique. Le client voit et contrôle ses propres données. Between n’y accède que lorsque c’est nécessaire pour faire fonctionner, soutenir ou sécuriser le service.">Only the professional who invited that client. Data is kept separate for each professional's account and is not shared across a clinic. The client sees and controls their own data. Between accesses it only when needed to run, support or secure the service.</p>
+
+    <h2 data-en="How does consent work?" data-fr="Comment fonctionne le consentement?">How does consent work?</h2>
+    <p data-en="The client creates their own account from your invite. AI summaries are off by default: the client turns them on, and can turn them off at any time. Check-ins work fully without AI. Recording an appointment to draft your note only starts after you confirm the client agreed. You remain responsible for any consent your professional order requires." data-fr="Le client crée son propre compte à partir de votre invitation. Les résumés par l’IA sont désactivés par défaut : le client les active, et peut les désactiver en tout temps. Les suivis fonctionnent entièrement sans l’IA. L’enregistrement d’un rendez-vous pour rédiger votre note ne commence qu’après que vous avez confirmé l’accord du client. Vous demeurez responsable de tout consentement exigé par votre ordre professionnel.">The client creates their own account from your invite. AI summaries are off by default: the client turns them on, and can turn them off at any time. Check-ins work fully without AI. Recording an appointment to draft your note only starts after you confirm the client agreed. You remain responsible for any consent your professional order requires.</p>
+
+    <h2 data-en="What does the AI see? Is it used for training?" data-fr="Que voit l’IA? Sert-elle à l’entraînement?">What does the AI see? Is it used for training?</h2>
+    <p data-en="Only check-ins from clients who turned AI on, plus documents or session transcripts you ask it to write up. It is processed by Anthropic, and under our agreement it is not used to train their models. Summaries are a neutral read for you, never a diagnosis: your judgment always decides." data-fr="Seulement les suivis des clients qui ont activé l’IA, ainsi que les documents ou transcriptions de séance que vous lui demandez de rédiger. Le traitement est fait par Anthropic et, selon notre entente, ce contenu n’est pas utilisé pour entraîner ses modèles. Les résumés sont une lecture neutre pour vous, jamais un diagnostic : votre jugement décide toujours.">Only check-ins from clients who turned AI on, plus documents or session transcripts you ask it to write up. It is processed by Anthropic, and under our agreement it is not used to train their models. Summaries are a neutral read for you, never a diagnosis: your judgment always decides.</p>
+
+    <h2 data-en="Are session recordings kept?" data-fr="Les enregistrements de séance sont-ils conservés?">Are session recordings kept?</h2>
+    <p data-en="No. When you record an appointment or dictate notes, the audio is transcribed, the note is drafted, and then the audio and transcript are dropped. Only the note you choose to keep in your own records remains." data-fr="Non. Quand vous enregistrez un rendez-vous ou dictez des notes, l’audio est transcrit, la note est rédigée, puis l’audio et la transcription sont supprimés. Seule la note que vous choisissez de garder dans vos propres dossiers demeure.">No. When you record an appointment or dictate notes, the audio is transcribed, the note is drafted, and then the audio and transcript are dropped. Only the note you choose to keep in your own records remains.</p>
+
+    <h2 data-en="How are accounts protected?" data-fr="Comment les comptes sont-ils protégés?">How are accounts protected?</h2>
+    <p data-en="Every connection is encrypted (HTTPS with HSTS). Passwords are stored hashed, never in plain text. Professionals can turn on two-step sign-in with an authenticator app. Voice and photo files open only through links that expire, and sign-in attempts are rate limited." data-fr="Chaque connexion est chiffrée (HTTPS avec HSTS). Les mots de passe sont conservés sous forme hachée, jamais en clair. Les professionnels peuvent activer la connexion en deux étapes avec une application d’authentification. Les fichiers vocaux et les photos ne s’ouvrent que par des liens qui expirent, et les tentatives de connexion sont limitées.">Every connection is encrypted (HTTPS with HSTS). Passwords are stored hashed, never in plain text. Professionals can turn on two-step sign-in with an authenticator app. Voice and photo files open only through links that expire, and sign-in attempts are rate limited.</p>
+
+    <h2 data-en="Who can sign up as a professional?" data-fr="Qui peut s’inscrire comme professionnel?">Who can sign up as a professional?</h2>
+    <p data-en="Professionals in regulated fields give their licence or order number, and it is checked before their dashboard opens." data-fr="Les professionnels des domaines réglementés fournissent leur numéro de permis ou de membre de leur ordre, et il est vérifié avant l’ouverture de leur tableau de bord.">Professionals in regulated fields give their licence or order number, and it is checked before their dashboard opens.</p>
+
+    <h2 data-en="Can data be exported or deleted?" data-fr="Les données peuvent-elles être exportées ou supprimées?">Can data be exported or deleted?</h2>
+    <p data-en="Yes. Clients can export or delete their own history at any time. When you remove a client, you get a short window to download their record, then their check-ins, summaries, voice notes and photos are permanently deleted. When a clinic leaves, we delete or return its data on request." data-fr="Oui. Les clients peuvent exporter ou supprimer leur propre historique en tout temps. Quand vous retirez un client, vous avez un court délai pour télécharger son dossier, puis ses suivis, résumés, notes vocales et photos sont supprimés définitivement. Quand une clinique part, nous supprimons ou remettons ses données sur demande.">Yes. Clients can export or delete their own history at any time. When you remove a client, you get a short window to download their record, then their check-ins, summaries, voice notes and photos are permanently deleted. When a clinic leaves, we delete or return its data on request.</p>
+
+    <h2 data-en="What if something goes wrong?" data-fr="Et en cas d’incident?">What if something goes wrong?</h2>
+    <p data-en="If a security incident affects your clients' data, we tell you without undue delay, share what we know, and help with any notice you must give under the law." data-fr="Si un incident de sécurité touche les données de vos clients, nous vous en avisons sans délai indu, vous communiquons ce que nous savons et vous aidons pour tout avis que vous devez donner en vertu de la loi.">If a security incident affects your clients' data, we tell you without undue delay, share what we know, and help with any notice you must give under the law.</p>
+
+    <h2 data-en="Am I on call through Between?" data-fr="Suis-je de garde par l’entremise de Between?">Am I on call through Between?</h2>
+    <p data-en="No. Between is not a crisis service and nobody monitors check-ins in real time. A summary waits for your next appointment. If a client writes something that suggests risk, they see crisis resources right away, without waiting on anyone." data-fr="Non. Between n’est pas un service de crise et personne ne surveille les suivis en temps réel. Un résumé attend votre prochain rendez-vous. Si un client écrit quelque chose qui suggère un risque, il voit immédiatement des ressources d’aide, sans attendre après personne.">No. Between is not a crisis service and nobody monitors check-ins in real time. A summary waits for your next appointment. If a client writes something that suggests risk, they see crisis resources right away, without waiting on anyone.</p>
+  </div>
+
+  <h3 data-en="The legal versions" data-fr="Les versions juridiques">The legal versions</h3>
+  <ul class="docs">
+    <li><a href="/clinic-data-agreement.html"><b data-en="Clinic Data Agreement" data-fr="Entente sur les données de la clinique">Clinic Data Agreement</b><span data-en="Ready to sign, with the roles, safeguards and deletion terms." data-fr="Prête à signer, avec les rôles, les mesures de protection et les modalités de suppression.">Ready to sign, with the roles, safeguards and deletion terms.</span></a></li>
+    <li><a href="/school-data-agreement.html"><b data-en="School Data Agreement" data-fr="Entente sur les données scolaires">School Data Agreement</b><span data-en="The same, for schools, including consent for minors." data-fr="La même chose pour les écoles, y compris le consentement pour les mineurs.">The same, for schools, including consent for minors.</span></a></li>
+    <li><a href="/subprocessors.html"><b data-en="Subprocessors & data location" data-fr="Sous-traitants et lieu de traitement">Subprocessors &amp; data location</b><span data-en="Every provider, what it can access and where." data-fr="Chaque fournisseur, ce à quoi il a accès et où.">Every provider, what it can access and where.</span></a></li>
+    <li><a href="/privacy.html"><b data-en="Privacy Policy" data-fr="Politique de confidentialité">Privacy Policy</b><span data-en="What we collect, why, and your rights." data-fr="Ce que nous recueillons, pourquoi, et vos droits.">What we collect, why, and your rights.</span></a></li>
+    <li><a href="/terms.html"><b data-en="Terms of Service" data-fr="Conditions d’utilisation">Terms of Service</b><span data-en="Billing, cancellation and acceptable use." data-fr="Facturation, annulation et utilisation acceptable.">Billing, cancellation and acceptable use.</span></a></li>
+  </ul>
+
+  <p data-en="Something your clinic needs that isn't here, like a security questionnaire? Write to the person responsible for privacy, Jack Hazan." data-fr="Votre clinique a besoin de quelque chose qui n’est pas ici, comme un questionnaire de sécurité? Écrivez au responsable de la protection des renseignements personnels, Jack Hazan.">Something your clinic needs that isn't here, like a security questionnaire? Write to the person responsible for privacy, Jack Hazan.</p>
+  <div class="cta">
+    <a class="btn pri" href="mailto:owner@betweenpsych.com" data-en="Email about privacy" data-fr="Écrire au sujet de la confidentialité">Email about privacy</a>
+    <a class="btn sec" href="/#book-demo" data-en="Book a 15-minute demo" data-fr="Réserver une démo de 15 minutes">Book a 15-minute demo</a>
+  </div>
+
+  <footer>
+    <span>© 2026 Between</span><a href="/about" data-en="About" data-fr="À propos">About</a><a href="/features" data-en="All features" data-fr="Toutes les fonctionnalités">All features</a><a href="/works-with-your-emr" data-en="Works with your EMR" data-fr="Avec votre logiciel de clinique">Works with your EMR</a><a href="/privacy.html" data-en="Privacy" data-fr="Confidentialité">Privacy</a><a href="/terms.html" data-en="Terms" data-fr="Conditions">Terms</a>
+  </footer>
+</div>
+<script>
+(function(){
+  var qs; try { qs = new URLSearchParams(location.search); } catch(e){ qs = { get: function(){ return null; } }; }
+  var lang = qs.get('lang') || (function(){ try { return localStorage.getItem('btw_lang'); } catch(e){ return null; } })() || ((navigator.language || '').slice(0, 2) === 'fr' ? 'fr' : 'en');
+  if (lang !== 'fr') lang = 'en';
+  function render(){
+    document.documentElement.lang = lang;
+    document.title = (lang === 'fr' ? 'Confidentialité et sécurité pour les cliniques' : 'Privacy & security for clinics') + ' | Between';
+    document.querySelectorAll('[data-en]').forEach(function(el){ el.textContent = el.getAttribute('data-' + lang); });
+    var back = document.querySelector('.back'); if (back) back.setAttribute('href', lang === 'fr' ? '/fr' : '/');
+    var demo = document.querySelector('.btn.sec'); if (demo) demo.setAttribute('href', (lang === 'fr' ? '/fr' : '/') + '#book-demo');
+    document.querySelectorAll('.langs button').forEach(function(b){ b.classList.toggle('on', b.dataset.lang === lang); b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'); });
+  }
+  document.querySelectorAll('.langs button').forEach(function(b){ b.addEventListener('click', function(){ lang = b.dataset.lang; try { localStorage.setItem('btw_lang', lang); } catch(e){} render(); }); });
+  render();
+})();
+</script>
+</body>
+</html>

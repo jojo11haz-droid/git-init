@@ -5566,6 +5566,7 @@ app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 // Who builds Between and how it treats data (public/about.html).
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'public', 'about.html')));
 app.get('/works-with-your-emr', (req, res) => res.sendFile(path.join(__dirname, 'public', 'works-with-your-emr.html')));
+app.get('/security', (req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')));
 // The link in check-in reminders: opens the client's check-in box (the page
 // asks them to sign in first if they aren't). No token in the link, so a
 // forwarded text can't open anyone's account.
