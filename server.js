@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
@@ -180,8 +181,15 @@ app.get('/api/public-config', (req, res) => {
   res.json({ stripe: stripeConfigured(), usdBilling: usdConfigured() });
 });
 
+// The home page and the app script split out of it (see baseIndexHtml).
+app.get(['/', '/index.html'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.type('html').send(baseIndexHtml());
+});
+app.get(/^\/app\.[0-9a-f]{12}\.js$/, (req, res) => appJsHandler(req, res));
+
 app.use(express.static(path.join(__dirname, 'public'), {
-  cacheControl: false,                 // we set Cache-Control ourselves below
+  cacheControl: false,                // we set Cache-Control ourselves below
   setHeaders: (res, filePath) => {
     // The marketing site is a single index.html with everything inline. Never
     // cache it (no-store), so a new deploy always shows up immediately instead
@@ -5520,10 +5528,40 @@ function fieldAltUrls(p) {
   const base = (p === '/' || p === '/therapy') ? '' : p;
   return { altEn: SITE_URL + (base || '/'), altFr: SITE_URL + '/fr' + base };
 }
+// The page's big inline app script (over 1 MB) is served as its own file,
+// /app.<hash>.js, cached for a year. The HTML itself stays no-store (so a
+// deploy shows up at once), but a returning visitor, or a move from /physio to
+// /fr/physio, no longer downloads the script again. The name is a hash of the
+// script, so every deploy that changes it gets a new name. The source stays
+// one index.html: the split happens here, once, when the server starts. The
+// external <script> sits exactly where the inline one was, so it runs in the
+// same order; a preload in <head> starts the download early.
 let _indexHtmlCache = null;
+let _appJs = null;
 function baseIndexHtml() {
-  if (_indexHtmlCache === null) _indexHtmlCache = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
-  return _indexHtmlCache;
+  if (_indexHtmlCache !== null) return _indexHtmlCache;
+  const raw = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  let best = null;
+  const re = /<script>([\s\S]*?)<\/script>/g;
+  let m;
+  while ((m = re.exec(raw))) if (!best || m[1].length > best.code.length) best = { at: m.index, tagLen: m[0].length, code: m[1] };
+  if (!best || best.code.length < 100000) { _indexHtmlCache = raw; return raw; }
+  const hash = crypto.createHash('sha256').update(best.code).digest('hex').slice(0, 12);
+  const src = '/app.' + hash + '.js';
+  _appJs = { name: src, code: best.code };
+  let html = raw.slice(0, best.at) + '<script src="' + src + '"></script>' + raw.slice(best.at + best.tagLen);
+  const headEnd = html.indexOf('</head>');
+  if (headEnd > 0) html = html.slice(0, headEnd) + '<link rel="preload" href="' + src + '" as="script">\n' + html.slice(headEnd);
+  _indexHtmlCache = html;
+  return html;
+}
+function appJsHandler(req, res) {
+  baseIndexHtml();
+  if (!_appJs) return res.status(404).end();
+  // An old hash (a page loaded just before a deploy) still gets working code,
+  // but only cached briefly, so it can't pin a stale script for a year.
+  res.setHeader('Cache-Control', req.path === _appJs.name ? 'public, max-age=31536000, immutable' : 'no-store');
+  res.type('application/javascript').send(_appJs.code);
 }
 const _fieldHtmlCache = new Map();
 app.get(FIELD_PATHS, (req, res) => {

@@ -203,7 +203,29 @@ try {
     const split = (html) => { const i = html.indexOf('</head>'); return [html.slice(0, i), html.slice(i)]; };
     const decode = (s) => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     const tag = (head, re) => { const m = head.match(re); return m ? decode(m[1]) : null; };
-    const [baseHead, baseBody] = split(indexSrc);
+    // The server serves index.html with its big app script split out to a
+    // cached /app.<hash>.js (see baseIndexHtml in server.js). Check that the
+    // split loses nothing: putting the script back gives the source file.
+    const served = (await get('/')).body;
+    {
+      const m = served.match(/<script src="(\/app\.[0-9a-f]{12}\.js)"><\/script>/);
+      const problems = [];
+      if (!m) problems.push('no <script src="/app.<hash>.js"> in the served page');
+      else {
+        const js = await fetch(base + m[1]);
+        const code = await js.text();
+        if (js.status !== 200) problems.push(m[1] + ' → ' + js.status);
+        if (!/javascript/.test(js.headers.get('content-type') || '')) problems.push('content-type ' + js.headers.get('content-type'));
+        if (!/immutable/.test(js.headers.get('cache-control') || '')) problems.push('not cached long-term: ' + js.headers.get('cache-control'));
+        const rebuilt = served.replace('<link rel="preload" href="' + m[1] + '" as="script">\n', '').replace(m[0], () => '<script>' + code + '</script>');
+        if (rebuilt !== indexSrc) problems.push('served page + script ≠ index.html');
+        if (!served.includes('<link rel="preload" href="' + m[1] + '" as="script">')) problems.push('no preload in <head>');
+        if (served.length > indexSrc.length / 3) problems.push('served page still ' + served.length + ' bytes');
+      }
+      if (problems.length) fail('GET / app script split — ' + problems.join('; '));
+      else ok(`GET / → ${Math.round(served.length / 1024)} KB page + cached ${m[1]}, rebuilds index.html exactly`);
+    }
+    const [baseHead, baseBody] = split(served);
     const defaultDesc = tag(baseHead, /<meta name="description" content="([^"]*)"/);
     // path → a word its title or description must contain
     const FIELDS = {
@@ -268,7 +290,7 @@ try {
       else ok(`GET ${frPath} → French title, lang, canonical, hreflang`);
     }
     const t = await get('/therapy');
-    if (t.status === 200 && t.body === indexSrc) ok('GET /therapy → base page (canonical "/")');
+    if (t.status === 200 && t.body === served) ok('GET /therapy → base page (canonical "/")');
     else fail('GET /therapy → ' + t.status + ' (expected the unmodified base page)');
 
     // sitemap.xml: lists every field page (not /therapy — it canonicalizes to
