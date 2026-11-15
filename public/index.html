@@ -678,6 +678,12 @@
   .btw-pro-btn:hover{opacity:.92;}
   .btw-pro-status{font-size:11.5px;color:var(--ink-soft);}
   .btw-week-summary{background:var(--moss-light);border:none;border-radius:13px;padding:13px 16px;margin-bottom:12px;}
+  .btw-allpts{display:flex;align-items:center;gap:8px;width:100%;margin:2px 0 10px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;}
+  .btw-allpts .n{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);font-weight:400;}
+  .btw-allpts svg{margin-left:auto;color:var(--ink-soft);transition:transform .2s;}
+  .btw-allpts[aria-expanded="true"] svg{transform:rotate(180deg);}
+  .btw-today-empty{font-size:13px;color:var(--ink-soft);line-height:1.5;padding:2px 2px 4px;}
+  .btw-today-fill{font:inherit;font-size:13px;font-weight:600;background:none;border:0;color:var(--moss);text-decoration:underline;cursor:pointer;padding:0;}
   .btw-firstweek{border:1px solid var(--moss);border-radius:14px;padding:13px 16px;margin-bottom:12px;background:var(--panel);}
   .btw-fw-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .btw-fw-head b{font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--ink);}
@@ -4503,6 +4509,14 @@
         <div class="btw-saved-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
         <div><div class="btw-saved-big" id="btwSavedBig"></div><div class="btw-saved-break" id="btwSavedBreak"></div></div>
       </div>
+      <div class="btw-today" id="btwTodayRoster" style="display:none;">
+        <div class="btw-today-head">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <strong id="btwTodayTitle">In clinic today</strong>
+          <span class="btw-today-count" id="btwTodayCount"></span>
+        </div>
+        <div class="btw-today-list" id="btwTodayList"></div>
+      </div>
       <div class="btw-today btw-needs" id="btwNeeds" style="display:none;">
         <div class="btw-today-head">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -4512,27 +4526,7 @@
         <div class="btw-today-list" id="btwNeedsList"></div>
         <label class="btw-needs-mail" id="btwNeedsMailRow"><input type="checkbox" id="btwNeedsMail"> <span id="btwNeedsMailLbl">Email me this list each morning, only on days someone needs me</span></label>
       </div>
-      <div class="btw-today" id="btwTodayRoster" style="display:none;">
-        <div class="btw-today-head">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <strong id="btwTodayTitle">In clinic today</strong>
-          <span class="btw-today-count" id="btwTodayCount"></span>
-        </div>
-        <div class="btw-today-list" id="btwTodayList"></div>
-      </div>
 
-      <div class="btw-prep" id="btwCaseDigest" style="display:none;">
-        <div class="btw-prep-head">
-          <div class="btw-prep-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
-            <span id="btwCaseDigestTitle">Caseload this week</span>
-          </div>
-          <button type="button" class="btw-prep-gen" id="btwCaseDigestGen">Summarize</button>
-        </div>
-        <div class="btw-prep-body" id="btwCaseDigestBody"></div>
-      </div>
-
-      <div class="btw-outcomes" id="btwOutcomes" style="display:none;"></div>
 
       <div class="btw-caseload-controls" id="btwCaseloadControls" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;">
         <div class="btw-patient-search">
@@ -4549,6 +4543,19 @@
       </div>
 
       <div class="btw-patient-list" id="btwPatientList"></div>
+
+      <div class="btw-prep" id="btwCaseDigest" style="display:none;">
+        <div class="btw-prep-head">
+          <div class="btw-prep-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"></path><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7L19 15z"></path></svg>
+            <span id="btwCaseDigestTitle">Caseload this week</span>
+          </div>
+          <button type="button" class="btw-prep-gen" id="btwCaseDigestGen">Summarize</button>
+        </div>
+        <div class="btw-prep-body" id="btwCaseDigestBody"></div>
+      </div>
+
+      <div class="btw-outcomes" id="btwOutcomes" style="display:none;"></div>
 
       <div id="btwAlertFeed" style="display:none;margin-bottom:16px;"></div>
 
@@ -6115,6 +6122,9 @@
     "Since you started":"Depuis vos débuts",
     "Private and secure by default. Patients see and control their own data and AI analysis is opt-in and off.":"Privé et sécurisé par défaut. Les patients voient et contrôlent leurs propres données, et l'analyse par l'IA est facultative et désactivée au départ.",
     "Your first week":"Votre première semaine",
+    "All patients":"Tous les patients",
+    "Search patients":"Rechercher un patient",
+    "No one on today’s schedule yet. Fill it from your schedule, or set a next-session date on someone.":"Personne à l’horaire d’aujourd’hui pour l’instant. Remplissez-le à partir de votre horaire, ou indiquez une date de prochaine séance pour quelqu’un.",
     "Three small steps to get going: your first check-in, three different days, and a daily reminder. It goes away once you are done.":"Trois petites étapes pour commencer : votre premier suivi, trois jours différents et un rappel quotidien. La carte disparaît une fois terminé.",
     "After three weeks, see how things have changed since your first weeks, in plain words.":"Après trois semaines, voyez en mots simples ce qui a changé depuis vos premières semaines.",
     "A “Replied” tag means they answered your message.":"L’étiquette « A répondu » veut dire que la personne a répondu à votre message.",
@@ -16724,6 +16734,11 @@
     if(!controls || !el) return;
     if(!state.patients.length){ controls.style.display = 'none'; return; }
     controls.style.display = 'flex';
+    // Search only earns its place once there are more than a handful of people.
+    const sw = controls.querySelector('.btw-patient-search');
+    if(sw) sw.style.display = (state.patients.length > 6 || caseloadSearch) ? '' : 'none';
+    const si = document.getElementById('btwPatientSearch');
+    if(si){ const ph = t('Search patients'); if(si.getAttribute('placeholder') !== ph){ si.setAttribute('placeholder', ph); si.setAttribute('aria-label', ph); } }
     const flagged = state.patients.filter(p=>p.has_recent_risk).length;
     const active = state.patients.filter(p=>(p.new_check_in_count||0)>0);
     const totalNew = active.reduce((s,p)=>s+(p.new_check_in_count||0),0);
@@ -16750,7 +16765,18 @@
     var card = document.getElementById('btwTodayRoster'); if(!card) return;
     var today = _btwToday();
     var todays = (state.patients||[]).filter(function(p){ return !p.left_at && _btwSessDate(p) === today; });
-    if(!todays.length){ card.style.display = 'none'; return; }
+    if(!todays.length){
+      // A big caseload leads with the schedule, so say how to fill it.
+      var nAll = (state.patients||[]).filter(function(p){ return !p.left_at; }).length;
+      if(nAll <= ALL_FOLD_AT){ card.style.display = 'none'; return; }
+      card.style.display = '';
+      var tt = document.getElementById('btwTodayTitle'); if(tt) tt.textContent = t('In clinic today');
+      var cn = document.getElementById('btwTodayCount'); if(cn) cn.textContent = '';
+      var ls = document.getElementById('btwTodayList');
+      ls.innerHTML = '<div class="btw-today-empty">' + esc(t('No one on today’s schedule yet. Fill it from your schedule, or set a next-session date on someone.')) + ' <button type="button" class="btw-today-fill">' + esc(t('Fill today from a schedule')) + '</button></div>';
+      var fb = ls.querySelector('.btw-today-fill'); if(fb) fb.addEventListener('click', function(){ var b = document.getElementById('btwScheduleBtn'); if(b) b.click(); });
+      return;
+    }
     var rank = { high:0, mid:1, good:2, none:3 };
     todays.sort(function(a,b){ var r = (rank[patientColor(a)]||3) - (rank[patientColor(b)]||3); return r !== 0 ? r : String(a.display_name||'').localeCompare(String(b.display_name||'')); });
     card.style.display = '';
@@ -16779,7 +16805,7 @@
     digest:{ en:['caseload summary','caseload summaries'], fr:['résumé de clientèle','résumés de clientèle'] },
     needs_email:{ en:['morning triage email','morning triage emails'], fr:['courriel de tri du matin','courriels de tri du matin'] },
     program_item:{ en:['program item written','program items written'], fr:['élément de programme rédigé','éléments de programme rédigés'] },
-    summary:{ en:['check-in summarised','check-ins summarised'], fr:['suivi résumé','suivis résumés'] },
+    summary:{ en:['check-in summarized','check-ins summarized'], fr:['suivi résumé','suivis résumés'] },
     report:{ en:['report drafted','reports drafted'], fr:['rapport rédigé','rapports rédigés'] },
     program_review:{ en:['program review','program reviews'], fr:['révision de programme','révisions de programme'] }
   };
@@ -18165,6 +18191,7 @@
     setTxt('btwAccTimelinePrev', n ? (n + ' ' + (n === 1 ? t('check-in') : t('check-ins'))) : '');
   }
 
+  const ALL_FOLD_AT = 12; // more people than this: the full list starts folded
   function renderPatientList(){
     const el = document.getElementById('btwPatientList');
     renderCaseloadSummary();
@@ -18217,7 +18244,21 @@
         return header + grp.map(cardHtml).join('');
       }).join('');
     }
-    el.innerHTML = cards + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
+    // A big caseload folds the full list away under "All patients (N)":
+    // Today, Needs you and search come first. Search results and a picked
+    // status colour always show. Small caseloads keep the list open.
+    const nAll = state.patients.filter(p=>!p.left_at).length;
+    let foldOpen = nAll <= ALL_FOLD_AT;
+    try { const v = localStorage.getItem('btw_allpts_open'); if(v === '1') foldOpen = true; else if(v === '0' && nAll > ALL_FOLD_AT) foldOpen = false; } catch(e){}
+    const showList = foldOpen || !!_q || !!colorFilter;
+    let foldHead = '';
+    if(nAll > ALL_FOLD_AT && !_q && !colorFilter){
+      foldHead = `<button type="button" class="btw-allpts" id="btwAllPts" aria-expanded="${foldOpen}">${esc(t('All patients'))} <span class="n">${nAll}</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>`;
+    }
+    if(!showList) cards = '';
+    el.innerHTML = foldHead + cards + `<button class="btw-add-patient-card" id="btwAddPatient"><span style="font-size:18px;">+</span>${esc(t('Add patient'))}</button>`;
+    const fh = document.getElementById('btwAllPts');
+    if(fh) fh.addEventListener('click', function(){ try { localStorage.setItem('btw_allpts_open', foldOpen ? '0' : '1'); } catch(e){} renderPatientList(); });
     el.querySelectorAll('.btw-patient-card').forEach(card=>{
       card.addEventListener('click', ()=>{
         state.selectedPatientId = card.dataset.pid;
