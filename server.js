@@ -5480,17 +5480,45 @@ const FIELD_HEAD_TAGS = [
   [/(<meta property="og:image:alt" content=")[^"]*(")/, 'title'],
   [/(<meta name="twitter:title" content=")[^"]*(")/, 'title'],
   [/(<meta name="twitter:description" content=")[^"]*(")/, 'description'],
-  [/(<meta name="twitter:image" content=")[^"]*(")/, 'image']
+  [/(<meta name="twitter:image" content=")[^"]*(")/, 'image'],
+  [/(<meta property="og:locale" content=")[^"]*(")/, 'locale'],
+  [/(<link rel="alternate" hreflang="en" href=")[^"]*(")/, 'altEn'],
+  [/(<link rel="alternate" hreflang="fr" href=")[^"]*(")/, 'altFr'],
+  [/(<link rel="alternate" hreflang="x-default" href=")[^"]*(")/, 'altEn']
 ];
+// French copy of every field page, served at /fr, /fr/physio, … so French
+// searches in Quebec land on French pages. Must match FIELD_HEAD_FR in
+// index.html; scripts/app-tests.mjs fails if they drift. '/' is the home page.
+const FIELD_META_FR = {
+  '/': { title: 'Between | Suivis entre les séances pour la psychothérapie', description: 'Les clients envoient une courte note entre les séances, l’IA la résume et les psychothérapeutes voient la tendance avant la prochaine séance. Privé, basé sur le consentement et pas un service de crise.' },
+  '/individual': { title: 'Between | Suivis privés pour vous-même', description: 'Faites vos propres suivis entre les journées qui comptent. Between les rassemble en une tendance d’humeur et en thèmes qui reviennent, pour qu’une période difficile devienne visible. Visible par vous seulement et pas un service de crise.' },
+  '/physio': { title: 'Between | Suivis de la douleur entre les visites en physiothérapie', description: 'Les patients indiquent où ils ont mal sur une carte du corps entre les visites. Between le résume et les physiothérapeutes voient l’évolution de la douleur avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/kinesiology': { title: 'Between | Suivis entre les séances en kinésiologie', description: 'Les clients suivent leurs mouvements et leur douleur entre les séances. Between le résume et les kinésiologues voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/osteopathy': { title: 'Between | Suivis entre les visites en ostéopathie', description: 'Les patients notent leur douleur et leur récupération entre les traitements. Between le résume et les ostéopathes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/occupational-therapy': { title: 'Between | Suivis entre les visites en ergothérapie', description: 'Les patients notent comment vont leurs activités quotidiennes et leur récupération entre les visites, sur une carte du corps. Between le résume et les ergothérapeutes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/neuropsychology': { title: 'Between | Suivis entre les séances en neuropsychologie', description: 'Les patients notent comment vont leur concentration, leur mémoire, leur fatigue mentale et leur humeur entre les évaluations et les séances. Between le résume et les neuropsychologues voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/sports': { title: 'Between | Suivis entre les pratiques pour les équipes sportives', description: 'Les joueurs envoient un court suivi entre les pratiques, les matchs et les tournois. Between le résume et les entraîneurs voient comment va l’équipe avant la prochaine séance. Privé et basé sur le consentement.' },
+  '/fitness': { title: 'Between | Suivis entre les séances pour les entraîneurs personnels', description: 'Les clients font un suivi entre leurs entraînements. Between le résume et les entraîneurs personnels voient comment ils vont avant la prochaine séance. Privé et basé sur le consentement.' },
+  '/addiction': { title: 'Between | Suivis entre les rencontres pour les programmes de rétablissement', description: 'Les participants font un suivi entre les rencontres. Between le résume et les mentors voient comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
+  '/schools': { title: 'Between | Suivis entre les séances pour les écoles', description: 'Les élèves font un suivi entre les séances. Between le résume et le personnel scolaire voit comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
+  '/nutrition': { title: 'Between | Suivis entre les séances pour les nutritionnistes', description: 'Les clients font le point sur leur énergie, leurs envies et le déroulement du plan entre les séances. Between le résume et les nutritionnistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' }
+};
 function withFieldHead(html, vals) {
   const end = html.indexOf('</head>');
   if (end < 0) return html;
   let head = html.slice(0, end);
   for (const [re, key] of FIELD_HEAD_TAGS) {
+    if (vals[key] === undefined) continue;
     const v = escapeHtml(vals[key]);
     head = head.replace(re, (m, open, close) => open + v + close);
   }
+  if (vals.lang) head = head.replace(/<html lang="[^"]*"/, '<html lang="' + vals.lang + '"');
   return head + html.slice(end);
+}
+// The English and French URLs of one field page ('/' = home), for hreflang.
+function fieldAltUrls(p) {
+  const base = (p === '/' || p === '/therapy') ? '' : p;
+  return { altEn: SITE_URL + (base || '/'), altFr: SITE_URL + '/fr' + base };
 }
 let _indexHtmlCache = null;
 function baseIndexHtml() {
@@ -5508,9 +5536,26 @@ app.get(FIELD_PATHS, (req, res) => {
   if (!_fieldHtmlCache.has(req.path)) {
     // Link-preview card rendered by scripts/og-images.mjs into public/og/.
     const image = SITE_URL + '/og' + req.path + '.png';
-    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path, image }));
+    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path, image, ...fieldAltUrls(req.path) }));
   }
   res.type('html').send(_fieldHtmlCache.get(req.path));
+});
+// French versions: /fr (home), /fr/physio, … The page starts in French (the SPA
+// reads the /fr prefix) and its <head> is French with lang="fr", a canonical
+// on the /fr URL and hreflang links back to the English page.
+const FR_PATHS = ['/fr', ...FIELD_PATHS.map(p => '/fr' + p)];
+app.get(FR_PATHS, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const p = req.path.replace(/\/+$/, '');
+  const field = (p === '/fr' || p === '/fr/therapy') ? '/' : p.slice(3);
+  const meta = FIELD_META_FR[field];
+  if (!meta) return res.type('html').send(baseIndexHtml());
+  if (!_fieldHtmlCache.has(p)) {
+    const alts = fieldAltUrls(field);
+    const image = SITE_URL + '/og' + (field === '/' ? '/therapy' : field) + '.png';
+    _fieldHtmlCache.set(p, withFieldHead(baseIndexHtml(), { ...meta, url: alts.altFr, image, locale: 'fr_CA', lang: 'fr', ...alts }));
+  }
+  res.type('html').send(_fieldHtmlCache.get(p));
 });
 
 // Simple health check — useful for most hosting platforms' uptime checks
