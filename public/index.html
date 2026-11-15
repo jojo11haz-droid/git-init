@@ -1350,8 +1350,12 @@
   .btw-hep-rule b,.btw-hep-steps b{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin-right:4px;}
   .btw-hep-steps{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.45;}
   .btw-allfeat{text-align:center;margin:6px 0 30px;font-size:15px;}
-  .btw-allfeat a{color:var(--moss);font-weight:600;text-decoration:none;border-bottom:1px solid var(--moss-light);padding-bottom:2px;}
-  .btw-allfeat a:hover{border-bottom-color:var(--moss);}
+  .btw-allfeat a{display:inline-flex;align-items:center;gap:8px;color:var(--moss);font-weight:600;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:10px 18px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:border-color .18s, box-shadow .18s;}
+  .btw-allfeat a span{display:inline-block;transition:transform .18s;}
+  .btw-allfeat a:hover{border-color:var(--moss);box-shadow:0 6px 18px -10px rgba(30,76,134,.5);}
+  .btw-allfeat a:hover span{transform:translateX(3px);}
+  .btw-allfeat a:focus-visible{outline:2px solid var(--moss);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){ .btw-allfeat a, .btw-allfeat a span{transition:none;} }
   .btw-msg-to{font-size:12.5px;color:var(--amber);margin:-2px 0 8px;}
   .btw-msg-to:empty{display:none;}
   .btw-msg-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-soft);}
