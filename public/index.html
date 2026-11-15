@@ -14000,13 +14000,73 @@
     body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
     engOverlay.style.display = 'flex';
     try{
-      const [overview, engagement] = await Promise.all([
+      const [overview, engagement, byPro] = await Promise.all([
         api('GET', '/api/admin/overview').catch(()=>null),
-        api('GET', '/api/admin/engagement')
+        api('GET', '/api/admin/engagement'),
+        api('GET', '/api/admin/engagement/by-clinician').catch(()=>null)
       ]);
-      body.innerHTML = (overview ? buildOverviewHtml(overview) : '') + renderEngagement(engagement);
+      body.innerHTML = (overview ? buildOverviewHtml(overview) : '') + (byPro ? '<div id="btwEngByPro"></div><div style="height:1px;background:var(--line);margin:16px 0;"></div>' : '') + renderEngagement(engagement);
+      if(byPro){ _engPro = byPro; renderEngByPro(); }
     }
     catch(e){ err.textContent = e.message; body.innerHTML = ''; }
+  }
+  // Engagement per professional: clients, joined, active, check-ins, messages,
+  // last sign-in. Sort, search by name, and hide the owner's test accounts.
+  let _engPro = null, _engSort = 'active', _engQ = '', _engShowTest = false;
+  function engAgo(ts){
+    if(!ts) return '—';
+    const ms = Date.now() - Date.parse(ts);
+    if(ms < 3600e3) return Math.max(1, Math.round(ms / 60e3)) + 'm ago';
+    if(ms < 86400e3) return Math.round(ms / 3600e3) + 'h ago';
+    if(ms < 60 * 86400e3) return Math.round(ms / 86400e3) + 'd ago';
+    return new Date(ts).toLocaleDateString();
+  }
+  function renderEngByPro(){
+    const host = document.getElementById('btwEngByPro'); if(!host || !_engPro) return;
+    let rows = _engPro.filter(r => _engShowTest || !r.test);
+    const q = _engQ.trim().toLowerCase();
+    if(q) rows = rows.filter(r => ((r.name || '') + ' ' + (r.practice_name || '')).toLowerCase().indexOf(q) >= 0);
+    const by = { active: (a, b) => b.checkins_30d - a.checkins_30d || b.active_7d - a.active_7d || b.patients - a.patients,
+      clients: (a, b) => b.patients - a.patients || b.checkins_30d - a.checkins_30d,
+      newest: (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
+      quiet: (a, b) => (Date.parse(a.last_signin || 0) || 0) - (Date.parse(b.last_signin || 0) || 0) };
+    rows = rows.slice().sort(by[_engSort] || by.active);
+    const real = _engPro.filter(r => !r.test);
+    const withClients = real.filter(r => r.patients > 0).length, activeWeek = real.filter(r => r.active_7d > 0).length;
+    const status = function(r){
+      if(!r.licence_verified) return ['Needs review', 'var(--amber)'];
+      if(r.subscription_status === 'active') return ['Subscribed', 'var(--moss)'];
+      if(r.subscription_status === 'trialing') return ['Trial', 'var(--moss)'];
+      if(r.subscription_status === 'past_due' || r.subscription_status === 'unpaid') return ['Payment due', 'var(--clay)'];
+      if(r.subscription_status === 'canceled') return ['Cancelled', 'var(--ink-soft)'];
+      return ['Verified', 'var(--ink-soft)'];
+    };
+    let h = '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);margin:4px 0 8px;">By professional</div>'
+      + '<div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;"><strong>' + withClients + '</strong> of ' + real.length + ' have at least one client · <strong>' + activeWeek + '</strong> had a client check in this week</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">'
+      + '<input type="search" id="btwEngProQ" placeholder="Search by name" value="' + esc(_engQ) + '" style="flex:1;min-width:150px;font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);">'
+      + '<select id="btwEngProSort" style="font:inherit;font-size:12.5px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);">'
+      + [['active', 'Most check-ins'], ['clients', 'Most clients'], ['newest', 'Newest'], ['quiet', 'Least recently signed in']].map(o => '<option value="' + o[0] + '"' + (o[0] === _engSort ? ' selected' : '') + '>' + o[1] + '</option>').join('')
+      + '</select><label style="font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;"><input type="checkbox" id="btwEngProTest"' + (_engShowTest ? ' checked' : '') + '> Show test accounts</label></div>';
+    if(!rows.length) h += '<div style="font-size:12.5px;color:var(--ink-soft);">No professionals match.</div>';
+    h += rows.slice(0, 200).map(function(r){
+      const st = status(r), field = NOTIF_TYPE[r.discipline] || NOTIF_TYPE[r.account_type] || r.account_type || '';
+      const stat = function(v, l){ return '<span style="white-space:nowrap;"><strong style="color:var(--ink);">' + esc(String(v)) + '</strong> ' + esc(l) + '</span>'; };
+      return '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--panel);">'
+        + '<div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;"><strong style="font-size:14px;">' + esc(r.name || '') + '</strong>'
+        + (r.practice_name ? '<span style="font-size:12px;color:var(--ink-soft);">' + esc(r.practice_name) + '</span>' : '')
+        + '<span style="font-size:11.5px;color:var(--ink-soft);">' + esc(field) + (r.plan ? ' · ' + esc(r.plan.replace(/_/g, ' ')) : '') + '</span>'
+        + '<span style="margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:' + st[1] + ';">' + esc(st[0]) + (r.test ? ' · test' : '') + '</span></div>'
+        + '<div style="font-size:12px;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;">'
+        + stat(r.patients, r.patients === 1 ? 'client' : 'clients') + stat(r.joined, 'joined') + (r.pending ? stat(r.pending, 'invite pending') : '')
+        + stat(r.active_7d, 'active this week') + stat(r.checkins_30d, 'check-ins · 30d') + stat(r.messages_30d + '/' + r.replies_30d, 'messages/replies · 30d')
+        + '</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Signed in ' + esc(engAgo(r.last_signin)) + ' · last check-in ' + esc(engAgo(r.last_checkin)) + ' · joined ' + esc(new Date(r.created_at).toLocaleDateString()) + '</div></div>';
+    }).join('');
+    host.innerHTML = h;
+    const qi = document.getElementById('btwEngProQ');
+    qi.addEventListener('input', function(){ _engQ = qi.value; const pos = qi.selectionStart; renderEngByPro(); const n = document.getElementById('btwEngProQ'); if(n){ n.focus(); try { n.setSelectionRange(pos, pos); } catch(e){} } });
+    document.getElementById('btwEngProSort').addEventListener('change', function(e){ _engSort = e.target.value; renderEngByPro(); });
+    document.getElementById('btwEngProTest').addEventListener('change', function(e){ _engShowTest = e.target.checked; renderEngByPro(); });
   }
   function engKpi(label, value, sub){
     return '<div style="flex:1;min-width:120px;background:var(--moss-light);border-radius:12px;padding:12px 14px;">'

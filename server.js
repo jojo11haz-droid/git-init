@@ -36,7 +36,7 @@ import {
   storeContactMessage, listContactMessages,
   bumpSiteStat, siteStatsSummary, storeDemoRequest, listDemoRequests,
   storageStats, purgeOldMedia
-, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies, setPatientLang, setClinicianLang , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
+, addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies, setPatientLang, setClinicianLang, getEngagementByClinician , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
 import { sanitizeStat } from './sitestats.js';
 import { sendEmail, emailConfigured, emailFrom } from './email.js';
@@ -1639,6 +1639,21 @@ app.get('/api/admin/engagement', requireDb, requireAuth, requireOwner, async (re
   } catch (err) {
     console.error('Error loading engagement stats:', err);
     res.status(500).json({ error: 'Could not load engagement stats.' });
+  }
+});
+
+// Owner-only: engagement per professional (clients, joined, active, check-ins,
+// messages, last sign-in). Counts only. Owner/free-access accounts are marked.
+app.get('/api/admin/engagement/by-clinician', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    const rows = await getEngagementByClinician();
+    res.json(rows.map(r => {
+      const { email, ...rest } = r;
+      return { ...rest, email, test: isFreeAccess(email) };
+    }));
+  } catch (err) {
+    console.error('Error loading engagement by clinician:', err);
+    res.status(500).json({ error: 'Could not load engagement by professional.' });
   }
 });
 

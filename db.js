@@ -1799,6 +1799,51 @@ export async function getEngagementStats() {
 // Owner-only account overview — the business-side counts behind the product:
 // how many clinicians and patients, how many verified / subscribed, recent
 // signups, and clinicians by discipline. Counts only, no patient content.
+// Owner: engagement per professional — how many clients they have, how many
+// joined and check in, and how much they use Between. Counts only; nothing
+// from inside a check-in or a message.
+export async function getEngagementByClinician() {
+  const { rows } = await pool.query(`
+    WITH pt AS (
+      SELECT clinician_id,
+        count(*) FILTER (WHERE left_at IS NULL)::int AS patients,
+        count(*) FILTER (WHERE left_at IS NULL AND invite_status = 'accepted')::int AS joined,
+        count(*) FILTER (WHERE left_at IS NULL AND invite_status <> 'accepted')::int AS pending
+      FROM patients WHERE clinician_id IS NOT NULL GROUP BY clinician_id
+    ), ci AS (
+      SELECT p.clinician_id,
+        count(DISTINCT c.patient_id) FILTER (WHERE c.submitted_at > now() - interval '7 days')::int AS active_7d,
+        count(DISTINCT c.patient_id) FILTER (WHERE c.submitted_at > now() - interval '30 days')::int AS active_30d,
+        count(*) FILTER (WHERE c.submitted_at > now() - interval '7 days')::int AS checkins_7d,
+        count(*) FILTER (WHERE c.submitted_at > now() - interval '30 days')::int AS checkins_30d,
+        count(*)::int AS checkins_total,
+        max(c.submitted_at) AS last_checkin
+      FROM check_ins c JOIN patients p ON p.id = c.patient_id
+      WHERE p.clinician_id IS NOT NULL GROUP BY p.clinician_id
+    ), msg AS (
+      SELECT clinician_id,
+        count(*) FILTER (WHERE sender = 'clinician' AND created_at > now() - interval '30 days')::int AS messages_30d,
+        count(*) FILTER (WHERE sender = 'client' AND created_at > now() - interval '30 days')::int AS replies_30d
+      FROM clinician_messages GROUP BY clinician_id
+    ), ses AS (
+      SELECT clinician_id, max(created_at) AS last_signin FROM auth_sessions GROUP BY clinician_id
+    )
+    SELECT c.id, c.name, c.email, c.practice_name, c.account_type, c.discipline, c.plan, c.subscription_status,
+      c.licence_verified, c.created_at,
+      coalesce(pt.patients, 0) AS patients, coalesce(pt.joined, 0) AS joined, coalesce(pt.pending, 0) AS pending,
+      coalesce(ci.active_7d, 0) AS active_7d, coalesce(ci.active_30d, 0) AS active_30d,
+      coalesce(ci.checkins_7d, 0) AS checkins_7d, coalesce(ci.checkins_30d, 0) AS checkins_30d,
+      coalesce(ci.checkins_total, 0) AS checkins_total, ci.last_checkin,
+      coalesce(msg.messages_30d, 0) AS messages_30d, coalesce(msg.replies_30d, 0) AS replies_30d,
+      ses.last_signin
+    FROM clinicians c
+    LEFT JOIN pt ON pt.clinician_id = c.id LEFT JOIN ci ON ci.clinician_id = c.id
+    LEFT JOIN msg ON msg.clinician_id = c.id LEFT JOIN ses ON ses.clinician_id = c.id
+    ORDER BY coalesce(ci.checkins_30d, 0) DESC, coalesce(pt.patients, 0) DESC, c.created_at DESC
+    LIMIT 500`);
+  return rows;
+}
+
 export async function getOwnerOverview() {
   const counts = (await pool.query(`
     SELECT
