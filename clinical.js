@@ -157,6 +157,99 @@ export function sanitizeExercisesDone(raw, validIds) {
 // "Did you do your exercises?" when the program lives in another app.
 export const EXERCISE_STATUSES = ['yes', 'some', 'no'];
 export function sanitizeExerciseStatus(v) { return EXERCISE_STATUSES.includes(v) ? v : null; }
+// --- AI consent for check-in data ------------------------------------------
+// The check-ins an AI may read for this client: none unless the client has AI
+// summaries on now, and of those only check-ins sent while AI was on. Older
+// rows (before the per-check-in flag existed) count only if the AI processed
+// them at the time, or they carry no words at all (a score or body map only):
+// a check-in typed while AI was off has its words stored as-is, so it stays out.
+export function aiCheckInsFor(patient, checkIns) {
+  if (!patient || !patient.ai_consent_enabled) return [];
+  return (checkIns || []).filter(c => c.ai_consent === true || (c.ai_consent == null && (!!c.model_version || !c.raw_text)));
+}
+
+// --- Plan → check-ins ------------------------------------------------------
+// Up to 3 short yes / partly / no questions the professional sets from their
+// plan; asked in every check-in until they replace them.
+export const PLAN_ANSWERS = ['yes', 'some', 'no'];
+export function sanitizePlanQuestions(input) {
+  const out = [];
+  for (const it of Array.isArray(input) ? input : []) {
+    const raw = typeof it === 'string' ? it : (it && typeof it.q === 'string' ? it.q : '');
+    const q = raw.replace(/[\u0000-\u001F\u007F<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140);
+    if (!q || out.some(o => o.q.toLowerCase() === q.toLowerCase())) continue;
+    const id = it && typeof it.id === 'string' && /^[a-z0-9]{4,12}$/.test(it.id) ? it.id : Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+    out.push({ id, q });
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+// The client's answers, kept only for questions currently set; the question
+// text is stored with the answer so it still reads right after a change.
+export function sanitizePlanAnswers(answers, questions) {
+  const qs = Array.isArray(questions) ? questions : [];
+  const out = [];
+  for (const a of Array.isArray(answers) ? answers : []) {
+    if (!a || typeof a.id !== 'string' || !PLAN_ANSWERS.includes(a.a)) continue;
+    const q = qs.find(x => x && x.id === a.id);
+    if (!q || out.some(o => o.id === a.id)) continue;
+    out.push({ id: q.id, q: q.q, a: a.a });
+  }
+  return out;
+}
+
+// --- "Since last visit" ----------------------------------------------------
+// Numbers for the chart note, worked out here rather than by an AI, so they
+// are exact and can be shown even for a client who has AI off.
+const areaName = key => areaLabel(key).toLowerCase();
+export function visitStats({ checkIns, exercises, since, pain, lang, now }) {
+  const fr = lang === 'fr';
+  const t = now ? new Date(now).getTime() : Date.now();
+  const startMs = since ? new Date(since).getTime() : t - 28 * 86400000;
+  const fmtDay = d => new Date(d).toLocaleDateString(fr ? 'fr-CA' : 'en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const head = since ? (fr ? `Depuis la dernière visite (${fmtDay(since)})` : `Since last visit (${fmtDay(since)})`) : (fr ? '4 dernières semaines' : 'Last 4 weeks');
+  const all = (checkIns || []).filter(c => c && c.submitted_at);
+  const win = all.filter(c => new Date(c.submitted_at).getTime() > startMs).sort((a, b) => new Date(a.submitted_at) - new Date(b.submitted_at));
+  const lines = [];
+  if (!win.length) return { head, lines: [fr ? 'Aucun suivi pendant cette période.' : 'No check-ins in this period.'], count: 0 };
+  lines.push(fr ? `${win.length} suivi${win.length > 1 ? 's' : ''}` : `${win.length} check-in${win.length > 1 ? 's' : ''}`);
+  const word = pain ? (fr ? 'douleur' : 'pain') : (fr ? 'humeur' : 'mood');
+  const sc = win.filter(c => c.mood_score != null).map(c => Number(c.mood_score));
+  if (sc.length === 1) lines.push(`${word} ${sc[0]}/10`);
+  else if (sc.length > 1) lines.push(`${word} ${sc[0]} → ${sc[sc.length - 1]}/10 (${fr ? 'écart' : 'range'} ${Math.min(...sc)}–${Math.max(...sc)})`);
+  // Body areas marked, and which are new compared with the 4 weeks before.
+  const keysIn = list => { const s = new Set(); list.forEach(c => { if (c.pain_map && typeof c.pain_map === 'object') Object.keys(c.pain_map).forEach(k => s.add(k)); }); return s; };
+  const inWin = keysIn(win);
+  if (inWin.size) {
+    const before = keysIn(all.filter(c => { const x = new Date(c.submitted_at).getTime(); return x <= startMs && x > startMs - 28 * 86400000; }));
+    const fresh = [...inWin].filter(k => !before.has(k));
+    if (fr) lines.push(`${inWin.size} zone${inWin.size > 1 ? 's' : ''} marquée${inWin.size > 1 ? 's' : ''}${fresh.length ? ` (dont ${fresh.length} nouvelle${fresh.length > 1 ? 's' : ''})` : ''}`);
+    else lines.push(`areas: ${[...inWin].slice(0, 5).map(k => areaName(k)).join(', ')}${fresh.length ? ` (new: ${fresh.slice(0, 3).map(k => areaName(k)).join(', ')})` : ''}`);
+  }
+  // Program completion: ticked in Between, or "did it?" for another app.
+  const active = (exercises || []).filter(e => !e.archived_at);
+  if (active.length) {
+    const any = win.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.length).length;
+    const per = active.slice(0, 4).map(e => `${e.name} ${win.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length}/${win.length}`).join(', ');
+    lines.push(fr ? `programme fait dans ${any} suivi${any > 1 ? 's' : ''} sur ${win.length} (${per})` : `program done in ${any} of ${win.length} check-ins (${per})`);
+  }
+  const ext = win.filter(c => c.exercise_status);
+  if (ext.length) {
+    const n = v => ext.filter(c => c.exercise_status === v).length;
+    lines.push(fr ? `exercices (autre application) : oui ${n('yes')} · en partie ${n('some')} · non ${n('no')}` : `exercises (other app): yes ${n('yes')} · partly ${n('some')} · no ${n('no')}`);
+  }
+  // Answers to the professional's plan questions.
+  const byQ = new Map();
+  win.forEach(c => (Array.isArray(c.plan_answers) ? c.plan_answers : []).forEach(a => {
+    if (!a || !a.id) return;
+    const r = byQ.get(a.id) || { q: a.q, yes: 0, some: 0, no: 0 };
+    if (PLAN_ANSWERS.includes(a.a)) r[a.a]++;
+    byQ.set(a.id, r);
+  }));
+  byQ.forEach(r => lines.push(fr ? `« ${r.q} » : oui ${r.yes} · en partie ${r.some} · non ${r.no}` : `"${r.q}": yes ${r.yes} · partly ${r.some} · no ${r.no}`));
+  return { head, lines, count: win.length };
+}
+
 // The name of that app, as the professional typed it (e.g. "Wibbi").
 export function sanitizeAppName(v) {
   return typeof v === 'string' ? v.replace(/[\u0000-\u001F\u007F<>]/g, '').trim().slice(0, 40) : '';
