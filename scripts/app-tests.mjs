@@ -206,6 +206,10 @@ try {
     // The server serves index.html with its big app script split out to a
     // cached /app.<hash>.js (see baseIndexHtml in server.js). Check that the
     // split loses nothing: putting the script back gives the source file.
+    // Each page's own field copy (field-copy.js) sits between FIELD_COPY
+    // markers, with its FAQ as JSON-LD in <head>; take both out to compare
+    // the rest of the page.
+    const unCopy = (html) => html.replace(/<!--FIELD_COPY-->[\s\S]*?<!--\/FIELD_COPY-->/, '<!--FIELD_COPY--><!--/FIELD_COPY-->').replace(/<script type="application\/ld\+json" id="btwFieldFaq">[\s\S]*?<\/script>\n/, '');
     const served = (await get('/')).body;
     {
       const m = served.match(/<script src="(\/app\.[0-9a-f]{12}\.js)"><\/script>/);
@@ -217,7 +221,7 @@ try {
         if (js.status !== 200) problems.push(m[1] + ' → ' + js.status);
         if (!/javascript/.test(js.headers.get('content-type') || '')) problems.push('content-type ' + js.headers.get('content-type'));
         if (!/immutable/.test(js.headers.get('cache-control') || '')) problems.push('not cached long-term: ' + js.headers.get('cache-control'));
-        const rebuilt = served.replace('<link rel="preload" href="' + m[1] + '" as="script">\n', '').replace(m[0], () => '<script>' + code + '</script>');
+        const rebuilt = unCopy(served).replace('<link rel="preload" href="' + m[1] + '" as="script">\n', '').replace(m[0], () => '<script>' + code + '</script>');
         if (rebuilt !== indexSrc) problems.push('served page + script ≠ index.html');
         if (!served.includes('<link rel="preload" href="' + m[1] + '" as="script">')) problems.push('no preload in <head>');
         if (served.length > indexSrc.length / 3) problems.push('served page still ' + served.length + ' bytes');
@@ -225,7 +229,30 @@ try {
       if (problems.length) fail('GET / app script split — ' + problems.join('; '));
       else ok(`GET / → ${Math.round(served.length / 1024)} KB page + cached ${m[1]}, rebuilds index.html exactly`);
     }
-    const [baseHead, baseBody] = split(served);
+    const [baseHead, baseBody] = split(unCopy(served));
+    // Every field page, English and French, carries its own copy: a heading
+    // nobody else has, the FAQ as structured data, and links to the others.
+    {
+      const seen = new Map(), problems = [];
+      const home = served.match(/data-fc="([^"]*)"/);
+      if (!home || home[1] !== '/|en' || !/btw-fieldcopy-fields/.test(served)) problems.push('/ has no field overview');
+      for (const p of ['/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/sports', '/fitness', '/addiction', '/schools', '/nutrition']) {
+        for (const [url, l] of [[p, 'en'], ['/fr' + p, 'fr']]) {
+          const html = (await get(url)).body;
+          const tag = html.match(/data-fc="([^"]*)"/);
+          const h2 = (html.match(/<!--FIELD_COPY-->[\s\S]*?<h2>([^<]*)<\/h2>/) || [])[1];
+          if (!tag || tag[1] !== p + '|' + l) problems.push(url + ': copy tag ' + (tag && tag[1]));
+          if (!h2) problems.push(url + ': no heading');
+          else if (seen.has(h2)) problems.push(url + ': same heading as ' + seen.get(h2)); else seen.set(h2, url);
+          if (!/"@type":"FAQPage"/.test(split(html)[0])) problems.push(url + ': no FAQ structured data');
+          if ((html.match(/<ul class="btw-fieldcopy-links">/g) || []).length !== 1) problems.push(url + ': no links to other fields');
+        }
+      }
+      const api = await (await fetch(base + '/api/field-copy?path=/fr/nutrition&lang=fr')).json();
+      if (api.key !== '/nutrition' || !/ADIME/.test(api.html)) problems.push('/api/field-copy → ' + api.key);
+      if (problems.length) fail('field copy — ' + problems.join('; '));
+      else ok('field copy: 22 field pages each have their own heading, FAQ data and links; / has the overview');
+    }
     const defaultDesc = tag(baseHead, /<meta name="description" content="([^"]*)"/);
     // path → a word its title or description must contain
     const FIELDS = {
@@ -253,7 +280,7 @@ try {
       if (card.status !== 200 || card.headers.get('content-type') !== 'image/png') problems.push('/og' + p + '.png → ' + card.status + ' ' + card.headers.get('content-type'));
       await card.arrayBuffer();
       if (!indexSrc.includes("title: '" + title + "'") || !indexSrc.includes("desc: '" + desc + "'")) problems.push('copy out of sync with FIELD_HEAD in index.html');
-      if (body !== baseBody) problems.push('page body was rewritten (only <head> should change)');
+      if (split(unCopy(r.body))[1] !== baseBody) problems.push('page body was rewritten beyond its field copy');
       if (problems.length) fail(`GET ${p} head meta — ${problems.join('; ')}`);
       else ok(`GET ${p} → own title, description, canonical, preview card`);
     }
@@ -281,7 +308,7 @@ try {
       if (tag(head, /<link rel="alternate" hreflang="en" href="([^"]*)"/) !== en || tag(head, /<link rel="alternate" hreflang="fr" href="([^"]*)"/) !== fr) problems.push('hreflang pair wrong');
       if (tag(head, /<meta property="og:locale" content="([^"]*)"/) !== 'fr_CA') problems.push('og:locale ≠ fr_CA');
       if (!indexSrc.includes("title: '" + title + "'") || !indexSrc.includes("desc: '" + desc + "'")) problems.push('copy out of sync with FIELD_HEAD_FR in index.html');
-      if (body !== baseBody) problems.push('page body was rewritten');
+      if (split(unCopy(r.body))[1] !== baseBody) problems.push('page body was rewritten beyond its field copy');
       if (p !== '/') {
         const e = split((await get(p)).body)[0];
         if (tag(e, /<link rel="alternate" hreflang="fr" href="([^"]*)"/) !== fr) problems.push('English page ' + p + ' has no hreflang fr → ' + fr);
