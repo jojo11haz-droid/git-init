@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
-  createCheckIn, createHistoricalCheckIn, listCheckIns, setPlanQuestions, markVisit, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, setPlanQuestions, markVisit, deleteOwnPatientAccount, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
@@ -4295,6 +4295,27 @@ app.post('/api/patient/subscription/cancel', requireDb, requirePatientAuth, asyn
   } catch (err) {
     console.error('Error changing patient subscription:', err);
     res.status(500).json({ error: 'Could not update your subscription.' });
+  }
+});
+
+// Delete my account (website and app). Body { confirm: 'DELETE' } so it can't
+// fire by accident. Any subscription is cancelled first so nothing is billed
+// again. Invited clients leave at once and are erased after the grace window
+// (their professional keeps the record until then); self-serve accounts are
+// erased immediately.
+app.delete('/api/patient/account', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!req.body || req.body.confirm !== 'DELETE') return res.status(400).json({ error: 'Type DELETE to confirm.' });
+    const s = await getPatientStripe(req.patient.id).catch(() => null);
+    if (s && s.stripe_subscription_id && stripeConfigured() && !['canceled', 'incomplete_expired'].includes(req.patient.subscription_status)) {
+      try { await cancelSubscriptionNow(s.stripe_subscription_id); } catch (e) { console.error('Cancel on account delete failed:', e.message); }
+    }
+    const out = await deleteOwnPatientAccount(req.patient.id);
+    if (!out) return res.status(404).json({ error: 'Not found' });
+    res.json({ deleted: true, mode: out.mode, graceDays: out.mode === 'left' ? PATIENT_LEFT_GRACE_DAYS : 0 });
+  } catch (err) {
+    console.error('Delete own account failed:', err);
+    res.status(500).json({ error: 'Could not delete your account. Please try again or email us.' });
   }
 });
 
