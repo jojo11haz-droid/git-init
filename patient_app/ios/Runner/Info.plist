@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Between uses the microphone so you can send voice-memo check-ins to your therapist.</string>
+	<string>Between uses the microphone so you can send a check-in by voice instead of typing.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Between lets you attach a photo of a sore area to a check-in, so your clinician can see what you mean.</string>
 	<key>NSCameraUsageDescription</key>

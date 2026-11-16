@@ -458,6 +458,15 @@ class AppState extends ChangeNotifier {
     await _storeSession((data as Map).cast<String, dynamic>());
   }
 
+  /// Delete my own account (App Store rule; same as the website). The server
+  /// cancels any subscription and drops the session, so we just clear locally.
+  Future<void> deleteAccount() async {
+    await _api.delete('/api/patient/account', {'confirm': 'DELETE'});
+    await _clearToken();
+    patient = null;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     try {
       await _api.post('/api/patient/logout');

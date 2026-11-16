@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../theme.dart';
 import 'plans_screen.dart';
+import '../store_rules.dart';
 
 /// A Premium individual's own page: accent colour and which sections show.
 /// Saved on the account, so the website follows the same choices.
@@ -129,13 +130,17 @@ class _PersonalizeScreenState extends State<PersonalizeScreen> {
                 onPressed: _saving ? null : _save,
                 child: Text(s.saveBtn),
               )
-            else
+            else if (canShowPurchase)
               FilledButton(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const PlansScreen()),
                 ),
                 child: Text(s.seePremium),
-              ),
+              )
+            else
+              Text(s.premiumFeatureNote,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: BtwColors.inkSoft)),
             if (_status != null) ...[
               const SizedBox(height: 10),
               Text(_status!,

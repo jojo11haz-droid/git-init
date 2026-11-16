@@ -6,6 +6,7 @@ import '../body_map.dart';
 import '../theme.dart';
 import 'plans_screen.dart';
 import 'welcome_screen.dart';
+import '../store_rules.dart';
 
 /// "Why Between" — the marketing story from betweenpsych.com, brought into the
 /// app: what you get, common questions, and a route to the plans. Patient-facing
@@ -116,6 +117,7 @@ class AboutScreen extends StatelessWidget {
                   title: f[1] as String,
                   body: f[2] as String),
             const SizedBox(height: 10),
+            if (canShowPurchase)
             Container(
               decoration: BoxDecoration(
                 color: BtwColors.mossLight,

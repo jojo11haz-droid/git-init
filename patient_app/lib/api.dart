@@ -96,7 +96,8 @@ class ApiClient {
       _send('POST', path, body ?? const {});
   Future<dynamic> put(String path, [Object? body]) =>
       _send('PUT', path, body ?? const {});
-  Future<dynamic> delete(String path) => _send('DELETE', path);
+  Future<dynamic> delete(String path, [Object? body]) =>
+      _send('DELETE', path, body);
 
   /// PUT raw bytes (used for the signed audio/photo/document upload URLs, which
   /// authenticate themselves — no Bearer header needed). Extra headers let a

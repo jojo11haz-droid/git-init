@@ -13,6 +13,7 @@ import 'personalize_screen.dart';
 import 'plans_screen.dart';
 import 'reminder_card.dart';
 import 'welcome_screen.dart';
+import '../store_rules.dart';
 
 /// My data & settings: the patient's controls over their own information —
 /// the AI toggle, the erasure request, and what's on file.
@@ -155,6 +156,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
+  // Delete my account: explain what happens, then ask them to type the word.
+  Future<void> _deleteAccount() async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    final invited = app.patient?.hasClinician ?? false;
+    final ctrl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: BtwColors.cream,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(s.deleteAccountTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(s.deleteAccountBody(invited),
+                  style: const TextStyle(height: 1.5)),
+              const SizedBox(height: 14),
+              TextField(
+                controller: ctrl,
+                autocorrect: false,
+                textCapitalization: TextCapitalization.characters,
+                decoration:
+                    InputDecoration(hintText: s.typeToConfirm(s.deleteConfirmWord)),
+                onChanged: (_) => setLocal(() {}),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(s.keepIt,
+                  style: const TextStyle(color: BtwColors.inkSoft)),
+            ),
+            TextButton(
+              onPressed: ctrl.text.trim().toUpperCase() == s.deleteConfirmWord
+                  ? () => Navigator.of(ctx).pop(true)
+                  : null,
+              child: Text(s.deleteAccountButton,
+                  style: const TextStyle(color: BtwColors.clay)),
+            ),
+          ],
+        ),
+      ),
+    );
+    ctrl.dispose();
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    try {
+      await app.deleteAccount();
+      messenger.showSnackBar(SnackBar(content: Text(s.accountDeleted)));
+      nav.popUntil((r) => r.isFirst);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -209,11 +273,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : s.currentPlanFree,
                     style: const TextStyle(
                         fontSize: 12.5, color: BtwColors.inkSoft)),
-                trailing: const Icon(Icons.chevron_right_rounded,
-                    color: BtwColors.inkSoft),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PlansScreen()),
-                ),
+                trailing: canShowPurchase
+                    ? const Icon(Icons.chevron_right_rounded,
+                        color: BtwColors.inkSoft)
+                    : null,
+                onTap: canShowPurchase
+                    ? () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PlansScreen()),
+                        )
+                    : null,
               ),
             ),
             // A solo individual styles their own page (an invited client
@@ -458,6 +526,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontSize: 13, color: BtwColors.inkSoft),
                 ),
                 onTap: _logout,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s.deleteAccount,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: BtwColors.clay)),
+                subtitle: Text(s.deleteAccountDesc,
+                    style: const TextStyle(
+                        fontSize: 13, color: BtwColors.inkSoft)),
+                onTap: _busy ? null : _deleteAccount,
               ),
             ),
             const SizedBox(height: 8),

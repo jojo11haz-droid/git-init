@@ -1114,6 +1114,23 @@ export async function markPatientLeft(clinicianId, patientId) {
   return patient;
 }
 
+// The person deletes their own account (App Store rule: anyone who can create
+// an account must be able to delete it in the app). Invited by a professional:
+// they leave now (access cut, sessions dropped) and purgeExpiredPatients()
+// erases everything after the same grace window, so the professional can
+// keep the record they're responsible for. Self-serve: erased right away.
+export async function deleteOwnPatientAccount(patientId) {
+  const { rows } = await pool.query(`SELECT clinician_id FROM patients WHERE id = $1`, [patientId]);
+  if (!rows[0]) return null;
+  if (rows[0].clinician_id) {
+    await pool.query(`UPDATE patients SET left_at = coalesce(left_at, now()), reminders_enabled = false WHERE id = $1`, [patientId]);
+    await pool.query(`DELETE FROM patient_sessions WHERE patient_id = $1`, [patientId]);
+    return { mode: 'left' };
+  }
+  await pool.query(`DELETE FROM patients WHERE id = $1`, [patientId]);
+  return { mode: 'deleted' };
+}
+
 // Permanently erase a patient and all their data (cascades to check-ins,
 // summaries, voice memos, alerts, notes, sessions). Scoped to the clinician.
 export async function deletePatient(clinicianId, patientId) {

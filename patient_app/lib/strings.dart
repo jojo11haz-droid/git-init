@@ -152,6 +152,9 @@ class S {
       _('Show the weekly reflection', 'Afficher le bilan de la semaine');
   String get showGoals => _('Show my goals', 'Afficher mes objectifs');
   String get seePremium => _('See Premium', 'Voir Premium');
+  // iPhone build: Premium features are named, never sold (App Store rule 3.1.1).
+  String get premiumFeatureNote =>
+      _('This is part of Premium.', 'Cette option fait partie de Premium.');
   String get saveBtn => _('Save', 'Enregistrer');
   String get savedLabel => _('Saved', 'Enregistré');
   String accentName(String k) {
@@ -980,6 +983,26 @@ class S {
       'Your check-in history has been deleted.',
       'Ton historique de nouvelles a été supprimé.');
   String get logOut => _('Log out', 'Déconnexion');
+  // Delete my account (required by the App Store; same on the website).
+  String get deleteAccount => _('Delete my account', 'Supprimer mon compte');
+  String get deleteAccountDesc => _(
+      'Close your account and erase your data.',
+      'Fermer ton compte et effacer tes données.');
+  String get deleteAccountTitle =>
+      _('Delete your account?', 'Supprimer ton compte?');
+  String deleteAccountBody(bool invited) => invited
+      ? _('You will be signed out and can no longer check in. Your professional keeps access to your record for 14 days, so they can save it as required for their files; after that, everything is erased. Any subscription is cancelled. This can\'t be undone.',
+          'Tu seras déconnecté(e) et ne pourras plus faire de suivi. Ton professionnel garde accès à ton dossier pendant 14 jours, pour le conserver comme l\'exige sa pratique; ensuite, tout est effacé. Tout abonnement est annulé. Cette action est irréversible.')
+      : _('Your account, check-ins, notes and photos are erased right away, and any subscription is cancelled. This can\'t be undone.',
+          'Ton compte, tes suivis, tes notes et tes photos sont effacés immédiatement, et tout abonnement est annulé. Cette action est irréversible.');
+  String get deleteConfirmWord => _('DELETE', 'SUPPRIMER');
+  String typeToConfirm(String word) =>
+      _('Type $word to confirm', 'Tape $word pour confirmer');
+  String get deleteAccountButton =>
+      _('Delete my account', 'Supprimer mon compte');
+  String get accountDeleted => _(
+      'Your account has been deleted.',
+      'Ton compte a été supprimé.');
 
   // Tags: shown translated, but the value sent to the server stays the English
   // key so the therapist dashboard (English) stays consistent.

@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../theme.dart';
 import 'about_screen.dart';
 import 'plans_screen.dart';
+import '../store_rules.dart';
 
 /// betweenpsych.com, the public site. Used by the welcome footer and Settings.
 const String kWebsiteUrl = 'https://betweenpsych.com';
@@ -142,6 +143,7 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   // Premium teaser — mirrors the website's "use it on your own"
                   // upsell. Plans are shown in-app but purchased on the website.
+                  if (canShowPurchase)
                   Container(
                     decoration: BoxDecoration(
                       color: BtwColors.mossLight,

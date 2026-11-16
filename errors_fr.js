@@ -186,6 +186,8 @@ const FR = {
   "Write or dictate the plan first, then Between can turn it into questions.": "Écrivez ou dictez d’abord le plan; Between pourra ensuite le transformer en questions.",
   "Could not suggest questions just now. Please try again.": "Impossible de suggérer des questions pour le moment. Veuillez réessayer.",
   "Could not save the questions.": "Impossible d’enregistrer les questions.",
+  "Type DELETE to confirm.": "Tapez SUPPRIMER pour confirmer.",
+  "Could not delete your account. Please try again or email us.": "Impossible de supprimer votre compte. Veuillez réessayer ou nous écrire.",
   "The encouragement draft is unavailable right now.": "Le brouillon d'encouragement n'est pas disponible pour le moment.",
   "Could not draft a message just now. Please try again.": "Impossible de rédiger un message pour le moment. Veuillez réessayer.",
   "Could not load health data.": "Impossible de charger les données de santé.",
