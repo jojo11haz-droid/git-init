@@ -7247,6 +7247,23 @@
     "Say a bit about what happened before sending…":"Dites un mot sur ce qui s'est passé avant d'envoyer…",
     "you@email.com":"vous@courriel.com",
     "Enter your email and password.":"Entrez votre courriel et votre mot de passe.",
+    "Password updated. Log in with your new password.":"Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.",
+    "Turn off AI summaries for {name}? Future check-ins will be stored as written, with no AI analysis.":"Désactiver les résumés IA pour {name}? Les prochains suivis seront conservés tels quels, sans analyse IA.",
+    "Delete this check-in? It will no longer appear in the timeline or trends.":"Supprimer ce suivi? Il n'apparaîtra plus dans l'historique ni dans les tendances.",
+    "Reset app access for {name}? Their current login stops working and they'll need the new invite code to set up again. Their history is kept.":"Réinitialiser l'accès pour {name}? Sa connexion actuelle cessera de fonctionner et il faudra le nouveau code d'invitation pour se reconnecter. L'historique est conservé.",
+    "Access reset. The old login no longer works. Use \"Copy invite message\" to send {name} a fresh link.":"Accès réinitialisé. L'ancienne connexion ne fonctionne plus. Utilisez « Copier le message d'invitation » pour envoyer un nouveau lien à {name}.",
+    "This removes all of the check-in history and trend data for {name}. Continue?":"Cela supprime tout l'historique de suivis et les tendances de {name}. Continuer?",
+    "Could not send check-in:":"Impossible d'envoyer le suivi :",
+    "Enter your account email.":"Entrez le courriel de votre compte.",
+    "Enter the 6-digit code from your authenticator app.":"Entrez le code à 6 chiffres de votre application d'authentification.",
+    "A licence/order number is required to create a clinician account.":"Un numéro de permis ou de membre de l'ordre est requis pour créer un compte professionnel.",
+    "Voice recording not supported in this browser, type instead":"L'enregistrement vocal n'est pas pris en charge par ce navigateur; écrivez plutôt",
+    "Your kinesiology account":"Votre compte en kinésiologie","Your osteopathy account":"Votre compte en ostéopathie",
+    "Your occupational therapy account":"Votre compte en ergothérapie","Your neuropsychology account":"Votre compte en neuropsychologie",
+    "Your nutrition account":"Votre compte en nutrition","Your coach account":"Votre compte d'entraîneur",
+    "Your mentor account":"Votre compte de mentor","Your school account":"Votre compte d'école","Your trainer account":"Votre compte d'entraîneur",
+    "Team name":"Nom de l'équipe","Practice name (optional)":"Nom de la pratique (facultatif)",
+    "e.g. Riverside U15":"p. ex. U15 Rivière","e.g. Riverside Kinesiology":"p. ex. Kinésiologie Rivière",
     "Please fill in all fields.":"Veuillez remplir tous les champs.",
     "That email address looks incomplete.":"Cette adresse courriel semble incomplète.",
     "Password needs to be at least 10 characters.":"Le mot de passe doit compter au moins 10 caractères.",
@@ -13637,11 +13654,11 @@
   document.getElementById('btwResetReqSubmit').addEventListener('click', async ()=>{
     const email = document.getElementById('btwResetEmail').value.trim();
     const err = document.getElementById('btwResetReqError');
-    if(!email){ err.textContent = 'Enter your account email.'; return; }
+    if(!email){ err.textContent = t('Enter your account email.'); return; }
     try{
       const resp = await api('POST', resetIsPatient ? '/api/patient/password/reset-request' : '/api/auth/password/reset-request', { email });
       document.getElementById('btwResetSentMsg').textContent = resp.emailConfigured
-        ? 'If an account exists for that address, a reset link is on its way. The link works for 60 minutes.'
+        ? t('If an account exists for that address, a reset link is on its way. The link works for 60 minutes.')
         : 'Email delivery isn\'t configured on this server yet, the reset link was printed to the server logs (ask whoever runs the server).';
       showResetStep('btwResetSentStep');
     }catch(e){ err.textContent = e.message; }
@@ -13650,12 +13667,12 @@
   document.getElementById('btwResetConfSubmit').addEventListener('click', async ()=>{
     const err = document.getElementById('btwResetConfError');
     const pw = document.getElementById('btwResetNewPw').value;
-    if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
+    if(pw.length < 10){ err.textContent = t('Password needs to be at least 10 characters.'); return; }
     try{
       await api('POST', resetIsPatient ? '/api/patient/password/reset-confirm' : '/api/auth/password/reset-confirm', { token: resetToken, newPassword: pw });
       resetOverlay.style.display = 'none';
       history.replaceState(null, '', location.pathname); // drop the token from the URL
-      alert('Password updated. Log in with your new password.');
+      alert(t('Password updated. Log in with your new password.'));
       openLogin(resetIsPatient ? 'patient' : undefined);
     }catch(e){ err.textContent = e.message; }
   });
@@ -13712,12 +13729,12 @@
       }
       if(pendingMfaToken){
         const code = document.getElementById('btwLoginMfaCode').value.trim();
-        if(!code){ loginError.textContent = 'Enter the 6-digit code from your authenticator app.'; return; }
+        if(!code){ loginError.textContent = t('Enter the 6-digit code from your authenticator app.'); return; }
         const data = await api('POST', '/api/auth/login/mfa', { mfaToken: pendingMfaToken, code });
         await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
         return;
       }
-      if(!email || !password){ loginError.textContent = 'Enter your email and password.'; return; }
+      if(!email || !password){ loginError.textContent = t('Enter your email and password.'); return; }
       const data = await api('POST', '/api/auth/login', { email, password });
       if(data.mfaRequired){
         pendingMfaToken = data.mfaToken;
@@ -14632,39 +14649,41 @@
       if(proNeedsLicence){
         // Physio: multi-step (account → licence → review), practice captured in step 2.
         teamField.style.display = 'none';
-        nextBtn.textContent = 'Continue';
-        if(eyebrow) eyebrow.textContent = 'Step 1 of 3 · Account';
+        nextBtn.textContent = t('Continue');
+        if(eyebrow) eyebrow.textContent = t('Step 1 of 3 · Account');
         // Default the order picker to the right profession, not a psychology one.
         const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = (curAudience === 'nutrition') ? 'CA-Dietitian' : (curAudience === 'neuropsych') ? 'CA-Psychology' : 'CA-Physio';
       } else {
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
-        nextBtn.textContent = 'Create account';
-        if(eyebrow) eyebrow.textContent = (curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'occupational') ? 'Your occupational therapy account' : (curAudience === 'neuropsych') ? 'Your neuropsychology account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account';
+        { const isTeam = curAudience === 'sports'; const tl = teamField.querySelector('label'), ti = document.getElementById('btwSuTeam');
+          if(tl) tl.textContent = t(isTeam ? 'Team name' : 'Practice name (optional)'); if(ti) ti.placeholder = t(isTeam ? 'e.g. Riverside U15' : 'e.g. Riverside Kinesiology'); }
+        nextBtn.textContent = t('Create account');
+        if(eyebrow) eyebrow.textContent = t((curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'occupational') ? 'Your occupational therapy account' : (curAudience === 'neuropsych') ? 'Your neuropsychology account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account');
       }
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
       selectedPlan = MENTOR_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('mentor_') === 0 ? plan : 'mentor_monthly');
       teamField.style.display = 'none';
-      nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = 'Your mentor account';
+      nextBtn.textContent = t('Create account');
+      if(eyebrow) eyebrow.textContent = t('Your mentor account');
     } else if(proSignup === 'school'){
       // School staff sign up in one step too: no licence, no verification.
       selectedPlan = SCHOOL_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('school_') === 0 ? plan : 'school_monthly');
       teamField.style.display = 'none';
-      nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = 'Your school account';
+      nextBtn.textContent = t('Create account');
+      if(eyebrow) eyebrow.textContent = t('Your school account');
     } else if(proSignup === 'trainer'){
       // Trainers sign up in one step too: no licence, no verification.
       selectedPlan = TRAINER_PLAN_FROM[plan] || (typeof plan === 'string' && plan.indexOf('trainer_') === 0 ? plan : 'trainer_monthly');
       teamField.style.display = 'none';
-      nextBtn.textContent = 'Create account';
-      if(eyebrow) eyebrow.textContent = 'Your trainer account';
+      nextBtn.textContent = t('Create account');
+      if(eyebrow) eyebrow.textContent = t('Your trainer account');
     } else {
       selectedPlan = plan || 'solo_monthly';
       teamField.style.display = 'none';
-      nextBtn.textContent = 'Continue';
-      if(eyebrow) eyebrow.textContent = 'Step 1 of 3 · Account';
+      nextBtn.textContent = t('Continue');
+      if(eyebrow) eyebrow.textContent = t('Step 1 of 3 · Account');
     }
     signupOverlay.style.display = 'flex';
     showStep('btwStep1');
@@ -15012,9 +15031,9 @@
     const email = document.getElementById('btwSuEmail').value.trim();
     const pw = document.getElementById('btwSuPassword').value;
     const err = document.getElementById('btwStep1Error');
-    if(!name || !email || !pw){ err.textContent = 'Please fill in all fields.'; return; }
-    if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = 'That email address looks incomplete.'; return; }
-    if(pw.length < 10){ err.textContent = 'Password needs to be at least 10 characters.'; return; }
+    if(!name || !email || !pw){ err.textContent = t('Please fill in all fields.'); return; }
+    if(!/^\S+@\S+\.\S+$/.test(email)){ err.textContent = t('That email address looks incomplete.'); return; }
+    if(pw.length < 10){ err.textContent = t('Password needs to be at least 10 characters.'); return; }
     err.textContent = '';
     if(proSignup && !proNeedsLicence){
       // One-step coach/mentor signup: create the account and go to the dashboard.
@@ -15052,7 +15071,7 @@
   document.getElementById('btwStep2Next').addEventListener('click', ()=>{
     const licence = document.getElementById('btwSuLicence').value.trim();
     const err = document.getElementById('btwStep2Error');
-    if(!licence){ err.textContent = 'A licence/order number is required to create a clinician account.'; return; }
+    if(!licence){ err.textContent = t('A licence/order number is required to create a clinician account.'); return; }
     err.textContent = '';
     renderReview();
     showStep('btwStep3');
@@ -15340,7 +15359,7 @@
 
   const aiStatusEl = document.getElementById('btwAiStatus');
   aiStatusEl.style.cursor = 'pointer';
-  aiStatusEl.title = 'Click to change this patient’s AI consent';
+  aiStatusEl.title = t('Click to change this patient’s AI consent');
   function syncConsentUi(){
     let on, has;
     if(isPatient()){ on = !!(state.patient && state.patient.ai_consent_enabled); has = true; }
@@ -15597,7 +15616,7 @@
     const p = selectedPatient();
     if(!p) return;
     if(p.ai_consent_enabled){
-      if(confirm('Turn off AI summaries for ' + p.display_name + '? Future check-ins will be stored as written, with no AI analysis.')){
+      if(confirm(t('Turn off AI summaries for {name}? Future check-ins will be stored as written, with no AI analysis.').replace('{name}', p.display_name))){
         setConsent(false).catch(err=>alert(err.message));
       }
     } else {
@@ -15627,7 +15646,7 @@
     }).join('');
     dataList.querySelectorAll('.btw-entry-delete').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        if(!confirm('Delete this check-in? It will no longer appear in the timeline or trends.')) return;
+        if(!confirm(t('Delete this check-in? It will no longer appear in the timeline or trends.'))) return;
         try{
           if(isPatient()){
             await pApi('DELETE', '/api/patient/check-ins/' + btn.dataset.cid);
@@ -16087,11 +16106,11 @@
   document.getElementById('btwResetAccess').addEventListener('click', async ()=>{
     const p = selectedPatient();
     if(!p) return;
-    if(!confirm('Reset app access for ' + p.display_name + '? Their current login stops working and they\'ll need the new invite code to set up again. Their history is kept.')) return;
+    if(!confirm(t('Reset app access for {name}? Their current login stops working and they\'ll need the new invite code to set up again. Their history is kept.').replace('{name}', p.display_name))) return;
     try{
       const updated = await api('POST', '/api/patients/' + p.id + '/reset-access');
       await loadPatients();
-      alert('Access reset. The old login no longer works, use "Copy invite" to send ' + updated.display_name + ' a fresh link.');
+      alert(t('Access reset. The old login no longer works. Use "Copy invite message" to send {name} a fresh link.').replace('{name}', updated.display_name));
       renderTherapistInvite(document.getElementById('btwInviteInfo'), updated);
     }catch(err){ alert(err.message); }
   });
@@ -16133,7 +16152,7 @@
     }
     const p = selectedPatient();
     if(!p) return;
-    if(!confirm('This removes all of ' + p.display_name + '’s check-in history and trend data. Continue?')) return;
+    if(!confirm(t('This removes all of the check-in history and trend data for {name}. Continue?').replace('{name}', p.display_name))) return;
     try{
       await api('DELETE', '/api/patients/' + p.id + '/check-ins');
       await loadPatients();
@@ -16791,7 +16810,7 @@
   });
   if(!checkinVoice.supported){
     micBtn.disabled = true;
-    micBtn.title = 'Voice recording not supported in this browser, type instead';
+    micBtn.title = t('Voice recording not supported in this browser, type instead');
   } else {
     micBtn.addEventListener('click', function(){ checkinVoice.toggle(); });
   }
@@ -20908,7 +20927,7 @@
       if(isPatient()) await loadPatientCheckIns();
       else await loadPatients();
     }catch(err){
-      alert('Could not send check-in: ' + err.message);
+      alert(t('Could not send check-in:') + ' ' + err.message);
     }finally{
       processingEl.style.display = 'none';
       // Keep Send disabled if a capped free week is now used up; the cap note
