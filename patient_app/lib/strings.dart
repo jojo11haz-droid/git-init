@@ -583,6 +583,21 @@ class S {
   String get exSome => _('Some', 'En partie');
   String get exNo => _('Not this time', 'Pas cette fois');
   String get exercisesLabel => _('Exercises', 'Exercices');
+  // Plan → check-ins: questions the professional set from their plan.
+  String get fromLastVisit =>
+      _('From your last visit', 'Depuis votre dernière visite');
+  String planAskedBy(String? name) => name == null || name.isEmpty
+      ? _('Your professional asked about these. Answer the ones that apply.',
+          'Votre professionnel aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.')
+      : _('$name asked about these. Answer the ones that apply.',
+          '$name aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.');
+  String get planPartly => _('Partly', 'En partie');
+  String get fromThePlan => _('From the plan', 'Selon le plan');
+  String planAnswerLabel(String a) => a == 'yes'
+      ? exYes
+      : a == 'some'
+          ? planPartly
+          : exNo;
   String exerciseStatusLabel(String st) => st == 'yes'
       ? _('Did them', 'Faits')
       : st == 'some'

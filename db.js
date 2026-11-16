@@ -313,6 +313,20 @@ ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS lang TEXT;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS hep_app TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS exercise_status TEXT;
 ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS followup_a TEXT;
+-- Whether the client had AI summaries on when they sent this check-in. Only
+-- check-ins sent with AI on may ever be read by an AI (notes, briefs, reports).
+-- NULL on older rows: see aiCheckInsFor() in server.js for how those are treated.
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS ai_consent BOOLEAN;
+-- Plan → check-ins: up to 3 short questions the professional set from their
+-- plan ("Did you do the step-ups?"), asked in each check-in until replaced, and
+-- the client's answers on each check-in ([{id, q, a: yes|some|no}]).
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan_questions JSONB;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS plan_questions_at TIMESTAMPTZ;
+ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS plan_answers JSONB;
+-- When the professional last drafted a chart note (a stand-in for "the last
+-- visit"), and the one before, for the note's "since last visit" line.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_visit_at TIMESTAMPTZ;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS prev_visit_at TIMESTAMPTZ;
 -- Hands-off mode: a morning email listing only the patients who need the
 -- clinician (sent only on days someone does), and the last day it went out.
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -824,7 +838,7 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, lang, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, lang, plan_questions, created_at, left_at';
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -1536,13 +1550,36 @@ export async function getCheckIn(checkInId, patientId) {
 // Routes must resolve the patient through getPatient (clinician-scoped) first,
 // so by the time these run, patientId is known to belong to the caller.
 
-export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone, followupQ, exerciseStatus }) {
+export async function createCheckIn({ patientId, moodScore, moodInferred, manualTags, rawText, summaryText, autoTags, riskFlag, modelVersion, audioUploadId, photoUploadId, painMap, painSens, inputMode, bodySex, exercisesDone, followupQ, exerciseStatus, aiConsent, planAnswers }) {
   const { rows } = await pool.query(
-    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done, followup_q, exercise_status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
-    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null, followupQ || null, exerciseStatus || null]
+    `INSERT INTO check_ins (patient_id, mood_score, mood_inferred, manual_tags, raw_text, summary_text, auto_tags, risk_flag, model_version, audio_upload_id, photo_upload_id, pain_map, pain_sensations, input_mode, body_sex, exercises_done, followup_q, exercise_status, ai_consent, plan_answers)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [patientId, moodScore == null ? null : moodScore, !!moodInferred, manualTags || [], rawText || null, summaryText || null, autoTags || [], !!riskFlag, modelVersion || null, audioUploadId || null, photoUploadId || null, painMap ? JSON.stringify(painMap) : null, painSens ? JSON.stringify(painSens) : null, inputMode || null, bodySex || null, (exercisesDone && exercisesDone.length) ? JSON.stringify(exercisesDone) : null, followupQ || null, exerciseStatus || null, !!aiConsent, (planAnswers && planAnswers.length) ? JSON.stringify(planAnswers) : null]
   );
   return rows[0];
+}
+
+// Plan → check-ins: the professional's questions for this client ([] clears).
+export async function setPlanQuestions(clinicianId, patientId, questions) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET plan_questions = $1, plan_questions_at = now() WHERE id = $2 AND clinician_id = $3 RETURNING ${PATIENT_ROW_COLS}`,
+    [questions && questions.length ? JSON.stringify(questions) : null, patientId, clinicianId]
+  );
+  return rows[0] || null;
+}
+
+// A chart note was drafted: count it as a visit, unless one was already
+// counted in the last 12 hours (redrafting the same note). Returns the
+// previous visit's time (or null), which starts the "since last visit" window.
+export async function markVisit(patientId) {
+  const { rows } = await pool.query(
+    `UPDATE patients SET
+       prev_visit_at = CASE WHEN last_visit_at IS NULL OR last_visit_at < now() - interval '12 hours' THEN last_visit_at ELSE prev_visit_at END,
+       last_visit_at = CASE WHEN last_visit_at IS NULL OR last_visit_at < now() - interval '12 hours' THEN now() ELSE last_visit_at END
+     WHERE id = $1 RETURNING prev_visit_at`,
+    [patientId]
+  );
+  return rows[0] ? rows[0].prev_visit_at : null;
 }
 
 // A backdated check-in the clinician typed in from a patient's earlier history,

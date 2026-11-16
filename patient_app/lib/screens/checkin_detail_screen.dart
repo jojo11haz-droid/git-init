@@ -117,6 +117,22 @@ class CheckInDetailScreen extends StatelessWidget {
               Text(s.exerciseStatusLabel(c.exerciseStatus!),
                   style: const TextStyle(fontSize: 15)),
             ],
+            if (c.planAnswers.isNotEmpty) ...[
+              const SizedBox(height: 22),
+              Text(s.fromThePlan.toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 10.5,
+                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w700,
+                      color: BtwColors.moss)),
+              const SizedBox(height: 8),
+              for (final a in c.planAnswers)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text('${a.key} · ${s.planAnswerLabel(a.value)}',
+                      style: const TextStyle(fontSize: 15)),
+                ),
+            ],
             if (painMap != null) ...[
               const SizedBox(height: 22),
               Text(s.painMapLabel.toUpperCase(),

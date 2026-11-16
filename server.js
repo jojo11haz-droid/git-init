@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
-  createCheckIn, createHistoricalCheckIn, listCheckIns, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, setPlanQuestions, markVisit, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
@@ -60,7 +60,7 @@ import {
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
 import { localizeErrors } from './errors_fr.js';
-import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion , sanitizeExerciseStatus, sanitizeAppName } from './clinical.js';
+import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion , sanitizeExerciseStatus, sanitizeAppName, aiCheckInsFor, sanitizePlanQuestions, sanitizePlanAnswers, visitStats } from './clinical.js';
 import {
   stripeConfigured, priceForPlan, usdConfigured, createSubscriptionCheckout,
   retrieveCheckoutSession, constructWebhookEvent, setSubscriptionCancelAtPeriodEnd, changeSubscriptionPrice,
@@ -171,6 +171,9 @@ app.post('/api/stripe/webhook', express.raw({ type: '*/*' }), async (req, res) =
 // Registered before every route and rate limiter so all of them are covered.
 app.use(localizeErrors);
 
+// A chart-note redraft can carry a recorded session's transcript (up to
+// ~90,000 characters), more than the default 100 KB body limit allows.
+app.use('/api/patients/:id/note', express.json({ limit: '400kb' }));
 app.use(express.json());
 
 // Public, unauthenticated config the marketing page reads on load. Only
@@ -505,47 +508,9 @@ Rules:
 // into their EMR and then edit, synthesized from the between-session check-ins.
 // Consent-safe (only check-ins the patient let AI process), plain text, neutral,
 // never diagnostic — it documents what the patient reported, nothing more.
-async function draftProgressNote({ name, discipline, accountType, checkIns, exercises, findings, transcript }) {
-  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+async function draftProgressNote(opts) {
   // Every profession gets a structured chart note now (SOAP, DAP, or ADIME for nutrition).
-  return draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript });
-  const focus = documentFocusForProfession({ discipline, accountType });
-  const who = name || 'the patient';
-  const cutoff = Date.now() - 56 * 24 * 60 * 60 * 1000;
-  const recent = (checkIns || [])
-    .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
-    .slice(0, 14).reverse();
-  const consented = recent.filter(c => c.summary_text && String(c.summary_text).trim());
-  const lines = consented.map(c => {
-    const d = new Date(c.submitted_at).toISOString().slice(0, 10);
-    const mood = (c.mood_score != null) ? ` (mood ${c.mood_score}/10)` : '';
-    const tags = [].concat(Array.isArray(c.auto_tags) ? c.auto_tags : []).concat(canonicalTags(c.manual_tags, tagField({ accountType, discipline }))).filter(Boolean).slice(0, 5).join(', ');
-    return `- ${d}${mood}${tags ? ` [${tags}]` : ''}: ${String(c.summary_text).trim().slice(0, 400)}`;
-  }).join('\n');
-  if (!lines) return { note: '', checkInsUsed: 0, needsData: true };
-  const first = consented[0] ? new Date(consented[0].submitted_at).toISOString().slice(0, 10) : '';
-  const last = consented[consented.length - 1] ? new Date(consented[consented.length - 1].submitted_at).toISOString().slice(0, 10) : '';
-
-  const system = `You help a ${focus.role} write a short, neutral between-session progress note for ${who} that they can paste into their EMR and then edit.
-Rules:
-- Use ONLY what is in the check-ins. Never diagnose, never give treatment advice, never invent anything — you document what ${who} reported between visits.
-- Write in the SAME language as the check-ins. Plain professional prose, no markdown fences, no headings beyond the short labels below.
-- This is a draft for the clinician to review and edit, not a final clinical record.
-- Structure it exactly as these lines:
-Between-session summary (${first} to ${last}): 3 to 5 sentences on how ${who} has been.
-Themes: a short comma-separated line of the recurring themes.
-Trend: one line on the mood or symptom trend if there is data, otherwise omit this line.
-- Keep the whole note under about 160 words.`;
-  const user = `Check-ins (oldest first):\n${lines}`;
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 600, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
-  });
-  if (!response.ok) { console.error('Anthropic API error (note):', response.status); throw new Error('AI note failed.'); }
-  const data = await response.json();
-  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, 2500);
-  return { note, checkInsUsed: consented.length, needsData: false };
+  return draftSoapNote(opts);
 }
 
 // Physical-rehab chart note in SOAP format (Subjective / Objective /
@@ -553,7 +518,36 @@ Trend: one line on the mood or symptom trend if there is data, otherwise omit th
 // patient said, their pain scores, body-map areas and how it feels, and home
 // exercise adherence. The AI only documents what was reported; Assessment
 // and the clinical part of the Plan are left for the clinician to write.
-async function draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript }) {
+// The token the AI puts at the top of the note's data block; the server swaps
+// in the exact "since last visit" numbers afterwards, so they're never
+// paraphrased, and so a client with AI off can have them without an AI seeing them.
+const CHECKIN_DATA_TOKEN = '[[CHECKIN_DATA]]';
+function statsText(stats, consent, lang) {
+  if (!stats || !stats.lines || !stats.lines.length) return '';
+  const tag = consent ? '' : (lang === 'fr' ? ' (tiré des suivis, non traité par l’IA)' : ' (from check-ins, not processed by AI)');
+  return `${stats.head}${tag}: ${stats.lines.join(' · ')}`;
+}
+// A chart note built without any AI: for a client with AI off and no session
+// notes or recording from the professional. Numbers from the check-ins, the
+// program they were given, and placeholders for everything else.
+function localChartNote({ format, lang, stats, exercises, kind }) {
+  const fr = lang === 'fr';
+  const data = statsText(stats, false, lang);
+  const names = (exercises || []).filter(e => !e.archived_at).slice(0, 8).map(e => e.name).join(', ');
+  const progWord = fr
+    ? { exercise: 'Programme à domicile', practice: 'Pratique entre les séances', habit: 'Habitudes à pratiquer', recovery: 'Pratiques quotidiennes', school: 'Stratégies à pratiquer' }[kind]
+    : { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise' }[kind];
+  const said = fr ? '[À compléter : ce que la personne a rapporté. Les résumés IA sont désactivés pour elle, donc ses mots ne sont pas lus par l’IA.]'
+    : '[To add: what they reported. AI summaries are off for this client, so their words are not read by AI.]';
+  const prog = `${progWord}: ${names || (fr ? 'rien d’assigné dans Between' : 'nothing assigned in Between')}. ${fr ? '[Plan à ajouter]' : '[Clinician to add plan]'}`;
+  const todo = fr ? '[À compléter par le professionnel]' : '[Clinician to complete]';
+  if (format === 'adime') return [`A: ${said}`, data, `${fr ? 'Constats en séance (accueil, mesures, analyses)' : 'In-session findings (intake, measurements, labs)'}: [${fr ? 'à ajouter' : 'to add'}]`,
+    `D: ${fr ? 'Diagnostic nutritionnel' : 'Nutrition diagnosis'}: ${todo}`, `I: ${prog}`, `M/E: ${fr ? '[Suivi et évaluation à ajouter]' : '[Clinician to add what to monitor and when]'}`].filter(Boolean).join('\n');
+  if (format === 'dap') return [`D: ${said}`, data, `${fr ? 'Observations en séance' : 'In-session observations'}: [${fr ? 'à ajouter' : 'to add'}]`, `A: ${todo}`, `P: ${prog}`].filter(Boolean).join('\n');
+  return [`S: ${said}`, `O: ${data || (fr ? 'Aucun suivi pendant cette période.' : 'No check-ins in this period.')}`, `${fr ? 'Constats en clinique' : 'In-clinic findings'}: [${fr ? 'à ajouter' : 'to add'}]`, `A: ${todo}`, `P: ${prog}`].join('\n');
+}
+
+async function draftSoapNote({ name, discipline, accountType, checkIns, exercises, findings, transcript, consent, stats, lang }) {
   const focus = documentFocusForProfession({ discipline, accountType });
   const pain = PAIN_DISCIPLINES.includes(discipline || '');
   const format = noteFormat({ accountType, discipline });
@@ -562,13 +556,25 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
   const scoreWord = pain ? 'pain' : 'mood';
   const who = name || 'the patient';
   const cutoff = Date.now() - 28 * 24 * 60 * 60 * 1000;
-  const recent = (checkIns || [])
+  // Only check-ins an AI may read (the caller passes aiCheckInsFor()); none
+  // at all for a client with AI off.
+  const recent = consent ? (checkIns || [])
     .filter(c => c.submitted_at && new Date(c.submitted_at).getTime() >= cutoff)
-    .slice(0, 20).reverse();
+    .slice(0, 20).reverse() : [];
   const own = (typeof findings === 'string' && findings.trim()) ? findings.trim().slice(0, 3000) : '';
   // A recorded session (speaker-separated transcript), from the session scribe.
   const session = (typeof transcript === 'string' && transcript.trim()) ? transcript.trim().slice(0, 90000) : '';
+  const dataLine = statsText(stats, consent, lang);
+  // AI off and nothing from the professional: no AI at all, just the numbers.
+  if (!consent && !own && !session) {
+    if (!stats || !stats.count) return { note: '', checkInsUsed: 0, needsData: true, format, aiOff: true };
+    return { note: localChartNote({ format, lang, stats, exercises, kind }), checkInsUsed: stats.count, needsData: false, format, aiOff: true };
+  }
   if (!recent.length && !own && !session) return { note: '', checkInsUsed: 0, needsData: true, format };
+  if (!ANTHROPIC_API_KEY) throw new Error('Server is not configured with an API key.');
+  // A few of the client's own words, for a short dated quote in S (AI on only).
+  const quotes = recent.filter(c => c.raw_text && String(c.raw_text).trim()).slice(-3)
+    .map(c => `- ${new Date(c.submitted_at).toISOString().slice(0, 10)}: "${String(c.raw_text).replace(/\s+/g, ' ').trim().slice(0, 200)}"`).join('\n');
   const exById = {};
   for (const e of exercises || []) exById[e.id] = e;
   const active = (exercises || []).filter(e => !e.archived_at);
@@ -590,6 +596,7 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
       parts.push('did: ' + c.exercises_done.map(id => exById[id] ? exById[id].name : null).filter(Boolean).join(', '));
     }
     if (c.followup_q && c.followup_a) parts.push(`follow-up "${String(c.followup_q).slice(0, 160)}" → "${String(c.followup_a).slice(0, 200)}"`);
+    if (Array.isArray(c.plan_answers) && c.plan_answers.length) parts.push('plan check: ' + c.plan_answers.map(a => `"${String(a.q).slice(0, 120)}" → ${a.a === 'some' ? 'partly' : a.a}`).join(', '));
     const said = c.summary_text ? String(c.summary_text).trim().slice(0, 300) : '';
     return `- ${d} (${parts.join('; ') || 'no score'})${said ? ': ' + said : ''}`;
   }).join('\n');
@@ -598,9 +605,13 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
   const extLine = ext.length
     ? `program in another app: did it in ${ext.filter(c => c.exercise_status === 'yes').length} of ${ext.length} check-ins, partly in ${ext.filter(c => c.exercise_status === 'some').length}, not in ${ext.filter(c => c.exercise_status === 'no').length}`
     : '';
-  const adherence = [active.length
-    ? active.map(e => `${e.name}: ticked in ${recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length} of ${recent.length} check-ins`).join('; ')
-    : '', extLine].filter(Boolean).join('; ') || 'nothing assigned in Between yet';
+  // With AI off, the AI gets the program the professional set (their own
+  // content) but not how often it was done: that comes from check-ins.
+  const adherence = !consent
+    ? (active.length ? active.map(e => e.name).join('; ') + ' (completion is added from the check-ins separately)' : 'nothing assigned in Between yet')
+    : [active.length
+      ? active.map(e => `${e.name}: ticked in ${recent.filter(c => Array.isArray(c.exercises_done) && c.exercises_done.includes(e.id)).length} of ${recent.length} check-ins`).join('; ')
+      : '', extLine].filter(Boolean).join('; ') || 'nothing assigned in Between yet';
   const first = recent.length ? new Date(recent[0].submitted_at).toISOString().slice(0, 10) : 'n/a';
   const last = recent.length ? new Date(recent[recent.length - 1].submitted_at).toISOString().slice(0, 10) : 'n/a';
   // Where each kind of content goes, per note format.
@@ -609,27 +620,34 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
     : format === 'adime'
       ? { name: 'ADIME', said: 'A', obs: 'A block ("In-session findings")', ctx: 'A', assess: 'D (only a nutrition diagnosis / PES statement they actually stated)', plan: 'I, with any monitoring they stated in M/E' }
       : { name: 'SOAP', said: 'S', obs: 'findings/observations line', ctx: 'S and O', assess: 'A', plan: 'P' };
+  // With exact figures swapped in by the server, the AI describes in words
+  // only; and it never sees completion counts for a client with AI off.
+  const figs = dataLine ? `the figures line (see the rule below), then the ${scoreWord} trend in words` : `the ${scoreWord} scores (range and trend with numbers)`;
+  const ticked = consent ? 'list what was assigned with how often it was ticked off' : 'list what was assigned';
   const blocks = format === 'adime'
-    ? `A: Assessment — what ${who} reported between sessions (eating patterns, energy, cravings, what got in the way, what helped, in 2-4 sentences, close to their words), the ${scoreWord} scores (range and trend with numbers), recurring themes, and completion of the ${progWord.toLowerCase()}. End with "In-session findings (intake, measurements, labs): [to add]".
+    ? `A: Assessment — what ${who} reported between sessions (eating patterns, energy, cravings, what got in the way, what helped, in 2-4 sentences, close to their words), ${figs}, recurring themes, and completion of the ${progWord.toLowerCase()}. End with "In-session findings (intake, measurements, labs): [to add]".
 D: Nutrition diagnosis: [Clinician to complete]
-I: Intervention — ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add intervention]".
+I: Intervention — ${progWord}: ${ticked}. Then "[Clinician to add intervention]".
 M/E: Monitoring and evaluation: [Clinician to add what to monitor and when]`
     : format === 'dap'
-    ? `D: Data — what ${who} reported between sessions (in 2-4 sentences, close to their words), the ${scoreWord} scores (range and trend with numbers), recurring themes, and completion of the between-session work. End with "In-session observations: [to add]".
+    ? `D: Data — what ${who} reported between sessions (in 2-4 sentences, close to their words), ${figs}, recurring themes, and completion of the between-session work. End with "In-session observations: [to add]".
 A: [Clinician to complete]
-P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`
+P: ${progWord}: ${ticked}. Then "[Clinician to add plan]".`
     : `S: what ${who} reported between visits (${pain ? 'symptoms, where, how it feels, activities/function' : 'how things went, what got in the way, what helped'}, in 2-4 sentences, close to their words).
-O: Patient-reported between visits — ${scoreWord} scores (range and trend with numbers)${pain ? ', body areas marked' : ''}, and completion of the ${progWord.toLowerCase()}. End with "${pain ? 'In-clinic findings' : 'Session observations'}: [to add]".
+O: Patient-reported between visits — ${figs}${pain ? ', body areas marked (in plain anatomy)' : ''}, and completion of the ${progWord.toLowerCase()}. End with "${pain ? 'In-clinic findings' : 'Session observations'}: [to add]".
 A: [Clinician to complete]
-P: ${progWord}: list what was assigned with how often it was ticked off. Then "[Clinician to add plan]".`;
+P: ${progWord}: ${ticked}. Then "[Clinician to add plan]".`;
   const system = `You draft a ${focus.role}'s chart note in ${F.name} format for ${who}, from what ${who} reported between ${pain ? 'visits' : 'sessions'} (${first} to ${last}), for the clinician to paste into their charting software and edit.
 Rules:
 - Document ONLY what is in the data. Never diagnose, never assess, never recommend treatment, never invent findings.
 - Body-map keys look like "front:l_knee_cap" or "back:lower_back": write them as plain anatomy ("left knee, kneecap", "lower back"). l_ = left, r_ = right. Sensation codes: ache = aching, tight = tightness, stiff = stiffness/locking, sharp = sharp/shooting, numb = tingling/numbness, throb = throbbing/heat.
-- Same language as the check-ins. Plain text, no markdown, exactly these labelled lines/blocks:
+- ${recent.length ? 'Same language as the check-ins' : `Write in ${lang === 'fr' ? 'French' : 'English'} (or the language the professional used, if different)`}. Plain text, no markdown, exactly these labelled lines/blocks:
 ${blocks}
-${session ? `- A TRANSCRIPT of today's recorded session is given below, with speakers numbered (not named). Work out which speaker is the clinician (asks the questions, explains, assigns) and which is ${who}. Use it as the main source: what ${who} said goes in ${F.said}; what was observed or done in session goes in the ${F.obs}; the clinician's OWN stated impressions go in ${F.assess} and the plan they stated (homework, ${progWord.toLowerCase()} changes, next visit) in ${F.plan}, in their words, tidied into clear clinical prose. Never add an assessment, diagnosis or plan the clinician did not say out loud; if they did not state one, keep the placeholder. Leave out small talk. The between-visit check-ins add context to ${F.ctx}.\n` : ''}${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the ${F.obs}, their assessment in ${F.assess} and their plan in ${F.plan} — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${session ? 420 : own ? 300 : 220} words.`;
-  const user = `Check-ins (oldest first):\n${lines || '(none in the last 4 weeks)'}\n\n${progWord} completion: ${adherence}${own ? `\n\nClinician's session notes:\n${own}` : ''}${session ? `\n\nSession transcript:\n${session}` : ''}`;
+- ${dataLine ? `The ${format === 'soap' ? 'O' : format === 'dap' ? 'D' : 'A'} block must contain the exact text ${CHECKIN_DATA_TOKEN} on its own line, right after the block label line (it is replaced with exact figures later). Do not restate those figures yourself.` : 'There are no figures to add.'}
+${consent ? '' : `- AI summaries are OFF for ${who}: you are given NO check-in data and must not guess any. Where the note would describe what ${who} reported between visits, write "[To add]" unless the professional's own notes or the session transcript say it.\n`}${quotes ? `- You may quote ${who}'s own words from the check-ins briefly in ${F.said}, in quotation marks with the date, at most two short quotes, only where they say something the clinician should see.\n` : ''}${session ? `- A TRANSCRIPT of today's recorded session is given below, with speakers numbered (not named). Work out which speaker is the clinician (asks the questions, explains, assigns) and which is ${who}. Use it as the main source: what ${who} said goes in ${F.said}; what was observed or done in session goes in the ${F.obs}; the clinician's OWN stated impressions go in ${F.assess} and the plan they stated (homework, ${progWord.toLowerCase()} changes, next visit) in ${F.plan}, in their words, tidied into clear clinical prose. Never add an assessment, diagnosis or plan the clinician did not say out loud; if they did not state one, keep the placeholder. Leave out small talk. The between-visit check-ins add context to ${F.ctx}.\n` : ''}${own ? `- The clinician's OWN session notes (dictated or typed) are given below. Put their in-session findings in the ${F.obs}, their assessment in ${F.assess} and their plan in ${F.plan} — in their words, tidied into clear clinical prose. Never add any finding, assessment or plan they did not state; anything they did not cover keeps its placeholder.\n` : ''}- Keep it under about ${session ? 420 : own ? 300 : 220} words.`;
+  const user = (consent ? `Check-ins (oldest first):\n${lines || '(none in the last 4 weeks)'}\n\n${progWord} completion: ${adherence}` : `${progWord} assigned: ${adherence}`)
+    + (quotes ? `\n\nThe client's own words (recent check-ins):\n${quotes}` : '')
+    + (own ? `\n\nClinician's session notes:\n${own}` : '') + (session ? `\n\nSession transcript:\n${session}` : '');
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
@@ -637,8 +655,21 @@ ${session ? `- A TRANSCRIPT of today's recorded session is given below, with spe
   });
   if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
-  const note = (data.content || []).map(b => b.text || '').join('').trim().slice(0, session ? 5000 : 3000);
-  return { note, checkInsUsed: recent.length, needsData: false, format };
+  const rawNote = (data.content || []).map(b => b.text || '').join('').trim().slice(0, session ? 5000 : 3000);
+  // Swap in the exact figures; if the AI left the token out, put them right
+  // under the data block's label line, else at the end.
+  let note;
+  if (dataLine && rawNote.includes(CHECKIN_DATA_TOKEN)) {
+    note = rawNote.replace(CHECKIN_DATA_TOKEN, () => dataLine).split(CHECKIN_DATA_TOKEN).join('');
+  } else {
+    note = rawNote.split(CHECKIN_DATA_TOKEN).join('');
+    if (dataLine) {
+      const re = new RegExp('^(' + (format === 'soap' ? 'O' : format === 'dap' ? 'D' : 'A') + ':[^\\n]*)$', 'm');
+      note = re.test(note) ? note.replace(re, m => m + '\n' + dataLine) : note + '\n\n' + dataLine;
+    }
+  }
+  note = note.replace(/\n{3,}/g, '\n\n');
+  return { note: note.trim(), checkInsUsed: consent ? recent.length : (stats ? stats.count : 0), needsData: false, format, aiOff: !consent };
 }
 
 // A short, warm encouragement message the clinician can send to a patient
@@ -733,7 +764,8 @@ async function caseloadDigest({ discipline, accountType, patients, lang }) {
   const pain = ['physio', 'kinesiology', 'osteo', 'occupational'].includes(discipline || '');
   const metric = pain ? 'pain' : 'mood';
   const now = Date.now();
-  const active = (patients || []).filter(p => !p.left_at).slice(0, 60);
+  // Signals come from check-ins, so only clients with AI summaries on are read.
+  const active = (patients || []).filter(p => !p.left_at && p.ai_consent_enabled).slice(0, 60);
   if (!active.length) return { digest: '', priorities: [], needsData: true };
   const lines = active.map(p => {
     const bits = [];
@@ -2434,6 +2466,7 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
         body_sex: c.body_sex || null,
         exercises_done: c.exercises_done || null,
         exercise_status: c.exercise_status || null,
+        plan_answers: c.plan_answers || null,
         followup_q: c.followup_q || null,
         followup_a: c.followup_a || null
       })),
@@ -2580,7 +2613,7 @@ function painMapPeak(pm) {
 // Which body figure the patient drew on: 'm' | 'f', else null.
 function sanitizeBodySex(v) { return v === 'm' || v === 'f' ? v : null; }
 
-async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus }) {
+async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus, planAnswers }) {
   let summaryText = null, autoTags = [], riskFlag = false, modelVersion = null, followupQ = null;
 
   // Whether the patient left the mood unset (they can skip the slider). Only
@@ -2635,7 +2668,11 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
     inputMode: inputMode === 'questions' ? 'questions' : null,
     followupQ,
     // Program in another app: just whether they did it (yes / some / no).
-    exerciseStatus: patient.hep_external ? sanitizeExerciseStatus(exerciseStatus) : null
+    exerciseStatus: patient.hep_external ? sanitizeExerciseStatus(exerciseStatus) : null,
+    // Whether AI was on for this check-in: only those may ever reach an AI.
+    aiConsent: !!patient.ai_consent_enabled,
+    // Answers to the professional's plan questions (yes / partly / no).
+    planAnswers: sanitizePlanAnswers(planAnswers, patient.plan_questions)
   });
   if (checkIn.risk_flag) await raiseRiskAlert(patient, checkIn);
   return checkIn;
@@ -2643,12 +2680,12 @@ async function buildAndStoreCheckIn(patient, { text, moodScore, manualTags, audi
 
 app.post('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedClinician, requireClinicianSubscription, checkInLimiter, async (req, res) => {
   try {
-    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus } = req.body || {};
+    const { moodScore, manualTags, text, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus, planAnswers } = req.body || {};
 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
 
-    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus });
+    const checkIn = await buildAndStoreCheckIn(patient, { text, moodScore, manualTags, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus, planAnswers });
     res.status(201).json(checkIn);
   } catch (err) {
     console.error('Error creating check-in:', err);
@@ -2709,7 +2746,7 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI brief is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
+    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
     const result = await sessionPrepBrief({
       name: patient.display_name,
       discipline: fieldOf(req).discipline,
@@ -2730,7 +2767,7 @@ app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedCl
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The signature read is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
+    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await signatureRead({
       name: patient.display_name,
@@ -2979,15 +3016,19 @@ app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireV
     const goal = req.body && typeof req.body.goal === 'string' ? req.body.goal.trim() : '';
     const lang = (req.body && req.body.lang === 'fr') ? 'fr' : 'en';
     const f = fieldOf(req);
-    const ctx = programContext(await listCheckIns(patient.id), await listExercises(patient.id), { pain: PAIN_DISCIPLINES.includes(f.discipline || '') });
-    // Check-in details go to the AI only with the client's AI consent; the
-    // safety caution is worked out locally and always applies.
-    const shared = patient.ai_consent_enabled && ctx.checkIns ? ctx.text : '';
+    const allCheckIns = await listCheckIns(patient.id), program = await listExercises(patient.id);
+    const pain = PAIN_DISCIPLINES.includes(f.discipline || '');
+    const ctx = programContext(allCheckIns, program, { pain });
+    // Check-in details go to the AI only with the client's AI consent, and
+    // only from check-ins sent while AI was on; the safety caution is worked
+    // out locally and the clinician always sees it.
+    const aiCtx = programContext(aiCheckInsFor(patient, allCheckIns), program, { pain });
+    const shared = aiCtx.checkIns ? aiCtx.text : '';
     if (goal.length < 3 && !shared) return res.status(400).json({ error: 'Describe the goal or area in a few words.' });
     // The caution (and its areas) is check-in-derived too: it shapes the AI's
     // suggestions only with consent. Without it the clinician still sees it.
-    const suggestions = await suggestExercises({ goal, discipline: f.discipline, accountType: f.account_type, lang, context: shared, caution: patient.ai_consent_enabled ? ctx.caution : null });
-    res.json({ suggestions, caution: ctx.caution, usedCheckIns: shared ? ctx.checkIns : 0 });
+    const suggestions = await suggestExercises({ goal, discipline: f.discipline, accountType: f.account_type, lang, context: shared, caution: patient.ai_consent_enabled ? aiCtx.caution : null });
+    res.json({ suggestions, caution: ctx.caution, usedCheckIns: shared ? aiCtx.checkIns : 0 });
   } catch (err) {
     console.error('Suggest exercises error:', err.message);
     res.status(502).json({ error: 'Could not suggest exercises just now. Please try again.' });
@@ -3294,20 +3335,13 @@ app.post('/api/patients/:id/session-scribe',
       const conv = await transcribeConversation(req.body, mime);
       req.body = null; // let the audio go as soon as it's transcribed
       if (!conv) return res.status(502).json({ error: "Couldn't make out the recording. Check the microphone and try again." });
-      const checkIns = await listCheckIns(patient.id);
-      const result = await draftProgressNote({
-        name: patient.display_name,
-        discipline: fieldOf(req).discipline,
-        accountType: fieldOf(req).account_type,
-        checkIns,
-        exercises: await listAllExercises(patient.id),
-        findings: '',
-        transcript: conv.text
-      });
+      const result = await draftProgressNote({ ...(await noteInputs(req, patient)), findings: '', transcript: conv.text });
       const minutes = Math.max(1, Math.min(180, Math.round(Number(req.query.minutes) || 1)));
       countWork(req.clinician.id, 'scribe');
       logClinicianEvent(req.clinician.id, 'session_recorded', minutes).catch(() => {});
-      res.json({ ...result, transcript: conv.turns.slice(0, 2000) });
+      // transcriptText stays in the professional's open page only, so a
+      // dictated addendum can be written into the same note; it isn't stored.
+      res.json({ ...result, transcript: conv.turns.slice(0, 2000), transcriptText: String(conv.text || '').slice(0, 90000) });
     } catch (err) {
       console.error('Session scribe error:', err.message);
       res.status(502).json({ error: 'Could not write up the session just now. Please try again.' });
@@ -3379,7 +3413,7 @@ app.post('/api/patients/:id/report', requireDb, requireAuth, requireVerifiedClin
     const recipient = typeof b.recipient === 'string' ? b.recipient.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
     const result = await draftReport({
       name: patient.display_name, discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
-      checkIns: await listCheckIns(patient.id), exercises: await listAllExercises(patient.id),
+      checkIns: aiCheckInsFor(patient, await listCheckIns(patient.id)), exercises: await listAllExercises(patient.id),
       kind, recipient, lang: b.lang === 'fr' ? 'fr' : 'en', clinicianName: req.clinician.name
     });
     if (!result.needsData) countWork(req.clinician.id, 'report');
@@ -3441,8 +3475,10 @@ app.post('/api/patients/:id/exercises/review', requireDb, requireAuth, requireVe
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const exercises = await listExercises(patient.id);
     if (!exercises.length) return res.json({ suggestions: [], empty: true });
+    // The review reads adherence and what the client said: AI-consented check-ins only.
+    if (!patient.ai_consent_enabled) return res.json({ suggestions: [], needsData: true, aiOff: true });
     const suggestions = await reviewProgram({ discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
-      checkIns: await listCheckIns(patient.id), exercises, lang: (req.body && req.body.lang === 'fr') ? 'fr' : 'en' });
+      checkIns: aiCheckInsFor(patient, await listCheckIns(patient.id)), exercises, lang: (req.body && req.body.lang === 'fr') ? 'fr' : 'en' });
     countWork(req.clinician.id, 'program_review');
     res.json({ suggestions });
   } catch (err) {
@@ -3519,20 +3555,37 @@ app.get('/api/caseload/outcomes', requireDb, requireAuth, requireVerifiedClinici
 
 // AI-drafted between-session progress note for the EMR: a clean narrative the
 // clinician can copy and edit. Same consent model and scoping as the prep brief.
+// The pieces every chart note is built from: the check-ins an AI may read,
+// the program, and the "since last visit" figures (worked out here, no AI).
+async function noteInputs(req, patient) {
+  const all = await listCheckIns(patient.id);
+  const exercises = await listAllExercises(patient.id);
+  const since = await markVisit(patient.id);
+  const b = req.body || {};
+  const lang = (b.lang === 'fr' || req.query.lang === 'fr') ? 'fr' : (b.lang === 'en' || req.query.lang === 'en') ? 'en' : (req.clinician.lang === 'fr' ? 'fr' : 'en');
+  const f = fieldOf(req);
+  const stats = visitStats({ checkIns: all, exercises, since, pain: PAIN_DISCIPLINES.includes(f.discipline || ''), lang });
+  return { name: patient.display_name, discipline: f.discipline, accountType: f.account_type,
+    checkIns: aiCheckInsFor(patient, all), exercises, consent: !!patient.ai_consent_enabled, stats, lang };
+}
 async function noteHandler(req, res) {
   try {
-    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
-    const result = await draftProgressNote({
-      name: patient.display_name,
-      discipline: fieldOf(req).discipline,
-      accountType: fieldOf(req).account_type,
-      checkIns,
-      exercises: await listAllExercises(patient.id),
-      findings: req.body && typeof req.body.findings === 'string' ? req.body.findings : ''
-    });
+    const b = req.body || {};
+    // A recorded session's transcript, sent back with a dictated addendum so
+    // both go into one note. Only with a valid signed recording consent.
+    let transcript = '';
+    if (typeof b.transcript === 'string' && b.transcript.trim()) {
+      if (!(await getValidRecordingConsent(patient.id, req.clinician.id))) {
+        return res.status(403).json({ error: 'A recording consent form signed by the client and by you is needed first.' });
+      }
+      transcript = b.transcript.slice(0, 90000);
+    }
+    const findings = typeof b.findings === 'string' ? b.findings : '';
+    // Without the AI key, a client with AI off can still get the numbers-only note.
+    if (!ANTHROPIC_API_KEY && (patient.ai_consent_enabled || findings.trim() || transcript)) return res.status(503).json({ error: 'The AI draft note is unavailable right now.' });
+    const result = await draftProgressNote({ ...(await noteInputs(req, patient)), findings, transcript });
     if (result && !result.needsData) countWork(req.clinician.id, 'note');
     res.json(result);
   } catch (err) {
@@ -3544,13 +3597,64 @@ app.get('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinici
 // POST: same note, with the clinician's own session findings (dictated or typed).
 app.post('/api/patients/:id/note', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, noteHandler);
 
+// --- Plan → check-ins ------------------------------------------------------
+// From the plan the professional wrote (or said), suggest up to 3 short
+// yes / partly / no questions for the client's check-ins. Only the plan text
+// the professional sends is read (their own words), never the check-ins.
+app.post('/api/patients/:id/plan-questions/suggest', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'Question suggestions are unavailable right now.' });
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const plan = typeof (req.body && req.body.plan) === 'string' ? req.body.plan.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 2500) : '';
+    if (plan.length < 8) return res.status(400).json({ error: 'Write or dictate the plan first, then Between can turn it into questions.' });
+    // The questions are read by the client, in the language they use Between in.
+    const lang = patient.lang === 'fr' ? 'fr' : patient.lang === 'en' ? 'en' : (req.body.lang === 'fr' ? 'fr' : 'en');
+    const f = fieldOf(req);
+    const focus = documentFocusForProfession({ discipline: f.discipline, accountType: f.account_type });
+    const system = `A ${focus.role} wrote this plan for their client after a session. Turn the things the client is asked to DO between visits (exercises, homework, habits, strategies, self-care) into at most 3 short check-in questions the client answers with yes / partly / no.
+Rules:
+- Second person, plain and warm, at most 12 words each, in ${lang === 'fr' ? 'French (Quebec usage, "vous")' : 'English'}. Example: "Did you do your step-ups this week?"
+- Only what the plan actually asks of the client. Nothing clinical, no diagnosis, nothing about safety or crisis.
+- If the plan asks nothing of the client between visits, return [].
+- Respond with ONLY a JSON array of strings, no prose or fences.`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 300, system: system + STYLE_RULE, messages: [{ role: 'user', content: `Plan:\n${plan}` }] })
+    });
+    if (!response.ok) { console.error('Anthropic API error (plan questions):', response.status); throw new Error('AI failed.'); }
+    const data = await response.json();
+    let parsed = [];
+    try { parsed = JSON.parse((data.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim()); } catch (e) { parsed = []; }
+    res.json({ questions: sanitizePlanQuestions(parsed).map(q => q.q), lang });
+  } catch (err) {
+    console.error('Plan questions error:', err.message);
+    res.status(502).json({ error: 'Could not suggest questions just now. Please try again.' });
+  }
+});
+// Save (or clear, with []) the questions the client is asked in each check-in.
+app.put('/api/patients/:id/plan-questions', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
+  try {
+    const patient = await getPatient(req.clinician.id, req.params.id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    const questions = sanitizePlanQuestions(req.body && req.body.questions);
+    const updated = await setPlanQuestions(req.clinician.id, patient.id, questions);
+    if (!updated) return res.status(404).json({ error: 'Patient not found.' });
+    res.json({ plan_questions: updated.plan_questions || [] });
+  } catch (err) {
+    console.error('Save plan questions error:', err);
+    res.status(500).json({ error: 'Could not save the questions.' });
+  }
+});
+
 // A warm encouragement message to send the patient between sessions (draft).
 app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifiedClinician, prepLimiter, async (req, res) => {
   try {
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The encouragement draft is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
+    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await encouragementDraft({
       name: patient.display_name,
@@ -3789,6 +3893,8 @@ function publicPatient(p) {
     // Program kept in another exercise app: the check-in asks yes/some/no.
     exercises_external: !!p.hep_external,
     exercises_app: p.hep_external ? (p.hep_app || null) : null,
+    // Questions their professional set from the plan, asked in each check-in.
+    plan_questions: p.clinician_id && Array.isArray(p.plan_questions) ? p.plan_questions.map(q => ({ id: q.id, q: q.q })) : [],
     // Their professional's branding (welcome note always; clinic name, logo
     // and accent on the professional's Premium plan).
     clinician_brand: p.clinician_id ? effectiveBrand(p.clinician_id, p.clinician_brand, clinicianIsPremium({ plan: p.clinician_plan, account_type: p.clinician_account_type, email: p.clinician_email })) : null,
@@ -4904,7 +5010,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
     if (!req.patient.consent_recorded_at) {
       return res.status(403).json({ error: 'Please complete the consent step before sending check-ins.' });
     }
-    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus } = req.body || {};
+    const { moodScore, manualTags, text, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus, planAnswers } = req.body || {};
     if (text && (typeof text !== 'string' || text.length > 4000)) {
       return res.status(400).json({ error: 'Check-in text is too long.' });
     }
@@ -4968,7 +5074,7 @@ app.post('/api/patient/check-ins', requireDb, requirePatientAuth, requirePatient
       }
     }
 
-    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus });
+    const checkIn = await buildAndStoreCheckIn(req.patient, { text: effectiveText, moodScore, manualTags, audioUploadId, photoUploadId, painMap, painSens, inputMode, scoreKind, bodySex, exercisesDone, exerciseStatus, planAnswers });
 
     // Crisis resources are returned directly to the patient, independent of
     // any therapist alert — the safety net must never wait on a human.

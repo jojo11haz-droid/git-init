@@ -73,6 +73,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   String? _exStatus; // program in another app: 'yes' | 'some' | 'no'
+  // Answers to the professional's plan questions: id → 'yes' | 'some' | 'no'.
+  final Map<String, String> _planAns = {};
   Uint8List? _photoBytes; // optional sore-area photo, uploaded on send
   double _mood = 5;
   bool _detailsOpen = false;
@@ -977,6 +979,7 @@ class _HomeScreenState extends State<HomeScreen>
         _painMap.isEmpty &&
         _exDone.isEmpty &&
         _exStatus == null &&
+        _planAns.isEmpty &&
         _photoBytes == null) {
       messenger.showSnackBar(SnackBar(content: Text(s.saySomething)));
       return;
@@ -1009,6 +1012,7 @@ class _HomeScreenState extends State<HomeScreen>
             exercisesDone: _exDone.isEmpty ? null : _exDone.toList(),
             exerciseStatus:
                 (app.patient?.exercisesExternal ?? false) ? _exStatus : null,
+            planAnswers: _planAns.isEmpty ? null : Map.of(_planAns),
           );
       if (!mounted) return;
       _text.clear();
@@ -1021,6 +1025,7 @@ class _HomeScreenState extends State<HomeScreen>
         _painSens = {};
         _exDone.clear();
         _exStatus = null;
+        _planAns.clear();
         _photoBytes = null;
         _mood = 5;
         _moodEstimate = false;
@@ -1339,6 +1344,45 @@ class _HomeScreenState extends State<HomeScreen>
                     ],
                   ],
                   const SizedBox(height: 16),
+                  // Plan → check-ins: the questions their professional set
+                  // from the plan at the last visit (each optional).
+                  if (patient.planQuestions.isNotEmpty) ...[
+                    Text(s.fromLastVisit,
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(s.planAskedBy(patient.clinicianName),
+                        style: const TextStyle(
+                            fontSize: 12.5, color: BtwColors.inkSoft)),
+                    const SizedBox(height: 8),
+                    for (final q in patient.planQuestions) ...[
+                      Text(q.q, style: const TextStyle(fontSize: 14.5)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final o in [
+                            ['yes', s.exYes],
+                            ['some', s.planPartly],
+                            ['no', s.exNo],
+                          ])
+                            ChoiceChip(
+                              label: Text(o[1]),
+                              selected: _planAns[q.id] == o[0],
+                              onSelected: (on) => setState(() {
+                                if (on) {
+                                  _planAns[q.id] = o[0];
+                                } else {
+                                  _planAns.remove(q.id);
+                                }
+                              }),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
                   // Between-session program from the clinician (exercises,
                   // practices, habits…): tick what you did. Every profession.
                   // Program kept in another app: one yes / some / no question.

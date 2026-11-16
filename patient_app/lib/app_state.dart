@@ -47,6 +47,15 @@ class Patient {
   // check-in asks "did you do your exercises?" instead of listing them.
   bool get exercisesExternal => raw['exercises_external'] == true;
   String? get exercisesApp => raw['exercises_app'] as String?;
+  // Questions their professional set from the plan ("Did you do your
+  // step-ups?"), answered yes / partly / no in each check-in.
+  List<PlanQuestion> get planQuestions =>
+      ((raw['plan_questions'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((m) => PlanQuestion(
+              (m['id'] ?? '').toString(), (m['q'] ?? '').toString()))
+          .where((q) => q.id.isNotEmpty && q.q.isNotEmpty)
+          .toList();
   // Their professional's branding: a welcome note (any plan) and, on the
   // professional's Premium plan, clinic name, logo and accent.
   Map<String, dynamic> get _brand =>
@@ -76,6 +85,13 @@ class Patient {
   // Writing a future-self note is covered for clinician patients and Premium
   // individuals (mirrors the server's subscription gate). Reading is always on.
   bool get canWriteFutureNote => hasClinician || isPremium;
+}
+
+/// One question from the professional's plan, asked in each check-in.
+class PlanQuestion {
+  const PlanQuestion(this.id, this.q);
+  final String id;
+  final String q;
 }
 
 /// Before each field had its own check-in topics, the website saved some
@@ -121,6 +137,13 @@ class CheckIn {
   String? get followupQuestion => raw['followup_q'] as String?;
   // Program in another app: did they do their exercises ('yes'/'some'/'no').
   String? get exerciseStatus => raw['exercise_status'] as String?;
+  // Answers to the professional's plan questions: (question, 'yes'|'some'|'no').
+  List<MapEntry<String, String>> get planAnswers =>
+      ((raw['plan_answers'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((m) => MapEntry((m['q'] ?? '').toString(), (m['a'] ?? '').toString()))
+          .where((e) => e.key.isNotEmpty && e.value.isNotEmpty)
+          .toList();
   String? get followupAnswer => raw['followup_a'] as String?;
   bool get moodInferred => raw['mood_inferred'] == true;
   List<String> get tags {
@@ -651,6 +674,7 @@ class AppState extends ChangeNotifier {
     String? bodySex, // 'm' | 'f': the figure the pain map was drawn on
     List<String>? exercisesDone, // home-program exercise ids ticked off
     String? exerciseStatus, // 'yes' | 'some' | 'no' (program in another app)
+    Map<String, String>? planAnswers, // plan question id → 'yes' | 'some' | 'no'
   }) async {
     final data = await _api.post('/api/patient/check-ins', {
       // Tells the server which scale a skipped score should be estimated on.
@@ -668,6 +692,10 @@ class AppState extends ChangeNotifier {
       if (exercisesDone != null && exercisesDone.isNotEmpty)
         'exercisesDone': exercisesDone,
       if (exerciseStatus != null) 'exerciseStatus': exerciseStatus,
+      if (planAnswers != null && planAnswers.isNotEmpty)
+        'planAnswers': [
+          for (final e in planAnswers.entries) {'id': e.key, 'a': e.value},
+        ],
       if (inputMode != null) 'inputMode': inputMode,
     });
     final map = (data as Map).cast<String, dynamic>();

@@ -227,5 +227,50 @@ console.log('French error messages');
   eq(found.size > 200, true, 'errors: the scan finds the server messages (' + found.size + ')');
   eq(untranslated, [], 'errors: every server message has a French version in errors_fr.js');
 }
+{
+  // Which check-ins an AI may read: none with AI off; with AI on, only those
+  // sent while AI was on (older rows: AI-processed ones, or ones with no words).
+  const { aiCheckInsFor, sanitizePlanQuestions, sanitizePlanAnswers, visitStats } = await import('../clinical.js');
+  console.log('aiCheckInsFor — AI consent for check-in data');
+  const cis = [
+    { id: 1, ai_consent: true, raw_text: 'sore' },
+    { id: 2, ai_consent: false, raw_text: 'typed with AI off' },
+    { id: 3, ai_consent: null, model_version: 'm', raw_text: 'old, AI-processed' },
+    { id: 4, ai_consent: null, model_version: null, raw_text: 'old, typed with AI off' },
+    { id: 5, ai_consent: null, model_version: null, raw_text: null, mood_score: 4 }
+  ];
+  eq(aiCheckInsFor({ ai_consent_enabled: false }, cis), [], 'AI off for the client → nothing');
+  eq(aiCheckInsFor(null, cis), [], 'no client → nothing');
+  eq(aiCheckInsFor({ ai_consent_enabled: true }, cis).map(c => c.id), [1, 3, 5], 'AI on → only check-ins sent with AI on (or wordless old ones)');
+
+  console.log('Plan questions');
+  const qs = sanitizePlanQuestions(['Did you do the step-ups?', '  did you do the step-ups? ', '', 'Ice <b>after</b> stairs?', 'One', 'Two']);
+  eq(qs.map(q => q.q), ['Did you do the step-ups?', 'Ice b after /b stairs?', 'One'], 'trims, drops duplicates/empties/markup, max 3');
+  eq(qs.every(q => /^[a-z0-9]{4,12}$/.test(q.id)), true, 'each question gets a short id');
+  eq(sanitizePlanQuestions([{ id: 'abcd1234', q: 'Kept id?' }])[0].id, 'abcd1234', 'a valid id is kept');
+  const ans = sanitizePlanAnswers([{ id: qs[0].id, a: 'yes' }, { id: qs[0].id, a: 'no' }, { id: 'zzzz9999', a: 'yes' }, { id: qs[1].id, a: 'maybe' }, { id: qs[2].id, a: 'some' }], qs);
+  eq(ans, [{ id: qs[0].id, q: qs[0].q, a: 'yes' }, { id: qs[2].id, q: 'One', a: 'some' }], 'answers: current questions only, yes/some/no, one each, question text kept');
+  eq(sanitizePlanAnswers([{ id: 'x', a: 'yes' }], null), [], 'no questions set → no answers');
+
+  console.log('visitStats — "since last visit" figures');
+  const now = Date.parse('2026-11-16T12:00:00Z');
+  const day = d => new Date(now - d * 86400000).toISOString();
+  const list = [
+    { submitted_at: day(1), mood_score: 3, pain_map: { 'front:l_knee_cap': 3 }, exercises_done: ['e1'], plan_answers: [{ id: 'q1', q: 'Step-ups?', a: 'yes' }] },
+    { submitted_at: day(4), mood_score: 6, pain_map: { 'front:l_knee_cap': 6, 'back:lower_back': 2 }, plan_answers: [{ id: 'q1', q: 'Step-ups?', a: 'no' }] },
+    { submitted_at: day(20), mood_score: 7, pain_map: { 'back:lower_back': 5 } }
+  ];
+  const s = visitStats({ checkIns: list, exercises: [{ id: 'e1', name: 'Step-ups' }], since: day(10), pain: true, lang: 'en', now });
+  eq(s.count, 2, 'counts only check-ins since the last visit');
+  eq(s.lines[0], '2 check-ins', 'count line');
+  eq(s.lines[1], 'pain 6 → 3/10 (range 3–6)', 'score oldest → newest with range');
+  eq(s.lines[2], 'areas: left kneecap, lower back (new: left kneecap)', 'areas in plain words, with the new one flagged');
+  eq(s.lines[3], 'program done in 1 of 2 check-ins (Step-ups 1/2)', 'program completion');
+  eq(s.lines[4], '"Step-ups?": yes 1 · partly 0 · no 1', 'plan answers tallied');
+  eq(/^Since last visit/.test(s.head), true, 'header names the last visit');
+  const none = visitStats({ checkIns: [], since: null, pain: false, lang: 'fr', now });
+  eq([none.head, none.count], ['4 dernières semaines', 0], 'no visit yet → last 4 weeks (French)');
+}
+
 if (failures) { console.error(`\nUnit tests: ${failures} failing.`); process.exit(1); }
 console.log('\nAll unit tests passed.');
