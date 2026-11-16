@@ -958,12 +958,15 @@ function askBudgetOk() {
   askCount++;
   return true;
 }
-// Session-prep brief: a clinician generating a synthesis of one patient. Keyed
-// per clinician so a busy practice isn't throttled by a shared office IP.
+// Every AI action a clinician takes (prep brief, note, report, polish, plan
+// questions, suggestions…) shares this budget. Keyed per clinician so a busy
+// practice isn't throttled by a shared office IP. 20 a minute leaves room for
+// a normal burst (open the note, update it, polish two messages, draft a
+// report) while still capping runaway clicking or a script.
 const prepLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 8,
+  windowMs: 60 * 1000, max: 20,
   keyFn: req => (req.clinician && req.clinician.id) || req.ip,
-  message: 'Give it a moment before generating another brief.'
+  message: 'That was a lot of AI requests in a row. Wait a few seconds and try again.'
 });
 // A patient generating their own weekly reflection. Keyed per patient.
 const reflectionLimiter = rateLimit({

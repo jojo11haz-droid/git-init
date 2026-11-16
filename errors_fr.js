@@ -291,7 +291,7 @@ const FR = {
   "Too many check-ins at once. Wait a minute and try again.": "Trop de suivis à la fois. Attendez une minute et réessayez.",
   "You have tried the demo a few times. Start a free trial to keep going.": "Vous avez essayé la démo quelques fois. Commencez un essai gratuit pour continuer.",
   "You have asked a few questions. Start a free trial or email us to keep going.": "Vous avez posé quelques questions. Commencez un essai gratuit ou écrivez-nous pour continuer.",
-  "Give it a moment before generating another brief.": "Attendez un instant avant de générer un autre résumé.",
+  "That was a lot of AI requests in a row. Wait a few seconds and try again.": "Beaucoup de demandes à l'IA d'un coup. Attendez quelques secondes et réessayez.",
   "Give it a moment before reflecting again.": "Attendez un instant avant de refaire le point.",
   "You have tried the voice demo a few times. Start a free trial to keep going.": "Vous avez essayé la démo vocale quelques fois. Commencez un essai gratuit pour continuer.",
   "Too many code attempts. Wait 15 minutes and try again.": "Trop de tentatives de code. Attendez 15 minutes et réessayez.",
