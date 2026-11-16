@@ -1380,8 +1380,8 @@ export async function getPhotoForClinician(uploadId, clinicianId) {
 // account type (null for an individual using Between on their own).
 export async function getPatientDocContext(patientId) {
   const { rows } = await pool.query(
-    `SELECT p.id, p.display_name, p.account_type, p.ai_consent_enabled,
-            c.account_type AS clinician_account_type, c.discipline AS clinician_discipline
+    `SELECT p.id, p.display_name, p.account_type, p.ai_consent_enabled, p.lang,
+            c.account_type AS clinician_account_type, c.discipline AS clinician_discipline, c.lang AS clinician_lang
      FROM patients p LEFT JOIN clinicians c ON c.id = p.clinician_id
      WHERE p.id = $1`,
     [patientId]
