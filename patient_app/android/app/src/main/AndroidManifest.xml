@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Talks to betweenpsych.com. Debug builds get this automatically; a
+         release build (the one people install) needs it here. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Daily check-in reminders scheduled by the app (flutter_local_notifications). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

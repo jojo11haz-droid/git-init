@@ -1625,6 +1625,8 @@
   .btw-planq-btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;}
   .btw-planq-ans{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
   .btw-planq-ans b{color:var(--ink);font-weight:600;}
+  .btw-emr-btn[style*="display: none"] + .btw-docx-btn, .btw-emr-btn[style*="display:none"] + .btw-docx-btn{display:none;}
+  .btw-scribe-txdl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 10px;font-size:12px;color:var(--ink-soft);}
   .btw-hep-src{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:7px;}
   .btw-hep-srcl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;}
   .btw-hep-srcl input{width:16px;height:16px;accent-color:var(--moss);}
@@ -4657,7 +4659,7 @@
         </div>
         <div class="btw-scribe-msg" id="btwScribeMsg" role="status" aria-live="polite"></div>
         <div class="btw-scribe-fine">Keep this page open while you record. The recording stays on this device until you stop; it is then turned into text and deleted. Only the note you keep is saved.</div>
-        <details class="btw-scribe-tx" id="btwScribeTx" style="display:none;"><summary>Transcript (not saved)</summary><div id="btwScribeTxBody"></div></details>
+        <details class="btw-scribe-tx" id="btwScribeTx" style="display:none;"><summary>Transcript (not saved)</summary><div class="btw-scribe-txdl"><span>Download it for your own records:</span><button type="button" id="btwScribeTxPdf" class="btw-emr-btn"><span>PDF</span></button><button type="button" id="btwScribeTxDocx" class="btw-emr-btn"><span>Word</span></button><button type="button" id="btwScribeTxTxt" class="btw-emr-btn"><span>Text</span></button></div><div id="btwScribeTxBody"></div></details>
       </div>
       <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
         <div class="btw-ainote-own">
@@ -4676,7 +4678,7 @@
         <textarea id="btwAiNoteText" class="btw-ainote-text" rows="7" spellcheck="true"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwAiNoteMeta"></span>
-          <span class="btw-ainote-btns"><button type="button" id="btwAiNotePdf" class="btw-emr-btn"><span>Save as PDF</span></button><button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button></span>
+          <span class="btw-ainote-btns"><button type="button" id="btwAiNotePdf" class="btw-emr-btn"><span>Save as PDF</span></button><button type="button" id="btwAiNoteDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button></span>
         </div>
         <div class="btw-planq-edit" id="btwPlanQEdit">
           <div class="btw-ainote-own-l" id="btwPlanQTitle">Ask about the plan in their check-ins</div>
@@ -4708,7 +4710,7 @@
         <textarea id="btwReportText" class="btw-ainote-text" rows="12" spellcheck="true" style="display:none;"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwReportMeta"></span>
-          <span class="btw-ainote-btns"><button type="button" id="btwReportPdf" class="btw-emr-btn" style="display:none;"><span>Save as PDF</span></button><button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button></span>
+          <span class="btw-ainote-btns"><button type="button" id="btwReportPdf" class="btw-emr-btn" style="display:none;"><span>Save as PDF</span></button><button type="button" id="btwReportDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button></span>
         </div>
       </div>
       <div id="btwEncouragePanel" class="btw-ainote btw-msg" style="display:none;">
@@ -6281,7 +6283,7 @@
     "What's new":"Quoi de neuf",
     "New professionals, new patients and contact messages, newest first. A dot on Settings means there's something new since you last looked.":"Nouveaux professionnels, nouveaux patients et messages de contact, du plus récent au plus ancien. Un point sur Paramètres signifie qu'il y a du nouveau depuis votre dernière visite.",
     "Add clinicians to your clinic. Each gets their own login and their own private caseload, clinicians can't see each other's patients, and they're all covered by your clinic subscription.":"Ajoutez des cliniciens à votre clinique. Chacun a son propre accès et ses propres suivis, privés, les cliniciens ne voient pas les patients des autres, et tous sont couverts par l'abonnement de votre clinique.",
-    "Clinic agreement":"Entente de clinique","Findings":"Constats","Assessment":"Évaluation","Plan":"Plan","Partly":"En partie","partly":"en partie","your client":"votre client","From the plan":"Selon le plan","Your notes are added to the recorded session: “Update note” writes both into one note.":"Vos notes s’ajoutent à la séance enregistrée : « Mettre à jour la note » réunit les deux dans une seule note.","Ask about the plan in their check-ins":"Faire le point sur le plan dans leurs suivis","Up to 3 yes / partly / no questions, asked in every check-in until you change them. Their answers show in the timeline and in your next note.":"Jusqu’à 3 questions oui / en partie / non, posées à chaque suivi jusqu’à ce que vous les changiez. Les réponses s’affichent dans l’historique et dans votre prochaine note.","Suggest from the plan":"Suggérer à partir du plan","Save questions":"Enregistrer les questions","From your last visit":"Depuis votre dernière visite","Your professional asked about these. Answer the ones that apply.":"Votre professionnel aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.","{name} asked about these. Answer the ones that apply.":"{name} aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.","Did you do what we planned at your last visit?":"Avez-vous fait ce qui était prévu à votre dernière visite?","Nothing in the plan for them to do between visits. Type a question if you like.":"Rien dans le plan à faire entre les visites. Écrivez une question si vous le souhaitez.","Suggested. Edit them if you like, then save.":"Suggérées. Modifiez-les au besoin, puis enregistrez.","Saved. {name} will see them in their next check-in.":"Enregistrées. {name} les verra à son prochain suivi.","Cleared. No questions in their check-ins.":"Effacées. Aucune question dans ses suivis.","Write or dictate the plan first, then Between can turn it into questions.":"Écrivez ou dictez d’abord le plan; Between pourra ensuite le transformer en questions.","Could not suggest questions just now. Please try again.":"Impossible de suggérer des questions pour le moment. Veuillez réessayer.","Could not save the questions.":"Impossible d’enregistrer les questions.","AI is off for this client: their check-ins were not read by AI":"L’IA est désactivée pour cette personne : ses suivis n’ont pas été lus par l’IA","AI is off for this client: the figures are worked out without AI":"L’IA est désactivée pour cette personne : les chiffres sont calculés sans IA","Privacy & security":"Confidentialité et sécurité",
+    "Clinic agreement":"Entente de clinique","Save as Word":"Enregistrer en Word","Download it for your own records:":"Téléchargez-la pour vos propres dossiers :","Text":"Texte","Session transcript":"Transcription de la séance","Findings":"Constats","Assessment":"Évaluation","Plan":"Plan","Partly":"En partie","partly":"en partie","your client":"votre client","From the plan":"Selon le plan","Your notes are added to the recorded session: “Update note” writes both into one note.":"Vos notes s’ajoutent à la séance enregistrée : « Mettre à jour la note » réunit les deux dans une seule note.","Ask about the plan in their check-ins":"Faire le point sur le plan dans leurs suivis","Up to 3 yes / partly / no questions, asked in every check-in until you change them. Their answers show in the timeline and in your next note.":"Jusqu’à 3 questions oui / en partie / non, posées à chaque suivi jusqu’à ce que vous les changiez. Les réponses s’affichent dans l’historique et dans votre prochaine note.","Suggest from the plan":"Suggérer à partir du plan","Save questions":"Enregistrer les questions","From your last visit":"Depuis votre dernière visite","Your professional asked about these. Answer the ones that apply.":"Votre professionnel aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.","{name} asked about these. Answer the ones that apply.":"{name} aimerait savoir où vous en êtes. Répondez à celles qui s’appliquent.","Did you do what we planned at your last visit?":"Avez-vous fait ce qui était prévu à votre dernière visite?","Nothing in the plan for them to do between visits. Type a question if you like.":"Rien dans le plan à faire entre les visites. Écrivez une question si vous le souhaitez.","Suggested. Edit them if you like, then save.":"Suggérées. Modifiez-les au besoin, puis enregistrez.","Saved. {name} will see them in their next check-in.":"Enregistrées. {name} les verra à son prochain suivi.","Cleared. No questions in their check-ins.":"Effacées. Aucune question dans ses suivis.","Write or dictate the plan first, then Between can turn it into questions.":"Écrivez ou dictez d’abord le plan; Between pourra ensuite le transformer en questions.","Could not suggest questions just now. Please try again.":"Impossible de suggérer des questions pour le moment. Veuillez réessayer.","Could not save the questions.":"Impossible d’enregistrer les questions.","AI is off for this client: their check-ins were not read by AI":"L’IA est désactivée pour cette personne : ses suivis n’ont pas été lus par l’IA","AI is off for this client: the figures are worked out without AI":"L’IA est désactivée pour cette personne : les chiffres sont calculés sans IA","Privacy & security":"Confidentialité et sécurité",
     "Your name":"Votre nom",
     "Choose a password (10+ characters)":"Choisissez un mot de passe (10 caractères ou plus)",
     "Professional licence/order number":"Numéro de permis ou d'ordre professionnel",
@@ -16330,6 +16332,75 @@
     return name;
   }
   window.__btwBuildPdf = buildPdf;
+  // A real Word (.docx) file, built here with no library: a tiny ZIP (stored,
+  // no compression) holding the three parts Word needs. Lines that start with
+  // a note label ("S:", "Assessment:") get a bold label.
+  var _crcT = null;
+  function crc32(u8){
+    if(!_crcT){ _crcT = new Uint32Array(256); for(var n = 0; n < 256; n++){ var c = n; for(var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); _crcT[n] = c >>> 0; } }
+    var crc = 0xFFFFFFFF; for(var i = 0; i < u8.length; i++) crc = _crcT[(crc ^ u8[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zipStore(files){
+    var enc = new TextEncoder(), parts = [], central = [], offset = 0;
+    var d = new Date(), dt = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(), tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    function hdr(len){ var b = new DataView(new ArrayBuffer(len)); return b; }
+    files.forEach(function(f){
+      var name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+      var h = hdr(30); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, tm, true); h.setUint16(12, dt, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      var c = hdr(46); c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+      c.setUint16(12, tm, true); c.setUint16(14, dt, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
+      c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+      central.push(new Uint8Array(c.buffer), name);
+      offset += 30 + name.length + data.length;
+    });
+    var cdSize = central.reduce(function(a, x){ return a + x.length; }, 0);
+    var e = hdr(22); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cdSize, true); e.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+  function buildDocx(o){
+    var x = function(s){ return String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+    var run = function(text, rpr){ return '<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>' + (rpr || '') + '</w:rPr><w:t xml:space="preserve">' + x(text) + '</w:t></w:r>'; };
+    var para = function(runs, ppr){ return '<w:p><w:pPr><w:spacing w:after="120"/>' + (ppr || '') + '</w:pPr>' + runs + '</w:p>'; };
+    var body = para(run(o.title, '<w:b/><w:sz w:val="32"/>'), '<w:spacing w:after="160"/>');
+    (o.meta || []).forEach(function(m){ body += para(run(m, '<w:color w:val="5A6169"/><w:sz w:val="20"/>'), '<w:spacing w:after="40"/>'); });
+    body += para('', '');
+    String(o.body || '').replace(/\r/g, '').split('\n').forEach(function(line){
+      var m = line.match(/^(\s*(?:[A-Z]{1,4}(?:\/[A-Z]{1,2})?|[A-ZÀ-Ý][\p{L} ]{2,40}?)\s*:)(\s.*)?$/u);
+      body += para(m ? run(m[1], '<w:b/><w:sz w:val="22"/>') + run(m[2] || '', '<w:sz w:val="22"/>') : run(line, '<w:sz w:val="22"/>'));
+    });
+    if(o.signature) body += para('', '') + para(run(o.signature + ' ____________________', '<w:sz w:val="22"/>')) + para(run(o.dateLabel + ' ____________________', '<w:sz w:val="22"/>'));
+    var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body
+      + '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+    return zipStore([
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+      { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/document.xml', data: doc }
+    ]);
+  }
+  // Same header lines and file name as savePdf, as a .docx (or .txt).
+  function saveDoc(kindTitle, body, opts){
+    var p = selectedPatient(), me = state.me || {}, today = new Date();
+    var dateStr = today.toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { year:'numeric', month:'long', day:'numeric' });
+    var who = [me.name, me.practice_name].filter(Boolean).join(', ');
+    var meta = [];
+    if(p) meta.push(t('Client') + ': ' + (p.display_name || ''));
+    if(who) meta.push(t('Prepared by') + ': ' + who);
+    meta.push(t('Date') + ': ' + dateStr);
+    var txt = opts && opts.format === 'txt';
+    var blob = txt ? new Blob([kindTitle + '\n' + meta.join('\n') + '\n\n' + body + '\n'], { type: 'text/plain;charset=utf-8' })
+      : buildDocx({ title: kindTitle, meta: meta, body: body, signature: (opts && opts.signature) ? (t('Signature') + (me.name ? ': ' + me.name : '')) : null, dateLabel: t('Date') });
+    var name = pdfFileSlug(kindTitle) + '-' + pdfFileSlug(p && p.display_name) + '-' + today.toISOString().slice(0, 10) + (txt ? '.txt' : '.docx');
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    return name;
+  }
+  window.__btwBuildDocx = buildDocx;
   function flashBtn(btn, word){
     var cs = btn.querySelector('span') || btn; var o = cs.textContent;
     cs.textContent = word; btn.disabled = true;
@@ -17177,6 +17248,8 @@
           if(window.__btwSyncTxNote) window.__btwSyncTxNote();
           if(window.__btwPlanQSync) window.__btwPlanQSync(true);
           if(Array.isArray(d.transcript) && d.transcript.length){
+            // Kept in this page only, for the transcript downloads below.
+            lastTurns = d.transcript.slice();
             txBody.innerHTML = '';
             d.transcript.forEach(function(tn){ var row = document.createElement('div'); var b = document.createElement('b'); b.textContent = t('Speaker') + ' ' + (tn.speaker + 1); row.appendChild(b); row.appendChild(document.createTextNode(tn.text)); txBody.appendChild(row); });
             tx.style.display = ''; tx.open = false;
@@ -17190,6 +17263,20 @@
         }
         sync();
       }
+      // Download the transcript for the professional's own records (Between
+      // never keeps it): PDF, Word or plain text, one line per speaker turn.
+      var lastTurns = null;
+      function txText(){ return (lastTurns || []).map(function(tn){ return t('Speaker') + ' ' + (tn.speaker + 1) + ': ' + tn.text; }).join('\n\n'); }
+      [['btwScribeTxPdf', 'pdf'], ['btwScribeTxDocx', 'docx'], ['btwScribeTxTxt', 'txt']].forEach(function(pair){
+        var b = document.getElementById(pair[0]); if(!b) return;
+        b.addEventListener('click', function(){
+          if(!lastTurns || !lastTurns.length) return;
+          var title = t('Session transcript');
+          if(pair[1] === 'pdf') savePdf(title, txText(), { signature: false });
+          else saveDoc(title, txText(), { format: pair[1] });
+          flashBtn(b, t('Saved ✓'));
+        });
+      });
       bRetry.addEventListener('click', send);
       bDiscard.addEventListener('click', function(){ reset(); setMsg(t('Recording discarded.')); });
       function showNote(d){
@@ -17367,6 +17454,14 @@
       var title = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].textContent : t('Report');
       savePdf(title, out.value, { signature: false });
       flashBtn(pdf, t('Saved ✓'));
+    });
+    var docx = document.getElementById('btwReportDocx');
+    if(docx) docx.addEventListener('click', function(){
+      if(!out.value.trim()) return;
+      var sel = document.getElementById('btwReportKind');
+      var title = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].textContent : t('Report');
+      saveDoc(title, out.value, { signature: false });
+      flashBtn(docx, t('Saved ✓'));
     });
     btn.addEventListener('click', function(){ panel.style.display = panel.style.display === 'none' ? '' : 'none'; });
     go.addEventListener('click', async function(){
@@ -20084,6 +20179,13 @@
       var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : state.noteFormat === 'adime' ? t('Chart note (ADIME)') : t('Session note');
       savePdf(title, ta.value, { signature: true });
       flashBtn(notePdf, t('Saved ✓'));
+    });
+    var noteDocx = document.getElementById('btwAiNoteDocx');
+    if(noteDocx) noteDocx.addEventListener('click', function(){
+      var ta = document.getElementById('btwAiNoteText'); if(!ta || !ta.value.trim()) return;
+      var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : state.noteFormat === 'adime' ? t('Chart note (ADIME)') : t('Session note');
+      saveDoc(title, ta.value, { signature: true });
+      flashBtn(noteDocx, t('Saved ✓'));
     });
     var copyBtn = document.getElementById('btwAiNoteCopy');
     if(copyBtn) copyBtn.addEventListener('click', async function(){
