@@ -2413,7 +2413,7 @@
   /* Home gate: the "Who's it for?" chooser is the landing on every plain visit
      (returning visitors included): show only the chooser until a field is
      picked. A field URL (/physio) or a signed-in account skips the gate. */
-  .btw-home.btw-gated > *:not(.btw-chooser){display:none !important;}
+  .btw-home.btw-gated > *:not(.btw-chooser):not(.btw-fieldcopy){display:none !important;}
   /* Once a field is picked the chooser gives way to that field's page; reopen
      it any time from the "For: <field>" pill at the top right. */
   .btw-home:not(.btw-gated) .btw-chooser{display:none;}
@@ -3114,6 +3114,33 @@
     margin:0 0 18px;
   }
   .btw-contact{margin-top:44px;text-align:center;}
+  /* Per-field copy (server-filled). */
+  .btw-fieldcopy{max-width:1040px;margin:56px auto 8px;padding:0 4px;}
+  .btw-fieldcopy:empty{display:none;}
+  .btw-fieldcopy h2{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.01em;margin:6px 0 12px;text-wrap:balance;}
+  .btw-fieldcopy-intro{font-size:17px;line-height:1.6;color:var(--ink-soft);max-width:70ch;margin:0 0 22px;}
+  .btw-fieldcopy-points{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:0 0 28px;}
+  .btw-fieldcopy-point{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 17px;}
+  .btw-fieldcopy-point h3{font-size:15px;font-weight:600;margin:0 0 5px;}
+  .btw-fieldcopy-point p{font-size:14px;line-height:1.5;color:var(--ink-soft);margin:0;}
+  .btw-fieldcopy-faqh{font-family:var(--font-display);font-size:22px;font-weight:600;margin:0 0 10px;}
+  .btw-fieldcopy-faq details{border-top:1px solid var(--line);padding:12px 2px;}
+  .btw-fieldcopy-faq details:last-child{border-bottom:1px solid var(--line);}
+  .btw-fieldcopy-faq summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:12px;}
+  .btw-fieldcopy-faq summary::-webkit-details-marker{display:none;}
+  .btw-fieldcopy-faq summary::after{content:'+';color:var(--moss);font-weight:600;}
+  .btw-fieldcopy-faq details[open] summary::after{content:'–';}
+  .btw-fieldcopy-faq p{margin:8px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-soft);}
+  .btw-fieldcopy-otherh{font-size:12px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:26px 0 8px;}
+  .btw-fieldcopy-links{display:flex;flex-wrap:wrap;gap:6px 8px;list-style:none;margin:0;padding:0;}
+  .btw-fieldcopy-links a{display:inline-block;font-size:13px;text-decoration:none;color:var(--moss);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;}
+  .btw-fieldcopy-links a:hover{border-color:var(--moss);}
+  .btw-fieldcopy-fields{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px;}
+  .btw-fieldcopy-fields a{display:block;height:100%;box-sizing:border-box;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .btw-fieldcopy-fields a:hover{border-color:var(--moss);}
+  .btw-fieldcopy-fields b{display:block;font-size:14.5px;margin-bottom:2px;}
+  .btw-fieldcopy-fields span{font-size:13px;color:var(--ink-soft);line-height:1.45;}
+  .btw-home.btw-gated .btw-fieldcopy{margin-top:40px;}
   .btw-contact h2{font-family:var(--font-display);font-weight:600;font-size:22px;margin:8px 0 8px;}
   .btw-contact p{font-size:15px;color:var(--ink-soft);line-height:1.6;max-width:480px;margin:0 auto 20px;}
   .btw-contact-actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:center;}
@@ -4290,6 +4317,11 @@
         <p class="btw-setup-bring" id="btwSetupBring">Already have patients? You can upload their intake documents, referrals and assessments, and add their earlier records so trends aren't starting empty.</p>
         <p class="btw-setup-reassure"><strong>Nothing to unwind if you stop.</strong> Cancel anytime, and export or delete your data whenever you want.</p>
       </section>
+
+      <!-- Field copy: filled in by the server for each URL (field-copy.js), so
+           every field page carries its own readable text; the SPA refreshes it
+           from /api/field-copy when the field or language changes. -->
+      <section class="btw-fieldcopy" id="btwFieldCopy" data-noattr><!--FIELD_COPY--><!--/FIELD_COPY--></section>
 
       <section class="btw-cta-banner">
         <h2>Start your next session already knowing their week.</h2>
@@ -9870,6 +9902,8 @@
     const nodes = [];
     while(walker.nextNode()) nodes.push(walker.currentNode);
     for(const n of nodes){
+      // The per-field copy arrives already written in the right language and field.
+      if(n.parentElement && n.parentElement.closest && n.parentElement.closest('#btwFieldCopy')) continue;
       if(!_orig.has(n)){ if(!n.nodeValue.trim()) continue; _orig.set(n, n.nodeValue); }
       const original = _orig.get(n); if(original === undefined) continue;
       const key = original.trim();
@@ -10172,7 +10206,26 @@
     schools: { title: 'Between | Suivis entre les séances pour les écoles', desc: 'Les élèves font un suivi entre les séances. Between le résume et le personnel scolaire voit comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
     nutrition: { title: 'Between | Suivis entre les séances pour les nutritionnistes', desc: 'Les clients font le point sur leur énergie, leurs envies et le déroulement du plan entre les séances. Between le résume et les nutritionnistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' }
   };
+  // The per-field copy block (server-written for the URL that was loaded):
+  // fetch the right one when the visitor switches field or language in-page.
+  let _fieldCopyReq = 0;
+  function refreshFieldCopy(){
+    const box = document.getElementById('btwFieldCopy'); if(!box) return;
+    const gated = typeof _homeGated !== 'undefined' && _homeGated;
+    const path = gated ? '/' : (curAudience === 'therapy' ? '/therapy' : (AUD_TO_PATH[curAudience] || '/'));
+    const want = path + '|' + (curLang === 'fr' ? 'fr' : 'en');
+    const tag = box.querySelector('[data-fc]');
+    // Bump first: a request still in flight for an earlier state (say English,
+    // before the page switched to French) must not land over the right copy.
+    const my = ++_fieldCopyReq;
+    if(tag && tag.getAttribute('data-fc') === want) return;
+    fetch('/api/field-copy?path=' + encodeURIComponent(path) + '&lang=' + (curLang === 'fr' ? 'fr' : 'en'))
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.html && my === _fieldCopyReq) box.innerHTML = d.html; })
+      .catch(function(){});
+  }
   function applyFieldHead(){
+    try { refreshFieldCopy(); } catch(e){}
     const fr = curLang === 'fr';
     const m = (fr ? (FIELD_HEAD_FR[curAudience] || FIELD_HEAD_FR.therapy) : (FIELD_HEAD[curAudience] || FIELD_HEAD.therapy));
     // Link-preview card: public/og/<path>.png ("/" uses therapy.png).
@@ -10207,6 +10260,7 @@
     // On the chooser landing, strip the header chrome (nav tabs, field pill) so
     // the page is just "Who's it for?" — it all comes back once a field is picked.
     try { document.body.classList.toggle('btw-gated-landing', _homeGated); } catch(e){}
+    try { refreshFieldCopy(); } catch(e){}
     if(_homeGated){
       document.querySelectorAll('.btw-chooser-card').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.btw-aud-btn').forEach(b=>b.classList.remove('active'));

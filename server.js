@@ -59,6 +59,7 @@ import {
   setClinicianNeedsDigest, listNeedsDigestClinicians, claimNeedsDigest, recentScoresForClinician
 } from './db.js';
 import { rateLimit } from './rate-limit.js';
+import { fieldKey, fieldCopyHtml, fieldFaqJsonLd } from './field-copy.js';
 import { localizeErrors } from './errors_fr.js';
 import { signatureLens, SIGNATURE_LENS, sanitizeGoals, clampPoints, canonicalTags, tagField, needsAttention, PAIN_DISCIPLINES, sanitizeExercisesDone, sanitizeExercise, programKind, noteFormat, timeSavedSummary, programContext, sanitizeSuggestion , sanitizeExerciseStatus, sanitizeAppName, aiCheckInsFor, sanitizePlanQuestions, sanitizePlanAnswers, visitStats } from './clinical.js';
 import {
@@ -187,7 +188,14 @@ app.get('/api/public-config', (req, res) => {
 // The home page and the app script split out of it (see baseIndexHtml).
 app.get(['/', '/index.html'], (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.type('html').send(baseIndexHtml());
+  res.type('html').send(homeHtml());
+});
+// The per-field copy block, for in-page field / language switches.
+app.get('/api/field-copy', (req, res) => {
+  const lang = req.query.lang === 'fr' ? 'fr' : 'en';
+  const key = fieldKey(typeof req.query.path === 'string' ? req.query.path : '/');
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.json({ key, lang, html: `<span hidden data-fc="${key}|${lang}"></span>` + fieldCopyHtml(key, lang) });
 });
 app.get(/^\/app\.[0-9a-f]{12}\.js$/, (req, res) => appJsHandler(req, res));
 
@@ -5661,6 +5669,22 @@ function baseIndexHtml() {
   _indexHtmlCache = html;
   return html;
 }
+// Write the page's own field copy (field-copy.js) between the FIELD_COPY
+// markers, and that field's FAQ as structured data in <head>. A hidden tag
+// records which copy it is, so the SPA only refetches on a real change.
+function withFieldCopy(html, urlPath, lang) {
+  const key = fieldKey(urlPath), l = lang === 'fr' ? 'fr' : 'en';
+  const block = `<!--FIELD_COPY--><span hidden data-fc="${key}|${l}"></span>${fieldCopyHtml(key, l)}<!--/FIELD_COPY-->`;
+  let out = html.replace(/<!--FIELD_COPY-->[\s\S]*?<!--\/FIELD_COPY-->/, () => block);
+  const faq = fieldFaqJsonLd(key, l);
+  if (faq) { const i = out.indexOf('</head>'); if (i > 0) out = out.slice(0, i) + faq + '\n' + out.slice(i); }
+  return out;
+}
+let _homeHtmlCache = null;
+function homeHtml() {
+  if (_homeHtmlCache === null) _homeHtmlCache = withFieldCopy(baseIndexHtml(), '/', 'en');
+  return _homeHtmlCache;
+}
 function appJsHandler(req, res) {
   baseIndexHtml();
   if (!_appJs) return res.status(404).end();
@@ -5676,11 +5700,11 @@ app.get(FIELD_PATHS, (req, res) => {
   const meta = FIELD_META[req.path];
   // /therapy is the default and canonical to "/", so it uses the base file.
   // Use send (not sendFile) so our no-cache header isn't overridden.
-  if (!meta) return res.type('html').send(baseIndexHtml());
+  if (!meta) return res.type('html').send(homeHtml());
   if (!_fieldHtmlCache.has(req.path)) {
     // Link-preview card rendered by scripts/og-images.mjs into public/og/.
     const image = SITE_URL + '/og' + req.path + '.png';
-    _fieldHtmlCache.set(req.path, withFieldHead(baseIndexHtml(), { ...meta, url: SITE_URL + req.path, image, ...fieldAltUrls(req.path) }));
+    _fieldHtmlCache.set(req.path, withFieldHead(withFieldCopy(baseIndexHtml(), req.path, 'en'), { ...meta, url: SITE_URL + req.path, image, ...fieldAltUrls(req.path) }));
   }
   res.type('html').send(_fieldHtmlCache.get(req.path));
 });
@@ -5693,11 +5717,11 @@ app.get(FR_PATHS, (req, res) => {
   const p = req.path.replace(/\/+$/, '');
   const field = (p === '/fr' || p === '/fr/therapy') ? '/' : p.slice(3);
   const meta = FIELD_META_FR[field];
-  if (!meta) return res.type('html').send(baseIndexHtml());
+  if (!meta) return res.type('html').send(homeHtml());
   if (!_fieldHtmlCache.has(p)) {
     const alts = fieldAltUrls(field);
     const image = SITE_URL + '/og' + (field === '/' ? '/therapy' : field) + '.png';
-    _fieldHtmlCache.set(p, withFieldHead(baseIndexHtml(), { ...meta, url: alts.altFr, image, locale: 'fr_CA', lang: 'fr', ...alts }));
+    _fieldHtmlCache.set(p, withFieldHead(withFieldCopy(baseIndexHtml(), field, 'fr'), { ...meta, url: alts.altFr, image, locale: 'fr_CA', lang: 'fr', ...alts }));
   }
   res.type('html').send(_fieldHtmlCache.get(p));
 });
