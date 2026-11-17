@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { readFileSync } from 'fs';
 
 const { Pool } = pg;
 
@@ -244,6 +245,26 @@ CREATE TABLE IF NOT EXISTS demo_requests (
   delivered BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Owner's clinic outreach list (who to contact, where each one is in the
+-- email sequence). Dates are plain YYYY-MM-DD strings in the owner's day.
+CREATE TABLE IF NOT EXISTS outreach_leads (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name TEXT NOT NULL,
+  contact TEXT NOT NULL DEFAULT '',
+  profession TEXT NOT NULL DEFAULT 'other',
+  city TEXT NOT NULL DEFAULT '',
+  lang TEXT NOT NULL DEFAULT 'fr',
+  email TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'to_contact',
+  next_at TEXT NOT NULL DEFAULT '',
+  last_at TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 // Databases created before the auth release have a patients table without
@@ -437,9 +458,28 @@ export async function initDb() {
     return;
   }
   await pool.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";'); // needed for gen_random_uuid()
+  const hadOutreach = (await pool.query("SELECT to_regclass('public.outreach_leads') AS t")).rows[0].t;
   await pool.query(SCHEMA);
   await pool.query(MIGRATIONS);
+  if (!hadOutreach) await seedOutreachLeads();
   console.log('✅ Database ready.');
+}
+
+// The first time the outreach table is created, fill it with the starting
+// lead list (data/outreach-seed.json). Never runs again, so leads the owner
+// deletes stay deleted.
+async function seedOutreachLeads() {
+  let leads = [];
+  try { leads = JSON.parse(readFileSync(new URL('./data/outreach-seed.json', import.meta.url), 'utf8')); }
+  catch (e) { return; }
+  for (const l of leads) {
+    await pool.query(
+      `INSERT INTO outreach_leads (id, name, contact, profession, city, lang, email, phone, website, status, next_at, last_at, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT (id) DO NOTHING`,
+      [l.id, l.name, l.contact || '', l.profession || 'other', l.city || '', l.lang || 'fr', l.email || '', l.phone || '',
+       l.website || '', l.status || 'to_contact', l.next || '', l.last || '', l.notes || '']
+    );
+  }
 }
 
 // --- Clinicians & sessions ---
@@ -2447,6 +2487,46 @@ export async function listDemoRequests(limit = 100) {
     [Math.min(Math.max(1, limit), 500)]
   );
   return rows;
+}
+
+// --- Owner: clinic outreach list ---
+const OUTREACH_COLS = `id, name, contact, profession, city, lang, email, phone, website, status,
+  next_at AS next, last_at AS last, notes, created_at, updated_at`;
+const OUTREACH_SET = { name: 'name', contact: 'contact', profession: 'profession', city: 'city', lang: 'lang', email: 'email',
+  phone: 'phone', website: 'website', status: 'status', next: 'next_at', last: 'last_at', notes: 'notes' };
+
+export async function listOutreachLeads() {
+  const { rows } = await pool.query(`SELECT ${OUTREACH_COLS} FROM outreach_leads ORDER BY created_at, name`);
+  return rows;
+}
+
+export async function createOutreachLead(l) {
+  const keys = Object.keys(OUTREACH_SET).filter((k) => l[k] !== undefined);
+  const cols = keys.map((k) => OUTREACH_SET[k]);
+  const { rows } = await pool.query(
+    `INSERT INTO outreach_leads (${cols.join(', ')}) VALUES (${keys.map((_, i) => '$' + (i + 1)).join(', ')}) RETURNING ${OUTREACH_COLS}`,
+    keys.map((k) => l[k])
+  );
+  return rows[0];
+}
+
+export async function updateOutreachLead(id, patch) {
+  const keys = Object.keys(OUTREACH_SET).filter((k) => patch[k] !== undefined);
+  if (!keys.length) {
+    const { rows } = await pool.query(`SELECT ${OUTREACH_COLS} FROM outreach_leads WHERE id = $1`, [id]);
+    return rows[0] || null;
+  }
+  const { rows } = await pool.query(
+    `UPDATE outreach_leads SET ${keys.map((k, i) => OUTREACH_SET[k] + ' = $' + (i + 2)).join(', ')}, updated_at = now()
+      WHERE id = $1 RETURNING ${OUTREACH_COLS}`,
+    [id, ...keys.map((k) => patch[k])]
+  );
+  return rows[0] || null;
+}
+
+export async function deleteOutreachLead(id) {
+  const { rowCount } = await pool.query('DELETE FROM outreach_leads WHERE id = $1', [id]);
+  return rowCount > 0;
 }
 
 // ---- Recording consent (signed by client and professional) ----
