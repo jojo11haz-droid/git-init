@@ -339,6 +339,9 @@ ALTER TABLE patients ADD COLUMN IF NOT EXISTS shared_since TIMESTAMPTZ;
 -- clinician (sent only on days someone does), and the last day it went out.
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_last_sent DATE;
+-- Founding-clinic offer: when this professional started a checkout with the
+-- longer founding trial (the spot is only counted once a subscription exists).
+ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS founding_trial_at TIMESTAMPTZ;
 -- Time-saved counter: one row per piece of work Between did for a clinician
 -- (note drafted, brief, program item, morning email…). Counts only, no content.
 CREATE TABLE IF NOT EXISTS clinician_events (
@@ -556,6 +559,23 @@ export async function getClinicianStripe(clinicianId) {
     [clinicianId]
   );
   return rows[0] || null;
+}
+
+// Founding-clinic offer. A spot counts once the professional really has a
+// subscription (trial or paid), so an abandoned checkout doesn't use one up.
+export async function countFoundingClinicians() {
+  const { rows } = await pool.query(
+    `SELECT count(*)::int AS n FROM clinicians
+     WHERE founding_trial_at IS NOT NULL AND stripe_subscription_id IS NOT NULL`
+  );
+  return rows[0] ? rows[0].n : 0;
+}
+export async function markFoundingTrial(clinicianId) {
+  await pool.query(`UPDATE clinicians SET founding_trial_at = coalesce(founding_trial_at, now()) WHERE id = $1`, [clinicianId]);
+}
+export async function getFoundingTrialAt(clinicianId) {
+  const { rows } = await pool.query(`SELECT founding_trial_at FROM clinicians WHERE id = $1`, [clinicianId]);
+  return rows[0] ? rows[0].founding_trial_at : null;
 }
 
 export async function getClinicianByStripeSubscription(subscriptionId) {
