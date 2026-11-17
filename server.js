@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   dbEnabled, initDb, createPatient, countActivePatients, setPatientConsent, getPatient, listPatients, markPatientReviewed, updatePatientNote, setPatientCheckInMode, setPatientNextSession,
-  createCheckIn, createHistoricalCheckIn, listCheckIns, setPlanQuestions, markVisit, deleteOwnPatientAccount, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
+  createCheckIn, createHistoricalCheckIn, listCheckIns, setPlanQuestions, markVisit, deleteOwnPatientAccount, connectOwnAccount, disconnectOwnAccount, caseloadOutcomes, countRecentCheckIns, softDeleteCheckIn, deleteAllCheckIns,
   upsertHealthDay, listRecentHealth, deleteAllHealth,
   getEngagementStats, getOwnerOverview, getOwnerNotifications,
   createClinician, createCoach, createMentor, createSchool, createTrainer, getClinicianByEmail, createSession, getClinicianBySession, deleteSession,
@@ -2416,6 +2416,8 @@ app.post('/api/patients/:id/consent', requireDb, requireAuth, requireVerifiedCli
 // infrastructure is needed. History and consent are untouched.
 app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
   try {
+    const own = await getPatient(req.clinician.id, req.params.id);
+    if (own && own.own_account) return res.status(403).json({ error: OWN_ACCOUNT_ERROR });
     const patient = await resetPatientAccess(req.clinician.id, req.params.id, generateInviteCode());
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     res.json(patient);
@@ -2430,6 +2432,17 @@ app.post('/api/patients/:id/reset-access', requireDb, requireAuth, requireVerifi
 // download the record; the patient can no longer log in or send check-ins.
 const PATIENT_LEFT_GRACE_DAYS = 14;
 
+// The check-ins a professional may see for one of their clients: an
+// individual who connected their own account keeps what they sent before
+// connecting private unless they chose to share it (patients.shared_since).
+function proVisible(patient, at) {
+  return !patient || !patient.shared_since || (at && new Date(at) >= new Date(patient.shared_since));
+}
+async function proCheckIns(patient) {
+  return (await listCheckIns(patient.id)).filter(c => proVisible(patient, c.submitted_at));
+}
+const OWN_ACCOUNT_ERROR = 'This person manages their own Between account, so only they can do this.';
+
 // "Remove patient" — marks them as having left rather than erasing immediately.
 // Their access is cut now; their data is kept for PATIENT_LEFT_GRACE_DAYS so the
 // clinician can download it, then purgeExpiredPatients() deletes it for good.
@@ -2437,7 +2450,11 @@ app.delete('/api/patients/:id', requireDb, requireAuth, requireVerifiedClinician
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    if (!patient.left_at) await markPatientLeft(req.clinician.id, req.params.id);
+    if (!patient.left_at) {
+      const out = await markPatientLeft(req.clinician.id, req.params.id);
+      // Their own account: it's disconnected (back to an individual account), not kept for 14 days.
+      if (out && out.disconnected) return res.json({ ok: true, disconnected: true, grace_days: 0 });
+    }
     res.json({ ok: true, grace_days: PATIENT_LEFT_GRACE_DAYS });
   } catch (err) {
     console.error('Error removing patient:', err);
@@ -2453,7 +2470,7 @@ app.get('/api/patients/:id/export', requireDb, requireAuth, requireVerifiedClini
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
+    const checkIns = await proCheckIns(patient);
     // The message thread with this professional, and the client's next-session topics.
     const thread = await listClinicianMessages(patient.id, 500, req.clinician.id).catch(() => []);
     const topics = await listSessionTopics(patient.id).catch(() => []);
@@ -2748,7 +2765,7 @@ app.get('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifiedCl
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = await listCheckIns(patient.id);
+    const checkIns = await proCheckIns(patient);
     // Opening a patient counts as reviewing them — clears their "new" badge.
     markPatientReviewed(req.clinician.id, patient.id).catch(() => {});
     res.json(checkIns);
@@ -2767,7 +2784,7 @@ app.get('/api/patients/:id/prep', requireDb, requireAuth, requireVerifiedClinici
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI brief is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
+    const checkIns = aiCheckInsFor(patient, await proCheckIns(patient));
     const result = await sessionPrepBrief({
       name: patient.display_name,
       discipline: fieldOf(req).discipline,
@@ -2789,7 +2806,7 @@ app.get('/api/patients/:id/signature', requireDb, requireAuth, requireVerifiedCl
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The signature read is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
+    const checkIns = aiCheckInsFor(patient, await proCheckIns(patient));
     const lang = (req.query && req.query.lang === 'fr') ? 'fr' : 'en';
     const result = await signatureRead({
       name: patient.display_name,
@@ -2942,7 +2959,7 @@ app.get('/api/patients/:id/exercises', requireDb, requireAuth, requireVerifiedCl
     // A plain (non-AI) read of the check-ins: pre-fills the goal box and raises
     // a safety caution. Nothing here is sent anywhere.
     const f = fieldOf(req);
-    const ctx = programContext(await listCheckIns(patient.id), exercises, { pain: PAIN_DISCIPLINES.includes(f.discipline || '') });
+    const ctx = programContext(await proCheckIns(patient), exercises, { pain: PAIN_DISCIPLINES.includes(f.discipline || '') });
     // Without the client's AI consent, no goal is pre-filled: it's built from
     // their check-ins and would reach the AI once sent. The caution is only
     // shown to the clinician, so it always comes back.
@@ -3038,7 +3055,7 @@ app.post('/api/patients/:id/exercises/suggest', requireDb, requireAuth, requireV
     const goal = req.body && typeof req.body.goal === 'string' ? req.body.goal.trim() : '';
     const lang = (req.body && req.body.lang === 'fr') ? 'fr' : 'en';
     const f = fieldOf(req);
-    const allCheckIns = await listCheckIns(patient.id), program = await listExercises(patient.id);
+    const allCheckIns = await proCheckIns(patient), program = await listExercises(patient.id);
     const pain = PAIN_DISCIPLINES.includes(f.discipline || '');
     const ctx = programContext(allCheckIns, program, { pain });
     // Check-in details go to the AI only with the client's AI consent, and
@@ -3436,7 +3453,7 @@ app.post('/api/patients/:id/report', requireDb, requireAuth, requireVerifiedClin
     const recipient = typeof b.recipient === 'string' ? b.recipient.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
     const result = await draftReport({
       name: patient.display_name, discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
-      checkIns: aiCheckInsFor(patient, await listCheckIns(patient.id)), exercises: await listAllExercises(patient.id),
+      checkIns: aiCheckInsFor(patient, await proCheckIns(patient)), exercises: await listAllExercises(patient.id),
       kind, recipient, lang: b.lang === 'fr' ? 'fr' : 'en', clinicianName: req.clinician.name
     });
     if (!result.needsData) countWork(req.clinician.id, 'report');
@@ -3501,7 +3518,7 @@ app.post('/api/patients/:id/exercises/review', requireDb, requireAuth, requireVe
     // The review reads adherence and what the client said: AI-consented check-ins only.
     if (!patient.ai_consent_enabled) return res.json({ suggestions: [], needsData: true, aiOff: true });
     const suggestions = await reviewProgram({ discipline: fieldOf(req).discipline, accountType: fieldOf(req).account_type,
-      checkIns: aiCheckInsFor(patient, await listCheckIns(patient.id)), exercises, lang: (req.body && req.body.lang === 'fr') ? 'fr' : 'en' });
+      checkIns: aiCheckInsFor(patient, await proCheckIns(patient)), exercises, lang: (req.body && req.body.lang === 'fr') ? 'fr' : 'en' });
     countWork(req.clinician.id, 'program_review');
     res.json({ suggestions });
   } catch (err) {
@@ -3581,7 +3598,7 @@ app.get('/api/caseload/outcomes', requireDb, requireAuth, requireVerifiedClinici
 // The pieces every chart note is built from: the check-ins an AI may read,
 // the program, and the "since last visit" figures (worked out here, no AI).
 async function noteInputs(req, patient) {
-  const all = await listCheckIns(patient.id);
+  const all = await proCheckIns(patient);
   const exercises = await listAllExercises(patient.id);
   const since = await markVisit(patient.id);
   const b = req.body || {};
@@ -3677,7 +3694,7 @@ app.get('/api/patients/:id/encouragement', requireDb, requireAuth, requireVerifi
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The encouragement draft is unavailable right now.' });
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
-    const checkIns = aiCheckInsFor(patient, await listCheckIns(patient.id));
+    const checkIns = aiCheckInsFor(patient, await proCheckIns(patient));
     // The client reads this message: in their language first, else the page's.
     const lang = (patient.lang === 'fr' || patient.lang === 'en') ? patient.lang : ((req.query && req.query.lang === 'fr') ? 'fr' : 'en');
     const result = await encouragementDraft({
@@ -3737,7 +3754,8 @@ app.get('/api/patients/:id/health', requireDb, requireAuth, requireVerifiedClini
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 30));
-    res.json(await listRecentHealth(patient.id, days));
+    const since = patient.shared_since ? new Date(patient.shared_since).toISOString().slice(0, 10) : null;
+    res.json((await listRecentHealth(patient.id, days)).filter(h => !since || String(h.day instanceof Date ? h.day.toISOString().slice(0, 10) : h.day).slice(0, 10) >= since));
   } catch (err) {
     console.error('Error listing patient health:', err);
     res.status(500).json({ error: 'Could not load health data.' });
@@ -3750,7 +3768,7 @@ app.get('/api/patients/:id/check-ins/:checkInId/audio', requireDb, requireAuth, 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const checkIn = await getCheckIn(req.params.checkInId, patient.id);
-    if (!checkIn || !checkIn.audio_upload_id) return res.status(404).json({ error: 'No audio for this check-in.' });
+    if (!checkIn || !checkIn.audio_upload_id || !proVisible(patient, checkIn.submitted_at)) return res.status(404).json({ error: 'No audio for this check-in.' });
     const audio = await getAudioForClinician(checkIn.audio_upload_id, req.clinician.id);
     if (!audio) return res.status(404).json({ error: 'No audio for this check-in.' });
     res.setHeader('Content-Type', audio.mime);
@@ -3767,7 +3785,7 @@ app.get('/api/patients/:id/check-ins/:checkInId/photo', requireDb, requireAuth, 
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
     const checkIn = await getCheckIn(req.params.checkInId, patient.id);
-    if (!checkIn || !checkIn.photo_upload_id) return res.status(404).json({ error: 'No photo for this check-in.' });
+    if (!checkIn || !checkIn.photo_upload_id || !proVisible(patient, checkIn.submitted_at)) return res.status(404).json({ error: 'No photo for this check-in.' });
     const photo = await getPhotoForClinician(checkIn.photo_upload_id, req.clinician.id);
     if (!photo) return res.status(404).json({ error: 'No photo for this check-in.' });
     res.setHeader('Content-Type', photo.mime);
@@ -3783,6 +3801,7 @@ app.delete('/api/patients/:id/check-ins/:checkInId', requireDb, requireAuth, req
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    if (patient.own_account) return res.status(403).json({ error: OWN_ACCOUNT_ERROR });
     const deleted = await softDeleteCheckIn(req.params.checkInId, patient.id);
     if (!deleted) return res.status(404).json({ error: 'Check-in not found.' });
     res.json({ ok: true });
@@ -3796,6 +3815,7 @@ app.delete('/api/patients/:id/check-ins', requireDb, requireAuth, requireVerifie
   try {
     const patient = await getPatient(req.clinician.id, req.params.id);
     if (!patient) return res.status(404).json({ error: 'Patient not found.' });
+    if (patient.own_account) return res.status(403).json({ error: OWN_ACCOUNT_ERROR });
     await deleteAllCheckIns(patient.id);
     res.json({ ok: true });
   } catch (err) {
@@ -3904,6 +3924,11 @@ function publicPatient(p) {
     clinician_account_type: p.clinician_account_type || null,
     clinician_discipline: p.clinician_discipline || null,
     clinician_name: p.clinician_name || null,
+    // Connected: has a professional. Own account: they brought it themselves
+    // (they can disconnect). history_private_before: earlier entries stay private.
+    connected: !!p.clinician_id,
+    own_account: !!p.own_account,
+    history_private_before: p.own_account && p.shared_since ? p.shared_since : null,
     body_sex: p.body_sex === 'f' || p.body_sex === 'm' ? p.body_sex : null,
     check_in_mode_lock: p.check_in_mode_lock || 'any',
     reminders_enabled: !!p.reminders_enabled,
@@ -4172,6 +4197,10 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
     // with the same email after a therapist access-reset works.
     const existing = await getPatientByEmail(email.trim());
     if (existing && existing.id !== found.id) {
+      // Their own Between account: log in and connect it, rather than a second account.
+      if (!existing.clinician_id) {
+        return res.status(409).json({ error: 'You already have a Between account with this email. Log in, then connect it to your professional with this code.', code: 'has_own_account' });
+      }
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
     }
 
@@ -4332,6 +4361,55 @@ app.delete('/api/patient/account', requireDb, requirePatientAuth, async (req, re
   } catch (err) {
     console.error('Delete own account failed:', err);
     res.status(500).json({ error: 'Could not delete your account. Please try again or email us.' });
+  }
+});
+
+// --- An individual's own account ↔ a professional ---
+// Connect: an individual (no professional) enters the invite code their
+// professional made for them. Their account joins that professional's caseload
+// (the professional's placeholder for them is merged in). Earlier check-ins
+// stay private unless shareHistory is true. A personal subscription can be
+// stopped at the end of its period: the professional's plan covers them now.
+app.post('/api/patient/connect', requireDb, requirePatientAuth, inviteLimiter, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const code = String(b.inviteCode || '').trim().toUpperCase();
+    if (!code) return res.status(400).json({ error: 'An invite code is required.' });
+    if (req.patient.clinician_id) return res.status(409).json({ error: 'You are already connected to a professional. Disconnect first to connect to someone else.' });
+    const out = await connectOwnAccount(req.patient.id, code, !!b.shareHistory);
+    if (out.error === 'connected') return res.status(409).json({ error: 'You are already connected to a professional. Disconnect first to connect to someone else.' });
+    if (out.error) return res.status(404).json({ error: 'That invite code is not valid. Check it with your professional.' });
+    let subscriptionStopping = false;
+    if (b.stopSubscription && stripeConfigured() && !['canceled', 'incomplete_expired', 'canceling'].includes(req.patient.subscription_status)) {
+      const s = await getPatientStripe(req.patient.id).catch(() => null);
+      if (s && s.stripe_subscription_id) {
+        try {
+          await setSubscriptionCancelAtPeriodEnd(s.stripe_subscription_id, true);
+          await updatePatientSubscription(req.patient.id, { status: 'canceling' });
+          subscriptionStopping = true;
+        } catch (e) { console.error('Stop subscription on connect failed:', e.message); }
+      }
+    }
+    const fresh = await getPatientById(req.patient.id);
+    res.json({ patient: publicPatient(await withClinicianInfo(fresh)), subscriptionStopping });
+  } catch (err) {
+    console.error('Connect own account failed:', err);
+    res.status(500).json({ error: 'Could not connect your account. Please try again.' });
+  }
+});
+
+// Disconnect: back to an individual account. Only for an account the person
+// brought themselves (an invited client deletes their account instead).
+app.post('/api/patient/disconnect', requireDb, requirePatientAuth, async (req, res) => {
+  try {
+    if (!req.patient.clinician_id) return res.status(409).json({ error: 'You are not connected to a professional.' });
+    if (!req.patient.own_account) return res.status(403).json({ error: 'This account was created by your professional. To stop, delete your account in Settings.' });
+    const back = await disconnectOwnAccount(req.patient.id);
+    if (!back) return res.status(409).json({ error: 'You are not connected to a professional.' });
+    res.json({ patient: publicPatient(await withClinicianInfo(back)) });
+  } catch (err) {
+    console.error('Disconnect own account failed:', err);
+    res.status(500).json({ error: 'Could not disconnect your account. Please try again.' });
   }
 });
 

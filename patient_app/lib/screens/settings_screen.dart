@@ -219,6 +219,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // Connect my own account to my professional with their invite code.
+  Future<void> _connectPro() async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    final p = app.patient;
+    // Cancelling a website subscription isn't offered on iPhone (store rules):
+    // they manage it on the website.
+    final canStop = canShowPurchase && (p?.hasLiveSubscription ?? false);
+    final ctrl = TextEditingController();
+    var share = false;
+    var stop = true;
+    String? error;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: BtwColors.cream,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(s.connectPro),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s.connectProDesc, style: const TextStyle(height: 1.5)),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: ctrl,
+                  autocorrect: false,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                      hintText: s.inviteCodeHint, errorText: error),
+                ),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: share,
+                  onChanged: (v) => setLocal(() => share = v ?? false),
+                  title: Text(s.shareEarlier,
+                      style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(s.shareEarlierOff,
+                      style: const TextStyle(
+                          fontSize: 12, color: BtwColors.inkSoft)),
+                ),
+                if (canStop)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: stop,
+                    onChanged: (v) => setLocal(() => stop = v ?? true),
+                    title: Text(s.stopPersonalPlan,
+                        style: const TextStyle(fontSize: 13.5)),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(s.cancel,
+                  style: const TextStyle(color: BtwColors.inkSoft)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (ctrl.text.trim().isEmpty) {
+                  setLocal(() => error = s.enterInviteCode);
+                  return;
+                }
+                Navigator.of(ctx).pop(true);
+              },
+              child: Text(s.connectButton,
+                  style: const TextStyle(color: BtwColors.moss)),
+            ),
+          ],
+        ),
+      ),
+    );
+    final code = ctrl.text;
+    ctrl.dispose();
+    if (go != true || !mounted) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final stopping = await app.connectProfessional(code,
+          shareHistory: share, stopSubscription: canStop && stop);
+      messenger.showSnackBar(SnackBar(
+          content: Text(stopping
+              ? '${s.connectedDone} ${s.planStopsAtPeriodEnd}'
+              : s.connectedDone)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _disconnectPro() async {
+    final app = context.read<AppState>();
+    final s = app.s;
+    final name = app.patient?.clinicianName ?? s.yourProfessionalFallback;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: BtwColors.cream,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(s.disconnectPro),
+        content: Text(s.disconnectBody(name),
+            style: const TextStyle(height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(s.cancel,
+                style: const TextStyle(color: BtwColors.inkSoft)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(s.disconnectButton,
+                style: const TextStyle(color: BtwColors.clay)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await app.disconnectProfessional();
+      messenger.showSnackBar(SnackBar(content: Text(s.disconnectedDone)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String _fmtDate(DateTime d, bool fr) {
+    const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const frM = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    return fr
+        ? '${d.day} ${frM[d.month - 1]} ${d.year}'
+        : '${en[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -513,6 +658,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+            // Their own account: connect to a professional, or disconnect.
+            // Hidden for a client their professional invited.
+            if (!patient.connected || patient.ownAccount) ...[
+              const SizedBox(height: 12),
+              _Section(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                      patient.connected
+                          ? Icons.link_rounded
+                          : Icons.person_add_alt_1_rounded,
+                      color: BtwColors.moss),
+                  title: Text(
+                      patient.connected ? s.yourProfessional : s.connectPro,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                      patient.connected
+                          ? '${s.connectedTo(patient.clinicianName ?? s.yourProfessionalFallback)} ${patient.historyPrivateBefore != null ? s.privateBefore(_fmtDate(patient.historyPrivateBefore!, s.isFr)) : s.historyShared}'
+                          : s.connectProDesc,
+                      style: const TextStyle(
+                          fontSize: 13, color: BtwColors.inkSoft)),
+                  trailing: patient.connected
+                      ? Text(s.disconnectButton,
+                          style: const TextStyle(
+                              fontSize: 13, color: BtwColors.clay))
+                      : const Icon(Icons.chevron_right_rounded,
+                          color: BtwColors.inkSoft),
+                  onTap: _busy
+                      ? null
+                      : (patient.connected ? _disconnectPro : _connectPro),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             _Section(
               child: ListTile(

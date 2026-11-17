@@ -998,6 +998,51 @@ class S {
   String get deleteConfirmWord => _('DELETE', 'SUPPRIMER');
   String typeToConfirm(String word) =>
       _('Type $word to confirm', 'Tape $word pour confirmer');
+
+  // Connect my own account to my professional (same as the website).
+  String get connectPro =>
+      _('Connect with my professional', 'Me relier à mon professionnel');
+  String get connectProDesc => _(
+      'Seeing a professional who uses Between? Ask them to add you, then enter the invite code they send. Your account, goals and notes stay yours.',
+      'Tu consultes un professionnel qui utilise Between? Demande-lui de t\'ajouter, puis entre le code d\'invitation qu\'il t\'envoie. Ton compte, tes objectifs et tes notes restent à toi.');
+  String get inviteCodeHint => _('Invite code', 'Code d\'invitation');
+  String get shareEarlier => _('Also share my earlier check-ins with them',
+      'Partager aussi mes suivis précédents avec cette personne');
+  String get shareEarlierOff => _(
+      'Off: they only see what you send from now on.',
+      'Désactivé : elle ne voit que ce que tu envoies à partir de maintenant.');
+  String get stopPersonalPlan => _(
+      'Stop my personal subscription at the end of this period (your professional\'s plan covers your check-ins)',
+      'Arrêter mon abonnement personnel à la fin de la période (le forfait de ton professionnel couvre tes suivis)');
+  String get connectButton => _('Connect', 'Me relier');
+  String get enterInviteCode => _('Enter the invite code from your professional.',
+      'Entre le code d\'invitation de ton professionnel.');
+  String get connectedDone => _(
+      'You are connected. Your professional will see your check-ins from now on.',
+      'Tu es relié(e). Ton professionnel verra tes suivis à partir de maintenant.');
+  String get planStopsAtPeriodEnd => _(
+      'Your personal subscription stops at the end of this period.',
+      'Ton abonnement personnel s\'arrête à la fin de la période.');
+  String get yourProfessional => _('Your professional', 'Ton professionnel');
+  String connectedTo(String name) =>
+      _('Connected to $name.', 'Relié(e) à $name.');
+  String privateBefore(String date) => _(
+      'What you sent before $date stays private to you.',
+      'Ce que tu as envoyé avant le $date reste privé.');
+  String get historyShared => _(
+      'They can see your check-ins, including the earlier ones you shared.',
+      'Ton professionnel voit tes suivis, y compris les précédents que tu as partagés.');
+  String get disconnectPro =>
+      _('Disconnect from my professional', 'Me déconnecter de mon professionnel');
+  String disconnectBody(String name) => _(
+      'Disconnect from $name? They lose access to your account right away, and what they added (program, messages, plan questions) is removed. Your check-ins, goals and notes stay with you.',
+      'Te déconnecter de $name? Cette personne perd l\'accès à ton compte immédiatement, et ce qu\'elle a ajouté (programme, messages, questions du plan) est retiré. Tes suivis, objectifs et notes restent à toi.');
+  String get disconnectButton => _('Disconnect', 'Me déconnecter');
+  String get disconnectedDone => _(
+      'You are disconnected. Your account is yours alone again.',
+      'Tu es déconnecté(e). Ton compte est de nouveau à toi seul(e).');
+  String get yourProfessionalFallback =>
+      _('your professional', 'ton professionnel');
   String get deleteAccountButton =>
       _('Delete my account', 'Supprimer mon compte');
   String get accountDeleted => _(

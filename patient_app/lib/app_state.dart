@@ -41,6 +41,13 @@ class Patient {
   // The body map's Man / Woman figure, saved on the account ('m' / 'f').
   String? get bodySex => raw['body_sex'] as String?;
   bool get hasClinician => clinicianAccountType != null;
+  // Their own account connected to a professional with an invite code (they
+  // can disconnect it); null history date = everything is shared.
+  bool get connected => raw['connected'] == true || hasClinician;
+  bool get ownAccount => raw['own_account'] == true;
+  DateTime? get historyPrivateBefore =>
+      DateTime.tryParse((raw['history_private_before'] ?? '').toString())
+          ?.toLocal();
   // Daily text/email reminders turned on from the website.
   bool get textRemindersOn => raw['reminders_enabled'] == true;
   // Their program lives in another exercise app (Wibbi, Physitrack…): the
@@ -517,6 +524,41 @@ class AppState extends ChangeNotifier {
     patient = Patient(
         ((data as Map)['patient'] as Map).cast<String, dynamic>());
     notifyListeners();
+  }
+
+  /// Connect my own account to my professional with the invite code they sent
+  /// (same as the website). Earlier check-ins stay private unless
+  /// [shareHistory]. Returns true when a personal subscription was set to stop
+  /// at the end of its period.
+  Future<bool> connectProfessional(String inviteCode,
+      {bool shareHistory = false, bool stopSubscription = false}) async {
+    final data = await _api.post('/api/patient/connect', {
+      'inviteCode': inviteCode.trim().toUpperCase(),
+      'shareHistory': shareHistory,
+      'stopSubscription': stopSubscription,
+    });
+    final m = (data as Map).cast<String, dynamic>();
+    patient = Patient((m['patient'] as Map).cast<String, dynamic>());
+    notifyListeners();
+    await _refreshMe();
+    return m['subscriptionStopping'] == true;
+  }
+
+  /// Back to an individual account (only for an account they brought).
+  Future<void> disconnectProfessional() async {
+    final data = await _api.post('/api/patient/disconnect');
+    patient = Patient(
+        ((data as Map)['patient'] as Map).cast<String, dynamic>());
+    notifyListeners();
+    await _refreshMe();
+  }
+
+  Future<void> _refreshMe() async {
+    try {
+      final me = await _api.get('/api/patient/me');
+      patient = Patient((me['patient'] as Map).cast<String, dynamic>());
+      notifyListeners();
+    } catch (_) {/* keep what we have */}
   }
 
   /// Stop the website's daily text/email reminders (when the app's own

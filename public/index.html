@@ -3595,6 +3595,20 @@
 
       <button id="btwResetAccess" style="width:100%;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Reset app access (new invite code)</button>
       <button id="btwDeleteAll" style="width:100%;background:var(--panel);color:var(--clay);border:1px solid var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Request deletion of my check-in history</button>
+      <div id="btwConnectBox" style="display:none;border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:12px;">
+        <strong id="btwConnectTitle" style="display:block;font-size:13px;margin-bottom:3px;">Connect with my professional</strong>
+        <div id="btwConnectLead" style="font-size:12px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;">Seeing a professional who uses Between? Ask them to add you, then enter the invite code they send. Your account, goals and notes stay yours.</div>
+        <div id="btwConnectForm">
+          <input type="text" id="btwConnectCode" placeholder="Invite code" autocomplete="off" autocapitalize="characters" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:var(--font-body);font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.45;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="btwConnectShare" style="margin-top:2px;"><span id="btwConnectShareLbl">Also share my earlier check-ins with them</span></label>
+          <div id="btwConnectShareHint" style="font-size:11.5px;color:var(--ink-soft);line-height:1.45;margin:-2px 0 10px 24px;">Off: they only see what you send from now on.</div>
+          <label id="btwConnectStopRow" style="display:none;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.45;margin-bottom:10px;cursor:pointer;"><input type="checkbox" id="btwConnectStop" checked style="margin-top:2px;"><span id="btwConnectStopLbl">Stop my personal subscription at the end of this period (your professional's plan covers your check-ins)</span></label>
+          <button type="button" id="btwConnectGo" style="width:100%;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Connect</button>
+        </div>
+        <button type="button" id="btwDisconnectGo" style="display:none;width:100%;background:var(--panel);color:var(--clay);border:1px solid var(--clay);border-radius:8px;padding:9px 14px;font-family:var(--font-body);font-weight:600;font-size:12.5px;cursor:pointer;">Disconnect from my professional</button>
+        <div class="btw-form-error" id="btwConnectErr" style="display:none;color:var(--clay);font-size:12px;margin-top:6px;"></div>
+        <div id="btwConnectOk" style="display:none;color:var(--moss);font-size:12px;margin-top:6px;line-height:1.5;"></div>
+      </div>
       <button id="btwDeleteAccount" style="display:none;width:100%;background:var(--panel);color:var(--clay);border:1px dashed var(--clay);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Delete my account</button>
       <div id="btwLeftNote" style="display:none;background:#FBF3E7;border:1px solid #E6D8A8;border-radius:9px;padding:10px 12px;font-size:12px;color:#6b5a1f;line-height:1.55;margin-bottom:10px;"></div>
       <button id="btwCopyEmr" style="width:100%;background:var(--moss);color:#fff;border:1px solid var(--moss);border-radius:9px;padding:10px 16px;font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px;">Copy summary for EMR</button>
@@ -5803,6 +5817,7 @@
     if(!resp.ok){
       const err = new Error((data && data.error) || (t('Request failed') + ' (' + resp.status + ')'));
       err.status = resp.status;
+      if(data && data.code) err.code = data.code;
       throw err;
     }
     return data;
@@ -7247,6 +7262,29 @@
     "Say a bit about what happened before sending…":"Dites un mot sur ce qui s'est passé avant d'envoyer…",
     "you@email.com":"vous@courriel.com",
     "Enter your email and password.":"Entrez votre courriel et votre mot de passe.",
+    "Connect with my professional":"Me relier à mon professionnel",
+    "Seeing a professional who uses Between? Ask them to add you, then enter the invite code they send. Your account, goals and notes stay yours.":"Vous consultez un professionnel qui utilise Between? Demandez-lui de vous ajouter, puis entrez le code d'invitation qu'il vous envoie. Votre compte, vos objectifs et vos notes restent à vous.",
+    "Also share my earlier check-ins with them":"Partager aussi mes suivis précédents avec cette personne",
+    "Off: they only see what you send from now on.":"Désactivé : elle ne voit que ce que vous envoyez à partir de maintenant.",
+    "Stop my personal subscription at the end of this period (your professional's plan covers your check-ins)":"Arrêter mon abonnement personnel à la fin de la période (le forfait de votre professionnel couvre vos suivis)",
+    "Connect":"Me relier",
+    "Disconnect from my professional":"Me déconnecter de mon professionnel",
+    "Their own Between account":"Son propre compte Between",
+    "{name} connected their own account on {date}. What they sent before stays private to them.":"{name} a relié son propre compte le {date}. Ce qui a été envoyé avant reste privé.",
+    "{name} connected their own account and shared their earlier check-ins with you.":"{name} a relié son propre compte et vous a partagé ses suivis précédents.",
+    "Only they can reset their login or delete their check-ins. Removing them disconnects the account; it is not kept here.":"Seule cette personne peut réinitialiser sa connexion ou supprimer ses suivis. La retirer déconnecte le compte; il n'est pas conservé ici.",
+    "Connected to {name}.":"Relié à {name}.",
+    "your professional":"votre professionnel",
+    "What you sent before {date} stays private to you.":"Ce que vous avez envoyé avant le {date} reste privé.",
+    "They can see your check-ins, including the earlier ones you shared.":"Votre professionnel voit vos suivis, y compris les précédents que vous avez partagés.",
+    "Enter the invite code from your professional.":"Entrez le code d'invitation de votre professionnel.",
+    "You are connected. Your professional will see your check-ins from now on.":"Vous êtes relié. Votre professionnel verra vos suivis à partir de maintenant.",
+    "Your personal subscription stops at the end of this period.":"Votre abonnement personnel s'arrête à la fin de la période.",
+    "Could not connect your account. Please try again.":"Impossible de relier votre compte. Veuillez réessayer.",
+    "Disconnect from {name}? They lose access to your account right away, and what they added (program, messages, plan questions) is removed. Your check-ins, goals and notes stay with you.":"Vous déconnecter de {name}? Cette personne perd l'accès à votre compte immédiatement, et ce qu'elle a ajouté (programme, messages, questions du plan) est retiré. Vos suivis, objectifs et notes restent à vous.",
+    "You are disconnected. Your account is yours alone again.":"Vous êtes déconnecté. Votre compte est de nouveau à vous seul.",
+    "Could not disconnect your account. Please try again.":"Impossible de déconnecter votre compte. Veuillez réessayer.",
+    "Disconnect {name}? They manage their own Between account: it goes back to being theirs alone, and you lose access to it right away (nothing is kept here). Download their record first if you need it for your files.":"Déconnecter {name}? Cette personne gère son propre compte Between : il redevient le sien seulement, et vous en perdez l'accès immédiatement (rien n'est conservé ici). Téléchargez d'abord son dossier si vous en avez besoin pour vos archives.",
     "Password updated. Log in with your new password.":"Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.",
     "Turn off AI summaries for {name}? Future check-ins will be stored as written, with no AI analysis.":"Désactiver les résumés IA pour {name}? Les prochains suivis seront conservés tels quels, sans analyse IA.",
     "Delete this check-in? It will no longer appear in the timeline or trends.":"Supprimer ce suivi? Il n'apparaîtra plus dans l'historique ni dans les tendances.",
@@ -7461,6 +7499,7 @@
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwPlanQ1:'p. ex. Avez-vous fait vos montées de marche cette semaine?',
+    btwConnectCode:'Code d\'invitation',
     btwEncourageText:'Un court mot : comment ça va, sur quoi se concentrer cette semaine.',
     btwFutureText:'Vous êtes déjà passé(e) au travers. Rappelez-vous qu’une marche et une bonne nuit de sommeil arrangent souvent les choses…',
     btwSuTeam:'p. ex. Riverside U15',
@@ -13715,6 +13754,12 @@
     await loadPatientCheckIns();
     goToView(navProduct, viewProduct);
     maybeGoCheckin();
+    // Came from a professional's invite with an email that already had its own
+    // account: open settings on "Connect with my professional", code filled in.
+    let pend = null; try { pend = localStorage.getItem('btw_pending_connect'); } catch(e){}
+    if(pend && state.patient && !state.patient.connected){
+      setTimeout(()=>{ try { document.getElementById('btwOpenData').click(); const b = document.getElementById('btwConnectBox'); if(b) b.scrollIntoView({ block: 'center' }); } catch(e){} }, 400);
+    }
   }
 
   document.getElementById('btwLoginSubmit').addEventListener('click', async ()=>{
@@ -15268,6 +15313,15 @@
       await loadPatientCheckIns();
       goToView(navProduct, viewProduct);
     }catch(e){
+      if(e && e.code === 'has_own_account'){
+        // They already use Between on their own: sign in, then connect that account.
+        try { localStorage.setItem('btw_pending_connect', inviteCode); } catch(_){}
+        inviteOverlay.style.display = 'none';
+        openLogin('patient');
+        try { document.getElementById('btwLoginEmail').value = email; } catch(_){}
+        const le = document.getElementById('btwLoginError'); if(le) le.textContent = e.message;
+        return;
+      }
       err.textContent = e.message;
     }finally{
       invSubmit.disabled = !invReady();
@@ -15981,6 +16035,7 @@
       syncRemindersUi();
       setupDocsSection();
       renderDataList();
+      try { window.__btwSyncConnect && window.__btwSyncConnect(); } catch(e){}
       dataOverlay.style.display = 'flex';
       return;
     }
@@ -16012,8 +16067,11 @@
       if(delBtn0) delBtn0.style.display = 'none';
     } else {
       if(leftNote) leftNote.style.display = 'none';
-      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = '';
+      const delAll0 = document.getElementById('btwDeleteAll'); if(delAll0) delAll0.style.display = p.own_account ? 'none' : '';
     }
+    // Their own account: only they reset their login or delete their check-ins.
+    if(p.own_account && resetBtn0) resetBtn0.style.display = 'none';
+    try { window.__btwSyncConnect && window.__btwSyncConnect(p); } catch(e){}
     // Let the clinician backfill earlier records so trends aren't empty. Hidden
     // once a patient has left (their record is winding down, not growing).
     const bfBox = document.getElementById('btwBackfillBox');
@@ -16140,6 +16198,84 @@
     });
   })();
 
+  // An individual's own account ↔ their professional (same as the app).
+  // Client: connect with the invite code (earlier check-ins private unless
+  // shared), or disconnect an account they brought themselves. Professional:
+  // a short note on an own account (what they can and can't see or do).
+  (function(){
+    const box = document.getElementById('btwConnectBox'); if(!box) return;
+    const $ = (id) => document.getElementById(id);
+    const PENDING = 'btw_pending_connect';
+    function fmtDate(d){ try { return new Date(d).toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { day: 'numeric', month: 'long', year: 'numeric' }); } catch(e){ return ''; } }
+    function msg(el, text){ const e = $(el); if(!e) return; e.textContent = text || ''; e.style.display = text ? '' : 'none'; }
+    window.__btwSyncConnect = function(proPatient){
+      msg('btwConnectErr', ''); msg('btwConnectOk', '');
+      if(_ownerPreview){ box.style.display = 'none'; return; }
+      if(proPatient){
+        // Professional looking at one client.
+        if(!proPatient.own_account){ box.style.display = 'none'; return; }
+        box.style.display = '';
+        $('btwConnectTitle').textContent = t('Their own Between account');
+        $('btwConnectLead').textContent = (proPatient.shared_since
+          ? t('{name} connected their own account on {date}. What they sent before stays private to them.').replace('{date}', fmtDate(proPatient.shared_since))
+          : t('{name} connected their own account and shared their earlier check-ins with you.')).replace('{name}', proPatient.display_name)
+          + ' ' + t('Only they can reset their login or delete their check-ins. Removing them disconnects the account; it is not kept here.');
+        $('btwConnectForm').style.display = 'none'; $('btwDisconnectGo').style.display = 'none';
+        return;
+      }
+      const p = state.patient;
+      if(!isPatient() || !p){ box.style.display = 'none'; return; }
+      if(p.connected && !p.own_account){ box.style.display = 'none'; return; } // invited by their professional
+      box.style.display = '';
+      if(p.connected){
+        $('btwConnectTitle').textContent = t('Your professional');
+        $('btwConnectLead').textContent = t('Connected to {name}.').replace('{name}', p.clinician_name || t('your professional'))
+          + ' ' + (p.history_private_before ? t('What you sent before {date} stays private to you.').replace('{date}', fmtDate(p.history_private_before)) : t('They can see your check-ins, including the earlier ones you shared.'));
+        $('btwConnectForm').style.display = 'none'; $('btwDisconnectGo').style.display = '';
+      } else {
+        $('btwConnectTitle').textContent = t('Connect with my professional');
+        $('btwConnectLead').textContent = t('Seeing a professional who uses Between? Ask them to add you, then enter the invite code they send. Your account, goals and notes stay yours.');
+        $('btwConnectForm').style.display = ''; $('btwDisconnectGo').style.display = 'none';
+        const subOn = !!(p.plan && billingEnabled && !['canceled', 'canceling', 'incomplete_expired', 'incomplete'].includes(p.subscription_status));
+        $('btwConnectStopRow').style.display = subOn ? 'flex' : 'none';
+        let pend = null; try { pend = localStorage.getItem(PENDING); } catch(e){}
+        if(pend && !$('btwConnectCode').value) $('btwConnectCode').value = pend;
+      }
+    };
+    $('btwConnectGo').addEventListener('click', async ()=>{
+      msg('btwConnectErr', ''); msg('btwConnectOk', '');
+      const code = $('btwConnectCode').value.trim().toUpperCase();
+      if(!code){ msg('btwConnectErr', t('Enter the invite code from your professional.')); return; }
+      const share = $('btwConnectShare').checked;
+      const stopRow = $('btwConnectStopRow');
+      const stop = stopRow.style.display !== 'none' && $('btwConnectStop').checked;
+      const btn = $('btwConnectGo'); btn.disabled = true;
+      try {
+        const r = await pApi('POST', '/api/patient/connect', { inviteCode: code, shareHistory: share, stopSubscription: stop });
+        try { localStorage.removeItem(PENDING); } catch(e){}
+        state.patient = { ...state.patient, ...r.patient };
+        $('btwConnectCode').value = ''; $('btwConnectShare').checked = false;
+        window.__btwSyncConnect();
+        msg('btwConnectOk', t('You are connected. Your professional will see your check-ins from now on.') + (r.subscriptionStopping ? ' ' + t('Your personal subscription stops at the end of this period.') : ''));
+        try { await loadPatientCheckIns(); } catch(e){}
+        try { renderAll(); } catch(e){}
+      } catch(err){ msg('btwConnectErr', (err && err.message) || t('Could not connect your account. Please try again.')); }
+      finally { btn.disabled = false; }
+    });
+    $('btwDisconnectGo').addEventListener('click', async ()=>{
+      const p = state.patient || {};
+      if(!confirm(t('Disconnect from {name}? They lose access to your account right away, and what they added (program, messages, plan questions) is removed. Your check-ins, goals and notes stay with you.').replace('{name}', p.clinician_name || t('your professional')))) return;
+      try {
+        const r = await pApi('POST', '/api/patient/disconnect');
+        state.patient = { ...state.patient, ...r.patient, clinician_name: null, clinician_account_type: null, clinician_discipline: null };
+        window.__btwSyncConnect();
+        msg('btwConnectOk', t('You are disconnected. Your account is yours alone again.'));
+        try { await loadPatientCheckIns(); } catch(e){}
+        try { renderAll(); } catch(e){}
+      } catch(err){ msg('btwConnectErr', (err && err.message) || t('Could not disconnect your account. Please try again.')); }
+    });
+  })();
+
   document.getElementById('btwDeleteAll').addEventListener('click', async ()=>{
     if(isPatient()){
       if(!confirm(t('This permanently deletes all of your check-in history and trends. Continue?'))) return;
@@ -16176,6 +16312,18 @@
   async function deletePatientFlow(p){
     if(!p) return;
     if(p.left_at) return; // already removed; nothing to do
+    // Their own account: removing disconnects it (it stays theirs), nothing is kept here.
+    if(p.own_account){
+      if(!confirm(t('Disconnect {name}? They manage their own Between account: it goes back to being theirs alone, and you lose access to it right away (nothing is kept here). Download their record first if you need it for your files.').replace('{name}', p.display_name))) return;
+      try{
+        await api('DELETE', '/api/patients/' + p.id);
+        if(state.selectedPatientId === p.id){ state.selectedPatientId = null; state.checkIns = []; }
+        const ov = document.getElementById('btwDataOverlay'); if(ov) ov.style.display = 'none';
+        await loadPatients(); renderAll();
+        if(window.__btwRefreshOwnerViews) window.__btwRefreshOwnerViews();
+      }catch(err){ alert(err.message); }
+      return;
+    }
     const hasData = !!p.last_check_in_at;
     const kept = t('They lose access now and their record is kept for you to download for 14 days, then permanently deleted.');
     if(hasData){
