@@ -43,14 +43,14 @@ business days. The signature below covers this; keep it on every email and
 keep a list of people who asked not to be contacted.
 
 **Signature (EN)**
-> [Your name] · Between
-> betweenpsych.com · [phone]
+> Jack Hazan · Founder, Between
+> owner@betweenpsych.com · betweenpsych.com · [phone]
 > [Mailing address]
 > Not interested? Reply "no thanks" and I won't write again.
 
 **Signature (FR)**
-> [Votre nom] · Between
-> betweenpsych.com · [téléphone]
+> Jack Hazan · Fondateur, Between
+> owner@betweenpsych.com · betweenpsych.com · [téléphone]
 > [Adresse postale]
 > Pas intéressé(e)? Répondez « non merci » et je ne vous écrirai plus.
 
@@ -198,16 +198,16 @@ same day with section 3 ("[Front-desk name] suggested I write to you").
 ## 5. Phone
 
 **Call (EN)**
-> "Hi, my name is [name], I'm calling from Between. It's not urgent and I don't need anyone right now. Who at the clinic chooses software for the team? … Great, what's the best email to send them a one-minute video?"
+> "Hi, my name is Jack Hazan, I'm the founder of Between. It's not urgent and I don't need anyone right now. Who at the clinic chooses software for the team? … Great, what's the best email to send them a one-minute video?"
 
 **Appel (FR)**
-> « Bonjour, mon nom est [nom], je vous appelle de la part de Between. Ce n'est pas urgent et je n'ai besoin de parler à personne maintenant. Qui, à la clinique, choisit les logiciels pour l'équipe? … Parfait, quelle est la meilleure adresse courriel pour lui envoyer une vidéo d'une minute? »
+> « Bonjour, mon nom est Jack Hazan, je suis le fondateur de Between. Ce n'est pas urgent et je n'ai besoin de parler à personne maintenant. Qui, à la clinique, choisit les logiciels pour l'équipe? … Parfait, quelle est la meilleure adresse courriel pour lui envoyer une vidéo d'une minute? »
 
 **Voicemail (EN, 15 seconds)**
-> "Hi [name], it's [name] from Between. We help physios see how their patients are doing between visits, with the note drafted before they walk in. I'll send you a one-minute video by email. Have a great day."
+> "Hi [name], it's Jack Hazan from Between. We help physios see how their patients are doing between visits, with the note drafted before they walk in. I'll send you a one-minute video by email. Have a great day."
 
 **Message vocal (FR, 15 secondes)**
-> « Bonjour [nom], ici [nom] de Between. On aide les physiothérapeutes à voir comment vont leurs patients entre les visites, avec la note rédigée avant qu'ils arrivent. Je vous envoie une vidéo d'une minute par courriel. Bonne journée! »
+> « Bonjour [nom], ici Jack Hazan de Between. On aide les physiothérapeutes à voir comment vont leurs patients entre les visites, avec la note rédigée avant qu'ils arrivent. Je vous envoie une vidéo d'une minute par courriel. Bonne journée! »
 
 ---
 
