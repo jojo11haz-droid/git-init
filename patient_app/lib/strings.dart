@@ -1023,7 +1023,6 @@ class S {
   String get planStopsAtPeriodEnd => _(
       'Your personal subscription stops at the end of this period.',
       'Ton abonnement personnel s\'arrête à la fin de la période.');
-  String get yourProfessional => _('Your professional', 'Ton professionnel');
   String connectedTo(String name) =>
       _('Connected to $name.', 'Relié(e) à $name.');
   String privateBefore(String date) => _(
