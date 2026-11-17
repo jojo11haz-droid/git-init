@@ -327,6 +327,14 @@ ALTER TABLE check_ins ADD COLUMN IF NOT EXISTS plan_answers JSONB;
 -- visit"), and the one before, for the note's "since last visit" line.
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS last_visit_at TIMESTAMPTZ;
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS prev_visit_at TIMESTAMPTZ;
+-- An individual's own account connected to a professional (they entered the
+-- professional's invite code). It stays theirs: leaving or being removed
+-- returns it to an individual account instead of erasing it.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS own_account BOOLEAN NOT NULL DEFAULT false;
+-- The professional only sees what was sent from this moment (NULL = all of
+-- it): an individual who connects keeps their earlier history private
+-- unless they choose to share it.
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS shared_since TIMESTAMPTZ;
 -- Hands-off mode: a morning email listing only the patients who need the
 -- clinician (sent only on days someone does), and the last day it went out.
 ALTER TABLE clinicians ADD COLUMN IF NOT EXISTS needs_digest_enabled BOOLEAN NOT NULL DEFAULT false;
@@ -838,7 +846,9 @@ export async function consumePatientPasswordReset(tokenHash, patientId, newPassw
 // PATIENT_ROW_COLS deliberately excludes password_hash so patient credentials
 // never ride along in an API response.
 
-const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, lang, plan_questions, created_at, left_at';
+const PATIENT_ROW_COLS = 'id, clinician_id, display_name, email, phone, invite_code, invite_status, account_type, ai_consent_enabled, consent_recorded_at, consent_version, guardian_ack_at, plan, subscription_status, check_in_mode_lock, reminders_enabled, reminder_time, reminder_days, reminder_tz, next_session_at, goals, body_sex, prefs, hep_external, hep_app, lang, plan_questions, created_at, left_at, own_account, shared_since';
+// SQL for "this check-in (alias c) is one the professional may see".
+const PRO_SEES = (c, p) => `${c}.submitted_at >= coalesce(${p}.shared_since, '-infinity'::timestamptz)`;
 
 export async function createPatient(clinicianId, displayName, inviteCode, accountType = 'patient') {
   const { rows } = await pool.query(
@@ -933,11 +943,11 @@ export async function listPatients(clinicianId) {
        coalesce(bool_or((c.pain_sensations @? '$.* ? (@ == "numb")') AND c.deleted_at IS NULL AND c.submitted_at > now() - interval '14 days'), false) AS has_recent_nerve_flag,
        last.mood_score AS last_mood
      FROM patients p
-     LEFT JOIN check_ins c ON c.patient_id = p.id
+     LEFT JOIN check_ins c ON c.patient_id = p.id AND ${PRO_SEES('c', 'p')}
      LEFT JOIN LATERAL (
-       SELECT mood_score FROM check_ins
-       WHERE patient_id = p.id AND deleted_at IS NULL
-       ORDER BY submitted_at DESC LIMIT 1
+       SELECT mood_score FROM check_ins lc
+       WHERE lc.patient_id = p.id AND lc.deleted_at IS NULL AND ${PRO_SEES('lc', 'p')}
+       ORDER BY lc.submitted_at DESC LIMIT 1
      ) last ON true
      WHERE p.clinician_id = $1
      GROUP BY p.id, last.mood_score
@@ -1075,9 +1085,10 @@ export async function resetPatientAccess(clinicianId, patientId, newInviteCode) 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Never on a person's own account: their login is theirs, not the professional's.
     const { rows } = await client.query(
       `UPDATE patients SET invite_code = $1, invite_status = 'pending', password_hash = NULL
-       WHERE id = $2 AND clinician_id = $3 RETURNING ${PATIENT_ROW_COLS}`,
+       WHERE id = $2 AND clinician_id = $3 AND own_account = false RETURNING ${PATIENT_ROW_COLS}`,
       [newInviteCode, patientId, clinicianId]
     );
     if (rows[0]) {
@@ -1101,6 +1112,13 @@ export async function resetPatientAccess(clinicianId, patientId, newInviteCode) 
 // but the clinician keeps read + download access to the existing record for a
 // grace period. purgeExpiredPatients() hard-deletes them once the window is up.
 export async function markPatientLeft(clinicianId, patientId) {
+  // Their own account: removing them disconnects it (it goes back to being an
+  // individual account) instead of scheduling it for erasure.
+  const own = await pool.query(`SELECT own_account FROM patients WHERE id = $1 AND clinician_id = $2`, [patientId, clinicianId]);
+  if (own.rows[0] && own.rows[0].own_account) {
+    const back = await disconnectOwnAccount(patientId, clinicianId);
+    return back ? { ...back, disconnected: true } : null;
+  }
   const { rows } = await pool.query(
     `UPDATE patients SET left_at = now()
      WHERE id = $1 AND clinician_id = $2 AND left_at IS NULL
@@ -1131,9 +1149,98 @@ export async function deleteOwnPatientAccount(patientId) {
   return { mode: 'deleted' };
 }
 
+// An individual (self-serve) account connects to a professional with the
+// invite code the professional made for them. The professional's placeholder
+// (what they set up before the person joined: name, private note, program,
+// plan questions, messages, documents) moves onto the person's own account,
+// and the placeholder is removed: one record, owned by the person. Their
+// earlier check-ins stay private unless shareHistory is true.
+// Returns { patient } or { error: 'invalid' | 'connected' | 'unavailable' }.
+export async function connectOwnAccount(patientId, inviteCode, shareHistory) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const me = (await client.query(`SELECT id, clinician_id, left_at FROM patients WHERE id = $1 FOR UPDATE`, [patientId])).rows[0];
+    if (!me) { await client.query('ROLLBACK'); return { error: 'invalid' }; }
+    if (me.clinician_id) { await client.query('ROLLBACK'); return { error: 'connected' }; }
+    const ph = (await client.query(
+      `SELECT p.* FROM patients p JOIN clinicians c ON c.id = p.clinician_id
+       WHERE p.invite_code = $1 AND p.invite_status = 'pending' AND p.email IS NULL
+         AND p.left_at IS NULL AND p.id <> $2
+       FOR UPDATE OF p`,
+      [inviteCode, patientId]
+    )).rows[0];
+    if (!ph) { await client.query('ROLLBACK'); return { error: 'invalid' }; }
+    for (const t of ['patient_exercises', 'clinician_messages', 'patient_documents', 'recording_consents', 'session_topics']) {
+      await client.query(`UPDATE ${t} SET patient_id = $1 WHERE patient_id = $2`, [patientId, ph.id]);
+    }
+    await client.query(`DELETE FROM patients WHERE id = $1`, [ph.id]);
+    const { rows } = await client.query(
+      `UPDATE patients SET clinician_id = $2, account_type = $3, display_name = coalesce($4, display_name),
+         clinician_note = $5, next_session_at = $6, check_in_mode_lock = $7,
+         plan_questions = $8, plan_questions_at = $9, hep_external = coalesce($10, false), hep_app = $11,
+         own_account = true, shared_since = $12, last_reviewed_at = NULL, left_at = NULL
+       WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,
+      [patientId, ph.clinician_id, ph.account_type || 'patient', ph.display_name || null,
+        ph.clinician_note || null, ph.next_session_at || null, ph.check_in_mode_lock || 'any',
+        ph.plan_questions ? JSON.stringify(ph.plan_questions) : null, ph.plan_questions_at || null,
+        ph.hep_external, ph.hep_app || null, shareHistory ? null : new Date()]
+    );
+    await client.query('COMMIT');
+    return { patient: rows[0] };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+// Back to an individual account: the person leaves (or the professional
+// removes them). Everything the professional added (private note, program,
+// plan questions, messages, recording consent, documents they uploaded) goes,
+// and the professional loses access at once. The person keeps all their own
+// check-ins, goals and notes. clinicianId (optional) scopes it to that professional.
+export async function disconnectOwnAccount(patientId, clinicianId = null) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const me = (await client.query(
+      `SELECT id, clinician_id FROM patients WHERE id = $1 AND own_account = true AND clinician_id IS NOT NULL
+         AND ($2::uuid IS NULL OR clinician_id = $2) FOR UPDATE`,
+      [patientId, clinicianId]
+    )).rows[0];
+    if (!me) { await client.query('ROLLBACK'); return null; }
+    await client.query(`DELETE FROM clinician_messages WHERE patient_id = $1`, [patientId]);
+    await client.query(`DELETE FROM patient_exercises WHERE patient_id = $1`, [patientId]);
+    await client.query(`DELETE FROM recording_consents WHERE patient_id = $1`, [patientId]);
+    await client.query(`DELETE FROM patient_documents WHERE patient_id = $1 AND uploaded_by = 'clinician'`, [patientId]);
+    const { rows } = await client.query(
+      `UPDATE patients SET clinician_id = NULL, account_type = 'patient', own_account = false, shared_since = NULL,
+         clinician_note = NULL, next_session_at = NULL, check_in_mode_lock = 'any', plan_questions = NULL,
+         plan_questions_at = NULL, hep_external = false, hep_app = NULL, last_reviewed_at = NULL,
+         last_visit_at = NULL, prev_visit_at = NULL, invite_code = NULL, left_at = NULL
+       WHERE id = $1 RETURNING ${PATIENT_ROW_COLS}`,
+      [patientId]
+    );
+    await client.query('COMMIT');
+    return rows[0] || null;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 // Permanently erase a patient and all their data (cascades to check-ins,
 // summaries, voice memos, alerts, notes, sessions). Scoped to the clinician.
 export async function deletePatient(clinicianId, patientId) {
+  const own = await pool.query(`SELECT own_account FROM patients WHERE id = $1 AND clinician_id = $2`, [patientId, clinicianId]);
+  if (own.rows[0] && own.rows[0].own_account) {
+    const back = await disconnectOwnAccount(patientId, clinicianId);
+    return back ? { id: back.id, disconnected: true } : null;
+  }
   const { rows } = await pool.query(
     `DELETE FROM patients WHERE id = $1 AND clinician_id = $2 RETURNING id`,
     [patientId, clinicianId]
@@ -1320,7 +1427,7 @@ export async function getAudioForClinician(uploadId, clinicianId) {
   const { rows } = await pool.query(
     `SELECT a.id, a.mime, a.data
      FROM audio_uploads a JOIN patients p ON p.id = a.patient_id
-     WHERE a.id = $1 AND p.clinician_id = $2`,
+     WHERE a.id = $1 AND p.clinician_id = $2 AND a.created_at >= coalesce(p.shared_since, '-infinity'::timestamptz)`,
     [uploadId, clinicianId]
   );
   return rows[0] || null;
@@ -1367,7 +1474,7 @@ export async function getPhotoForClinician(uploadId, clinicianId) {
   const { rows } = await pool.query(
     `SELECT a.id, a.mime, a.data
      FROM photo_uploads a JOIN patients p ON p.id = a.patient_id
-     WHERE a.id = $1 AND p.clinician_id = $2`,
+     WHERE a.id = $1 AND p.clinician_id = $2 AND a.created_at >= coalesce(p.shared_since, '-infinity'::timestamptz)`,
     [uploadId, clinicianId]
   );
   return rows[0] || null;
@@ -1442,7 +1549,8 @@ export async function listPatientDocumentsForClinician(patientId, clinicianId) {
   const { rows } = await pool.query(
     `SELECT d.id, d.uploaded_by, d.filename, d.mime, d.ai_summary, d.ai_fields, d.ai_status, d.created_at
      FROM patient_documents d JOIN patients p ON p.id = d.patient_id
-     WHERE d.patient_id = $1 AND p.clinician_id = $2 ORDER BY d.created_at DESC`,
+     WHERE d.patient_id = $1 AND p.clinician_id = $2 AND d.created_at >= coalesce(p.shared_since, '-infinity'::timestamptz)
+     ORDER BY d.created_at DESC`,
     [patientId, clinicianId]
   );
   return rows;
@@ -1468,7 +1576,7 @@ export async function getDocumentForClinician(documentId, clinicianId) {
   const { rows } = await pool.query(
     `SELECT d.id, d.filename, d.mime, d.data
      FROM patient_documents d JOIN patients p ON p.id = d.patient_id
-     WHERE d.id = $1 AND p.clinician_id = $2`,
+     WHERE d.id = $1 AND p.clinician_id = $2 AND d.created_at >= coalesce(p.shared_since, '-infinity'::timestamptz)`,
     [documentId, clinicianId]
   );
   return rows[0] || null;
@@ -1486,6 +1594,7 @@ export async function deleteDocumentForClinician(documentId, clinicianId) {
   const { rows } = await pool.query(
     `DELETE FROM patient_documents d USING patients p
      WHERE d.id = $1 AND p.id = d.patient_id AND p.clinician_id = $2
+       AND d.created_at >= coalesce(p.shared_since, '-infinity'::timestamptz)
      RETURNING d.id`,
     [documentId, clinicianId]
   );
@@ -1530,7 +1639,7 @@ export async function listAlerts(clinicianId) {
      FROM alerts al
      JOIN check_ins c ON c.id = al.check_in_id
      JOIN patients p ON p.id = c.patient_id
-     WHERE al.clinician_id = $1 AND c.deleted_at IS NULL
+     WHERE al.clinician_id = $1 AND p.clinician_id = al.clinician_id AND c.deleted_at IS NULL
      ORDER BY al.created_at DESC
      LIMIT 50`,
     [clinicianId]
@@ -1689,7 +1798,7 @@ export async function caseloadOutcomes(clinicianId) {
         COUNT(ci.id) AS n
        FROM patients p
        LEFT JOIN check_ins ci
-         ON ci.patient_id = p.id AND ci.deleted_at IS NULL
+         ON ci.patient_id = p.id AND ci.deleted_at IS NULL AND ${PRO_SEES('ci', 'p')}
         AND ci.mood_score IS NOT NULL
         AND ci.submitted_at >= now() - interval '56 days'
       WHERE p.clinician_id = $1 AND p.left_at IS NULL
@@ -1701,7 +1810,7 @@ export async function caseloadOutcomes(clinicianId) {
             AVG(ci.mood_score) AS avg, COUNT(ci.id) AS n
        FROM check_ins ci
        JOIN patients p ON p.id = ci.patient_id
-      WHERE p.clinician_id = $1 AND p.left_at IS NULL AND ci.deleted_at IS NULL
+      WHERE p.clinician_id = $1 AND p.left_at IS NULL AND ci.deleted_at IS NULL AND ${PRO_SEES('ci', 'p')}
         AND ci.mood_score IS NOT NULL
         AND ci.submitted_at >= now() - interval '56 days'
       GROUP BY week ORDER BY week`,
@@ -2101,8 +2210,8 @@ export async function recentScoresForClinician(clinicianId, n = 4) {
   const { rows } = await pool.query(
     `SELECT p.id AS patient_id,
        (SELECT array_agg(s.mood_score ORDER BY s.submitted_at DESC) FROM (
-          SELECT mood_score, submitted_at FROM check_ins
-          WHERE patient_id = p.id AND deleted_at IS NULL AND mood_score IS NOT NULL
+          SELECT mood_score, submitted_at FROM check_ins rc
+          WHERE rc.patient_id = p.id AND rc.deleted_at IS NULL AND rc.mood_score IS NOT NULL AND ${PRO_SEES('rc', 'p')}
           ORDER BY submitted_at DESC LIMIT $2) s) AS scores
      FROM patients p WHERE p.clinician_id = $1 AND p.left_at IS NULL`,
     [clinicianId, n]
@@ -2134,7 +2243,7 @@ export async function clinicianEventCounts(clinicianId, days = 30) {
   for (const r of rows) out[r.kind] = r.n;
   const { rows: s } = await pool.query(
     `SELECT count(*)::int AS n FROM check_ins c JOIN patients p ON p.id = c.patient_id
-     WHERE p.clinician_id = $1 AND c.deleted_at IS NULL AND c.model_version IS NOT NULL
+     WHERE p.clinician_id = $1 AND c.deleted_at IS NULL AND c.model_version IS NOT NULL AND ${PRO_SEES('c', 'p')}
        AND c.submitted_at > now() - ($2 || ' days')::interval`,
     [clinicianId, String(days)]
   );
