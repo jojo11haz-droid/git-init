@@ -13,6 +13,7 @@ import {
   updateClinicianSubscription, getClinicianByStripeSubscription,
   getPatientByInviteCode, getPatientByEmail, acceptPatientInvite, createSelfServePatient, setOwnConsent,
   updatePatientSubscription, getPatientById, getPatientByStripeSubscription, getPatientStripe, getClinicianStripe,
+  countFoundingClinicians, markFoundingTrial, getFoundingTrialAt,
   createPatientSession, getPatientBySession, deletePatientSession,
   flagCheckInInaccurate, getCheckIn,
   createFutureNote, listFutureNotes, deleteFutureNote,
@@ -181,8 +182,10 @@ app.use(express.json());
 // non-sensitive flags belong here: whether billing is live, and whether US
 // visitors are billed in real USD (vs. the CAD-conversion fallback) so the
 // pricing disclaimer can be accurate.
-app.get('/api/public-config', (req, res) => {
-  res.json({ stripe: stripeConfigured(), usdBilling: usdConfigured() });
+app.get('/api/public-config', async (req, res) => {
+  let founding = { active: false };
+  try { founding = await foundingOffer(); } catch (e) {}
+  res.json({ stripe: stripeConfigured(), usdBilling: usdConfigured(), founding });
 });
 
 // The home page and the app script split out of it (see baseIndexHtml).
@@ -3994,14 +3997,39 @@ function trialDaysFor(email) {
   }
   return CLINICIAN_TRIAL_DAYS;
 }
+// Founding-clinic offer: the first FOUNDING_SPOTS professionals who start a
+// subscription before FOUNDING_ENDS get FOUNDING_TRIAL_DAYS free instead of
+// 14. Only the trial length changes: licence verification and everything else
+// stay as they are. Set FOUNDING_SPOTS=0 to switch the offer off.
+const FOUNDING_TRIAL_DAYS = Number(process.env.FOUNDING_TRIAL_DAYS) > 0 ? Math.floor(Number(process.env.FOUNDING_TRIAL_DAYS)) : 60;
+const FOUNDING_SPOTS = process.env.FOUNDING_SPOTS != null && process.env.FOUNDING_SPOTS !== '' ? Math.max(0, Math.floor(Number(process.env.FOUNDING_SPOTS) || 0)) : 10;
+// End of January 31, 2027, Montreal time.
+const FOUNDING_ENDS = new Date(process.env.FOUNDING_ENDS || '2027-02-01T05:00:00Z');
+async function foundingOffer() {
+  if (!FOUNDING_SPOTS || !(FOUNDING_ENDS > new Date()) || !dbEnabled()) return { active: false };
+  let used = 0;
+  try { used = await countFoundingClinicians(); } catch (e) { return { active: false }; }
+  const left = Math.max(0, FOUNDING_SPOTS - used);
+  return { active: left > 0, days: FOUNDING_TRIAL_DAYS, spots: FOUNDING_SPOTS, spotsLeft: left, ends: FOUNDING_ENDS.toISOString() };
+}
 async function startClinicianCheckout(clinician, plan, origin, currency) {
   const priceId = priceForPlan(plan, currency);
   if (!stripeConfigured() || !priceId) return null;
   // Trial length follows the plan, not the account: an Individual (Personal)
   // plan always gets the 3-day trial, even when checked out through this
   // clinician path (e.g. an admin testing it). Everything else uses the
-  // clinician trial (14 days, or an extended pilot trial).
-  const trialDays = String(plan).indexOf('patient_') === 0 ? PATIENT_TRIAL_DAYS : trialDaysFor(clinician.email);
+  // clinician trial (14 days, an extended pilot trial, or the founding offer).
+  let trialDays = String(plan).indexOf('patient_') === 0 ? PATIENT_TRIAL_DAYS : trialDaysFor(clinician.email);
+  if (String(plan).indexOf('patient_') !== 0 && !isFreeAccess(clinician.email)) {
+    try {
+      const already = await getFoundingTrialAt(clinician.id);
+      const offer = already ? null : await foundingOffer();
+      if (already || (offer && offer.active)) {
+        trialDays = Math.max(trialDays, FOUNDING_TRIAL_DAYS);
+        await markFoundingTrial(clinician.id);
+      }
+    } catch (e) { console.error('Founding offer check failed:', e.message); }
+  }
   const session = await createSubscriptionCheckout({
     priceId,
     customerEmail: clinician.email,

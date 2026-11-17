@@ -2611,6 +2611,13 @@
   .btw-hero-links .btw-demo-link,.btw-hero-links .btw-hero-solo-link{margin:0;}
   /* "From $X" price hint under the hero buttons (read from the pricing cards). */
   .btw-hero-price{margin-top:14px;font-size:14px;color:var(--ink-soft);}
+  .btw-founding{margin-top:12px;display:inline-flex;align-items:flex-start;gap:8px;background:#FBF1EE;border:1px solid #F0D3CB;color:#7A2A1F;border-radius:12px;padding:9px 13px;font-size:13.5px;line-height:1.45;max-width:560px;}
+  .btw-founding strong{font-weight:600;}
+  .btw-founding[hidden]{display:none;}
+  .btw-sched-note{max-width:760px;margin:18px auto 30px;padding:14px 18px;border:1px dashed var(--line);border-radius:12px;font-size:14px;line-height:1.55;color:var(--ink-soft);text-align:center;}
+  .btw-sched-note strong{color:var(--ink);font-weight:600;}
+  .btw-sched-note a{color:var(--moss);font-weight:600;}
+  .btw-founding-pricing{display:flex;margin:14px auto 4px;max-width:720px;justify-content:center;text-align:center;}
   .btw-hero-price[hidden]{display:none;}
   .btw-hero-price strong{color:var(--ink);font-weight:600;}
   .btw-hero-price a{color:var(--moss);font-weight:600;text-decoration:none;margin-left:4px;white-space:nowrap;}
@@ -3910,6 +3917,7 @@
             <button class="btw-hero-btn secondary" id="btwHeroDemo">See how it works</button>
           </div>
           <div class="btw-hero-price" id="btwHeroPrice" hidden></div>
+          <div class="btw-founding" id="btwFoundingHero" data-noattr hidden></div>
           <div class="btw-hero-links">
             <button type="button" class="btw-demo-link" data-demo-book data-demo-only><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>Book a 15-minute demo</span></button>
             <button type="button" class="btw-hero-solo-link" onclick="var b=document.querySelector('.btw-chooser-card[data-aud=&quot;individual&quot;]'); if(b){ b.click(); window.scrollTo({top:0,behavior:'smooth'}); }">Not a therapist? You can use Between on your own <span aria-hidden="true">→</span></button>
@@ -4941,6 +4949,7 @@
       </div>
 
       <div class="btw-pricing-cost-note">Every plan includes AI summaries and trend charts, with no usage fees. Use them as much as you need.</div>
+      <div class="btw-founding btw-founding-pricing" id="btwFoundingPricing" data-noattr hidden></div>
 
       <div class="btw-pricing-segment" data-price-aud="pro">For therapists &amp; practices</div>
       <div class="btw-pricing-cards" data-price-aud="pro">
@@ -5005,6 +5014,7 @@
 
       <p class="btw-demo-cta" data-price-aud="pro" data-demo-only><span>Want to see it first?</span> <button type="button" class="btw-demo-link" data-demo-book><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>Book a 15-minute demo</span></button></p>
 
+      <div class="btw-sched-note" data-price-aud="pro"><strong>Using a scheduling website?</strong> <span>If connecting Jane, GOrendezvous, ClinicSense or another to Between would be practical for your clinic, ask us for the integration at</span> <a href="mailto:owner@betweenpsych.com?subject=Scheduling%20integration">owner@betweenpsych.com</a>.</div>
       <div class="btw-pricing-segment" data-price-aud="indiv">For patients, use Between on your own <span class="btw-seg-mode" data-price-mode hidden></span></div>
       <div class="btw-pricing-cards" data-price-aud="indiv">
         <div class="btw-price-card">
@@ -7262,6 +7272,8 @@
     "Say a bit about what happened before sending…":"Dites un mot sur ce qui s'est passé avant d'envoyer…",
     "you@email.com":"vous@courriel.com",
     "Enter your email and password.":"Entrez votre courriel et votre mot de passe.",
+    "Using a scheduling website?":"Vous utilisez un site de prise de rendez-vous?",
+    "If connecting Jane, GOrendezvous, ClinicSense or another to Between would be practical for your clinic, ask us for the integration at":"Si relier Jane, GOrendezvous, ClinicSense ou un autre à Between vous semble pratique pour votre clinique, demandez-nous l’intégration à",
     "Connect with my professional":"Me relier à mon professionnel",
     "Seeing a professional who uses Between? Ask them to add you, then enter the invite code they send. Your account, goals and notes stay yours.":"Vous consultez un professionnel qui utilise Between? Demandez-lui de vous ajouter, puis entrez le code d'invitation qu'il vous envoie. Votre compte, vos objectifs et vos notes restent à vous.",
     "Also share my earlier check-ins with them":"Partager aussi mes suivis précédents avec cette personne",
@@ -10121,12 +10133,27 @@
   // tells US visitors the truth (billed in USD vs. approximate/CAD).
   fetch('/api/public-config').then(function(r){ return r.ok ? r.json() : null; }).then(function(cfg){
     if(cfg && cfg.usdBilling){ usdBillingLive = true; applyCurrency(); }
+    if(cfg && cfg.founding){ window.__btwFounding = cfg.founding; try { window.__btwSyncFounding && window.__btwSyncFounding(); } catch(e){} }
   }).catch(function(){});
+  // Founding-clinic offer line (professional pages only, while spots remain).
+  window.__btwSyncFounding = function(){
+    var f = window.__btwFounding, els = [document.getElementById('btwFoundingHero'), document.getElementById('btwFoundingPricing')];
+    var pro = !(typeof curAudience !== 'undefined' && curAudience === 'individual') && !/\/individual/.test(location.pathname);
+    var show = !!(f && f.active && pro);
+    var fr = (typeof curLang !== 'undefined' && curLang === 'fr');
+    var end = '';
+    try { end = new Date(new Date(f.ends).getTime() - 1).toLocaleDateString(fr ? 'fr-CA' : 'en-CA', { day: 'numeric', month: 'long', timeZone: 'America/Montreal' }); } catch(e){}
+    var html = !show ? '' : (fr
+      ? '<span aria-hidden="true">\u2605</span><span><strong>Offre clinique fondatrice\u00a0:</strong> ' + f.days + ' jours gratuits au lieu de 14 pour les ' + f.spots + ' premi\u00e8res cliniques inscrites d\u2019ici le ' + esc(end) + ', et votre prix garanti. Encore ' + f.spotsLeft + (f.spotsLeft === 1 ? ' place.' : ' places.') + '</span>'
+      : '<span aria-hidden="true">\u2605</span><span><strong>Founding clinic offer:</strong> ' + f.days + ' days free instead of 14 for the first ' + f.spots + ' clinics that start by ' + esc(end) + ', with your price locked in. ' + f.spotsLeft + (f.spotsLeft === 1 ? ' spot left.' : ' spots left.') + '</span>');
+    els.forEach(function(el){ if(!el) return; el.innerHTML = html; el.hidden = !show; });
+  };
   function setCurrency(c){ btwCurrency = (c === 'USD') ? 'USD' : 'CAD'; try{ localStorage.setItem('btw_ccy', btwCurrency); }catch(e){} applyCurrency(); }
   document.querySelectorAll('.btw-ccy-btn').forEach(function(b){ b.addEventListener('click', function(){ setCurrency(b.getAttribute('data-ccy')); }); });
 
   function setLang(l, opts){
     curLang = (l === 'fr') ? 'fr' : 'en';
+    setTimeout(function(){ try { window.__btwSyncFounding && window.__btwSyncFounding(); } catch(e){} }, 0);
     try { localStorage.setItem('btw_lang', curLang); } catch(e){}
     document.documentElement.lang = curLang;
     document.querySelectorAll('.btw-lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang === curLang));
