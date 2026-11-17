@@ -69,13 +69,13 @@ keep a list of people who asked not to be contacted.
 **Signature (EN)**
 > Jack Hazan · Founder, Between
 > 514-667-9513 · owner@betweenpsych.com · betweenpsych.com
-> [Mailing address]
+> 2600, rue Dragon, Montréal (Québec)
 > Not interested? Reply "no thanks" and I won't write again.
 
 **Signature (FR)**
 > Jack Hazan · Fondateur, Between
 > 514-667-9513 · owner@betweenpsych.com · betweenpsych.com
-> [Adresse postale]
+> 2600, rue Dragon, Montréal (Québec)
 > Pas intéressé(e)? Répondez « non merci » et je ne vous écrirai plus.
 
 **Links (swap the profession in the URL: physio, kinesiology, osteopathy,
