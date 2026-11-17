@@ -37,6 +37,7 @@ import {
   createAlert, listAlerts, markAlertViewed,
   storeContactMessage, listContactMessages,
   bumpSiteStat, siteStatsSummary, storeDemoRequest, listDemoRequests,
+  listOutreachLeads, createOutreachLead, updateOutreachLead, deleteOutreachLead,
   storageStats, purgeOldMedia
 , addClinicianMessage, listClinicianMessages, markClinicianMessagesRead, addClientReply, markClientRepliesRead, countUnreadReplies, setPatientLang, setClinicianLang, getEngagementByClinician , setPatientBodySex, setClinicianBrand, setClinicianBrandLogo, getClinicianBrandLogo, setPatientPrefs, setPatientExerciseSource } from './db.js';
 import { sanitizeBrand, effectiveBrand, sanitizePrefs, sniffImage, LOGO_MAX_BYTES } from './brand.js';
@@ -5710,6 +5711,50 @@ app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
 app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async (req, res) => {
   try { res.json(await listDemoRequests(100)); }
   catch (err) { console.error('Demo requests error:', err); res.status(500).json({ error: 'Could not load demo requests.' }); }
+});
+
+// Owner: clinic outreach list (who to email, where each one is in the sequence).
+const OUTREACH_STATUSES = ['to_contact', 'emailed', 'followup1', 'followup2', 'replied', 'trial', 'customer', 'not_interested'];
+const OUTREACH_PROFESSIONS = ['physio', 'psycho', 'kinesio', 'osteo', 'other'];
+const OUTREACH_TEXT = { name: 160, contact: 120, city: 80, email: 200, phone: 40, website: 400, notes: 2000 };
+function cleanOutreach(body) {
+  const b = body && typeof body === 'object' ? body : {};
+  const out = {};
+  for (const [k, max] of Object.entries(OUTREACH_TEXT)) {
+    if (b[k] !== undefined) out[k] = String(b[k] ?? '').trim().slice(0, max);
+  }
+  if (b.status !== undefined) out.status = OUTREACH_STATUSES.includes(b.status) ? b.status : 'to_contact';
+  if (b.profession !== undefined) out.profession = OUTREACH_PROFESSIONS.includes(b.profession) ? b.profession : 'other';
+  if (b.lang !== undefined) out.lang = b.lang === 'en' ? 'en' : 'fr';
+  for (const k of ['next', 'last']) {
+    if (b[k] !== undefined) out[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(b[k])) ? String(b[k]) : '';
+  }
+  return out;
+}
+app.get('/api/admin/outreach', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try { res.json(await listOutreachLeads()); }
+  catch (err) { console.error('Outreach list error:', err); res.status(500).json({ error: 'Could not load the outreach list.' }); }
+});
+app.post('/api/admin/outreach', requireDb, requireAuth, requireOwner, async (req, res) => {
+  const lead = cleanOutreach(req.body);
+  if (!lead.name) return res.status(400).json({ error: 'Give the clinic a name.' });
+  try { res.status(201).json(await createOutreachLead(lead)); }
+  catch (err) { console.error('Outreach create error:', err); res.status(500).json({ error: 'Could not save that lead.' }); }
+});
+app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, async (req, res) => {
+  const patch = cleanOutreach(req.body);
+  if (patch.name !== undefined && !patch.name) return res.status(400).json({ error: 'Give the clinic a name.' });
+  try {
+    const lead = await updateOutreachLead(String(req.params.id).slice(0, 200), patch);
+    if (!lead) return res.status(404).json({ error: 'Lead not found.' });
+    res.json(lead);
+  } catch (err) { console.error('Outreach update error:', err); res.status(500).json({ error: 'Could not save that lead.' }); }
+});
+app.delete('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, async (req, res) => {
+  try {
+    if (!(await deleteOutreachLead(String(req.params.id).slice(0, 200)))) return res.status(404).json({ error: 'Lead not found.' });
+    res.json({ ok: true });
+  } catch (err) { console.error('Outreach delete error:', err); res.status(500).json({ error: 'Could not save that lead.' }); }
 });
 
 // Each field has its own marketing URL (/physio, /sports, …). They're the same
