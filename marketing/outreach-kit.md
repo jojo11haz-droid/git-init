@@ -21,6 +21,8 @@ Replace anything in [brackets]. Keep emails short: the shorter, the more replies
 3. **The owner / decider** — only once you have their name (ask the front
    desk "who chooses your software?") or a clinician has tried it.
 
+**Founding clinic offer (until January 31, first 10 clinics):** 60 days free instead of 14, price locked in. It’s automatic on the site while spots remain, so just mention it; the P.S. lines below already do.
+
 **Rhythm for each person:** email 1 → follow-up 1 four days later → follow-up 2
 five days after that → stop. Most replies come from the follow-ups.
 
@@ -79,6 +81,8 @@ schools; psychotherapy is `/therapy`)**
 >
 > Would you like me to set up a free account so you can try it with 2–3 patients for two weeks? (1-minute video: betweenpsych.com/physio?ref=email)
 >
+> P.S. Founding clinic offer: the first 10 clinics that start before January 31 get 60 days free instead of 14, with their price locked in.
+>
 > [Signature]
 
 **FR**
@@ -89,6 +93,8 @@ schools; psychotherapy is `/therapy`)**
 > J'ai créé Between : entre les visites, vos patients envoient un suivi d'une minute, par la voix ou par écrit, et montrent où ça fait mal sur une carte du corps. Avant le prochain rendez-vous, vous avez la tendance de la douleur, l'assiduité aux exercices et une note SOAP rédigée.
 >
 > Voulez-vous que je vous crée un compte gratuit pour l'essayer avec 2 ou 3 patients pendant deux semaines? (Vidéo d'une minute : betweenpsych.com/fr/physio?ref=email)
+>
+> P.-S. Offre clinique fondatrice : les 10 premières cliniques inscrites d’ici le 31 janvier ont 60 jours gratuits au lieu de 14, et leur prix garanti.
 >
 > [Signature]
 
@@ -127,6 +133,8 @@ schools; psychotherapy is `/therapy`)**
 >
 > Could I give you a free account to try with 2–3 of your own patients for two weeks? If it's useful, you'd be the right person to show the clinic. (1-minute video: betweenpsych.com/physio?ref=email)
 >
+> P.S. Founding clinic offer: the first 10 clinics that start before January 31 get 60 days free instead of 14, with their price locked in.
+>
 > [Signature]
 
 **FR**
@@ -137,6 +145,8 @@ schools; psychotherapy is `/therapy`)**
 > Between permet à vos patients d'envoyer une mise à jour d'une minute entre les visites (par la voix ou par écrit). Vous voyez la tendance de la douleur et ce qu'ils ont fait de leur programme avant qu'ils arrivent, et la note SOAP est rédigée pour vous.
 >
 > Puis-je vous offrir un compte gratuit pour l'essayer avec 2 ou 3 de vos patients pendant deux semaines? Si c'est utile, vous seriez la bonne personne pour le présenter à la clinique. (Vidéo d'une minute : betweenpsych.com/fr/physio?ref=email)
+>
+> P.-S. Offre clinique fondatrice : les 10 premières cliniques inscrites d’ici le 31 janvier ont 60 jours gratuits au lieu de 14, et leur prix garanti.
 >
 > [Signature]
 
@@ -157,6 +167,8 @@ schools; psychotherapy is `/therapy`)**
 >
 > Would a 90-second look be useful? betweenpsych.com/physio?ref=email — or if you prefer, a 15-minute demo at a time that suits you: betweenpsych.com/physio?ref=email#book-demo
 >
+> P.S. Founding clinic offer: the first 10 clinics that start before January 31 get 60 days free instead of 14, with their price locked in.
+>
 > [Signature]
 
 **FR**
@@ -167,6 +179,8 @@ schools; psychotherapy is `/therapy`)**
 > En une ligne : les patients font un suivi d'une minute entre les visites, et votre équipe voit comment ils vont avant le rendez-vous, avec la note déjà rédigée. C'est bilingue, conçu en tenant compte de la Loi 25, et les résumés IA restent désactivés jusqu'à ce que chaque patient les active.
 >
 > Un aperçu de 90 secondes vous serait utile? betweenpsych.com/fr/physio?ref=email — ou, si vous préférez, une démo de 15 minutes au moment qui vous convient : betweenpsych.com/fr/physio?ref=email#book-demo
+>
+> P.-S. Offre clinique fondatrice : les 10 premières cliniques inscrites d’ici le 31 janvier ont 60 jours gratuits au lieu de 14, et leur prix garanti.
 >
 > [Signature]
 
