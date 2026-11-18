@@ -462,7 +462,34 @@ export async function initDb() {
   await pool.query(SCHEMA);
   await pool.query(MIGRATIONS);
   if (!hadOutreach) await seedOutreachLeads();
+  await applyOutreachUpdates();
   console.log('✅ Database ready.');
+}
+
+// Contact details found later (data/outreach-updates.json) for leads already in
+// the table. Only fills fields that are still blank, and adds a note once, so
+// it never overwrites anything the owner typed and is safe on every start.
+const OUTREACH_FILL = ['contact', 'email', 'phone', 'website'];
+async function applyOutreachUpdates() {
+  let ups = [];
+  try { ups = JSON.parse(readFileSync(new URL('./data/outreach-updates.json', import.meta.url), 'utf8')); }
+  catch (e) { return; }
+  for (const u of ups) {
+    if (!u || !u.id) continue;
+    const sets = []; const vals = [u.id];
+    for (const f of OUTREACH_FILL) {
+      if (!u[f]) continue;
+      vals.push(String(u[f]));
+      sets.push(`${f} = CASE WHEN ${f} = '' THEN $${vals.length} ELSE ${f} END`);
+    }
+    if (u.note) {
+      vals.push(String(u.note));
+      const n = vals.length;
+      sets.push(`notes = CASE WHEN position($${n} in notes) > 0 THEN notes WHEN notes = '' THEN $${n} ELSE notes || ' ' || $${n} END`);
+    }
+    if (!sets.length) continue;
+    try { await pool.query(`UPDATE outreach_leads SET ${sets.join(', ')} WHERE id = $1`, vals); } catch (e) {}
+  }
 }
 
 // The first time the outreach table is created, fill it with the starting
