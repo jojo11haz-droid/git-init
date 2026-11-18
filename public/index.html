@@ -15238,7 +15238,7 @@
       const cls = late ? 'late' : due ? 'due' : l.status === 'replied' ? 'hot' : '';
       const site = l.website ? (/^https?:\/\//i.test(l.website) ? l.website : 'https://' + l.website) : '';
       const find = 'https://www.google.com/search?q=' + encodeURIComponent(l.name + ' ' + (l.city || '') + (l.lang === 'en' ? ' email' : ' courriel'));
-      const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
+      const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a> <button type="button" class="btw-or-b ghost" data-oract="editemail" style="padding:0 4px;font-size:12px;" aria-label="Change the email for ' + esc(l.name) + '">change</button>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
         (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '');
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
@@ -15247,12 +15247,13 @@
       else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
       const sq = SEQ[l.status];
       let main = '';
-      if(l.status === 'to_contact' && !l.email) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
+      if(!l.email && (sq || l.status === 'replied' || l.status === 'trial')) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
       else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
-      if(sq && l.email) main += '<button type="button" class="btw-or-b" data-oract="marksent" title="Already sent it another way (for example a Gmail draft)? Log it here.">✓ Mark as sent</button>';
       else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
       else if(l.status === 'replied') main = '<button type="button" class="btw-or-b pri" data-oract="compose">Send the video</button>';
       else if(l.status === 'trial') main = '<button type="button" class="btw-or-b pri" data-oract="set" data-to="customer">✓ They became a customer</button>';
+      // Sent it another way (a Gmail draft, their contact form, a call)? Log it.
+      if(sq) main += '<button type="button" class="btw-or-b" data-oract="marksent" title="Already sent it another way (for example a Gmail draft)? Log it here.">✓ Mark as sent</button>';
       const menu = [];
       if(l.status !== 'replied' && l.status !== 'trial' && l.status !== 'customer') menu.push(['set:replied', 'They replied']);
       if(l.status === 'replied') menu.push(['set:trial', 'They started a trial']);
@@ -15302,11 +15303,11 @@
       if(act === 'menu'){ const m = cardEl.querySelector('.btw-or-menu'); closeMenus(m); m.hidden = !m.hidden; if(!m.hidden){ const f = m.querySelector('button'); if(f) f.focus(); } }
       else if(act === 'notes') b.classList.toggle('open');
       else if(act === 'compose' || act === 'email') openCompose(l);
-      else if(act === 'addemail'){ const w = cardEl.querySelector('.btw-or-addemail'); w.hidden = false; w.querySelector('input').focus(); }
+      else if(act === 'addemail' || act === 'editemail'){ const w = cardEl.querySelector('.btw-or-addemail'); w.hidden = false; const inp = w.querySelector('input'); if(act === 'editemail') inp.value = l.email || ''; inp.focus(); inp.select(); }
       else if(act === 'saveemail'){
         const v = cardEl.querySelector('.btw-or-addemail input').value.trim();
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('That doesn’t look like an email address.'); return; }
-        try { await patch(l.id, { email: v }); toast('Email saved. ' + l.name + ' is ready for a first email.'); } catch(err){ toast(err.message); }
+        try { await patch(l.id, { email: v }); toast(l.status === 'to_contact' && !l.email ? 'Email saved. ' + l.name + ' is ready for a first email.' : 'Email saved for ' + l.name + '.'); } catch(err){ toast(err.message); }
       }
       else if(act === 'marksent'){
         const sq = SEQ[l.status]; if(!sq) return;
