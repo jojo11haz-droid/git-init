@@ -5674,7 +5674,7 @@
         <summary>How this works</summary>
         <ol>
           <li><b>Today</b> shows what to do now: follow-ups that are due, replies to answer, and clinics ready for a first email. 10–15 first emails a day is plenty.</li>
-          <li>Click <b>Write first email</b>, add one personal line about the clinic, then click <b>Open in Gmail</b> (it opens as owner@betweenpsych.com) or copy it.</li>
+          <li>Click <b>Write first email</b>, add one personal line about the clinic (or tap <b>✨ Write it for me</b> to have it written from their website), then click <b>Open in Gmail</b> (it opens as owner@betweenpsych.com) or copy it.</li>
           <li>After sending, click <b>I sent it</b>. The follow-up is scheduled for you: 4 days later, then 5 days after that.</li>
           <li>When someone answers, open <b>⋯ → They replied</b> and send them the video. Use Undo if you click something by mistake.</li>
         </ol>
@@ -5687,7 +5687,11 @@
           <div class="who" id="btwOrCWho"></div>
           <div id="btwOrCOpenerWrap">
             <label class="btw-or-lbl" for="btwOrCOpener">Your personal first line <small>(one sentence about them: it's what gets replies)</small></label>
-            <input type="text" class="opener" id="btwOrCOpener" maxlength="240">
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <input type="text" class="opener" id="btwOrCOpener" maxlength="300" style="flex:1;min-width:0;">
+              <button type="button" class="btw-or-b" id="btwOrCAi" title="Reads their website and writes a line from their own words">✨ Write it for me</button>
+            </div>
+            <div class="btw-or-hint" id="btwOrCAiNote" hidden></div>
             <div class="btw-or-hint" id="btwOrCHint"></div>
           </div>
           <label class="btw-or-lbl" for="btwOrCSubject">Subject</label>
@@ -15341,6 +15345,7 @@
       $o('btwOrCWho').textContent = 'To ' + (l.contact ? l.contact + ', ' : '') + l.name + (l.email ? ' · ' + l.email : '');
       $o('btwOrCOpenerWrap').hidden = !first;
       $o('btwOrCOpener').value = '';
+      $o('btwOrCAiNote').hidden = true; $o('btwOrCAiNote').textContent = '';
       $o('btwOrCOpener').placeholder = l.lang === 'en' ? 'e.g. I saw you focus on post-op knees in NDG.' : 'ex. J’ai vu que vous combinez physio et ostéo à Villeray.';
       $o('btwOrCHint').textContent = l.notes ? 'From your notes: ' + l.notes : 'Their specialty, neighbourhood, or something from their website.';
       const m = emailFor(l, '');
@@ -15352,6 +15357,23 @@
       $o('btwOrCompose').hidden = false;
       setTimeout(() => (first ? $o('btwOrCOpener') : $o('btwOrCMail')).focus(), 30);
     }
+    // "Write it for me": the server reads the clinic's website and the AI
+    // writes one line from their own words, with the quote it used.
+    $o('btwOrCAi').addEventListener('click', async function(){
+      const l = composing; if(!l) return;
+      const btn = this, note = $o('btwOrCAiNote');
+      if(!l.website){ note.hidden = false; note.textContent = 'Add their website first (⋯ → Edit details), then try again.'; return; }
+      btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Reading their site…';
+      note.hidden = false; note.textContent = 'Reading ' + l.website.replace(/^https?:\/\//, '').replace(/\/$/, '') + ' and its about / team / services pages…';
+      try {
+        const r = await api('POST', '/api/admin/outreach/' + encodeURIComponent(l.id) + '/opener', {});
+        if(composing !== l) return;
+        if(!r.line){ note.textContent = 'Nothing specific enough on their site. Write the line yourself (their notes are below).'; return; }
+        $o('btwOrCOpener').value = r.line; rebuild();
+        note.innerHTML = 'Based on their site: “' + esc(r.quote || '') + '”' + (r.source ? ' · <a href="' + esc(r.source) + '" target="_blank" rel="noopener">see the page ↗</a>' : '') + '. Check it, then edit if you like.';
+      } catch(e){ note.textContent = e.message; }
+      finally { btn.disabled = false; btn.textContent = orig; }
+    });
     function closeSheets(){ $o('btwOrCompose').hidden = true; $o('btwOrForm').hidden = true; composing = null; editing = null; }
     ov.querySelectorAll('[data-orclose]').forEach(b => b.addEventListener('click', closeSheets));
     $o('btwOrCOpener').addEventListener('input', rebuild);
