@@ -15241,13 +15241,15 @@
       const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
         (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '');
       let when = '';
-      if(OPEN[l.status] && l.status !== 'to_contact' && l.next) when = late ? 'Follow-up overdue since ' + fmt(l.next) : due ? 'Follow up today' : 'Next follow-up ' + fmt(l.next);
+      const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
+      if(OPEN[l.status] && l.status !== 'to_contact' && l.next) when = contacted + (late ? 'follow-up overdue since ' + fmt(l.next) : due ? 'follow up today' : 'next follow-up ' + fmt(l.next));
       else if(l.status === 'to_contact') when = 'Not contacted yet';
       else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
       const sq = SEQ[l.status];
       let main = '';
       if(l.status === 'to_contact' && !l.email) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
       else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
+      if(sq && l.email) main += '<button type="button" class="btw-or-b" data-oract="marksent" title="Already sent it another way (for example a Gmail draft)? Log it here.">✓ Mark as sent</button>';
       else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
       else if(l.status === 'replied') main = '<button type="button" class="btw-or-b pri" data-oract="compose">Send the video</button>';
       else if(l.status === 'trial') main = '<button type="button" class="btw-or-b pri" data-oract="set" data-to="customer">✓ They became a customer</button>';
@@ -15306,6 +15308,11 @@
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('That doesn’t look like an email address.'); return; }
         try { await patch(l.id, { email: v }); toast('Email saved. ' + l.name + ' is ready for a first email.'); } catch(err){ toast(err.message); }
       }
+      else if(act === 'marksent'){
+        const sq = SEQ[l.status]; if(!sq) return;
+        const nx = sq.days ? addDays(t, sq.days) : '';
+        await setStatus(l, { status: sq.to, last: t, next: nx }, (l.status === 'to_contact' ? 'Marked as contacted. ' : 'Logged. ') + (nx ? 'Follow-up scheduled for ' + fmt(nx) + '.' : 'That was the last email for ' + l.name + '.'));
+      }
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
         const to = act === 'set' ? b.dataset.to : act.slice(4);
@@ -15353,7 +15360,7 @@
       $o('btwOrCMail').style.display = l.email ? '' : 'none';
       const nx = sq && sq.days ? addDays(today(), sq.days) : '';
       $o('btwOrCSentText').textContent = sq ? 'Sent it? ' + (nx ? 'The next follow-up will be scheduled for ' + fmt(nx) + '.' : 'That was the last email in the sequence.') : 'Sent it?';
-      $o('btwOrCSent').hidden = true;
+      $o('btwOrCSent').hidden = false;
       $o('btwOrCompose').hidden = false;
       setTimeout(() => (first ? $o('btwOrCOpener') : $o('btwOrCMail')).focus(), 30);
     }
