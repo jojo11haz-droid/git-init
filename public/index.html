@@ -3201,37 +3201,96 @@
   .btw-dr{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;background:var(--panel);}
   .btw-dr + .btw-dr{margin-top:8px;}
   /* Owner: clinic outreach */
-  .btw-or-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 10px;}
-  .btw-or-bar input{flex:1;min-width:150px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;font-family:var(--font-body);background:var(--panel);color:var(--ink);}
-  .btw-or-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
-  .btw-or-chips button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--ink-soft);font-family:var(--font-body);}
-  .btw-or-chips button.on{background:var(--moss);color:#fff;border-color:var(--moss);}
-  .btw-or-due{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5;background:var(--panel);margin-bottom:10px;color:var(--ink);}
-  .btw-or-due.late{border-color:var(--clay);}
-  .btw-or-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow-y:auto;padding-right:2px;}
-  .btw-or-lead{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel);font-size:12.5px;line-height:1.5;color:var(--ink-soft);}
-  .btw-or-lead.due{border-color:var(--moss);}
-  .btw-or-lead.late{border-color:var(--clay);}
-  .btw-or-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
-  .btw-or-top strong{font-size:14px;color:var(--ink);}
-  .btw-or-st{flex:0 0 auto;font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--line);color:var(--ink);white-space:nowrap;}
-  .btw-or-st.s-replied,.btw-or-st.s-trial{background:#E3EEDF;color:#2F5E2A;}
-  .btw-or-st.s-customer{background:var(--moss);color:#fff;}
-  .btw-or-st.s-not_interested{background:transparent;border:1px solid var(--line);color:var(--ink-soft);}
-  .btw-or-links a{color:var(--moss);}
-  .btw-or-when{font-size:12px;margin-top:2px;}
-  .btw-or-when.due{color:var(--moss);font-weight:600;} .btw-or-when.late{color:var(--clay);font-weight:600;}
-  .btw-or-notes{white-space:pre-wrap;color:var(--ink);margin-top:3px;}
-  .btw-or-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-  .btw-or-acts button,.btw-or-acts a{border:1px solid var(--line);background:var(--bg,#fff);border-radius:999px;padding:4px 11px;font-size:12px;cursor:pointer;color:var(--ink);font-family:var(--font-body);text-decoration:none;}
-  .btw-or-acts .pri{background:var(--moss);border-color:var(--moss);color:#fff;}
-  .btw-or-form[hidden]{display:none;}
-  .btw-or-form{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--panel);}
-  .btw-or-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;}
+  .btw-or-modal{max-width:980px !important;padding:22px 24px 18px !important;display:flex;flex-direction:column;overflow:hidden !important;height:min(860px,92vh);max-height:92vh !important;}
+  @media (max-width:640px){ #btwOutreachOverlay{padding:0;} .btw-or-modal{height:100%;max-height:100% !important;border-radius:0 !important;padding:16px 16px 12px !important;} }
+  .btw-or-head{flex:0 0 auto;}
+  .btw-or-modal > .btw-modal-close{z-index:7;}
+  .btw-or-sub{font-size:13.5px;color:var(--ink);line-height:1.5;margin:2px 0 10px;}
+  .btw-or-sub b{color:var(--moss);}
+  .btw-or-funnel{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
+  .btw-or-funnel span.n{display:inline-flex;align-items:baseline;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--paper);}
+  .btw-or-funnel span.n b{font-size:13.5px;color:var(--ink);}
+  .btw-or-funnel i{font-style:normal;opacity:.5;}
+  .btw-or-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .btw-or-tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;}
+  .btw-or-tabs button{border:0;background:transparent;border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer;color:var(--ink-soft);font-family:var(--font-body);font-weight:600;}
+  .btw-or-tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .btw-or-tabs button .c{font-weight:500;opacity:.7;margin-left:3px;}
+  .btw-or-right{display:flex;gap:8px;flex:1;justify-content:flex-end;min-width:240px;}
+  .btw-or-right input{flex:1;max-width:260px;min-width:120px;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:13px;font-family:var(--font-body);background:var(--panel);color:var(--ink);}
+  .btw-or-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 2px 6px;margin:0 -2px;}
+  .btw-or-group{margin:6px 0 14px;}
+  .btw-or-group h4{display:flex;align-items:center;gap:8px;margin:0 0 7px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;}
+  .btw-or-group h4 .cnt{background:var(--line);color:var(--ink);border-radius:999px;padding:0 7px;font-size:11px;letter-spacing:0;}
+  .btw-or-group.late h4{color:var(--clay);} .btw-or-group.hot h4,.btw-or-group.due h4{color:var(--moss);}
+  .btw-or-group h4 small{text-transform:none;letter-spacing:0;font-weight:500;}
+  .btw-or-lead{position:relative;display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--panel);font-size:12.5px;line-height:1.45;color:var(--ink-soft);}
+  .btw-or-lead + .btw-or-lead{margin-top:7px;}
+  .btw-or-lead.late{border-left:4px solid var(--clay);} .btw-or-lead.due,.btw-or-lead.hot{border-left:4px solid var(--moss);}
+  .btw-or-main{flex:1;min-width:0;}
+  .btw-or-name{font-size:14.5px;font-weight:700;color:var(--ink);}
+  .btw-or-contact{margin-top:2px;overflow-wrap:anywhere;}
+  .btw-or-contact a{color:var(--moss);}
+  .btw-or-noemail{color:var(--amber);font-weight:600;}
+  .btw-or-notes{margin-top:3px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}
+  .btw-or-notes.open{display:block;-webkit-line-clamp:unset;white-space:pre-wrap;}
+  .btw-or-side{flex:0 0 236px;display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right;}
+  .btw-or-steps{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--ink-soft);}
+  .btw-or-steps .d{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink-soft);background:var(--panel);}
+  .btw-or-steps .d.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-or-steps .ln{width:12px;height:1.5px;background:var(--line);} .btw-or-steps .ln.on{background:var(--moss);}
+  .btw-or-pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--moss-light);color:var(--moss);}
+  .btw-or-pill.cust{background:var(--moss);color:#fff;} .btw-or-pill.no{background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-weight:600;}
+  .btw-or-when{font-size:12px;color:var(--ink-soft);} .btw-or-when.late{color:var(--clay);font-weight:700;} .btw-or-when.due{color:var(--moss);font-weight:700;}
+  .btw-or-acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+  .btw-or-b{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);font-family:var(--font-body);text-decoration:none;white-space:nowrap;}
+  .btw-or-b.pri{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-or-b.ghost{border-color:transparent;color:var(--moss);padding-left:6px;padding-right:6px;}
+  .btw-or-b.more{padding:5px 10px;font-size:15px;line-height:1;letter-spacing:1px;}
+  .btw-or-menu{position:absolute;right:12px;top:calc(100% - 8px);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:5px;min-width:210px;display:flex;flex-direction:column;}
+  .btw-or-menu[hidden]{display:none;}
+  .btw-or-menu button{border:0;background:transparent;text-align:left;padding:8px 11px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--ink);font-family:var(--font-body);}
+  .btw-or-menu button:hover,.btw-or-menu button:focus-visible{background:var(--paper);}
+  .btw-or-menu button.warn{color:var(--clay);}
+  .btw-or-addemail{display:flex;gap:6px;margin-top:6px;}
+  .btw-or-addemail[hidden]{display:none;}
+  .btw-or-addemail input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;font-family:var(--font-body);background:var(--panel);color:var(--ink);}
+  .btw-or-empty{text-align:center;padding:40px 10px;color:var(--ink-soft);font-size:13.5px;line-height:1.6;}
+  .btw-or-empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:4px;}
+  .btw-or-help{flex:0 0 auto;font-size:12px;color:var(--ink-soft);line-height:1.55;border-top:1px solid var(--line);padding-top:8px;margin-top:4px;}
+  .btw-or-help summary{cursor:pointer;color:var(--moss);font-weight:600;}
+  .btw-or-help ol{margin:6px 0 2px;padding-left:18px;}
+  .btw-or-sheet{position:absolute;inset:0;background:var(--panel);z-index:6;display:flex;flex-direction:column;padding:22px 24px 16px;border-radius:inherit;}
+  .btw-or-sheet[hidden]{display:none;}
+  @media (max-width:640px){ .btw-or-sheet{padding:16px;} }
+  .btw-or-sheet-body{flex:1;min-height:0;overflow-y:auto;}
+  .btw-or-back{border:0;background:none;color:var(--moss);font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-bottom:8px;font-family:var(--font-body);align-self:flex-start;}
+  .btw-or-sheet h3{margin:0 0 2px;font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink);}
+  .btw-or-sheet .who{font-size:13px;color:var(--ink-soft);margin-bottom:12px;}
+  .btw-or-lbl{display:block;font-size:12px;font-weight:700;color:var(--ink);margin:10px 0 4px;}
+  .btw-or-lbl small{font-weight:500;color:var(--ink-soft);}
+  .btw-or-sheet input[type=text],.btw-or-sheet textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13.5px;font-family:var(--font-body);background:var(--panel);color:var(--ink);}
+  .btw-or-sheet input.opener{border-color:var(--moss);background:var(--moss-light);}
+  .btw-or-sheet textarea{min-height:240px;line-height:1.5;resize:vertical;}
+  .btw-or-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.45;}
+  .btw-or-sheet-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+  .btw-or-sent{margin-top:12px;border:1px solid var(--moss);background:var(--moss-light);border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:13px;color:var(--ink);}
+  .btw-or-sent[hidden]{display:none;}
+  .btw-or-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
   @media (max-width:560px){ .btw-or-grid{grid-template-columns:1fr;} }
-  .btw-or-form textarea{width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:var(--font-body);font-size:13px;box-sizing:border-box;background:var(--bg,#fff);color:var(--ink);}
-  .btw-or-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;z-index:10050;opacity:0;transition:opacity .2s;pointer-events:none;}
-  .btw-or-toast.show{opacity:1;}
+  .btw-or-sheet .btw-form-field textarea{min-height:70px;}
+  @media (max-width:640px){
+    .btw-or-lead{flex-direction:column;gap:8px;}
+    .btw-or-side{flex:none;width:100%;align-items:flex-start;text-align:left;}
+    .btw-or-acts{justify-content:flex-start;}
+    .btw-or-right{min-width:0;width:100%;} .btw-or-right input{max-width:none;}
+    .btw-or-tabs{width:100%;justify-content:space-between;} .btw-or-tabs button{padding:6px 9px;}
+    .btw-or-group h4{flex-wrap:wrap;row-gap:2px;} .btw-or-group h4 small{flex-basis:100%;}
+  }
+  .btw-or-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--panel);padding:8px 8px 8px 16px;border-radius:999px;font-size:13px;z-index:10050;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);}
+  .btw-or-toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto;}
+  .btw-or-toast button{border:0;background:transparent;color:var(--moss-light);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;font-family:var(--font-body);}
+  .btw-or-toast button[hidden]{display:none;}
   .btw-contact-email{font-size:15px;color:var(--moss);text-decoration:none;font-weight:600;}
   .btw-contact-email:hover{text-decoration:underline;}
   /* ---- auth area ---- */
@@ -5593,45 +5652,88 @@
   </div>
 
   <div class="btw-modal-overlay" id="btwOutreachOverlay" style="display:none;">
-    <div class="btw-modal" style="max-width:760px;">
+    <div class="btw-modal btw-or-modal" role="dialog" aria-labelledby="btwOrTitle">
       <button class="btw-modal-close" data-close="btwOutreachOverlay" type="button" aria-label="Close">✕</button>
-      <div class="btw-modal-eyebrow">Owner · Outreach</div>
-      <h2>Clinic outreach</h2>
-      <div class="btw-st-kpis" id="btwOrKpis"></div>
-      <div id="btwOrDue"></div>
-      <div class="btw-or-bar">
-        <input type="search" id="btwOrSearch" placeholder="Search clinics, cities, notes…" aria-label="Search clinics">
-        <button type="button" class="btw-nav-btn" id="btwOrAdd">+ Add a clinic</button>
-      </div>
-      <div class="btw-or-chips" id="btwOrChips"></div>
-      <div class="btw-form-error" id="btwOrError"></div>
-      <div class="btw-or-form" id="btwOrForm" hidden>
-        <div class="btw-modal-eyebrow" id="btwOrFormTitle">Add a clinic</div>
-        <div class="btw-or-grid">
-          <div class="btw-form-field"><label>Clinic name</label><input type="text" id="btwOrName" maxlength="160"></div>
-          <div class="btw-form-field"><label>Contact person</label><input type="text" id="btwOrContact" maxlength="120" placeholder="Optional"></div>
-          <div class="btw-form-field"><label>Profession</label><select id="btwOrProf"><option value="physio">Physiotherapy</option><option value="psycho">Psychotherapy / psychology</option><option value="kinesio">Kinesiology</option><option value="osteo">Osteopathy</option><option value="other">Other</option></select></div>
-          <div class="btw-form-field"><label>Language</label><select id="btwOrLang"><option value="fr">French</option><option value="en">English</option></select></div>
-          <div class="btw-form-field"><label>Email</label><input type="email" id="btwOrEmail" maxlength="200"></div>
-          <div class="btw-form-field"><label>Phone</label><input type="tel" id="btwOrPhone" maxlength="40"></div>
-          <div class="btw-form-field"><label>City / area</label><input type="text" id="btwOrCity" maxlength="80"></div>
-          <div class="btw-form-field"><label>Website</label><input type="url" id="btwOrWebsite" maxlength="400"></div>
-          <div class="btw-form-field"><label>Status</label><select id="btwOrStatus"></select></div>
-          <div class="btw-form-field"><label>Next follow-up</label><input type="date" id="btwOrNext"></div>
+      <div class="btw-or-head">
+        <div class="btw-modal-eyebrow">Owner · Outreach</div>
+        <h2 id="btwOrTitle" style="margin-bottom:2px;">Clinic outreach</h2>
+        <div class="btw-or-sub" id="btwOrSub"></div>
+        <div class="btw-or-funnel" id="btwOrFunnel"></div>
+        <div class="btw-or-tools">
+          <div class="btw-or-tabs" role="tablist" id="btwOrTabs"></div>
+          <div class="btw-or-right">
+            <input type="search" id="btwOrSearch" placeholder="Search…" aria-label="Search clinics">
+            <button type="button" class="btw-or-b" id="btwOrAdd">+ Add clinic</button>
+          </div>
         </div>
-        <div class="btw-form-field"><label>Notes</label><textarea id="btwOrNotes" maxlength="2000"></textarea></div>
-        <div class="btw-form-error" id="btwOrFormError"></div>
-        <div class="btw-form-row">
-          <button type="button" class="btw-modal-continue secondary" id="btwOrDelete" style="margin-right:auto;">Delete</button>
-          <button type="button" class="btw-modal-continue secondary" id="btwOrCancel">Cancel</button>
-          <button type="button" class="btw-modal-continue" id="btwOrSave">Save</button>
+        <div class="btw-form-error" id="btwOrError"></div>
+      </div>
+      <div class="btw-or-body" id="btwOrList"></div>
+      <details class="btw-or-help">
+        <summary>How this works</summary>
+        <ol>
+          <li><b>Today</b> shows what to do now: follow-ups that are due, replies to answer, and clinics ready for a first email. 10–15 first emails a day is plenty.</li>
+          <li>Click <b>Write first email</b>, add one personal line about the clinic, then open it in your mail app (send from owner@betweenpsych.com) or copy it.</li>
+          <li>After sending, click <b>I sent it</b>. The follow-up is scheduled for you: 4 days later, then 5 days after that.</li>
+          <li>When someone answers, open <b>⋯ → They replied</b> and send them the video. Use Undo if you click something by mistake.</li>
+        </ol>
+      </details>
+
+      <div class="btw-or-sheet" id="btwOrCompose" hidden>
+        <button type="button" class="btw-or-back" data-orclose>← Back to the list</button>
+        <div class="btw-or-sheet-body">
+          <h3 id="btwOrCTitle">First email</h3>
+          <div class="who" id="btwOrCWho"></div>
+          <div id="btwOrCOpenerWrap">
+            <label class="btw-or-lbl" for="btwOrCOpener">Your personal first line <small>(one sentence about them: it's what gets replies)</small></label>
+            <input type="text" class="opener" id="btwOrCOpener" maxlength="240">
+            <div class="btw-or-hint" id="btwOrCHint"></div>
+          </div>
+          <label class="btw-or-lbl" for="btwOrCSubject">Subject</label>
+          <input type="text" id="btwOrCSubject" maxlength="200">
+          <label class="btw-or-lbl" for="btwOrCBody">Email <small>(edit anything you like)</small></label>
+          <textarea id="btwOrCBody"></textarea>
+          <div class="btw-or-sheet-acts">
+            <a class="btw-or-b pri" id="btwOrCMail" href="#">Open in Mail app</a>
+            <button type="button" class="btw-or-b" id="btwOrCCopy">Copy email</button>
+            <button type="button" class="btw-or-b ghost" data-orclose>Cancel</button>
+          </div>
+          <div class="btw-or-sent" id="btwOrCSent" hidden>
+            <span id="btwOrCSentText">Sent it?</span>
+            <button type="button" class="btw-or-b pri" id="btwOrCDone">✓ I sent it</button>
+          </div>
         </div>
       </div>
-      <div class="btw-or-list" id="btwOrList"></div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;">Rhythm: first email → follow-up 1 four days later → follow-up 2 five days after that → stop. "Write email" opens it in your mail app, ready to send from owner@betweenpsych.com; fill in the bracketed line first.</div>
+
+      <div class="btw-or-sheet" id="btwOrForm" hidden>
+        <button type="button" class="btw-or-back" data-orclose>← Back to the list</button>
+        <div class="btw-or-sheet-body">
+          <h3 id="btwOrFormTitle">Add a clinic</h3>
+          <div class="who">Only the name is required. Add the email so it shows up in "Ready for a first email".</div>
+          <div class="btw-or-grid">
+            <div class="btw-form-field"><label for="btwOrName">Clinic name</label><input type="text" id="btwOrName" maxlength="160"></div>
+            <div class="btw-form-field"><label for="btwOrContact">Contact person <span style="font-weight:400;">(optional)</span></label><input type="text" id="btwOrContact" maxlength="120" placeholder="e.g. Marie Roy"></div>
+            <div class="btw-form-field"><label for="btwOrEmail">Email</label><input type="email" id="btwOrEmail" maxlength="200"></div>
+            <div class="btw-form-field"><label for="btwOrPhone">Phone</label><input type="tel" id="btwOrPhone" maxlength="40"></div>
+            <div class="btw-form-field"><label for="btwOrProf">Profession</label><select id="btwOrProf"><option value="physio">Physiotherapy</option><option value="psycho">Psychotherapy / psychology</option><option value="kinesio">Kinesiology</option><option value="osteo">Osteopathy</option><option value="other">Other</option></select></div>
+            <div class="btw-form-field"><label for="btwOrLang">Write to them in</label><select id="btwOrLang"><option value="fr">French</option><option value="en">English</option></select></div>
+            <div class="btw-form-field"><label for="btwOrCity">City / area</label><input type="text" id="btwOrCity" maxlength="80"></div>
+            <div class="btw-form-field"><label for="btwOrWebsite">Website</label><input type="url" id="btwOrWebsite" maxlength="400"></div>
+            <div class="btw-form-field"><label for="btwOrStatus">Where they are</label><select id="btwOrStatus"></select></div>
+            <div class="btw-form-field"><label for="btwOrNext">Next follow-up</label><input type="date" id="btwOrNext"></div>
+          </div>
+          <div class="btw-form-field"><label for="btwOrNotes">Notes</label><textarea id="btwOrNotes" maxlength="2000" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:var(--font-body);font-size:13.5px;background:var(--panel);color:var(--ink);"></textarea></div>
+          <div class="btw-form-error" id="btwOrFormError"></div>
+          <div class="btw-or-sheet-acts">
+            <button type="button" class="btw-or-b pri" id="btwOrSave">Save</button>
+            <button type="button" class="btw-or-b ghost" data-orclose>Cancel</button>
+            <button type="button" class="btw-or-b ghost" id="btwOrDelete" style="margin-left:auto;color:var(--clay);">Delete clinic</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="btw-or-toast" id="btwOrToast" role="status" aria-live="polite"></div>
+  <div class="btw-or-toast" id="btwOrToast" role="status" aria-live="polite"><span id="btwOrToastMsg"></span><button type="button" id="btwOrUndo" hidden>Undo</button></div>
 
   <div class="btw-modal-overlay" id="btwBillCheckOverlay" style="display:none;">
     <div class="btw-modal" style="max-width:600px;">
@@ -14990,24 +15092,33 @@
     }); });
   }
 
-  // Owner only: clinic outreach list (leads, where each is in the email
-  // sequence, the email to send next, follow-up dates).
+  // Owner only: clinic outreach. "Today" says what to do now; each clinic has
+  // one main button for its next step; emails are written in a built-in
+  // composer (personal line + template) and marked sent with one click.
   (function(){
     const btn = document.getElementById('btwOutreachBtn'), ov = document.getElementById('btwOutreachOverlay');
     if(!btn || !ov) return;
     const $o = id => document.getElementById(id);
-    const ST = [['to_contact','To contact'],['emailed','First email sent'],['followup1','Follow-up 1 sent'],['followup2','Follow-up 2 sent'],
+    const ST = [['to_contact','Not contacted yet'],['emailed','First email sent'],['followup1','Follow-up 1 sent'],['followup2','No reply after 3 emails'],
       ['replied','Replied'],['trial','On trial'],['customer','Customer'],['not_interested','Not interested']];
     const ST_LABEL = Object.fromEntries(ST);
     const OPEN = { to_contact:1, emailed:1, followup1:1 };
-    const NEXT = { to_contact:['emailed','First email sent ✓', 4], emailed:['followup1','Follow-up 1 sent ✓', 5], followup1:['followup2','Follow-up 2 sent ✓', 0] };
+    const SEQ = { to_contact:{ to:'emailed', days:4, write:'Write first email', title:'First email' },
+                  emailed:{ to:'followup1', days:5, write:'Write follow-up 1', title:'Follow-up 1' },
+                  followup1:{ to:'followup2', days:0, write:'Write follow-up 2', title:'Follow-up 2 (the last one)' } };
+    const STEP = { to_contact:0, emailed:1, followup1:2, followup2:3 };
     const PROF = { physio:'Physio', psycho:'Psychotherapy', kinesio:'Kinesiology', osteo:'Osteopathy', other:'Other' };
     const PATH = { physio:'physio', psycho:'therapy', kinesio:'kinesiology', osteo:'osteopathy', other:'' };
-    let leads = [], fStatus = 'all', editing = null;
+    let leads = [], tab = 'today', editing = null, composing = null, bodyDirty = false, opened = false, undoFn = null;
+
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
     function addDays(iso, n){ const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
-    function fmt(iso){ try { return new Date(iso + 'T12:00:00').toLocaleDateString('en-CA', { month:'short', day:'numeric' }); } catch(e){ return iso; } }
-    function toast(m){ const t = $o('btwOrToast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove('show'), 2400); }
+    function fmt(iso){ try { return new Date(iso + 'T12:00:00').toLocaleDateString('en-CA', { weekday:'short', month:'short', day:'numeric' }); } catch(e){ return iso; } }
+    function toast(msg, undo){
+      $o('btwOrToastMsg').textContent = msg; undoFn = undo || null; $o('btwOrUndo').hidden = !undo;
+      const t = $o('btwOrToast'); t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove('show'), undo ? 6000 : 2600);
+    }
+    $o('btwOrUndo').addEventListener('click', async function(){ const f = undoFn; undoFn = null; $o('btwOrToast').classList.remove('show'); if(f) await f(); });
 
     /* ---- email templates (same as marketing/outreach-kit.md) ---- */
     const LINE = {
@@ -15023,147 +15134,261 @@
             other:'les personnes que vous accompagnez envoient un suivi d’une minute entre les rendez-vous, et vous voyez comment elles vont avant la rencontre.' } };
     const SIG = { en:'--\nJack Hazan · Founder, Between\n514-667-9513 · owner@betweenpsych.com · betweenpsych.com\n2600, rue Dragon, Montréal (Québec)\nNot interested? Reply "no thanks" and I won’t write again.',
                   fr:'--\nJack Hazan · Fondateur, Between\n514-667-9513 · owner@betweenpsych.com · betweenpsych.com\n2600, rue Dragon, Montréal (Québec)\nPas intéressé(e)? Répondez « non merci » et je ne vous écrirai plus.' };
-    function emailFor(l){
-      const lang = l.lang === 'en' ? 'en' : 'fr';
-      const first = (l.contact || '').trim().replace(/^(dr\.?|dre?\.?)\s+/i, '').split(/\s+/)[0] || '';
+    function firstName(l){ return (l.contact || '').trim().replace(/^(dr\.?|dre\.?)\s+/i, '').split(/\s+/)[0] || ''; }
+    function emailFor(l, opener){
+      const lang = l.lang === 'en' ? 'en' : 'fr', first = firstName(l);
       const hi = lang === 'fr' ? 'Bonjour' + (first ? ' ' + first : '') + ',' : (first ? 'Hi ' + first + ',' : 'Hello,');
       const prof = LINE[lang][l.profession] ? l.profession : 'other';
-      const line = LINE[lang][prof];
       const url = 'betweenpsych.com/' + (lang === 'fr' ? 'fr/' : '') + (PATH[prof] || '') + '?ref=email';
       const cl = prof !== 'physio' && prof !== 'osteo';
       const who = lang === 'fr' ? (cl ? 'vos clients' : 'vos patients') : (cl ? 'your clients' : 'your patients');
       const sub1 = lang === 'fr' ? 'Petite question' + (first ? ', ' + first : ' pour ' + l.name) : 'Quick question' + (first ? ', ' + first : ' for ' + l.name);
       const re = (lang === 'fr' ? 'Re : ' : 'Re: ') + sub1;
-      const st = l.status;
-      if(st === 'replied') return { stage:'Reply (video + offer)', subject: re, body: lang === 'fr'
+      const op = (opener || '').trim() ? (opener || '').trim() + '\n\n' : '';
+      if(l.status === 'replied') return { subject: re, body: lang === 'fr'
         ? `Merci${first ? ' ' + first : ''}! La voici : ${url}\n\nSi vous voulez l’essayer, je peux configurer votre compte avec vous en 10 minutes, par téléphone ou en vidéo. Comme l’une de nos 10 cliniques fondatrices (jusqu’au 31 janvier), vous auriez 60 jours gratuits au lieu de 14, et votre prix garanti.\n\nJack`
         : `Great, thanks${first ? ' ' + first : ''}! Here it is: ${url}\n\nIf you’d like to try it, I can set up your account with you in 10 minutes, by phone or video. As one of our first 10 founding clinics (until January 31), you’d get 60 days free instead of 14, with your price locked in.\n\nJack` };
-      if(st === 'emailed') return { stage:'Follow-up 1', subject: re, body: lang === 'fr'
+      if(l.status === 'emailed') return { subject: re, body: lang === 'fr'
         ? `${hi} au cas où ce serait plus simple de regarder, voici la vidéo d’une minute : ${url}\n\nCe que les cliniciens aiment le plus : vous n’êtes jamais de garde. Les suivis vous attendent, rien ne vous dérange, et ${who} ne paient jamais.\n\nP.-S. Les 10 premières cliniques inscrites d’ici le 31 janvier ont 60 jours gratuits au lieu de 14.\n\nJack\n\n${SIG.fr}`
         : `${hi} in case it’s easier to just watch, here’s the 1-minute video: ${url}\n\nWhat clinicians like most: you’re never on call. Check-ins wait for you, nothing pings you, and ${who} never pay.\n\nP.S. The first 10 clinics that start by January 31 get 60 days free instead of 14.\n\nJack\n\n${SIG.en}` };
-      if(st === 'followup1') return { stage:'Follow-up 2', subject: re, body: lang === 'fr'
+      if(l.status === 'followup1') return { subject: re, body: lang === 'fr'
         ? `${hi} je m’arrête ici pour ne pas encombrer votre boîte. Si le moment est mieux plus tard, répondez simplement à ce courriel et je vous l’installe. Et si un ou une collègue pouvait trouver ça utile, je vous serais reconnaissant de nous mettre en contact.\n\nJack\n\n${SIG.fr}`
         : `${hi} I’ll leave it here so I don’t fill your inbox. If the timing’s better later, just reply to this email and I’ll set it up with you. And if a colleague would find it useful, I’d be grateful for the intro.\n\nJack\n\n${SIG.en}` };
-      if(st !== 'to_contact') return null;
-      return { stage:'First email', subject: sub1, body: lang === 'fr'
-        ? `${hi}\n\n[Une ligne sur la personne ou sa clinique.]\n\nPetite question : quand ${who} reviennent, se souviennent-ils vraiment de leur semaine?\n\nJ’ai créé Between : ${line}\n\nUne vidéo d’une minute qui montre comment ça marche vous serait-elle utile?\n\nJack\n\n${SIG.fr}`
-        : `${hi}\n\n[One line about them or their clinic.]\n\nQuick question: when ${who} come back, do they actually remember how their week went?\n\nI built Between: ${line}\n\nWould a 1-minute video of how it works be useful?\n\nJack\n\n${SIG.en}` };
+      return { subject: sub1, body: lang === 'fr'
+        ? `${hi}\n\n${op}Petite question : quand ${who} reviennent, se souviennent-ils vraiment de leur semaine?\n\nJ’ai créé Between : ${LINE.fr[prof]}\n\nUne vidéo d’une minute qui montre comment ça marche vous serait-elle utile?\n\nJack\n\n${SIG.fr}`
+        : `${hi}\n\n${op}Quick question: when ${who} come back, do they actually remember how their week went?\n\nI built Between: ${LINE.en[prof]}\n\nWould a 1-minute video of how it works be useful?\n\nJack\n\n${SIG.en}` };
     }
     async function copyText(text){
       try { await navigator.clipboard.writeText(text); return true; } catch(e){}
       try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch(e){ return false; }
     }
 
+    /* ---- grouping ---- */
+    const isDue = l => OPEN[l.status] && l.status !== 'to_contact' && l.next && l.next <= today();
+    const byNext = (a, b) => (a.next || '9999').localeCompare(b.next || '9999') || a.name.localeCompare(b.name);
+    const byName = (a, b) => a.name.localeCompare(b.name);
+    function groups(){
+      const t = today(), L = leads;
+      if(tab === 'today') return [
+        ['Follow-ups overdue', L.filter(l => isDue(l) && l.next < t).sort(byNext), 'late', ''],
+        ['Follow up today', L.filter(l => isDue(l) && l.next === t).sort(byName), 'due', ''],
+        ['They replied: answer them', L.filter(l => l.status === 'replied').sort(byName), 'hot', 'Send the video and offer to set them up.'],
+        ['Ready for a first email', L.filter(l => l.status === 'to_contact' && l.email).sort(byName), '', 'Send 10–15 a day, in the morning.'],
+        ['Find their email first', L.filter(l => l.status === 'to_contact' && !l.email).sort(byName), '', 'Look on their website, then add it here.']];
+      if(tab === 'waiting') return [
+        ['Waiting for a reply', L.filter(l => OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)).sort(byNext), '', 'Their next follow-up date is on each card.'],
+        ['On trial', L.filter(l => l.status === 'trial').sort(byName), '', 'Check in with them during the trial.']];
+      if(tab === 'closed') return [
+        ['Customers', L.filter(l => l.status === 'customer').sort(byName), '', ''],
+        ['No reply after 3 emails', L.filter(l => l.status === 'followup2').sort(byName), '', 'You can try again in a few months.'],
+        ['Not interested', L.filter(l => l.status === 'not_interested').sort(byName), '', 'Don’t email them again.']];
+      return [['All clinics', L.slice().sort(byName), '', '']];
+    }
+    function counts(){
+      const todo = leads.filter(l => isDue(l) || l.status === 'replied' || l.status === 'to_contact').length;
+      const waiting = leads.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial').length;
+      const closed = leads.filter(l => l.status === 'customer' || l.status === 'followup2' || l.status === 'not_interested').length;
+      return { today: todo, waiting, closed, all: leads.length };
+    }
+
     /* ---- render ---- */
-    function dueState(l){ if(!OPEN[l.status] || !l.next) return ''; const t = today(); return l.next < t ? 'late' : l.next === t ? 'due' : ''; }
     function render(){
-      const n = s => leads.filter(l => l.status === s).length;
-      const sent = leads.filter(l => l.status !== 'to_contact').length;
-      const replies = n('replied') + n('trial') + n('customer');
-      $o('btwOrKpis').innerHTML =
-        '<div class="btw-st-kpi"><b>' + leads.length + '</b><span>clinics</span></div>' +
-        '<div class="btw-st-kpi"><b>' + n('to_contact') + '</b><span>to contact</span></div>' +
-        '<div class="btw-st-kpi"><b>' + sent + '</b><span>emailed</span></div>' +
-        '<div class="btw-st-kpi"><b>' + replies + '</b><span>replied · ' + (sent ? Math.round(replies / sent * 100) + '%' : '–') + '</span></div>' +
-        '<div class="btw-st-kpi"><b>' + (n('trial') + n('customer')) + '</b><span>trials & customers</span></div>';
-      const late = leads.filter(l => dueState(l) === 'late'), due = leads.filter(l => dueState(l) === 'due');
-      $o('btwOrDue').innerHTML = (late.length || due.length)
-        ? '<div class="btw-or-due' + (late.length ? ' late' : '') + '"><strong>Follow-ups ' + (late.length ? 'overdue: ' + late.length + (due.length ? ' · due today: ' + due.length : '') : 'due today: ' + due.length) + '</strong> — ' + esc(late.concat(due).map(l => l.name).join(', ')) + '</div>'
-        : (n('to_contact') ? '<div class="btw-or-due">No follow-ups due today. ' + n('to_contact') + ' clinics are waiting for a first email (10–15 a day is plenty).</div>' : '');
-      const counts = { all: leads.length }; ST.forEach(([k]) => counts[k] = n(k));
-      $o('btwOrChips').innerHTML = [['all','All']].concat(ST).filter(([k]) => k === 'all' || counts[k]).map(([k, lab]) =>
-        '<button type="button" data-orst="' + k + '" class="' + (fStatus === k ? 'on' : '') + '">' + esc(lab) + ' · ' + counts[k] + '</button>').join('');
+      const t = today(), n = s => leads.filter(l => l.status === s).length;
+      const due = leads.filter(isDue).length, rep = n('replied'), ready = leads.filter(l => l.status === 'to_contact' && l.email).length;
+      const bits = [];
+      if(due) bits.push('<b>' + due + ' follow-up' + (due > 1 ? 's' : '') + '</b> to send');
+      if(rep) bits.push('<b>' + rep + ' repl' + (rep > 1 ? 'ies' : 'y') + '</b> to answer');
+      if(ready) bits.push('<b>' + ready + '</b> clinic' + (ready > 1 ? 's' : '') + ' ready for a first email');
+      $o('btwOrSub').innerHTML = bits.length ? 'Today: ' + bits.join(', ') + '.' : 'Nothing to do today. Add clinics or find more email addresses.';
+      const sent = leads.length - n('to_contact');
+      const steps = [[n('to_contact'), 'not contacted'], [sent, 'emailed'], [rep + n('trial') + n('customer'), 'replied'], [n('trial') + n('customer'), 'trials'], [n('customer'), 'customers']];
+      $o('btwOrFunnel').innerHTML = steps.map(s => '<span class="n"><b>' + s[0] + '</b>' + s[1] + '</span>').join('<i>→</i>');
+      const c = counts();
+      $o('btwOrTabs').innerHTML = [['today','Today'],['waiting','Waiting'],['closed','Done'],['all','All']].map(([k, lab]) =>
+        '<button type="button" role="tab" aria-selected="' + (tab === k) + '" data-ortab="' + k + '" class="' + (tab === k ? 'on' : '') + '">' + lab + '<span class="c">' + c[k] + '</span></button>').join('');
       const q = ($o('btwOrSearch').value || '').trim().toLowerCase();
-      const rank = l => dueState(l) === 'late' ? 0 : dueState(l) === 'due' ? 1 : l.status === 'replied' ? 2 : OPEN[l.status] ? (l.email ? 3 : 4) : 5;
-      const shown = leads.filter(l => (fStatus === 'all' || l.status === fStatus) &&
-        (!q || [l.name, l.contact, l.city, l.notes, l.email].join(' ').toLowerCase().includes(q)))
-        .sort((a, b) => rank(a) - rank(b) || (a.next || '9').localeCompare(b.next || '9') || a.name.localeCompare(b.name));
-      $o('btwOrList').innerHTML = shown.length ? shown.map(card).join('') : '<div style="font-size:12.5px;color:var(--ink-soft);">No clinics here.</div>';
+      let gs = q ? [['Search results', leads.filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
+      gs = gs.filter(g => g[1].length);
+      if(!gs.length){
+        $o('btwOrList').innerHTML = '<div class="btw-or-empty"><b>' + (q ? 'No clinic matches “' + esc(q) + '”.' : tab === 'today' ? 'All done for today 🎉' : 'Nothing here yet.') + '</b>' +
+          (q ? 'Try another word, or add it with “+ Add clinic”.' : tab === 'today' ? 'Follow-ups will show up here on the day they’re due.' : '') + '</div>';
+        return;
+      }
+      $o('btwOrList').innerHTML = gs.map(g => '<div class="btw-or-group ' + g[2] + '"><h4>' + esc(g[0]) + ' <span class="cnt">' + g[1].length + '</span>' + (g[3] ? ' <small>' + esc(g[3]) + '</small>' : '') + '</h4>' + g[1].map(card).join('') + '</div>').join('');
+    }
+    function stepper(l){
+      if(l.status === 'replied' || l.status === 'trial') return '<span class="btw-or-pill">' + esc(ST_LABEL[l.status]) + '</span>';
+      if(l.status === 'customer') return '<span class="btw-or-pill cust">Customer</span>';
+      if(l.status === 'not_interested') return '<span class="btw-or-pill no">Not interested</span>';
+      const s = STEP[l.status] || 0, d = i => '<span class="d' + (s >= i ? ' on' : '') + '" title="' + ['First email','Follow-up 1','Follow-up 2'][i - 1] + '">' + (s >= i ? '✓' : i) + '</span>';
+      return '<span class="btw-or-steps" aria-label="' + esc(ST_LABEL[l.status]) + '">' + d(1) + '<span class="ln' + (s >= 2 ? ' on' : '') + '"></span>' + d(2) + '<span class="ln' + (s >= 3 ? ' on' : '') + '"></span>' + d(3) + '</span>';
     }
     function card(l){
-      const ds = dueState(l), m = emailFor(l), nx = NEXT[l.status];
+      const t = today(), due = isDue(l), late = due && l.next < t;
+      const cls = late ? 'late' : due ? 'due' : l.status === 'replied' ? 'hot' : '';
       const site = l.website ? (/^https?:\/\//i.test(l.website) ? l.website : 'https://' + l.website) : '';
-      const links = [l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '<span style="color:var(--clay);">no email yet</span>',
-        l.phone ? '<a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '',
-        site ? '<a href="' + esc(site) + '" target="_blank" rel="noopener">website</a>' : ''].filter(Boolean).join(' · ');
-      const when = OPEN[l.status] && l.next ? '<div class="btw-or-when ' + ds + '">' + (ds === 'late' ? 'Follow-up was due ' + fmt(l.next) : ds === 'due' ? 'Follow up today' : 'Follow up ' + fmt(l.next)) + '</div>'
-        : (l.last ? '<div class="btw-or-when">Last contact ' + fmt(l.last) + '</div>' : '');
-      const mailto = m && l.email ? 'mailto:' + encodeURIComponent(l.email) + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.body) : '';
-      return '<div class="btw-or-lead ' + ds + '" data-id="' + esc(l.id) + '">' +
-        '<div class="btw-or-top"><div><strong>' + esc(l.name) + '</strong><div>' + esc([l.contact, l.city, PROF[l.profession] || '', (l.lang || 'fr').toUpperCase()].filter(Boolean).join(' · ')) + '</div></div>' +
-        '<span class="btw-or-st s-' + esc(l.status) + '">' + esc(ST_LABEL[l.status] || l.status) + '</span></div>' +
-        '<div class="btw-or-links">' + links + '</div>' + when +
-        (l.notes ? '<div class="btw-or-notes">' + esc(l.notes) + '</div>' : '') +
-        '<div class="btw-or-acts">' +
-          (m ? '<button type="button" data-oract="copy">Copy ' + esc(m.stage.toLowerCase()) + '</button>' : '') +
-          (mailto ? '<a href="' + esc(mailto) + '">Write email</a>' : '') +
-          (nx ? '<button type="button" class="pri" data-oract="adv">' + esc(nx[1]) + '</button>' : '') +
-          (OPEN[l.status] && l.status !== 'to_contact' ? '<button type="button" data-oract="replied">They replied</button>' : '') +
-          (l.status === 'replied' ? '<button type="button" data-oract="trial">Started a trial</button>' : '') +
-          (l.status === 'trial' ? '<button type="button" data-oract="customer">Became a customer</button>' : '') +
-          (l.status !== 'not_interested' && l.status !== 'customer' ? '<button type="button" data-oract="no">Not interested</button>' : '') +
-          '<button type="button" data-oract="edit">Edit</button>' +
-        '</div></div>';
+      const find = 'https://www.google.com/search?q=' + encodeURIComponent(l.name + ' ' + (l.city || '') + (l.lang === 'en' ? ' email' : ' courriel'));
+      const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
+        (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '');
+      let when = '';
+      if(OPEN[l.status] && l.status !== 'to_contact' && l.next) when = late ? 'Follow-up overdue since ' + fmt(l.next) : due ? 'Follow up today' : 'Next follow-up ' + fmt(l.next);
+      else if(l.status === 'to_contact') when = 'Not contacted yet';
+      else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
+      const sq = SEQ[l.status];
+      let main = '';
+      if(l.status === 'to_contact' && !l.email) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
+      else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
+      else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
+      else if(l.status === 'replied') main = '<button type="button" class="btw-or-b pri" data-oract="compose">Send the video</button>';
+      else if(l.status === 'trial') main = '<button type="button" class="btw-or-b pri" data-oract="set" data-to="customer">✓ They became a customer</button>';
+      const menu = [];
+      if(l.status !== 'replied' && l.status !== 'trial' && l.status !== 'customer') menu.push(['set:replied', 'They replied']);
+      if(l.status === 'replied') menu.push(['set:trial', 'They started a trial']);
+      if(l.status === 'trial') menu.push(['set:customer', 'They became a customer']);
+      if(l.status !== 'not_interested' && l.status !== 'customer') menu.push(['set:not_interested', 'Not interested']);
+      if(l.email && !sq && l.status !== 'replied') menu.push(['email', 'Write them an email']);
+      menu.push(['edit', 'Edit details']);
+      if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
+      return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
+        '<div class="btw-or-main"><div class="btw-or-name">' + esc(l.name) + '</div>' +
+          '<div>' + esc([l.contact, l.city, PROF[l.profession] || '', l.lang === 'en' ? 'English' : 'Français'].filter(Boolean).join(' · ')) + '</div>' +
+          '<div class="btw-or-contact">' + contact + '</div>' +
+          (l.notes ? '<div class="btw-or-notes" data-oract="notes" title="Click to see all">' + esc(l.notes) + '</div>' : '') +
+          '<div class="btw-or-addemail" hidden><input type="email" placeholder="their@email.com" aria-label="Email for ' + esc(l.name) + '"><button type="button" class="btw-or-b pri" data-oract="saveemail">Save</button></div>' +
+        '</div>' +
+        '<div class="btw-or-side">' + stepper(l) + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
+          '<div class="btw-or-acts">' + main + '<button type="button" class="btw-or-b more" data-oract="menu" aria-label="More actions for ' + esc(l.name) + '" aria-haspopup="true">⋯</button></div></div>' +
+        '<div class="btw-or-menu" hidden>' + menu.map(m => '<button type="button" data-oract="' + m[0] + '"' + (m[0] === 'set:not_interested' ? ' class="warn"' : '') + '>' + esc(m[1]) + '</button>').join('') + '</div>' +
+      '</div>';
     }
 
     /* ---- data ---- */
     async function load(){
       $o('btwOrError').textContent = '';
-      $o('btwOrList').innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">Loading…</div>';
+      $o('btwOrList').innerHTML = '<div class="btw-or-empty">Loading…</div>';
       try { leads = await api('GET', '/api/admin/outreach'); render(); }
       catch(e){ $o('btwOrError').textContent = e.message; $o('btwOrList').innerHTML = ''; }
     }
-    async function save(id, patch, msg){
-      try {
-        const upd = await api('PATCH', '/api/admin/outreach/' + encodeURIComponent(id), patch);
-        leads = leads.map(l => l.id === id ? upd : l); render(); if(msg) toast(msg); return true;
-      } catch(e){ toast(e.message); return false; }
+    async function patch(id, data){
+      const upd = await api('PATCH', '/api/admin/outreach/' + encodeURIComponent(id), data);
+      leads = leads.map(l => l.id === id ? upd : l); render(); return upd;
     }
+    async function setStatus(l, data, msg){
+      const before = { status: l.status, last: l.last || '', next: l.next || '' };
+      try { await patch(l.id, data); toast(msg, async () => { try { await patch(l.id, before); toast('Undone.'); } catch(e){ toast(e.message); } }); }
+      catch(e){ toast(e.message); }
+    }
+    const SET_MSG = { replied:'Marked as replied. Answer them today!', trial:'On trial. Check in with them in a week.', customer:'A new customer! 🎉', not_interested:'Marked as not interested.', to_contact:'Moved back to not contacted.' };
+
+    function closeMenus(except){ ov.querySelectorAll('.btw-or-menu').forEach(m => { if(m !== except) m.hidden = true; }); }
     $o('btwOrList').addEventListener('click', async function(e){
-      const b = e.target.closest('[data-oract]'); if(!b) return;
-      const id = b.closest('.btw-or-lead').dataset.id; const l = leads.find(x => x.id === id); if(!l) return;
-      const t = today(), act = b.dataset.oract;
-      if(act === 'copy'){ const m = emailFor(l); if(m) toast((await copyText('Subject: ' + m.subject + '\n\n' + m.body)) ? 'Email copied. Fill in the bracketed line before sending.' : 'Copy didn’t work here.'); }
-      else if(act === 'adv'){ const nx = NEXT[l.status]; const nd = nx[2] ? addDays(t, nx[2]) : ''; await save(id, { status: nx[0], last: t, next: nd }, nd ? 'Next follow-up on ' + fmt(nd) + '.' : 'Sequence done for this clinic.'); }
-      else if(act === 'replied') await save(id, { status:'replied', last: t, next:'' }, 'Marked as replied. Answer within a few hours!');
-      else if(act === 'trial') await save(id, { status:'trial', last: t, next:'' }, 'On trial. Check in with them in a week.');
-      else if(act === 'customer') await save(id, { status:'customer', last: t, next:'' }, 'Customer! 🎉');
-      else if(act === 'no') await save(id, { status:'not_interested', last: t, next:'' }, 'Marked as not interested. Don’t email them again.');
+      const b = e.target.closest('[data-oract]');
+      if(!b){ closeMenus(); return; }
+      const cardEl = b.closest('.btw-or-lead'); const l = leads.find(x => x.id === cardEl.dataset.id); if(!l) return;
+      const act = b.dataset.oract, t = today();
+      if(act !== 'menu') closeMenus();
+      if(act === 'menu'){ const m = cardEl.querySelector('.btw-or-menu'); closeMenus(m); m.hidden = !m.hidden; if(!m.hidden){ const f = m.querySelector('button'); if(f) f.focus(); } }
+      else if(act === 'notes') b.classList.toggle('open');
+      else if(act === 'compose' || act === 'email') openCompose(l);
+      else if(act === 'addemail'){ const w = cardEl.querySelector('.btw-or-addemail'); w.hidden = false; w.querySelector('input').focus(); }
+      else if(act === 'saveemail'){
+        const v = cardEl.querySelector('.btw-or-addemail input').value.trim();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('That doesn’t look like an email address.'); return; }
+        try { await patch(l.id, { email: v }); toast('Email saved. ' + l.name + ' is ready for a first email.'); } catch(err){ toast(err.message); }
+      }
       else if(act === 'edit') openForm(l);
+      else if(act.indexOf('set:') === 0 || act === 'set'){
+        const to = act === 'set' ? b.dataset.to : act.slice(4);
+        await setStatus(l, { status: to, last: to === 'to_contact' ? '' : t, next: '' }, SET_MSG[to] || 'Saved.');
+      }
     });
-    $o('btwOrChips').addEventListener('click', function(e){ const b = e.target.closest('[data-orst]'); if(!b) return; fStatus = b.dataset.orst; render(); });
+    $o('btwOrList').addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
+      if(e.key === 'Escape'){ closeMenus(); }
+    });
+    $o('btwOrTabs').addEventListener('click', function(e){ const b = e.target.closest('[data-ortab]'); if(!b) return; tab = b.dataset.ortab; $o('btwOrSearch').value = ''; render(); $o('btwOrList').scrollTop = 0; });
     $o('btwOrSearch').addEventListener('input', render);
+
+    /* ---- composer ---- */
+    function composeMail(){
+      const l = composing; if(!l) return;
+      const href = l.email ? 'mailto:' + encodeURIComponent(l.email) + '?subject=' + encodeURIComponent($o('btwOrCSubject').value) + '&body=' + encodeURIComponent($o('btwOrCBody').value) : '#';
+      $o('btwOrCMail').href = href;
+    }
+    function rebuild(){ if(!composing) return; const m = emailFor(composing, $o('btwOrCOpener').value); if(!bodyDirty) $o('btwOrCBody').value = m.body; composeMail(); }
+    function openCompose(l){
+      composing = l; bodyDirty = false; opened = false;
+      const sq = SEQ[l.status], first = l.status === 'to_contact';
+      $o('btwOrCTitle').textContent = l.status === 'replied' ? 'Reply with the video' : sq ? sq.title : 'Email';
+      $o('btwOrCWho').textContent = 'To ' + (l.contact ? l.contact + ', ' : '') + l.name + (l.email ? ' · ' + l.email : '');
+      $o('btwOrCOpenerWrap').hidden = !first;
+      $o('btwOrCOpener').value = '';
+      $o('btwOrCOpener').placeholder = l.lang === 'en' ? 'e.g. I saw you focus on post-op knees in NDG.' : 'ex. J’ai vu que vous combinez physio et ostéo à Villeray.';
+      $o('btwOrCHint').textContent = l.notes ? 'From your notes: ' + l.notes : 'Their specialty, neighbourhood, or something from their website.';
+      const m = emailFor(l, '');
+      $o('btwOrCSubject').value = m.subject; $o('btwOrCBody').value = m.body; composeMail();
+      $o('btwOrCMail').style.display = l.email ? '' : 'none';
+      const nx = sq && sq.days ? addDays(today(), sq.days) : '';
+      $o('btwOrCSentText').textContent = sq ? 'Sent it? ' + (nx ? 'The next follow-up will be scheduled for ' + fmt(nx) + '.' : 'That was the last email in the sequence.') : 'Sent it?';
+      $o('btwOrCSent').hidden = true;
+      $o('btwOrCompose').hidden = false;
+      setTimeout(() => (first ? $o('btwOrCOpener') : $o('btwOrCMail')).focus(), 30);
+    }
+    function closeSheets(){ $o('btwOrCompose').hidden = true; $o('btwOrForm').hidden = true; composing = null; editing = null; }
+    ov.querySelectorAll('[data-orclose]').forEach(b => b.addEventListener('click', closeSheets));
+    $o('btwOrCOpener').addEventListener('input', rebuild);
+    $o('btwOrCSubject').addEventListener('input', composeMail);
+    $o('btwOrCBody').addEventListener('input', function(){ bodyDirty = true; composeMail(); });
+    function showSent(){ opened = true; $o('btwOrCSent').hidden = false; }
+    $o('btwOrCMail').addEventListener('click', function(e){
+      if(composing && composing.status === 'to_contact' && !$o('btwOrCOpener').value.trim() && !bodyDirty && !confirm('Send it without a personal first line? Emails with one get more replies.')){ e.preventDefault(); return; }
+      setTimeout(showSent, 400);
+    });
+    $o('btwOrCCopy').addEventListener('click', async function(){
+      const ok = await copyText('Subject: ' + $o('btwOrCSubject').value + '\n\n' + $o('btwOrCBody').value);
+      toast(ok ? 'Copied. Paste it into a new email to ' + (composing && composing.email || 'them') + '.' : 'Copy didn’t work here: select the text and copy it.');
+      showSent();
+    });
+    $o('btwOrCDone').addEventListener('click', async function(){
+      const l = composing; if(!l) return; const t = today(), sq = SEQ[l.status];
+      closeSheets();
+      if(sq){ const nx = sq.days ? addDays(t, sq.days) : ''; await setStatus(l, { status: sq.to, last: t, next: nx }, nx ? 'Done. Follow-up scheduled for ' + fmt(nx) + '.' : 'Done. That was the last email for ' + l.name + '.'); }
+      else await setStatus(l, { last: t }, 'Done. Logged for ' + l.name + '.');
+    });
 
     /* ---- add / edit ---- */
     $o('btwOrStatus').innerHTML = ST.map(([k, lab]) => '<option value="' + k + '">' + esc(lab) + '</option>').join('');
     const F = { name:'btwOrName', contact:'btwOrContact', profession:'btwOrProf', lang:'btwOrLang', email:'btwOrEmail', phone:'btwOrPhone', city:'btwOrCity', website:'btwOrWebsite', status:'btwOrStatus', next:'btwOrNext', notes:'btwOrNotes' };
     function openForm(l){
       editing = l ? l.id : null;
-      $o('btwOrFormTitle').textContent = l ? 'Edit ' + l.name : 'Add a clinic';
+      $o('btwOrFormTitle').textContent = l ? l.name : 'Add a clinic';
       Object.entries(F).forEach(([k, id]) => { $o(id).value = l ? (l[k] || '') : ({ profession:'physio', lang:'fr', status:'to_contact' }[k] || ''); });
       $o('btwOrDelete').style.display = l ? '' : 'none';
       $o('btwOrFormError').textContent = '';
-      $o('btwOrForm').hidden = false; $o('btwOrForm').scrollIntoView({ block:'nearest', behavior:'smooth' }); $o('btwOrName').focus();
+      $o('btwOrForm').hidden = false; setTimeout(() => $o('btwOrName').focus(), 30);
     }
-    function closeForm(){ $o('btwOrForm').hidden = true; editing = null; }
-    $o('btwOrAdd').addEventListener('click', ()=> openForm(null));
-    $o('btwOrCancel').addEventListener('click', closeForm);
+    $o('btwOrAdd').addEventListener('click', () => openForm(null));
     $o('btwOrSave').addEventListener('click', async function(){
       const body = {}; Object.entries(F).forEach(([k, id]) => body[k] = $o(id).value);
-      if(!body.name.trim()){ $o('btwOrFormError').textContent = 'Give the clinic a name.'; return; }
+      if(!body.name.trim()){ $o('btwOrFormError').textContent = 'Give the clinic a name.'; $o('btwOrName').focus(); return; }
       try {
         if(editing){ const upd = await api('PATCH', '/api/admin/outreach/' + encodeURIComponent(editing), body); leads = leads.map(l => l.id === editing ? upd : l); toast('Saved.'); }
-        else { leads.push(await api('POST', '/api/admin/outreach', body)); toast('Clinic added.'); }
-        closeForm(); render();
+        else { leads.push(await api('POST', '/api/admin/outreach', body)); toast(body.name.trim() + ' added.'); }
+        closeSheets(); render();
       } catch(e){ $o('btwOrFormError').textContent = e.message; }
     });
     $o('btwOrDelete').addEventListener('click', async function(){
-      if(!editing) return; const l = leads.find(x => x.id === editing);
-      if(!confirm('Delete ' + (l ? l.name : 'this clinic') + ' from your outreach list?')) return;
-      try { await api('DELETE', '/api/admin/outreach/' + encodeURIComponent(editing)); leads = leads.filter(x => x.id !== editing); closeForm(); render(); toast('Deleted.'); }
-      catch(e){ $o('btwOrFormError').textContent = e.message; }
+      if(!editing) return; const l = leads.find(x => x.id === editing); if(!l) return;
+      if(!confirm('Delete ' + l.name + ' from your outreach list?')) return;
+      try {
+        await api('DELETE', '/api/admin/outreach/' + encodeURIComponent(l.id)); leads = leads.filter(x => x.id !== l.id); closeSheets(); render();
+        const copy = Object.assign({}, l); delete copy.id; delete copy.created_at; delete copy.updated_at;
+        toast(l.name + ' deleted.', async () => { try { leads.push(await api('POST', '/api/admin/outreach', copy)); render(); toast('Restored.'); } catch(e){ toast(e.message); } });
+      } catch(e){ $o('btwOrFormError').textContent = e.message; }
     });
-    btn.addEventListener('click', function(){ closeForm(); ov.style.display = 'flex'; load(); });
+    ov.addEventListener('click', function(e){ if(!e.target.closest('.btw-or-menu') && !e.target.closest('[data-oract="menu"]')) closeMenus(); });
+    ov.addEventListener('keydown', function(e){ if(e.key === 'Escape' && (!$o('btwOrCompose').hidden || !$o('btwOrForm').hidden)){ e.stopPropagation(); closeSheets(); } }, true);
+    btn.addEventListener('click', function(){ closeSheets(); tab = 'today'; $o('btwOrSearch').value = ''; ov.style.display = 'flex'; load(); });
   })();
 
   // Owner only: check every plan's Stripe price against how the site sells it.
