@@ -154,7 +154,7 @@ schools; psychotherapy is `/therapy`)**
 **FR**
 > Bonjour [Prénom], au cas où ce serait plus simple de regarder, voici la vidéo d'une minute : betweenpsych.com/fr/physio?ref=email
 >
-> Ce que les cliniciens aiment le plus : vous n'êtes jamais de garde. Les suivis vous attendent, rien ne vous dérange, et vos patients ne paient jamais.
+> Ce qu'on apprécie le plus en clinique : vous n'êtes jamais de garde. Les suivis vous attendent, rien ne vous dérange, et vos patients ne paient jamais.
 >
 > P.-S. Les 10 premières cliniques inscrites d'ici le 31 janvier ont 60 jours gratuits au lieu de 14.
 >
@@ -228,7 +228,7 @@ schools; psychotherapy is `/therapy`)**
 **FR**
 > Bonjour [Prénom],
 >
-> [Prénom de la réception] m'a dit que c'est vous qui choisissez les logiciels de la clinique. / [Prénom du clinicien] essaie Between avec quelques-uns de ses patients.
+> [Prénom de la réception] m'a dit que c'est vous qui choisissez les logiciels de la clinique. / [Prénom de la clinicienne ou du clinicien] essaie Between avec quelques patients.
 >
 > En une ligne : les patients font un suivi d'une minute entre les visites, et votre équipe voit comment ils vont avant le rendez-vous, avec la note déjà rédigée. C'est bilingue et conçu en tenant compte de la Loi 25.
 >
@@ -254,7 +254,7 @@ Bring the flyer (`marketing/flyers/`). Don't ask for the owner.
 > *(Leaving)* "Thanks so much. Have a good day!"
 
 **FR**
-> « Bonjour! Je fais vite, je sais que vous êtes occupé(e). Je fais un outil qui permet aux patients de faire un suivi entre les visites, pour que le physio sache comment ils vont avant qu'ils arrivent. Pourriez-vous remettre cette feuille à la personne qui choisit vos logiciels? Le code QR montre une vidéo d'une minute. »
+> « Bonjour! Je fais vite, je sais que vous êtes occupé(e). Je fais un outil qui permet aux patients de faire un suivi entre les visites, pour que l'équipe sache comment vont les patients avant leur rendez-vous. Pourriez-vous remettre cette feuille à la personne qui choisit vos logiciels? Le code QR montre une vidéo d'une minute. »
 >
 > *(Si la personne est ouverte)* « Ce serait qui, d'habitude? Je lui écrirai directement pour ne pas vous prendre de temps. »
 >
@@ -307,7 +307,7 @@ change the link (`/physio` → the right page).
 | Psychotherapy `/therapy` | your clients check in when something happens, by voice or text; you see their mood trend, recurring themes and a drafted DAP note | vos clients font un suivi quand quelque chose arrive, par la voix ou par écrit; vous voyez la tendance de l'humeur, les thèmes récurrents et une note DAP rédigée |
 | Neuropsychology `/neuropsychology` | your patients log focus, memory, mental fatigue and mood between appointments | vos patients notent la concentration, la mémoire, la fatigue mentale et l'humeur entre les rendez-vous |
 | Nutrition `/nutrition` | your clients log energy, eating and cravings; you get the pattern and a drafted ADIME note | vos clients notent l'énergie, l'alimentation et les envies; vous avez la tendance et une note ADIME rédigée |
-| Sports `/sports` | your players say how they feel after practices and games, body and mind | vos joueurs disent comment ils se sentent après les entraînements et les matchs, physiquement et mentalement |
+| Sports `/sports` | your players say how they feel after practices and games, body and mind | vos athlètes disent comment ça va après les entraînements et les matchs, physiquement et mentalement |
 | Fitness `/fitness` | your clients log energy, soreness and the workouts they did between sessions | vos clients notent l'énergie, les courbatures et les entraînements faits entre les séances |
 | Schools `/schools` | students check in on how they're coping; staff see who needs a conversation first | les élèves disent comment ils vont; l'équipe voit qui a besoin d'une conversation en premier |
 
