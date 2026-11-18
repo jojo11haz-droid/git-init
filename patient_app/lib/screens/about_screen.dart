@@ -32,7 +32,7 @@ class AboutScreen extends StatelessWidget {
         ? const [
             [
               'Ai-je besoin d\'un professionnel?',
-              'Non. Vous pouvez utiliser Between seul comme journal privé. Si vous avez un professionnel, il peut vous inviter et voir un court résumé, seulement avec votre consentement.'
+              'Non. Vous pouvez utiliser Between par vous-même comme journal privé. Si quelqu\'un vous suit, cette personne peut vous inviter et voir un court résumé, seulement avec votre consentement.'
             ],
             [
               'Mes données sont-elles privées?',

@@ -601,7 +601,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
     b.writeln();
     b.writeln(f
-        ? 'Généré à partir des propres suivis de $name pour partage avec un professionnel. Autodéclaré; n\'est pas une évaluation clinique.'
+        ? 'Généré à partir des propres suivis de $name pour partage avec une professionnelle ou un professionnel. Autodéclaré; n\'est pas une évaluation clinique.'
         : "Generated from $name's own check-ins to share with a professional. Self-reported; not a clinical assessment.");
     return b.toString();
   }
