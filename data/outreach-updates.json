@@ -1,0 +1,34 @@
+[
+  {
+    "id": "physio-physioactif-ahuntsic",
+    "contact": "Ariel Desjardins-Charbonneau (co-owner)",
+    "email": "ariel@physioactif.com",
+    "website": "https://physioactif.com",
+    "note": "Owner email found via Apollo (verified, Nov 18)."
+  },
+  {
+    "id": "physio-altermed-ndg",
+    "contact": "Brice Gagliardi (owner, osteopath)",
+    "note": "Owner's direct email: brice.gagliardi@cliniquealtermed.com (Apollo, verified, Nov 18). Use it instead of info@ if no reply."
+  },
+  {
+    "id": "physio-nxt-generation-hochelaga",
+    "contact": "Dominic Baillargeon (founder and CEO)",
+    "email": "dbaillargeon@nxtgphysio.com",
+    "website": "https://www.nxtgphysio.com",
+    "note": "Founder's email via Apollo (verified, Nov 18). He runs the whole group (about 12 sites), so pitch all locations."
+  },
+  {
+    "id": "physio-physio-balance",
+    "contact": "Tatiana Vera-Lescano (president)",
+    "phone": "514-593-4040",
+    "website": "https://www.physiobalance.ca",
+    "note": "Apollo had no email for the president (Nov 18): call or use the site's contact form."
+  },
+  {
+    "id": "physio-westmount-procare",
+    "contact": "Veneta Stolinchev (owner and founder)",
+    "website": "https://www.physiotherapiewestmountprocare.com",
+    "note": "Apollo had no email for the owner (Nov 18): call or use the site's contact form."
+  }
+]
