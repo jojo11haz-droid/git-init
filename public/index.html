@@ -3273,6 +3273,7 @@
   .btw-or-sheet input.opener{border-color:var(--moss);background:var(--moss-light);}
   .btw-or-sheet textarea{min-height:240px;line-height:1.5;resize:vertical;}
   .btw-or-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.45;}
+  .btw-or-hint a{color:var(--moss);font-weight:600;}
   .btw-or-sheet-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
   .btw-or-sent{margin-top:12px;border:1px solid var(--moss);background:var(--moss-light);border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:13px;color:var(--ink);}
   .btw-or-sent[hidden]{display:none;}
@@ -5673,7 +5674,7 @@
         <summary>How this works</summary>
         <ol>
           <li><b>Today</b> shows what to do now: follow-ups that are due, replies to answer, and clinics ready for a first email. 10–15 first emails a day is plenty.</li>
-          <li>Click <b>Write first email</b>, add one personal line about the clinic, then open it in your mail app (send from owner@betweenpsych.com) or copy it.</li>
+          <li>Click <b>Write first email</b>, add one personal line about the clinic, then click <b>Open in Gmail</b> (it opens as owner@betweenpsych.com) or copy it.</li>
           <li>After sending, click <b>I sent it</b>. The follow-up is scheduled for you: 4 days later, then 5 days after that.</li>
           <li>When someone answers, open <b>⋯ → They replied</b> and send them the video. Use Undo if you click something by mistake.</li>
         </ol>
@@ -5694,10 +5695,11 @@
           <label class="btw-or-lbl" for="btwOrCBody">Email <small>(edit anything you like)</small></label>
           <textarea id="btwOrCBody"></textarea>
           <div class="btw-or-sheet-acts">
-            <a class="btw-or-b pri" id="btwOrCMail" href="#">Open in Mail app</a>
+            <a class="btw-or-b pri" id="btwOrCMail" href="#" target="_blank" rel="noopener">Open in Gmail</a>
             <button type="button" class="btw-or-b" id="btwOrCCopy">Copy email</button>
             <button type="button" class="btw-or-b ghost" data-orclose>Cancel</button>
           </div>
+          <div class="btw-or-hint" id="btwOrCAlt" style="margin-top:8px;">Not opening? <a href="#" id="btwOrCWeb" target="_blank" rel="noopener">Gmail in the browser</a> · <a href="#" id="btwOrCOther">Other mail app</a></div>
           <div class="btw-or-sent" id="btwOrCSent" hidden>
             <span id="btwOrCSentText">Sent it?</span>
             <button type="button" class="btw-or-b pri" id="btwOrCDone">✓ I sent it</button>
@@ -15312,10 +15314,22 @@
     $o('btwOrSearch').addEventListener('input', render);
 
     /* ---- composer ---- */
+    // "Open in Gmail": the Gmail app on iPhone / iPad (Gmail's website can't
+    // take a pre-filled email there), Gmail in a new tab elsewhere, signed in
+    // as the outreach address. Backup links: Gmail web, and any mail app.
+    const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const SENDER = 'owner@betweenpsych.com';
     function composeMail(){
       const l = composing; if(!l) return;
-      const href = l.email ? 'mailto:' + encodeURIComponent(l.email) + '?subject=' + encodeURIComponent($o('btwOrCSubject').value) + '&body=' + encodeURIComponent($o('btwOrCBody').value) : '#';
-      $o('btwOrCMail').href = href;
+      const to = l.email || '', su = $o('btwOrCSubject').value, body = $o('btwOrCBody').value, E = encodeURIComponent;
+      const web = 'https://mail.google.com/mail/?authuser=' + E(SENDER) + '&view=cm&fs=1&to=' + E(to) + '&su=' + E(su) + '&body=' + E(body);
+      const app = 'googlegmail:///co?to=' + E(to) + '&subject=' + E(su) + '&body=' + E(body);
+      const main = $o('btwOrCMail');
+      main.href = to ? (IOS ? app : web) : '#';
+      if(IOS) main.removeAttribute('target'); else main.setAttribute('target', '_blank');
+      $o('btwOrCWeb').href = to ? web : '#';
+      $o('btwOrCOther').href = to ? 'mailto:' + E(to) + '?subject=' + E(su) + '&body=' + E(body) : '#';
+      $o('btwOrCAlt').style.display = to ? '' : 'none';
     }
     function rebuild(){ if(!composing) return; const m = emailFor(composing, $o('btwOrCOpener').value); if(!bodyDirty) $o('btwOrCBody').value = m.body; composeMail(); }
     function openCompose(l){
@@ -15342,9 +15356,11 @@
     $o('btwOrCSubject').addEventListener('input', composeMail);
     $o('btwOrCBody').addEventListener('input', function(){ bodyDirty = true; composeMail(); });
     function showSent(){ opened = true; $o('btwOrCSent').hidden = false; }
-    $o('btwOrCMail').addEventListener('click', function(e){
-      if(composing && composing.status === 'to_contact' && !$o('btwOrCOpener').value.trim() && !bodyDirty && !confirm('Send it without a personal first line? Emails with one get more replies.')){ e.preventDefault(); return; }
-      setTimeout(showSent, 400);
+    ['btwOrCMail', 'btwOrCWeb', 'btwOrCOther'].forEach(function(id){
+      $o(id).addEventListener('click', function(e){
+        if(composing && composing.status === 'to_contact' && !$o('btwOrCOpener').value.trim() && !bodyDirty && !confirm('Send it without a personal first line? Emails with one get more replies.')){ e.preventDefault(); return; }
+        setTimeout(showSent, 400);
+      });
     });
     $o('btwOrCCopy').addEventListener('click', async function(){
       const ok = await copyText('Subject: ' + $o('btwOrCSubject').value + '\n\n' + $o('btwOrCBody').value);
