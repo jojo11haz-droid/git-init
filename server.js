@@ -235,6 +235,10 @@ function outLangRule(lang) {
     : 'Write everything in English, whatever language the data is in. Only direct quotes of the client stay in the language they used.';
 }
 
+// The client's gender is never known: the model must not guess it (from a
+// name or anything else) and writes about them in neutral terms.
+const NEUTRAL_RULE = '\n\nThe client\'s gender is not known: never guess it from their name or anything else. In English, use they/them. In French, use gender-neutral wording (la personne, cette personne, son/sa) and avoid adjectives or participles that would need a gender, including when addressing them as vous.';
+
 // opts.pain: the check-in is on the pain scale (physical fields), so the model
 // also estimates a pain level (1 = mild, 10 = worst) — the mood estimate runs
 // the other way and must never be stored as a pain score.
@@ -259,7 +263,7 @@ Respond with ONLY a JSON object, no preamble, no markdown fences, in exactly thi
     body: JSON.stringify({
       model: MODEL_VERSION,
       max_tokens: 500,
-      messages: [{ role: 'user', content: prompt + STYLE_RULE }]
+      messages: [{ role: 'user', content: prompt + STYLE_RULE + NEUTRAL_RULE }]
     })
   });
 
@@ -443,7 +447,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) {
     console.error('Anthropic API error (prep):', response.status);
@@ -512,7 +516,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 700, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (signature):', response.status); throw new Error('AI signature read failed.'); }
   const data = await response.json();
@@ -673,7 +677,7 @@ ${consent ? '' : `- AI summaries are OFF for ${who}: you are given NO check-in d
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: session ? 1400 : 800, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: session ? 1400 : 800, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (soap):', response.status); throw new Error('AI note failed.'); }
   const data = await response.json();
@@ -726,7 +730,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (encouragement):', response.status); throw new Error('AI encouragement failed.'); }
   const data = await response.json();
@@ -767,7 +771,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 400, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (reflection):', response.status); throw new Error('AI reflection failed.'); }
   const data = await response.json();
@@ -3440,7 +3444,7 @@ ${recent}`;
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1100, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 1100, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (report):', response.status); throw new Error('AI report failed.'); }
   const data = await response.json();
@@ -3491,7 +3495,7 @@ Rules:
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system: system + STYLE_RULE, messages: [{ role: 'user', content: user }] })
+    body: JSON.stringify({ model: MODEL_VERSION, max_tokens: 900, system: system + STYLE_RULE + NEUTRAL_RULE, messages: [{ role: 'user', content: user }] })
   });
   if (!response.ok) { console.error('Anthropic API error (review):', response.status); throw new Error('AI review failed.'); }
   const data = await response.json();
