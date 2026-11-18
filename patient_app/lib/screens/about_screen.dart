@@ -203,7 +203,7 @@ class _PreviewSectionState extends State<_PreviewSection> {
           children: [
             Expanded(
               child: Text(
-                  (fr ? 'Voyez-le en action' : 'See it in action')
+                  (fr ? 'En action' : 'See it in action')
                       .toUpperCase(),
                   style: const TextStyle(
                       fontSize: 11.5,
