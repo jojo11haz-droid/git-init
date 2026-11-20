@@ -40,13 +40,16 @@ dependencies:
   record: ^6.2.1
   path_provider: ^2.1.5
   image_picker: ^1.1.2
-  image: ^4.3.0
+  # Held below 4.6 to match pdf/printing (pdf < 3.13 caps archive < 4.1, and
+  # newer image releases need a newer archive). pdf 3.13+ needs xml 7, which
+  # flutter_local_notifications 19 doesn't allow yet.
+  image: '>=4.3.0 <4.6.0'
   health: ^13.3.2
   url_launcher: ^6.3.0
   flutter_local_notifications: ^19.0.0
   timezone: ^0.10.0
-  pdf: ^3.13.1
-  printing: ^5.15.1
+  pdf: '>=3.11.3 <3.13.0'
+  printing: '>=5.14.2 <5.15.0'
 
 dev_dependencies:
   flutter_test:
