@@ -45,20 +45,20 @@ const HOME = {
   },
   fr: {
     label: 'Tous les domaines',
-    h: 'Des suivis entre les séances, pensés pour votre domaine',
-    intro: 'Between offre aux personnes que vous aidez une façon simple, en une minute, de vous dire comment elles vont entre les rendez-vous, par la voix ou par écrit. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une ébauche de note au dossier avant la prochaine visite. Between fonctionne en français et en anglais, et l’IA reste désactivée tant que chaque personne ne l’a pas activée.',
+    h: 'Des suivis entre les rendez‑vous, faits pour votre domaine',
+    intro: 'Les gens que vous aidez vous disent comment ça va entre les rendez-vous, par la voix ou par écrit, en une minute. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une note prête avant la prochaine visite. En français et en anglais. L’IA reste éteinte tant que la personne ne l’allume pas.',
     lines: {
-      '/therapy': 'Humeur, thèmes récurrents et notes DAP pour les psychothérapeutes.',
-      '/physio': 'Douleur sur une carte du corps, suivi des exercices et notes SOAP.',
-      '/kinesiology': 'Mouvement, douleur et suivi du programme entre les séances.',
-      '/osteopathy': 'Douleur et récupération entre les traitements, sur une carte du corps.',
-      '/occupational-therapy': 'Activités quotidiennes et récupération, avec des notes SOAP.',
-      '/neuropsychology': 'Concentration, mémoire, fatigue mentale et humeur entre les évaluations.',
-      '/nutrition': 'Énergie, fringales et plan alimentaire, avec des notes ADIME.',
-      '/sports': 'Des suivis des athlètes entre les pratiques, les matchs et les tournois.',
+      '/therapy': 'L’humeur, les thèmes qui reviennent et des notes DAP.',
+      '/physio': 'La douleur sur une carte du corps, les exercices faits et des notes SOAP.',
+      '/kinesiology': 'Le mouvement, la douleur et le programme entre les séances.',
+      '/osteopathy': 'La douleur et la récupération entre les traitements.',
+      '/occupational-therapy': 'La vie de tous les jours, la récupération et des notes SOAP.',
+      '/neuropsychology': 'La concentration, la mémoire, la fatigue et l’humeur.',
+      '/nutrition': 'L’énergie, les fringales et le plan, avec des notes ADIME.',
+      '/sports': 'Comment vont les athlètes entre les pratiques et les matchs.',
       '/fitness': 'Des suivis entre les entraînements, pour les coachs.',
-      '/addiction': 'Des suivis entre les rencontres, pour les programmes de rétablissement.',
-      '/schools': 'Des suivis des élèves, pour le personnel scolaire.',
+      '/addiction': 'Des suivis entre les rencontres de rétablissement.',
+      '/schools': 'Comment vont les élèves, pour le personnel de l’école.',
       '/individual': 'Des suivis privés, juste pour vous.'
     }
   }
