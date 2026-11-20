@@ -648,6 +648,7 @@ class S {
     'trainer': 'trainer',
     'nutritionist': 'nutritionist',
     'neuropsychologist': 'neuropsychologist',
+    'speech-language pathologist': 'speech-language pathologist',
     'mentor': 'mentor',
     'teacher': 'teacher',
   };
@@ -661,6 +662,7 @@ class S {
     'trainer': 'entraîneur ou entraîneuse',
     'nutritionist': 'nutritionniste',
     'neuropsychologist': 'neuropsychologue',
+    'speech-language pathologist': 'orthophoniste',
     'mentor': 'mentor ou mentore',
     'teacher': 'enseignant ou enseignante',
   };
@@ -686,6 +688,8 @@ class S {
       'Comment te sens-tu par rapport à l\'entraînement ?');
   String get qTraining =>
       _('How\'s training going?', 'Comment se passe l\'entraînement ?');
+  String get qSpeaking => _('How did speaking go today?',
+      'Comment s\'est passée la parole aujourd\'hui ?');
   String get qEating =>
       _('How\'s eating going?', 'Comment se passe l\'alimentation ?');
 
@@ -703,6 +707,8 @@ class S {
     switch (providerKey) {
       case 'neuropsychologist':
         return qFocusEnergy;
+      case 'speech-language pathologist':
+        return qSpeaking;
       case 'mentor':
         return qHoldingUp;
       case 'teacher':
@@ -1093,6 +1099,13 @@ class S {
       case 'Meetings': return 'Réunions';
       case 'Snacking': return 'Grignotage';
       case 'Habits': return 'Habitudes';
+      case 'Home practice': return 'Exercices à la maison';
+      case 'Fluency': return 'Fluidité';
+      case 'Clarity': return 'Clarté';
+      case 'Word-finding': return 'Recherche de mots';
+      case 'Voice': return 'Voix';
+      case 'Confidence': return 'Confiance';
+      case 'Frustration': return 'Frustration';
       default: return key;
     }
   }

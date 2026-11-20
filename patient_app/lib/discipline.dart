@@ -3,7 +3,7 @@ import 'app_state.dart';
 /// What the check-in is flavoured for, derived from the patient's clinician.
 /// Stage 1 uses this to pick the theme chips and the "send to …" wording per
 /// category, mirroring betweenpsych.com. (The body pain map comes in stage 2.)
-enum CheckInKind { mind, body, nutrition, recovery, neuro, school }
+enum CheckInKind { mind, body, nutrition, recovery, neuro, speech, school }
 
 class DisciplineProfile {
   const DisciplineProfile(this.kind, this.themes, this.providerKey);
@@ -51,6 +51,10 @@ const _recoveryThemes = [
 ];
 const _neuroThemes = [
   'Focus', 'Memory', 'Fatigue', 'Mood', 'Sleep', 'Overwhelm', 'Headache', 'Win',
+];
+// Speech therapy: home practice and real speaking moments, no body.
+const _speechThemes = [
+  'Home practice', 'Fluency', 'Clarity', 'Word-finding', 'Voice', 'Confidence', 'Frustration', 'Win',
 ];
 const _schoolThemes = [
   'Focus', 'Mood', 'Friends', 'Sleep', 'Stress', 'Energy', 'Win',
@@ -101,6 +105,13 @@ List<String> questionsFor(DisciplineProfile p, bool isFr) {
         ...q('What was tiring or hard to manage?',
             'Qu\'est-ce qui a été fatigant ou difficile à gérer ?'),
       ];
+    case CheckInKind.speech:
+      return [
+        ...q('How did your practice go since last time?',
+            'Comment se sont passés tes exercices depuis la dernière fois ?'),
+        ...q('When was speaking hardest?',
+            'Quand la parole a-t-elle été le plus difficile ?'),
+      ];
     case CheckInKind.school:
       return [
         ...q('How have things been at school?',
@@ -120,7 +131,7 @@ List<String> questionsFor(DisciplineProfile p, bool isFr) {
 
 DisciplineProfile profileFor(Patient p) {
   final acct = p.clinicianAccountType; // therapist|coach|mentor|school|trainer|null
-  final disc = p.clinicianDiscipline; // physio|kinesiology|osteo|occupational|neuropsych|nutrition|sports|null
+  final disc = p.clinicianDiscipline; // physio|kinesiology|osteo|occupational|neuropsych|speech|nutrition|sports|null
 
   // Solo / self-serve: no clinician behind them.
   if (acct == null || acct.isEmpty) {
@@ -136,6 +147,9 @@ DisciplineProfile profileFor(Patient p) {
         case 'neuropsych':
           return const DisciplineProfile(
               CheckInKind.neuro, _neuroThemes, 'neuropsychologist');
+        case 'speech':
+          return const DisciplineProfile(
+              CheckInKind.speech, _speechThemes, 'speech-language pathologist');
         case 'kinesiology':
           return const DisciplineProfile(
               CheckInKind.body, _bodyThemes, 'kinesiologist');
@@ -189,6 +203,7 @@ const List<String> kProfessionalCategories = [
   'trainer',
   'nutrition',
   'neuro',
+  'speech',
   'recovery',
   'school',
 ];
@@ -209,6 +224,7 @@ String previewCategoryLabel(String key, bool isFr) {
     'trainer': 'Personal training',
     'nutrition': 'Nutrition coaching',
     'neuro': 'Neuropsychology',
+    'speech': 'Speech therapy',
     'recovery': 'Addiction & recovery',
     'school': 'School',
   };
@@ -226,6 +242,7 @@ String previewCategoryLabel(String key, bool isFr) {
     'trainer': 'Entraînement personnel',
     'nutrition': 'Coaching nutrition',
     'neuro': 'Neuropsychologie',
+    'speech': 'Orthophonie',
     'recovery': 'Dépendance et rétablissement',
     'school': 'École',
   };
@@ -271,6 +288,9 @@ DisciplineProfile profileByKey(String key) {
     case 'neuro':
       return const DisciplineProfile(
           CheckInKind.neuro, _neuroThemes, 'neuropsychologist');
+    case 'speech':
+      return const DisciplineProfile(
+          CheckInKind.speech, _speechThemes, 'speech-language pathologist');
     case 'school':
       return const DisciplineProfile(CheckInKind.school, _schoolThemes, 'teacher');
     default:

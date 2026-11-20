@@ -149,6 +149,8 @@ class _HomeScreenState extends State<HomeScreen>
         return s.dailyPractices;
       case CheckInKind.school:
         return s.strategiesToPractise;
+      case CheckInKind.speech:
+        return s.homeExercises;
       case CheckInKind.mind:
       case CheckInKind.neuro:
         return s.practiceBetween;
