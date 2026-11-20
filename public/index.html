@@ -3124,6 +3124,16 @@
   /* Per-field copy (server-filled). */
   .btw-fieldcopy{max-width:1040px;margin:56px auto 8px;padding:0 4px;}
   .btw-fieldcopy:empty{display:none;}
+  /* Field pages stay short: 3 features (the rest live on /features), no
+     setup section, and the field write-up folded into a closed box. */
+  .btw-home .btw-feat-more, .btw-home .btw-setup{display:none;}
+  .btw-fieldcopy-more{margin:18px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 2px;}
+  .btw-fieldcopy-more summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .btw-fieldcopy-more summary::-webkit-details-marker{display:none;}
+  .btw-fieldcopy-more summary::after{content:'+';color:var(--moss);font-weight:600;font-size:18px;}
+  .btw-fieldcopy-more[open] summary::after{content:'–';}
+  .btw-fieldcopy-more summary h2{font-family:var(--font-body);font-size:15px;font-weight:600;letter-spacing:0;margin:0;line-height:1.4;}
+  .btw-fieldcopy-more[open] .btw-fieldcopy-intro{margin-top:12px;}
   .btw-fieldcopy h2{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.01em;margin:6px 0 12px;text-wrap:balance;}
   .btw-fieldcopy-intro{font-size:17px;line-height:1.6;color:var(--ink-soft);max-width:70ch;margin:0 0 22px;}
   .btw-fieldcopy-points{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin:0 0 28px;}
@@ -4318,7 +4328,7 @@
               </div>
             </div>
           </div>
-          <div class="btw-feature">
+          <div class="btw-feature btw-feat-more">
             <div class="btw-feat-copy">
               <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
               <h4>Programs that adapt</h4>
@@ -4332,7 +4342,7 @@
               </div>
             </div>
           </div>
-          <div class="btw-feature">
+          <div class="btw-feature btw-feat-more">
             <div class="btw-feat-copy">
               <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="6"></rect><circle cx="8" cy="12" r="2.6"></circle></svg></div>
               <h4>Privacy by default</h4>
@@ -4367,7 +4377,7 @@
               </div>
             </div>
           </div>
-          <div class="btw-feature">
+          <div class="btw-feature btw-feat-more">
             <div class="btw-feat-copy">
               <div class="btw-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"></line><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"></line><line x1="14.8" y1="9.2" x2="19.1" y2="4.9"></line><line x1="4.9" y1="19.1" x2="9.2" y2="14.8"></line></svg></div>
               <h4>Built-in safety net</h4>
