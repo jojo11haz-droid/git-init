@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../app_state.dart';
@@ -286,8 +289,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _patternsCard(s, pats),
           const SizedBox(height: 16),
         ],
-        if (soloIndividual) ...[
-          _shareProButton(s),
+        if (soloIndividual || _history.isNotEmpty) ...[
+          Wrap(spacing: 10, runSpacing: 10, children: [
+            if (soloIndividual) _shareProButton(s),
+            if (_history.isNotEmpty) _printButton(s),
+          ]),
           const SizedBox(height: 16),
         ],
         if (isBody && hasPainHistory) ...[
@@ -609,6 +615,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget _shareProButton(S s) {
     return Align(
       alignment: Alignment.centerLeft,
+      widthFactor: 1,
       child: OutlinedButton.icon(
         onPressed: () async {
           final txt = _buildProSummary(s);
@@ -629,6 +636,134 @@ class _ProgressScreenState extends State<ProgressScreen> {
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
       ),
     );
+  }
+
+  // Print the person's own check-ins (mirrors the website's Print button):
+  // a PDF with their summary and every check-in, handed to the phone's print
+  // sheet, which can also save or share it. Built on the device; nothing is sent.
+  Widget _printButton(S s) {
+    return OutlinedButton.icon(
+      onPressed: () => _printProgress(s),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: BtwColors.moss,
+        side: const BorderSide(color: BtwColors.line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      ),
+      icon: const Icon(Icons.print_outlined, size: 16),
+      label: Text(s.printBtn,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+    );
+  }
+
+  // The built-in PDF font covers Latin-1 only, so curly quotes, arrows and
+  // emoji are swapped for plain characters (French accents are kept).
+  String _pdfSafe(String t) => t
+      .replaceAll('’', "'")
+      .replaceAll('‘', "'")
+      .replaceAll('“', '"')
+      .replaceAll('”', '"')
+      .replaceAll('→', '->')
+      .replaceAll('–', '-')
+      .replaceAll('—', '-')
+      .replaceAll('…', '...')
+      .replaceAll('•', '-')
+      .replaceAll(' ', ' ')
+      .replaceAll(RegExp(r'[^\x00-\xFF]'), '');
+
+  String _printDate(DateTime d, bool fr) {
+    const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December'];
+    const frM = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+      'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    return fr
+        ? '${d.day} ${frM[d.month - 1]} ${d.year}'
+        : '${en[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  Future<void> _printProgress(S s) async {
+    final fr = s.isFr;
+    final patient = context.read<AppState>().patient;
+    final messenger = ScaffoldMessenger.of(context);
+    final name = patient?.displayName.trim() ?? '';
+    final list = _history.toList()
+      ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+    // The plain-language summary, minus its own title lines.
+    final summary = _buildProSummary(s).split('\n').skip(2).join('\n').trim();
+    const navy = PdfColor(0.118, 0.298, 0.525);
+    const soft = PdfColor(0.35, 0.38, 0.42);
+    final scoreWord = _painScale
+        ? (fr ? 'Douleur' : 'Pain')
+        : (fr ? 'Humeur' : 'Mood');
+    final doc = pw.Document();
+    doc.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.letter,
+      margin: const pw.EdgeInsets.all(40),
+      footer: (ctx) => pw.Text(_pdfSafe(s.printPrivate),
+          style: const pw.TextStyle(fontSize: 8.5, color: soft)),
+      build: (ctx) => [
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.end,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Between.',
+                    style: const pw.TextStyle(
+                        fontSize: 16, fontWeight: pw.FontWeight.bold, color: navy)),
+                pw.Text(_pdfSafe(s.printTitle),
+                    style: const pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                if (name.isNotEmpty) pw.Text(_pdfSafe(name)),
+              ],
+            ),
+            pw.Text(
+                _pdfSafe('${s.printedOn} ${_printDate(DateTime.now(), fr)}'),
+                style: const pw.TextStyle(fontSize: 10, color: soft)),
+          ],
+        ),
+        pw.Divider(color: navy, thickness: 1.5),
+        if (summary.isNotEmpty) ...[
+          pw.Text(_pdfSafe(summary), style: const pw.TextStyle(fontSize: 10.5)),
+          pw.SizedBox(height: 14),
+        ],
+        pw.Text(_pdfSafe(s.printCheckIns),
+            style: const pw.TextStyle(
+                fontSize: 11, fontWeight: pw.FontWeight.bold, color: navy)),
+        pw.SizedBox(height: 6),
+        for (final c in list)
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 7),
+            decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                    bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.6))),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                    _pdfSafe([
+                      _printDate(c.submittedAt, fr),
+                      if (c.mood != null) '$scoreWord ${c.mood}/10',
+                      if (c.tags.isNotEmpty) c.tags.map(s.tagLabel).join(', '),
+                    ].join('  ·  ')),
+                    style: const pw.TextStyle(fontSize: 9.5, color: soft)),
+                pw.SizedBox(height: 2),
+                pw.Text(_pdfSafe((c.rawText?.trim().isNotEmpty ?? false)
+                        ? c.rawText!.trim()
+                        : c.summary),
+                    style: const pw.TextStyle(fontSize: 11)),
+              ],
+            ),
+          ),
+      ],
+    ));
+    try {
+      await Printing.layoutPdf(
+          onLayout: (_) => doc.save(),
+          name: fr ? 'between-mes-suivis' : 'between-my-check-ins');
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(s.printFailed)));
+    }
   }
 
   Widget _goalField(TextEditingController c, String hint) {

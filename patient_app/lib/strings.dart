@@ -348,6 +348,15 @@ class S {
   // Bring-to-a-pro summary
   String get shareWithPro =>
       _('Share a summary with a professional', 'Partager un résumé avec une professionnelle ou un professionnel');
+  // Print: the person's own check-ins as a PDF, through the phone's print sheet.
+  String get printBtn => _('Print', 'Imprimer');
+  String get printTitle => _('My check-ins', 'Mes suivis');
+  String get printedOn => _('Printed on', 'Imprimé le');
+  String get printCheckIns => _('CHECK-INS', 'SUIVIS');
+  String get printPrivate => _('Private: printed from your Between account.',
+      'Privé : imprimé depuis votre compte Between.');
+  String get printFailed => _('Could not open printing. Please try again.',
+      'Impossible d\'ouvrir l\'impression. Veuillez réessayer.');
   String get proCopied => _(
       'Summary copied: paste it into an email or notes for your professional.',
       'Résumé copié : collez-le dans un courriel ou des notes pour la personne qui vous suit.');
