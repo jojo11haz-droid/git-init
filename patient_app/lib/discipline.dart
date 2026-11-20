@@ -108,7 +108,7 @@ List<String> questionsFor(DisciplineProfile p, bool isFr) {
     case CheckInKind.speech:
       return [
         ...q('How did your practice go since last time?',
-            'Comment se sont passés tes exercices depuis la dernière fois ?'),
+            'Comment se sont passés vos exercices depuis la dernière fois ?'),
         ...q('When was speaking hardest?',
             'Quand la parole a-t-elle été le plus difficile ?'),
       ];
