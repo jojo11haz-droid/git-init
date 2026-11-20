@@ -22,48 +22,6 @@ const NAMES = {
   '/individual': ['For yourself', 'Pour vous-même']
 };
 
-// The home page ("/"): what Between is, with one line per field.
-const HOME = {
-  en: {
-    label: 'Every field',
-    h: 'Between‑session check‑ins, made for your field',
-    intro: 'Between gives the people you help a one‑minute way to tell you how they are doing between appointments, by voice or text. You see the trend, who needs you today and a drafted chart note before the next visit. It works in English and French, and AI stays off until each person turns it on.',
-    lines: {
-      '/therapy': 'Mood, recurring themes and DAP notes for psychotherapists.',
-      '/physio': 'Pain on a body map, home exercise adherence and SOAP notes.',
-      '/kinesiology': 'Movement, pain and program completion between sessions.',
-      '/osteopathy': 'Pain and recovery between treatments, on a body map.',
-      '/occupational-therapy': 'Daily activities and recovery, with SOAP notes.',
-      '/neuropsychology': 'Focus, memory, mental fatigue and mood between assessments.',
-      '/nutrition': 'Energy, cravings and the plan, with ADIME notes.',
-      '/sports': 'Player check-ins between practices, games and tournaments.',
-      '/fitness': 'Client check-ins between workouts for personal trainers.',
-      '/addiction': 'Check-ins between meetings for recovery programs.',
-      '/schools': 'Student check-ins for counsellors and school staff.',
-      '/individual': 'Private check-ins for yourself, with no professional involved.'
-    }
-  },
-  fr: {
-    label: 'Tous les domaines',
-    h: 'Des suivis entre les rendez‑vous, faits pour votre domaine',
-    intro: 'Les gens que vous aidez vous disent comment ça va entre les rendez-vous, par la voix ou par écrit, en une minute. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une note prête avant la prochaine visite. En français et en anglais. L’IA reste éteinte tant que la personne ne l’allume pas.',
-    lines: {
-      '/therapy': 'L’humeur, les thèmes qui reviennent et des notes DAP.',
-      '/physio': 'La douleur sur une carte du corps, les exercices faits et des notes SOAP.',
-      '/kinesiology': 'Le mouvement, la douleur et le programme entre les séances.',
-      '/osteopathy': 'La douleur et la récupération entre les traitements.',
-      '/occupational-therapy': 'La vie de tous les jours, la récupération et des notes SOAP.',
-      '/neuropsychology': 'La concentration, la mémoire, la fatigue et l’humeur.',
-      '/nutrition': 'L’énergie, les fringales et le plan, avec des notes ADIME.',
-      '/sports': 'Comment vont les athlètes entre les pratiques et les matchs.',
-      '/fitness': 'Des suivis entre les entraînements, pour les coachs.',
-      '/addiction': 'Des suivis entre les rencontres de rétablissement.',
-      '/schools': 'Comment vont les élèves, pour le personnel de l’école.',
-      '/individual': 'Des suivis privés, juste pour vous.'
-    }
-  }
-};
-
 // Each field page: heading, intro, 4 points [title, text], 3 questions [q, a].
 const FIELDS = {
   '/therapy': {
@@ -322,11 +280,8 @@ export function fieldCopyHtml(path, lang) {
   const fr = lang === 'fr', L = fr ? 'fr' : 'en', key = fieldKey(path);
   const others = ORDER.filter(p => p !== key);
   const linkList = list => '<ul class="btw-fieldcopy-links">' + list.map(p => `<li><a href="${urlFor(p, fr)}">${esc(NAMES[p][fr ? 1 : 0])}</a></li>`).join('') + '</ul>';
-  if (key === '/') {
-    const H = HOME[L];
-    return `<div class="btw-section-label">${esc(H.label)}</div><h2>${esc(H.h)}</h2><p class="btw-fieldcopy-intro">${esc(H.intro)}</p>`
-      + '<ul class="btw-fieldcopy-fields">' + ORDER.map(p => `<li><a href="${urlFor(p, fr)}"><b>${esc(NAMES[p][fr ? 1 : 0])}</b><span>${esc(H.lines[p])}</span></a></li>`).join('') + '</ul>';
-  }
+  // The home page is just the "Who's it for?" chooser: no long overview below it.
+  if (key === '/') return '';
   const C = FIELDS[key][L];
   return `<div class="btw-section-label">${esc(NAMES[key][fr ? 1 : 0])}</div><h2>${esc(C.h)}</h2><p class="btw-fieldcopy-intro">${esc(C.intro)}</p>`
     + '<div class="btw-fieldcopy-points">' + C.points.map(([t, d]) => `<div class="btw-fieldcopy-point"><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join('') + '</div>'
