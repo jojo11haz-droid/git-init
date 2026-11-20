@@ -597,6 +597,12 @@
     #btwPrintArea .btw-pr-sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#1E4C86;margin:0 0 8px;}
     #btwPrintArea .btw-pr-tl > *{break-inside:avoid;}
     #btwPrintArea button, #btwPrintArea .btw-timeline-more{display:none !important;}
+    #btwPrintArea.btw-pd .btw-pd-body{font-size:12.5px;line-height:1.55;}
+    #btwPrintArea.btw-pd .btw-pd-body p{margin:0 0 4px;}
+    #btwPrintArea.btw-pd .btw-pd-body b{color:#1E4C86;}
+    #btwPrintArea.btw-pd .btw-pd-gap{height:8px;}
+    #btwPrintArea.btw-pd .btw-pd-sign{display:flex;gap:40px;margin-top:36px;break-inside:avoid;}
+    #btwPrintArea.btw-pd .btw-pd-sign div{flex:1;border-top:1px solid #333;padding-top:5px;font-size:11px;color:#333;}
     #btwPrintArea .btw-pr-foot{margin-top:18px;border-top:1px solid #ccc;padding-top:8px;font-size:10px;color:#666;}
     @page{margin:14mm;}
   }
@@ -4840,7 +4846,7 @@
         </div>
         <div class="btw-scribe-msg" id="btwScribeMsg" role="status" aria-live="polite"></div>
         <div class="btw-scribe-fine">Keep this page open while you record. The recording stays on this device until you stop; it is then turned into text and deleted. Only the note you keep is saved.</div>
-        <details class="btw-scribe-tx" id="btwScribeTx" style="display:none;"><summary>Transcript (not saved)</summary><div class="btw-scribe-txdl"><span>Download it for your own records:</span><button type="button" id="btwScribeTxPdf" class="btw-emr-btn"><span>PDF</span></button><button type="button" id="btwScribeTxDocx" class="btw-emr-btn"><span>Word</span></button><button type="button" id="btwScribeTxTxt" class="btw-emr-btn"><span>Text</span></button></div><div id="btwScribeTxBody"></div></details>
+        <details class="btw-scribe-tx" id="btwScribeTx" style="display:none;"><summary>Transcript (not saved)</summary><div class="btw-scribe-txdl"><span>Download it for your own records:</span><button type="button" id="btwScribeTxPdf" class="btw-emr-btn"><span>PDF</span></button><button type="button" id="btwScribeTxPrint" class="btw-emr-btn"><span>Print</span></button><button type="button" id="btwScribeTxDocx" class="btw-emr-btn"><span>Word</span></button><button type="button" id="btwScribeTxTxt" class="btw-emr-btn"><span>Text</span></button></div><div id="btwScribeTxBody"></div></details>
       </div>
       <div id="btwAiNotePanel" class="btw-ainote" style="display:none;">
         <div class="btw-ainote-own">
@@ -4859,7 +4865,7 @@
         <textarea id="btwAiNoteText" class="btw-ainote-text" rows="7" spellcheck="true"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwAiNoteMeta"></span>
-          <span class="btw-ainote-btns"><button type="button" id="btwAiNotePdf" class="btw-emr-btn"><span>Save as PDF</span></button><button type="button" id="btwAiNoteDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button></span>
+          <span class="btw-ainote-btns"><button type="button" id="btwAiNotePdf" class="btw-emr-btn"><span>Save as PDF</span></button><button type="button" id="btwAiNotePrint" class="btw-emr-btn"><span>Print</span></button><button type="button" id="btwAiNoteDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwAiNoteCopy" class="btw-emr-btn"><span>Copy note</span></button></span>
         </div>
         <div class="btw-planq-edit" id="btwPlanQEdit">
           <div class="btw-ainote-own-l" id="btwPlanQTitle">Ask about the plan in their check-ins</div>
@@ -4891,7 +4897,7 @@
         <textarea id="btwReportText" class="btw-ainote-text" rows="12" spellcheck="true" style="display:none;"></textarea>
         <div class="btw-ainote-foot">
           <span id="btwReportMeta"></span>
-          <span class="btw-ainote-btns"><button type="button" id="btwReportPdf" class="btw-emr-btn" style="display:none;"><span>Save as PDF</span></button><button type="button" id="btwReportDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button></span>
+          <span class="btw-ainote-btns"><button type="button" id="btwReportPdf" class="btw-emr-btn" style="display:none;"><span>Save as PDF</span></button><button type="button" id="btwReportPrint" class="btw-emr-btn" style="display:none;"><span>Print</span></button><button type="button" id="btwReportDocx" class="btw-emr-btn btw-docx-btn"><span>Save as Word</span></button><button type="button" id="btwReportCopy" class="btw-emr-btn" style="display:none;"><span>Copy</span></button></span>
         </div>
       </div>
       <div id="btwEncouragePanel" class="btw-ainote btw-msg" style="display:none;">
@@ -17281,6 +17287,41 @@
     return name;
   }
   window.__btwBuildPdf = buildPdf;
+
+  // Print a note, report or transcript: the same layout as the PDF (title,
+  // client, prepared by, date, bold section labels, signature line), sent to
+  // the browser's print window, which can also save it as a PDF.
+  function printDoc(kindTitle, body, opts){
+    var p = selectedPatient();
+    var me = state.me || {};
+    var dateStr = new Date().toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { year:'numeric', month:'long', day:'numeric' });
+    var who = [me.name, me.practice_name].filter(Boolean).join(', ');
+    var meta = [];
+    if(p) meta.push(t('Client') + ': ' + (p.display_name || ''));
+    if(who) meta.push(t('Prepared by') + ': ' + who);
+    meta.push(t('Date') + ': ' + dateStr);
+    var lines = String(body || '').replace(/\r/g, '').split('\n').map(function(line){
+      var m = line.match(/^(\s*(?:[A-Z]{1,4}(?:\/[A-Z]{1,2})?|[A-ZÀ-Ý][\p{L} ]{2,40}?)\s*:)(\s.*)?$/u);
+      if(!line.trim()) return '<div class="btw-pd-gap"></div>';
+      return '<p>' + (m ? '<b>' + esc(m[1]) + '</b>' + esc(m[2] || '') : esc(line)) + '</p>';
+    }).join('');
+    var area = document.createElement('div'); area.id = 'btwPrintArea'; area.className = 'btw-pd';
+    area.innerHTML = '<div class="btw-pr-head"><div><div class="btw-pr-brand">' + esc(me.practice_name || 'Between.') + '</div><div class="btw-pr-title">' + esc(kindTitle) + '</div></div>'
+      + '<div class="btw-pr-meta">' + meta.map(esc).join('<br>') + '</div></div>'
+      + '<div class="btw-pd-body">' + lines + '</div>'
+      + ((opts && opts.signature) ? '<div class="btw-pd-sign"><div>' + esc(t('Signature') + (me.name ? ': ' + me.name : '')) + '</div><div>' + esc(t('Date')) + '</div></div>' : '')
+      + '<div class="btw-pr-foot">' + esc(t('Confidential: contains health information. Store and dispose of it as your professional order requires.')) + '</div>';
+    document.body.appendChild(area);
+    document.documentElement.classList.add('btw-print-mode');
+    var done = false;
+    function cleanup(){
+      if(done) return; done = true;
+      document.documentElement.classList.remove('btw-print-mode');
+      area.remove(); window.removeEventListener('afterprint', cleanup);
+    }
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(function(){ window.print(); setTimeout(cleanup, 1500); }, 50);
+  }
   // A real Word (.docx) file, built here with no library: a tiny ZIP (stored,
   // no compression) holding the three parts Word needs. Lines that start with
   // a note label ("S:", "Assessment:") get a bold label.
@@ -18220,11 +18261,12 @@
       // never keeps it): PDF, Word or plain text, one line per speaker turn.
       var lastTurns = null;
       function txText(){ return (lastTurns || []).map(function(tn){ return t('Speaker') + ' ' + (tn.speaker + 1) + ': ' + tn.text; }).join('\n\n'); }
-      [['btwScribeTxPdf', 'pdf'], ['btwScribeTxDocx', 'docx'], ['btwScribeTxTxt', 'txt']].forEach(function(pair){
+      [['btwScribeTxPdf', 'pdf'], ['btwScribeTxPrint', 'print'], ['btwScribeTxDocx', 'docx'], ['btwScribeTxTxt', 'txt']].forEach(function(pair){
         var b = document.getElementById(pair[0]); if(!b) return;
         b.addEventListener('click', function(){
           if(!lastTurns || !lastTurns.length) return;
           var title = t('Session transcript');
+          if(pair[1] === 'print'){ printDoc(title, txText(), { signature: false }); return; }
           if(pair[1] === 'pdf') savePdf(title, txText(), { signature: false });
           else saveDoc(title, txText(), { format: pair[1] });
           flashBtn(b, t('Saved ✓'));
@@ -18249,6 +18291,7 @@
         if(meta) meta.textContent = t('From the recorded session') + (n ? ' + ' + n + ' ' + (n === 1 ? t('check-in') : t('check-ins')) : '') + (d && d.aiOff ? ' · ' + t('AI is off for this client: their check-ins were not read by AI') : '') + ' · ' + t('Indicative, not a clinical record.');
         var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap || adime) ? t('Copy to chart') : t('Copy note');
         var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = '';
+        var prB = document.getElementById('btwAiNotePrint'); if(prB) prB.style.display = '';
         if(np){ np.style.display = ''; setTimeout(function(){ try { np.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(e){} }, 60); }
       }
       // Don't lose a session by closing the tab mid-recording or before it's sent.
@@ -18408,6 +18451,13 @@
       savePdf(title, out.value, { signature: false });
       flashBtn(pdf, t('Saved ✓'));
     });
+    var repPrint = document.getElementById('btwReportPrint');
+    if(repPrint) repPrint.addEventListener('click', function(){
+      if(!out.value.trim()) return;
+      var sel = document.getElementById('btwReportKind');
+      var title = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].textContent : t('Report');
+      printDoc(title, out.value, { signature: false });
+    });
     var docx = document.getElementById('btwReportDocx');
     if(docx) docx.addEventListener('click', function(){
       if(!out.value.trim()) return;
@@ -18422,8 +18472,9 @@
       var sp = go.querySelector('span'); go.disabled = true; sp.textContent = t('Thinking…'); meta.textContent = '';
       try {
         var d = await api('POST', '/api/patients/' + p.id + '/report', { kind: document.getElementById('btwReportKind').value, recipient: document.getElementById('btwReportTo').value, lang: curLang === 'fr' ? 'fr' : 'en' });
-        if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; pdf.style.display = 'none'; meta.textContent = aiEmptyMsg(p); }
-        else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; pdf.style.display = ''; meta.textContent = t('Draft: add your clinical input where marked, then copy.'); }
+        var prR = document.getElementById('btwReportPrint');
+        if(d && d.needsData){ out.style.display = 'none'; copy.style.display = 'none'; pdf.style.display = 'none'; if(prR) prR.style.display = 'none'; meta.textContent = aiEmptyMsg(p); }
+        else { out.value = (d && d.report) || ''; out.style.display = ''; copy.style.display = ''; pdf.style.display = ''; if(prR) prR.style.display = ''; meta.textContent = t('Draft: add your clinical input where marked, then copy.'); }
       } catch(e){ meta.textContent = (e && e.message) || t('Could not draft the report just now.'); }
       finally { go.disabled = false; sp.textContent = t('Draft it'); }
     });
@@ -21166,6 +21217,7 @@
         var cs0 = document.querySelector('#btwAiNoteCopy span'); if(cs0) cs0.textContent = (soap || dap || adime) ? t('Copy to chart') : t('Copy note');
         state.noteFormat = soap ? 'soap' : dap ? 'dap' : adime ? 'adime' : null;
         var pdfB = document.getElementById('btwAiNotePdf'); if(pdfB) pdfB.style.display = (d && d.needsData) ? 'none' : '';
+        var prB = document.getElementById('btwAiNotePrint'); if(prB) prB.style.display = (d && d.needsData) ? 'none' : '';
         if(d && d.needsData){
           aiPanelNotice(panel, aiEmptyMsg(p, t('You can still dictate or type your session notes above, or record the session.')));
           if(meta) meta.textContent = '';
@@ -21192,6 +21244,12 @@
       var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : state.noteFormat === 'adime' ? t('Chart note (ADIME)') : t('Session note');
       savePdf(title, ta.value, { signature: true });
       flashBtn(notePdf, t('Saved ✓'));
+    });
+    var notePrint = document.getElementById('btwAiNotePrint');
+    if(notePrint) notePrint.addEventListener('click', function(){
+      var ta = document.getElementById('btwAiNoteText'); if(!ta || !ta.value.trim()) return;
+      var title = state.noteFormat === 'soap' ? t('Chart note (SOAP)') : state.noteFormat === 'dap' ? t('Chart note (DAP)') : state.noteFormat === 'adime' ? t('Chart note (ADIME)') : t('Session note');
+      printDoc(title, ta.value, { signature: true });
     });
     var noteDocx = document.getElementById('btwAiNoteDocx');
     if(noteDocx) noteDocx.addEventListener('click', function(){
