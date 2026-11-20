@@ -304,10 +304,12 @@ export function fieldCopyHtml(path, lang) {
   // The home page is just the "Who's it for?" chooser: no long overview below it.
   if (key === '/') return '';
   const C = FIELDS[key][L];
-  return `<div class="btw-section-label">${esc(NAMES[key][fr ? 1 : 0])}</div><h2>${esc(C.h)}</h2><p class="btw-fieldcopy-intro">${esc(C.intro)}</p>`
-    + '<div class="btw-fieldcopy-points">' + C.points.map(([t, d]) => `<div class="btw-fieldcopy-point"><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join('') + '</div>'
-    + `<h3 class="btw-fieldcopy-faqh">${fr ? 'Questions fréquentes' : 'Common questions'}</h3>`
+  // Short on screen: the 3 questions, then the field write-up folded into a
+  // closed box (still in the page for search engines), then the other fields.
+  return `<div class="btw-section-label">${fr ? 'Questions fréquentes' : 'Common questions'}</div>`
     + '<div class="btw-fieldcopy-faq">' + C.faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('') + '</div>'
+    + `<details class="btw-fieldcopy-more"><summary><h2>${esc(C.h)}</h2></summary><p class="btw-fieldcopy-intro">${esc(C.intro)}</p>`
+    + '<div class="btw-fieldcopy-points">' + C.points.map(([t, d]) => `<div class="btw-fieldcopy-point"><h3>${esc(t)}</h3><p>${esc(d)}</p></div>`).join('') + '</div></details>'
     + `<p class="btw-fieldcopy-otherh">${fr ? 'Between pour d’autres domaines' : 'Between for other fields'}</p>` + linkList(others);
 }
 
