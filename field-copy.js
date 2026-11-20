@@ -46,20 +46,20 @@ const HOME = {
   fr: {
     label: 'Tous les domaines',
     h: 'Des suivis entre les séances, pensés pour votre domaine',
-    intro: 'Between offre aux personnes que vous aidez une façon simple, en une minute, de vous dire comment elles vont entre les rendez-vous, par la voix ou par écrit. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une ébauche de note au dossier avant la prochaine visite. En français et en anglais, et l’IA reste désactivée jusqu’à ce que chaque personne l’active.',
+    intro: 'Between offre aux personnes que vous aidez une façon simple, en une minute, de vous dire comment elles vont entre les rendez-vous, par la voix ou par écrit. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une ébauche de note au dossier avant la prochaine visite. Between fonctionne en français et en anglais, et l’IA reste désactivée tant que chaque personne ne l’a pas activée.',
     lines: {
       '/therapy': 'Humeur, thèmes récurrents et notes DAP pour les psychothérapeutes.',
       '/physio': 'Douleur sur une carte du corps, suivi des exercices et notes SOAP.',
-      '/kinesiology': 'Mouvement, douleur et programme complété entre les séances.',
+      '/kinesiology': 'Mouvement, douleur et suivi du programme entre les séances.',
       '/osteopathy': 'Douleur et récupération entre les traitements, sur une carte du corps.',
       '/occupational-therapy': 'Activités quotidiennes et récupération, avec des notes SOAP.',
       '/neuropsychology': 'Concentration, mémoire, fatigue mentale et humeur entre les évaluations.',
-      '/nutrition': 'Énergie, envies et plan alimentaire, avec des notes ADIME.',
-      '/sports': 'Suivis des athlètes entre les pratiques, les matchs et les tournois.',
-      '/fitness': 'Suivis des clients entre les entraînements, pour les entraîneurs personnels.',
-      '/addiction': 'Suivis entre les rencontres pour les programmes de rétablissement.',
-      '/schools': 'Suivis des élèves pour le personnel scolaire.',
-      '/individual': 'Des suivis privés pour vous-même, sans professionnel.'
+      '/nutrition': 'Énergie, fringales et plan alimentaire, avec des notes ADIME.',
+      '/sports': 'Des suivis des athlètes entre les pratiques, les matchs et les tournois.',
+      '/fitness': 'Des suivis entre les entraînements, pour les coachs.',
+      '/addiction': 'Des suivis entre les rencontres, pour les programmes de rétablissement.',
+      '/schools': 'Des suivis des élèves, pour le personnel scolaire.',
+      '/individual': 'Des suivis privés, juste pour vous.'
     }
   }
 };
