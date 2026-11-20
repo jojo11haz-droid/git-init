@@ -578,6 +578,28 @@
   .btw-zone::after{content:"";flex:1;height:1px;background:var(--line);}
   .btw-zone .btw-zone-pin{color:var(--moss);font-weight:700;font-size:11px;}
   .btw-zone .btw-zone-sel{color:var(--moss);}
+  .btw-zone::after{order:1;}
+  .btw-print-btn{order:2;display:inline-flex;align-items:center;gap:6px;background:var(--card,#fff);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--moss);cursor:pointer;}
+  .btw-print-btn:hover{border-color:var(--moss);}
+  /* Print sheet: a person's progress and check-ins, built on demand. */
+  #btwPrintArea{display:none;}
+  @media print{
+    html.btw-print-mode body > *:not(#btwPrintArea){display:none !important;}
+    html.btw-print-mode, html.btw-print-mode body{background:#fff !important;}
+    html.btw-print-mode body::before, html.btw-print-mode body::after, html.btw-print-mode::before, html.btw-print-mode::after{display:none !important;content:none !important;}
+    html.btw-print-mode #btwPrintArea{display:block;color:#1D2330;font-family:var(--font-body);font-size:12px;}
+    #btwPrintArea .btw-pr-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E4C86;padding-bottom:10px;margin-bottom:14px;}
+    #btwPrintArea .btw-pr-brand{font-family:var(--font-display);font-size:20px;font-weight:600;color:#1E4C86;}
+    #btwPrintArea .btw-pr-title{font-family:var(--font-display);font-size:22px;font-weight:600;margin:2px 0 0;}
+    #btwPrintArea .btw-pr-meta{font-size:11px;color:#555;text-align:right;line-height:1.5;}
+    #btwPrintArea .btw-pr-sec{margin:0 0 16px;}
+    #btwPrintArea .btw-pr-sec h3{break-after:avoid;}
+    #btwPrintArea .btw-pr-sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#1E4C86;margin:0 0 8px;}
+    #btwPrintArea .btw-pr-tl > *{break-inside:avoid;}
+    #btwPrintArea button, #btwPrintArea .btw-timeline-more{display:none !important;}
+    #btwPrintArea .btw-pr-foot{margin-top:18px;border-top:1px solid #ccc;padding-top:8px;font-size:10px;color:#666;}
+    @page{margin:14mm;}
+  }
   /* Collapsible detail sections: slide open only what you need. */
   .btw-acc{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:0 0 10px;overflow:hidden;}
   .btw-acc-head{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:13px 15px;cursor:pointer;text-align:left;font-family:var(--font-body);}
@@ -4766,7 +4788,7 @@
       <div class="btw-week-summary btw-since" id="btwSinceStart" style="display:none;"></div>
 
       <!-- ============ ZONE: selected patient / your progress ============ -->
-      <div class="btw-zone" id="btwZoneDetail"><span class="btw-zone-pin">◆</span><span id="btwZoneDetailLabel">Selected patient</span><span id="btwZoneDetailName" class="btw-zone-sel"></span></div>
+      <div class="btw-zone" id="btwZoneDetail"><span class="btw-zone-pin">◆</span><span id="btwZoneDetailLabel">Selected patient</span><span id="btwZoneDetailName" class="btw-zone-sel"></span><button type="button" id="btwPrintBtn" class="btw-print-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg><span>Print</span></button></div>
 
       <div id="btwNextSessionBar" class="btw-nextsess" style="display:none;">
         <label class="btw-nextsess-label" for="btwNextSessionInput" id="btwNextSessionLabel">Next session</label>
@@ -6619,6 +6641,10 @@
     "Consent withdrawn.":"Consentement retiré.",
     "Session recording":"Enregistrement de séance","Consent to record a session":"Consentement à l'enregistrement d'une séance",
     "Client or patient":"Client ou patient","Professional":"Professionnel","Clear":"Effacer","Print":"Imprimer",
+    "Pick someone first.":"Choisissez d'abord une personne.","My check-ins":"Mes suivis","Printed on":"Imprimé le",
+    "Your week":"Votre semaine","Check-ins":"Suivis",
+    "Private: printed from your Between account.":"Privé : imprimé depuis votre compte Between.",
+    "Confidential: contains health information. Store and dispose of it as your professional order requires.":"Confidentiel : contient des renseignements de santé. Conservez-le et détruisez-le selon les exigences de votre ordre professionnel.",
     "Each person signs in their own box with a finger, a stylus or the mouse.":"Chaque personne signe dans sa propre case avec le doigt, un stylet ou la souris.",
     "Save the signed form":"Enregistrer le formulaire signé",
     "Both signatures are needed: the client and the professional.":"Les deux signatures sont nécessaires\u00a0: celle de la personne suivie et la vôtre.",
@@ -20090,6 +20116,65 @@
   // state is kept per patient (and reset when you switch) so a background
   // refresh doesn't snap it shut while you're reading.
   let timelineExpandedFor = null;
+
+  // --- Print: the selected person's progress and check-ins (practitioner),
+  // or your own (individual). Builds a clean sheet, prints it, then cleans up.
+  function printDetail(){
+    const patient = isPatient();
+    const sp = patient ? null : selectedPatient();
+    if(!patient && !sp){ alert(t('Pick someone first.')); return; }
+    const prevExpanded = timelineExpandedFor;
+    timelineExpandedFor = state.selectedPatientId || (patient ? 'self' : null);
+    try { renderTimeline(); } catch(e){}
+    const fr = curLang === 'fr';
+    const list = (state.checkIns || []).slice().sort((a,b)=>a.time-b.time);
+    const fmt = (d)=> new Date(d).toLocaleDateString(fr ? 'fr-CA' : 'en-CA', { year:'numeric', month:'long', day:'numeric' });
+    const range = list.length ? (fmt(list[0].time) + ' – ' + fmt(list[list.length-1].time)) : '';
+    const name = patient ? ((state.patient && (state.patient.display_name || state.patient.name)) || '') : (sp.display_name || '');
+    const area = document.createElement('div'); area.id = 'btwPrintArea';
+    let html = '<div class="btw-pr-head"><div><div class="btw-pr-brand">Between.</div><div class="btw-pr-title">' + esc(patient ? t('My check-ins') : name) + '</div>'
+      + (patient && name ? '<div>' + esc(name) + '</div>' : '') + '</div>'
+      + '<div class="btw-pr-meta">' + esc(t('Printed on')) + ' ' + esc(fmt(Date.now())) + '<br>' + esc(list.length + ' ' + (list.length === 1 ? t('check-in') : t('check-ins'))) + (range ? '<br>' + esc(range) : '') + '</div></div>';
+    area.innerHTML = html;
+    function addSec(title, node){
+      if(!node) return;
+      const visible = node.offsetParent !== null || node.closest('.btw-acc');
+      const txt = (node.innerText || node.textContent || '').trim();
+      if(!visible || (!txt && !node.querySelector('svg,img,canvas'))) return;
+      const sec = document.createElement('div'); sec.className = 'btw-pr-sec';
+      if(title){ const h = document.createElement('h3'); h.textContent = title; sec.appendChild(h); }
+      const c = node.cloneNode(true); c.removeAttribute('id'); c.style.display = 'block';
+      c.querySelectorAll('button').forEach(b => b.remove());
+      sec.appendChild(c); area.appendChild(sec); return sec;
+    }
+    const vis = id => { const e = document.getElementById(id); return e && e.style.display !== 'none' && getComputedStyle(e).display !== 'none' ? e : null; };
+    addSec('', vis('btwWeekSummary'));
+    addSec('', vis('btwSinceStart'));
+    if(patient){ const rb = document.getElementById('btwAiReflectBody'); if(rb && vis('btwAiReflection')) addSec(t('Your week'), rb); }
+    // The insight cards usually sit inside Trends; print them on their own only when they don't.
+    const tr = vis('btwAccTrends'), ins = vis('btwInsights');
+    if(ins && !(tr && tr.contains(ins))) addSec('', ins);
+    if(tr) addSec(t('Trends'), tr.querySelector('.btw-acc-body'));
+    const tl = vis('btwAccTimeline'); if(tl){ const s = addSec(t('Check-ins'), document.getElementById('btwTimeline')); if(s) s.classList.add('btw-pr-tl'); }
+    const he = vis('btwAccHealth'); if(he) addSec(t('Health & body'), he.querySelector('.btw-acc-body'));
+    const foot = document.createElement('div'); foot.className = 'btw-pr-foot';
+    foot.textContent = patient ? t('Private: printed from your Between account.') : t('Confidential: contains health information. Store and dispose of it as your professional order requires.');
+    area.appendChild(foot);
+    document.body.appendChild(area);
+    document.documentElement.classList.add('btw-print-mode');
+    let done = false;
+    function cleanup(){
+      if(done) return; done = true;
+      document.documentElement.classList.remove('btw-print-mode');
+      area.remove();
+      timelineExpandedFor = prevExpanded;
+      try { renderTimeline(); } catch(e){}
+      window.removeEventListener('afterprint', cleanup);
+    }
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(function(){ window.print(); setTimeout(cleanup, 1500); }, 50);
+  }
+  (function(){ const b = document.getElementById('btwPrintBtn'); if(b) b.addEventListener('click', printDetail); })();
   function renderTimeline(){
     const el = document.getElementById('btwTimeline');
     const sorted = [...state.checkIns].sort((a,b)=>b.time-a.time);
