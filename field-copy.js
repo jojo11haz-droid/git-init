@@ -26,8 +26,8 @@ const NAMES = {
 const HOME = {
   en: {
     label: 'Every field',
-    h: 'Between-session check-ins, made for your field',
-    intro: 'Between gives the people you help a one-minute way to tell you how they are doing between appointments, by voice or text. You see the trend, who needs you today and a drafted chart note before the next visit. It works in English and French, and AI stays off until each client turns it on.',
+    h: 'Between‑session check‑ins, made for your field',
+    intro: 'Between gives the people you help a one‑minute way to tell you how they are doing between appointments, by voice or text. You see the trend, who needs you today and a drafted chart note before the next visit. It works in English and French, and AI stays off until each person turns it on.',
     lines: {
       '/therapy': 'Mood, recurring themes and DAP notes for psychotherapists.',
       '/physio': 'Pain on a body map, home exercise adherence and SOAP notes.',
@@ -46,7 +46,7 @@ const HOME = {
   fr: {
     label: 'Tous les domaines',
     h: 'Des suivis entre les séances, pensés pour votre domaine',
-    intro: 'Between offre aux personnes que vous aidez une façon simple, en une minute, de vous dire comment elles vont entre les rendez-vous, par la voix ou par écrit. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une ébauche de note au dossier avant la prochaine visite. En français et en anglais, et l’IA reste désactivée jusqu’à ce que chaque client l’active.',
+    intro: 'Between offre aux personnes que vous aidez une façon simple, en une minute, de vous dire comment elles vont entre les rendez-vous, par la voix ou par écrit. Vous voyez la tendance, qui a besoin de vous aujourd’hui et une ébauche de note au dossier avant la prochaine visite. En français et en anglais, et l’IA reste désactivée jusqu’à ce que chaque personne l’active.',
     lines: {
       '/therapy': 'Humeur, thèmes récurrents et notes DAP pour les psychothérapeutes.',
       '/physio': 'Douleur sur une carte du corps, suivi des exercices et notes SOAP.',
