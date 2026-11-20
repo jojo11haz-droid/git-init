@@ -710,10 +710,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text('Between.',
-                    style: const pw.TextStyle(
+                    style: pw.TextStyle(
                         fontSize: 16, fontWeight: pw.FontWeight.bold, color: navy)),
                 pw.Text(_pdfSafe(s.printTitle),
-                    style: const pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                    style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                 if (name.isNotEmpty) pw.Text(_pdfSafe(name)),
               ],
             ),
@@ -728,7 +728,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           pw.SizedBox(height: 14),
         ],
         pw.Text(_pdfSafe(s.printCheckIns),
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
                 fontSize: 11, fontWeight: pw.FontWeight.bold, color: navy)),
         pw.SizedBox(height: 6),
         for (final c in list)
