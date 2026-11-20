@@ -57,6 +57,14 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://betweenpsych.com/speech-therapy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/speech-therapy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/speech-therapy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/speech-therapy"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://betweenpsych.com/sports</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/sports"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/sports"/>
@@ -149,6 +157,14 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/neuropsychology"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/neuropsychology"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/neuropsychology"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://betweenpsych.com/fr/speech-therapy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betweenpsych.com/speech-therapy"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://betweenpsych.com/fr/speech-therapy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betweenpsych.com/speech-therapy"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

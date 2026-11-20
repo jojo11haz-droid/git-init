@@ -5,7 +5,7 @@
 // The SPA asks /api/field-copy for the same block when the visitor switches
 // field or language. Keep claims in line with what the product actually does.
 
-const ORDER = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/nutrition', '/sports', '/fitness', '/addiction', '/schools', '/individual'];
+const ORDER = ['/therapy', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/speech-therapy', '/nutrition', '/sports', '/fitness', '/addiction', '/schools', '/individual'];
 
 const NAMES = {
   '/therapy': ['Psychotherapy', 'Psychothérapie'],
@@ -14,6 +14,7 @@ const NAMES = {
   '/osteopathy': ['Osteopathy', 'Ostéopathie'],
   '/occupational-therapy': ['Occupational therapy', 'Ergothérapie'],
   '/neuropsychology': ['Neuropsychology', 'Neuropsychologie'],
+  '/speech-therapy': ['Speech therapy', 'Orthophonie'],
   '/nutrition': ['Nutrition', 'Nutrition'],
   '/sports': ['Sports teams', 'Équipes sportives'],
   '/fitness': ['Personal training', 'Entraînement personnel'],
@@ -143,6 +144,26 @@ const FIELDS = {
       faq: [['Est-ce un outil d’évaluation?', 'Non. Between recueille ce que les clients rapportent entre les visites et ne pose jamais de diagnostic; votre jugement clinique décide toujours.'],
         ['Un proche peut-il aider aux suivis?', 'Les clients envoient leurs propres suivis; pour un mineur, le consentement exigé par votre ordre est obtenu avant l’invitation.'],
         ['Qui peut voir les données?', 'Seulement vous, le professionnel qui a invité le client, et le client. Rien n’est partagé dans la clinique.']] }
+  },
+  '/speech-therapy': {
+    en: { h: 'Between for speech-language pathologists',
+      intro: 'Progress in speech therapy happens in home practice and in real conversations: ordering a coffee, a phone call, a class presentation. Between gives clients a quick way to tell you how practice went and which moments were hard, so the next session starts from their real week.',
+      points: [['Practice and real-life moments', 'Check-ins on home practice, speaking situations, fluency, voice and confidence, with topics and a score that build into a trend.'],
+        ['Easy at any age', 'Under a minute, by voice or text, with optional guided questions and daily reminders at the time they choose.'],
+        ['SOAP notes and reports', 'A SOAP note from their check-ins and your own words, plus progress reports and letters to a doctor or school drafted from the history.'],
+        ['Home practice they actually do', 'Assign home exercises and ask about them in each check-in, so you know what was done and what helped.']],
+      faq: [['Is this an assessment tool?', 'No. Between collects what clients report between sessions and never diagnoses; your clinical judgment always decides.'],
+        ['What about children?', 'For a minor, the consent required by your order is obtained before inviting them.'],
+        ['Who can see the data?', 'Only you, as the professional who invited the client, and the client. Nothing is shared across a clinic.']] },
+    fr: { h: 'Between pour les orthophonistes',
+      intro: 'En orthophonie, les progrès se font dans les exercices à la maison et dans les vraies conversations : commander un café, un appel, une présentation en classe. Between donne aux personnes suivies une façon rapide de vous dire comment se sont passés les exercices et quels moments ont été difficiles. La prochaine séance part de leur vraie semaine.',
+      points: [['Les exercices et la vie de tous les jours', 'Des suivis sur les exercices à la maison, les situations de parole, la fluidité, la voix et la confiance, avec des sujets et un score qui forment une tendance.'],
+        ['Simple à tout âge', 'Moins d’une minute, par la voix ou par écrit, avec des questions guidées au besoin et des rappels quotidiens à l’heure choisie.'],
+        ['Notes SOAP et rapports', 'Une note SOAP tirée des suivis et de vos propres mots, ainsi que des rapports d’évolution et des lettres à un médecin ou à une école, rédigés à partir de l’historique.'],
+        ['Des exercices vraiment faits', 'Assignez des exercices à la maison et faites le point à chaque suivi, pour savoir ce qui a été fait et ce qui a aidé.']],
+      faq: [['Est-ce un outil d’évaluation?', 'Non. Between recueille ce que les personnes rapportent entre les séances et ne pose jamais de diagnostic; votre jugement clinique décide toujours.'],
+        ['Et pour les enfants?', 'Pour une personne mineure, le consentement exigé par votre ordre est obtenu avant l’invitation.'],
+        ['Qui peut voir les données?', 'Seulement vous, la personne professionnelle qui a fait l’invitation, et la personne suivie. Rien n’est partagé dans la clinique.']] }
   },
   '/nutrition': {
     en: { h: 'Between for nutritionists',

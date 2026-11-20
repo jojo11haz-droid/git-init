@@ -33,7 +33,12 @@ const CARDS = {
   fitness: { lead: 'Between-session check-ins for', em: 'personal trainers', art: 'fitness', sub: 'Clients check in between workouts. You see how they are doing before the next session.' },
   addiction: { lead: 'Between-session check-ins for', em: 'recovery programs', art: 'recovery', sub: 'People check in between meetings. Mentors see how they are doing.' },
   schools: { lead: 'Between-session check-ins for', em: 'schools', art: 'schools', sub: 'Students check in between sessions. School staff see how they are doing.' },
-  nutrition: { lead: 'Between-session check-ins for', em: 'nutritionists', art: 'nutrition', sub: 'Energy, cravings and how the plan is going, noted between sessions. You see the trend before the next appointment.' }
+  nutrition: { lead: 'Between-session check-ins for', em: 'nutritionists', art: 'nutrition', sub: 'Energy, cravings and how the plan is going, noted between sessions. You see the trend before the next appointment.' },
+  // No illustration for speech therapy yet: its line icon stands in.
+  'speech-therapy': { lead: 'Between-session check-ins for', em: 'speech therapy', icon: 'speech', sub: 'Home practice and real speaking moments, noted between sessions. You see the trend before the next one.' }
+};
+const ICONS = {
+  speech: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1E4C86" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M19.5 8.5c1 .9 1 4.1 0 5"/><path d="M21.5 6.8c1.8 1.9 1.8 6.5 0 8.4"/></svg>'
 };
 
 // Guide articles: public/og/guide-<file name>.png (the index → guides.png).
@@ -52,7 +57,9 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 const keepHyphens = (s) => esc(s).split(' ').map((w) => (w.includes('-') ? `<span class="nb">${w}</span>` : w)).join(' ');
 
 function cardHtml(c) {
-  const art = 'data:image/png;base64,' + readFileSync(join(root, 'public', 'assets', 'fields', c.art + '.png')).toString('base64');
+  const art = c.icon
+    ? 'data:image/svg+xml;base64,' + Buffer.from(ICONS[c.icon]).toString('base64')
+    : 'data:image/png;base64,' + readFileSync(join(root, 'public', 'assets', 'fields', c.art + '.png')).toString('base64');
   const long = (c.lead + ' ' + c.em).length > 44;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   @font-face{font-family:Newsreader;font-style:normal;font-weight:400 700;src:url(https://fonts.gstatic.com/s/newsreader/v26/cY9VfjOCX1hbuyalUrK49dLafXjalZCsZBsSBgbNJYQ.woff2) format('woff2');}

@@ -327,6 +327,9 @@ function documentFocusForProfession({ discipline, accountType }) {
       mustHighlight: 'Most affected area'
     };
   }
+  if (d === 'speech') {
+    return { role: 'speech-language pathologist', wants: 'the main communication concerns (speech, language, voice, fluency or swallowing), how home practice is going, the speaking situations that are hardest, and what is affecting the person most day to day.', mustHighlight: 'Main concern' };
+  }
   if (d === 'neuropsych') {
     return { role: 'neuropsychology clinician', wants: 'the main cognitive concerns (focus, memory, mental fatigue), mood, relevant history, and what is affecting the person most day to day.', mustHighlight: 'Main concern' };
   }
@@ -844,7 +847,7 @@ Rules:
 // shown on the pricing section.
 const ASK_FACTS = `WHAT IT IS
 - Between is a tool for between-session check-ins. Someone checks in the moment something comes up — by voice memo, text, or by answering a few short guided questions — and Between turns it into a short summary and a trend the professional reads before the next session.
-- It is used by psychotherapists, physiotherapists, kinesiologists, osteopaths, occupational therapists, neuropsychologists, nutritionists, sports coaches, personal trainers, schools, and addiction-recovery mentors. People can also use it on their own as a private journal, with no professional attached.
+- It is used by psychotherapists, physiotherapists, kinesiologists, osteopaths, occupational therapists, neuropsychologists, speech-language pathologists, nutritionists, sports coaches, personal trainers, schools, and addiction-recovery mentors. People can also use it on their own as a private journal, with no professional attached.
 - It is a documentation tool, not a crisis service. Crisis resources are always one tap away.
 
 HOW IT WORKS
@@ -860,7 +863,7 @@ PRICING (Canadian dollars, taxes at checkout)
 - Clinicians/professionals: Solo $99.99 per clinician per month (up to 30 patients), Solo Annual $79.99 per month, Premium $149.99 per month (30+ patients), Team is custom (contact us). All start with a 14-day free trial with a card on file, nothing charged during it.
 - Patients invited by a professional NEVER pay — they are covered by the professional's seat.
 - Individuals on their own: Personal $14.99 per month (up to 5 check-ins a week), Personal Annual $9.99 per month, Premium $24.99 per month (unlimited check-ins, guided journaling packs, a weekly reflection, attach a photo to any entry, the full advanced-stats view), Premium Annual $19.99 per month. Individuals get a 3-day free trial.
-- Regulated professions (physiotherapy, nutrition, neuropsychology) verify a professional licence before their account goes live.
+- Regulated professions (physiotherapy, nutrition, neuropsychology, speech therapy) verify a professional licence before their account goes live.
 
 LANGUAGES: English and French.`;
 
@@ -870,6 +873,7 @@ LANGUAGES: English and French.`;
 // the framing changes. An unknown or missing field just gets the generic voice.
 const ASK_FIELD_CONTEXT = {
   therapy: 'The visitor is exploring Between for psychotherapy or counselling. Speak of "clients" and "sessions", and use mood and talk-therapy examples.',
+  speech: 'The visitor is exploring Between for speech therapy (speech-language pathology). Speak of "clients" and "sessions", and use home practice, speaking situations, fluency and confidence examples.',
   neuropsych: 'The visitor is exploring Between for neuropsychology. Speak of "patients" and "assessments/sessions", and use focus, memory, mental fatigue and mood examples.',
   recovery: 'The visitor is exploring Between for addiction and recovery support. Speak of "members" and "meetings", and use craving, trigger and mood examples. Be especially careful and supportive in tone.',
   physio: 'The visitor is exploring Between for physiotherapy. Speak of "patients" and "visits", and use pain, a body map and exercise-adherence examples.',
@@ -1239,6 +1243,8 @@ function sendWelcomeEmail({ to, name, kind, discipline }) {
       ? `Your account is confirmed and ready. Add your clients and you'll see how they're doing between training sessions: soreness, recovery and how the body is holding up, with a pain map showing where it hurts.`
     : discipline === 'nutrition'
       ? `Your nutrition account is confirmed and ready. Add your clients and you'll see how they're doing between sessions: energy, cravings and how the plan is going, summarized before the next appointment.`
+    : discipline === 'speech'
+      ? `Your speech therapy account is confirmed and ready. Add your clients and you'll see how they're doing between sessions: how home practice and real speaking situations are going, summarized before the next appointment.`
     : discipline === 'neuropsych'
       ? `Your neuropsychology account is confirmed and ready. Add your patients and you'll see how they're doing between assessments and sessions: how their focus, memory, mental fatigue and mood are going, summarized before the next appointment.`
     : `Your account is confirmed and ready. You can add the people you support and start seeing their check-ins between sessions right away.`;
@@ -1376,7 +1382,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
 app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) => {
   try {
     const { name, email, password, teamName, licenceNumber, licenceOrder, province } = req.body || {};
-    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition'];
+    const COACH_DISCIPLINES = ['sports', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'speech', 'nutrition'];
     const discipline = COACH_DISCIPLINES.includes((req.body || {}).discipline) ? req.body.discipline : null;
     const plan = TEAM_PLANS.includes((req.body || {}).plan) ? req.body.plan : 'team_monthly';
     if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required.' });
@@ -1384,7 +1390,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
     if (!password || password.length < 10) return res.status(400).json({ error: 'Password must be at least 10 characters.' });
     // Physio and nutrition are regulated professions, so they need a licence and
     // manual review. The owner's free-access account skips it (to test each flow).
-    const needsLicence = (discipline === 'physio' || discipline === 'nutrition' || discipline === 'neuropsych') && !isFreeAccess(email.trim());
+    const needsLicence = (discipline === 'physio' || discipline === 'nutrition' || discipline === 'neuropsych' || discipline === 'speech') && !isFreeAccess(email.trim());
     if (needsLicence && (!licenceNumber || !licenceNumber.trim())) {
       return res.status(400).json({ error: 'A professional licence/order number is required.' });
     }
@@ -1857,7 +1863,7 @@ app.post('/api/admin/test-email', requireDb, requireAuth, requireOwner, async (r
 // subscription. Caseloads are never shared across seats (see the clinic data
 // agreement), so this is purely an access + billing grouping.
 const PRACTICE_INVITE_TTL_DAYS = 14;
-const COACH_REVIEWED_DISCIPLINES = ['physio', 'nutrition', 'neuropsych'];
+const COACH_REVIEWED_DISCIPLINES = ['physio', 'nutrition', 'neuropsych', 'speech'];
 function memberNeedsReview(accountType, discipline) {
   if (accountType === 'therapist') return true;
   if (accountType === 'coach') return COACH_REVIEWED_DISCIPLINES.includes(discipline);
@@ -4149,7 +4155,7 @@ function clinicianVerified(c) {
   // Coach/mentor/school/trainer accounts self-verify — except physio,
   // nutrition and neuropsychology, which are regulated and reviewed like a
   // therapist.
-  if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition' && c.discipline !== 'neuropsych';
+  if (c.account_type === 'coach') return c.discipline !== 'physio' && c.discipline !== 'nutrition' && c.discipline !== 'neuropsych' && c.discipline !== 'speech';
   return c.account_type === 'mentor' || c.account_type === 'school' || c.account_type === 'trainer';
 }
 // Premium professional plans (and the owner's free-access account) unlock
@@ -4182,7 +4188,7 @@ const FIELD_AS = {
   sports: { account_type: 'coach', discipline: 'sports' }, physio: { account_type: 'coach', discipline: 'physio' },
   kinesiology: { account_type: 'coach', discipline: 'kinesiology' }, osteo: { account_type: 'coach', discipline: 'osteo' },
   occupational: { account_type: 'coach', discipline: 'occupational' }, neuropsych: { account_type: 'coach', discipline: 'neuropsych' },
-  nutrition: { account_type: 'coach', discipline: 'nutrition' }
+  speech: { account_type: 'coach', discipline: 'speech' }, nutrition: { account_type: 'coach', discipline: 'nutrition' }
 };
 function fieldOf(req) {
   const c = req.clinician;
@@ -5632,10 +5638,10 @@ app.get('/api/public-config', (req, res) => {
   res.json({ bookingUrl: /^https:\/\//.test(process.env.BOOKING_URL || '') ? process.env.BOOKING_URL : null });
 });
 const demoRequestLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Too many requests: please wait a little while, or email owner@betweenpsych.com.' });
-const DEMO_FIELDS = ['therapy', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'nutrition', 'sports', 'fitness', 'recovery', 'schools', 'other'];
+const DEMO_FIELDS = ['therapy', 'physio', 'kinesiology', 'osteo', 'occupational', 'neuropsych', 'speech', 'nutrition', 'sports', 'fitness', 'recovery', 'schools', 'other'];
 // Field page with that profession's product video (linked from the demo confirmation).
 const DEMO_VIDEO_PATH = { therapy: '/therapy', physio: '/physio', kinesiology: '/kinesiology', osteo: '/osteopathy', occupational: '/occupational-therapy', neuropsych: '/neuropsychology', nutrition: '/nutrition', sports: '/sports', fitness: '/fitness', recovery: '/addiction', schools: '/schools' };
-const FIELD_LABEL = { therapy: 'Psychotherapy / counselling', physio: 'Physiotherapy', kinesiology: 'Kinesiology', osteo: 'Osteopathy', occupational: 'Occupational therapy', neuropsych: 'Neuropsychology', nutrition: 'Nutrition', sports: 'Sports', fitness: 'Fitness', recovery: 'Recovery / addiction', schools: 'Schools', other: 'Other' };
+const FIELD_LABEL = { therapy: 'Psychotherapy / counselling', physio: 'Physiotherapy', kinesiology: 'Kinesiology', osteo: 'Osteopathy', occupational: 'Occupational therapy', neuropsych: 'Neuropsychology', speech: 'Speech therapy', nutrition: 'Nutrition', sports: 'Sports', fitness: 'Fitness', recovery: 'Recovery / addiction', schools: 'Schools', other: 'Other' };
 app.post('/api/demo-request', demoRequestLimiter, async (req, res) => {
   try {
     const b = req.body || {};
@@ -5816,7 +5822,7 @@ app.delete('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, asyn
 // result. /therapy is the default (canonical "/"), so it serves the base file.
 // The copy here must match FIELD_HEAD in index.html (what the SPA sets on an
 // in-page field switch); scripts/app-tests.mjs fails if the two drift.
-const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
+const FIELD_PATHS = ['/therapy', '/individual', '/physio', '/kinesiology', '/osteopathy', '/occupational-therapy', '/neuropsychology', '/speech-therapy', '/sports', '/fitness', '/addiction', '/schools', '/nutrition'];
 const SITE_URL = 'https://betweenpsych.com';
 const FIELD_META = {
   '/individual': { title: 'Between | Private check-ins for yourself', description: 'Keep your own check-ins between the days that matter. Between gathers them into a mood trend and the themes that keep returning, so a rough stretch is something you can see. Private to you and not a crisis service.' },
@@ -5825,6 +5831,7 @@ const FIELD_META = {
   '/osteopathy': { title: 'Between | Between-visit check-ins for osteopathy', description: 'Patients note pain and recovery between treatments. Between summarizes it and osteopaths see the trend before the next appointment. Private and consent-first.' },
   '/occupational-therapy': { title: 'Between | Between-visit check-ins for occupational therapy', description: 'Patients note how daily activities and recovery are going between visits on a body map. Between summarizes it and occupational therapists see the trend before the next appointment. Private and consent-first.' },
   '/neuropsychology': { title: 'Between | Between-session check-ins for neuropsychology', description: 'Patients note how their focus, memory, mental fatigue and mood are going between assessments and sessions. Between summarizes it and neuropsychologists see the trend before the next appointment. Private and consent-first.' },
+  '/speech-therapy': { title: 'Between | Between-session check-ins for speech therapy', description: 'Clients note how speaking, practice and confidence are going between sessions. Between summarizes it and speech-language pathologists see the trend before the next appointment. Private and consent-first.' },
   '/sports': { title: 'Between | Between-practice check-ins for sports teams', description: 'Players send a quick check-in between practices, games and tournaments. Between summarizes it and coaches see how the team is doing before the next session. Private and consent-first.' },
   '/fitness': { title: 'Between | Between-session check-ins for personal trainers', description: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
   '/addiction': { title: 'Between | Between-session check-ins for recovery programs', description: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
@@ -5864,6 +5871,7 @@ const FIELD_META_FR = {
   '/osteopathy': { title: 'Between | Suivis entre les visites en ostéopathie', description: 'Les patients notent leur douleur et leur récupération entre les traitements. Between le résume et les ostéopathes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
   '/occupational-therapy': { title: 'Between | Suivis entre les visites en ergothérapie', description: 'Les patients notent comment vont leurs activités quotidiennes et leur récupération entre les visites, sur une carte du corps. Between le résume et les ergothérapeutes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
   '/neuropsychology': { title: 'Between | Suivis entre les séances en neuropsychologie', description: 'Les patients notent comment vont leur concentration, leur mémoire, leur fatigue mentale et leur humeur entre les évaluations et les séances. Between le résume et les neuropsychologues voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
+  '/speech-therapy': { title: 'Between | Suivis entre les séances en orthophonie', description: 'Les personnes suivies notent comment vont la parole, les exercices et la confiance entre les séances. Between le résume et les orthophonistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
   '/sports': { title: 'Between | Suivis entre les pratiques pour les équipes sportives', description: 'Les athlètes envoient un court suivi entre les pratiques, les matchs et les tournois. Between le résume, et le personnel d’entraînement voit comment va l’équipe avant la prochaine séance. Privé et basé sur le consentement.' },
   '/fitness': { title: 'Between | Suivis entre les séances pour l’entraînement personnel', description: 'Les clients font un suivi entre leurs entraînements. Between le résume, et vous voyez comment ça va avant la prochaine séance. Privé et basé sur le consentement.' },
   '/addiction': { title: 'Between | Suivis entre les rencontres pour les programmes de rétablissement', description: 'Les participants font un suivi entre les rencontres. Between le résume et les mentors voient comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
@@ -6069,6 +6077,7 @@ function reminderCheckinPhrase(p, fr) {
   if (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational') return fr ? 'votre corps' : "how your body's feeling";
   if (d === 'nutrition') return fr ? 'votre alimentation et votre énergie' : 'how eating and energy are going';
   if (d === 'neuropsych') return fr ? 'votre concentration et votre humeur' : 'how your focus and mood are';
+  if (d === 'speech') return fr ? 'vos exercices et votre parole' : 'how practice and speaking are going';
   if (acct === 'coach' || acct === 'trainer') return fr ? "l'entraînement" : "how training's going";
   return fr ? 'votre journée' : "how you're doing"; // therapy, recovery, schools, self-serve
 }

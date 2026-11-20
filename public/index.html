@@ -3460,7 +3460,7 @@
 (function(){try{
   var d=document.documentElement;
   var p=(location.pathname||'/').replace(/\/+$/,'').replace(/^\/fr(?=\/|$)/,'')||'/';
-  var FP={'/therapy':1,'/individual':1,'/physio':1,'/kinesiology':1,'/osteopathy':1,'/occupational-therapy':1,'/neuropsychology':1,'/sports':1,'/fitness':1,'/addiction':1,'/schools':1,'/nutrition':1};
+  var FP={'/therapy':1,'/individual':1,'/physio':1,'/kinesiology':1,'/osteopathy':1,'/occupational-therapy':1,'/neuropsychology':1,'/speech-therapy':1,'/sports':1,'/fitness':1,'/addiction':1,'/schools':1,'/nutrition':1};
   var forP=''; try{forP=new URLSearchParams(location.search).get('for')||'';}catch(e){}
   var urlField=!!FP[p]||!!forP;
   var signedIn=false; try{signedIn=!!localStorage.getItem('btw_ptoken')||localStorage.getItem('btw_session')==='1';}catch(e){}
@@ -3977,6 +3977,7 @@
             <div class="btw-chooser-grouplabel">Wellbeing &amp; support<span class="btw-chooser-chevron" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div>
             <div class="btw-chooser-grid">
               <button type="button" class="btw-chooser-card" data-aud="nutrition"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/nutrition.png" alt="" loading="lazy"></span><span class="t">Nutrition</span><span class="h">Energy and eating between sessions</span></button>
+              <button type="button" class="btw-chooser-card" data-aud="speech"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M19.5 8.5c1 .9 1 4.1 0 5"/><path d="M21.5 6.8c1.8 1.9 1.8 6.5 0 8.4"/></svg></span><span class="t">Speech therapy</span><span class="h">Speech practice and confidence between sessions</span></button>
               <button type="button" class="btw-chooser-card" data-aud="schools"><span class="ic" aria-hidden="true"><img class="ic-img" src="/assets/fields/schools.png" alt="" loading="lazy"></span><span class="t">Schools</span><span class="h">Students between check-ins</span></button>
             </div>
           </div>
@@ -5342,6 +5343,12 @@
                 <option value="CDBC-Diet">College of Dietitians of British Columbia</option>
                 <option value="CA-Dietitian">Dietitian or nutritionist: other provincial college</option>
               </optgroup>
+              <optgroup label="Canada · Speech-language pathology">
+                <option value="OOAQ">Orthophonistes et audiologistes du Québec (OOAQ)</option>
+                <option value="CASLPO">College of Audiologists and Speech-Language Pathologists of Ontario (CASLPO)</option>
+                <option value="ACSLPA">Alberta College of Speech-Language Pathologists and Audiologists (ACSLPA)</option>
+                <option value="CA-SLP">Speech-language pathologist: other provincial college</option>
+              </optgroup>
               <optgroup label="Canada · Nursing">
                 <option value="OIIQ">Infirmières et infirmiers du Québec (OIIQ)</option>
                 <option value="CA-Nursing">Nurse: provincial college</option>
@@ -5482,6 +5489,7 @@
         <button type="button" class="btw-aud-btn" id="btwAdminTabPhysio" data-admintab="physio">Physiotherapists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabNutrition" data-admintab="nutrition">Nutritionists</button>
         <button type="button" class="btw-aud-btn" id="btwAdminTabNeuropsych" data-admintab="neuropsych">Neuropsychologists</button>
+        <button type="button" class="btw-aud-btn" id="btwAdminTabSpeech" data-admintab="speech">Speech therapists</button>
       </div>
       <div class="btw-form-error" id="btwAdminError"></div>
       <div id="btwAdminList" style="display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow-y:auto;"></div>
@@ -6061,7 +6069,7 @@
     therapy:{ at:'therapist', disc:null }, recovery:{ at:'mentor', disc:null }, schools:{ at:'school', disc:null },
     fitness:{ at:'trainer', disc:null }, sports:{ at:'coach', disc:'sports' }, physio:{ at:'coach', disc:'physio' },
     kinesiology:{ at:'coach', disc:'kinesiology' }, osteo:{ at:'coach', disc:'osteo' }, occupational:{ at:'coach', disc:'occupational' },
-    neuropsych:{ at:'coach', disc:'neuropsych' }, nutrition:{ at:'coach', disc:'nutrition' }
+    neuropsych:{ at:'coach', disc:'neuropsych' }, nutrition:{ at:'coach', disc:'nutrition' }, speech:{ at:'coach', disc:'speech' }
   };
   function makePreviewPatient(mode){
     const me = (_ownerPreviewSaved ? _ownerPreviewSaved.me : state.me) || {};
@@ -6757,6 +6765,15 @@
     "Need help right now?":"Besoin d'aide maintenant ?",
     // per-field check-in card: the question, who sees it, and the topics
     "How are your focus and energy today?":"Comment vont votre concentration et votre énergie aujourd'hui ?",
+    "How did speaking go today?":"Comment s'est passée la parole aujourd'hui ?",
+    "A quick check-in whenever something comes up. Your speech-language pathologist will see it.":"Un court suivi dès que quelque chose arrive. Votre orthophoniste le verra.",
+    "How did your practice go since last time?":"Comment se sont passés vos exercices depuis la dernière fois ?",
+    "When was speaking hardest?":"Quand la parole a-t-elle été le plus difficile ?",
+    "What went well when you spoke?":"Qu'est-ce qui a bien marché quand vous avez parlé ?",
+    "Speech therapy":"Orthophonie","Speech practice and confidence between sessions":"La parole et les exercices entre les séances",
+    "Your speech therapy account":"Votre compte en orthophonie",
+    "Home practice":"Exercices à la maison","Fluency":"Fluidité","Clarity":"Clarté","Voice":"Voix","Frustration":"Frustration","Swallowing":"Déglutition",
+    "Canada · Speech-language pathology":"Canada · Orthophonie","Speech-language pathologist: other provincial college":"Orthophoniste : autre ordre provincial",
     "How are you holding up today?":"Comment tenez-vous le coup aujourd'hui ?",
     "How's your day going?":"Comment se passe votre journée ?",
     "How's your body feeling today?":"Comment va votre corps aujourd'hui ?",
@@ -7798,6 +7815,7 @@
     if(curAudience === 'osteo') return [OST_EN, OST_FR];
     if(curAudience === 'occupational') return [OCC_EN, OCC_FR];
     if(curAudience === 'neuropsych') return [NEURO_EN, NEURO_FR];
+    if(curAudience === 'speech') return [SPEECH_EN, SPEECH_FR];
     if(curAudience === 'therapy') return [THERAPY_EN, THERAPY_FR];
     return null;
   }
@@ -7820,11 +7838,11 @@
   // schools student, every other field client. The base copy mixes "patient"
   // and "client", so a therapist used to read "Add patient" next to "your
   // clients". Applied to t() and to the static page text, in EN and FR.
-  const FIELD_NOUN = { physio:'patient', therapy:'client', neuropsych:'client', kinesiology:'client', osteo:'client', occupational:'client',
+  const FIELD_NOUN = { physio:'patient', therapy:'client', neuropsych:'client', speech:'client', kinesiology:'client', osteo:'client', occupational:'client',
     nutrition:'client', fitness:'client', sports:'player', recovery:'member', schools:'student' };
   // French: [masculine, feminine]. Swapping client <-> patient keeps gender and
   // articles; élève and athlète need the elided article (l'élève, cet athlète).
-  const FIELD_NOUN_FR = { physio:['patient','patiente'], therapy:['client','cliente'], neuropsych:['client','cliente'], kinesiology:['client','cliente'],
+  const FIELD_NOUN_FR = { physio:['patient','patiente'], therapy:['client','cliente'], neuropsych:['client','cliente'], speech:['client','cliente'], kinesiology:['client','cliente'],
     osteo:['client','cliente'], occupational:['client','cliente'], nutrition:['client','cliente'], fitness:['client','cliente'],
     sports:['athlète','athlète'], recovery:['membre','membre'], schools:['élève','élève'] };
   function fieldNoun(str, lang){
@@ -9534,6 +9552,69 @@
     NEURO_FR[P3] = "Les tendances de concentration, de mémoire, de fatigue mentale et d'humeur, les thèmes récurrents et un récapitulatif depuis la dernière séance vous attendent dans votre tableau de bord avant chaque rendez-vous, pour commencer en sachant déjà où en sont les choses.";
   })();
 
+  // --- audience: speech therapy (speech-language pathologists / orthophonistes)
+  // Speech, language, voice and fluency: clients note how home practice and real
+  // conversations went between sessions. Built like the neuropsych dict: swap
+  // "therapist" -> "speech-language pathologist" over the shared keys (keeping
+  // "client"), then override the marketing lines with speech wording.
+  const SPEECH_EN = {};
+  const SPEECH_FR = {};
+  (function(){
+    const keys = {};
+    [SPORTS_EN, FITNESS_EN, RECOVERY_EN, SCHOOLS_EN, PHYSIO_EN, NUTRITION_EN, FR].forEach(function(d){
+      for(const k in d){ if(/[Tt]herapist/.test(k) && !/physiotherapist|psychotherapist/i.test(k)) keys[k] = 1; }
+    });
+    function swapEN(s){ return s.replace(/(psycho|physio)?([Tt])herapist(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Speech-language pathologist' : 'speech-language pathologist') + pl; }); }
+    function swapFR(s){ return s.replace(/(psycho|physio)?([Tt])hérapeute(s?)/g, function(m, pre, c, pl){ return pre ? m : (c === 'T' ? 'Orthophoniste' : 'orthophoniste') + pl; }); }
+    Object.keys(keys).forEach(function(k){
+      SPEECH_EN[k] = swapEN(k);
+      const frv = FR[k];
+      if(frv) SPEECH_FR[k] = swapFR(frv);
+    });
+  })();
+  (function(){
+    var FK = "Between shows each client their own recovery over time. They watch the sore spots ease week by week and the good days add up. It's the feedback loop that keeps them checking in.";
+    var H  = "Patient sends a check-in";
+    var P1 = "Stressed, anxious, or riding a win. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.";
+    var P3 = "Mood trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand.";
+    Object.assign(SPEECH_EN, {
+      "Rough week. Work stress kept me up again.":"Hard phone call at work today. Got stuck on my words.",
+      "Rough week, work stress kept me up again.":"Hard phone call at work today, got stuck on my words.",
+      "For therapists and counsellors":"For speech-language pathologists",
+      "You don't need a therapist to use Between.":"You don't need a speech-language pathologist to use Between.",
+      [FK]:"Between shows each client their own progress over time. They watch practice add up, hard moments get easier and the good days add up. It's the feedback loop that keeps them checking in.",
+      [H]:"Client sends a check-in",
+      [P1]:"A hard phone call, a smooth class presentation or a practice session done. Your client captures it in a quick voice note or text the moment it happens, not a week later from memory.",
+      [P3]:"Practice, confidence and speaking-situation trends, recurring themes and a since-last-session recap are waiting in your dashboard before every appointment, so you begin already knowing where things stand."
+    });
+    Object.assign(SPEECH_FR, {
+      "Rough week. Work stress kept me up again.":"Appel difficile au travail aujourd'hui. Je bloquais sur les mots.",
+      "Rough week, work stress kept me up again.":"Appel difficile au travail aujourd'hui, je bloquais sur les mots.",
+      "For therapists and counsellors":"Pour les orthophonistes",
+      "You don't need a therapist to use Between.":"Pas besoin d'orthophoniste pour utiliser Between.",
+      [FK]:"Between montre à chaque personne ses propres progrès au fil du temps. Les exercices s'accumulent, les moments difficiles deviennent plus faciles et les bonnes journées s'additionnent. C'est ce qui donne envie de continuer.",
+      [H]:"La personne envoie un suivi",
+      [P1]:"Un appel difficile, une présentation en classe qui s'est bien passée ou des exercices faits. La personne le note dans un court message vocal ou écrit, sur le moment, pas une semaine plus tard de mémoire.",
+      [P3]:"Les exercices, la confiance, les situations de parole, les thèmes qui reviennent et un résumé depuis la dernière séance vous attendent avant chaque rendez-vous. Vous commencez en sachant déjà où en sont les choses."
+    });
+  })();
+
+  // Speech-therapy wording for the hero and marketing lines (keys are the base English).
+  Object.assign(SPEECH_EN, {
+    "Your clients tell you about the hard night the moment it happens, by voice or text, in under a minute. Between turns it into a short summary, a mood trend and a drafted chart note, waiting in your dashboard before the next session. You skip the catch-up and start where it matters.":"Your clients tell you about the hard phone call, the practice they did or the presentation that went well, the moment it happens, by voice or text, in under a minute. Between turns it into a short summary, a trend across practice and confidence, and a drafted chart note, waiting in your dashboard before the next session. You skip the catch-up and start where it matters.",
+    "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":"The between-session notes on practice, speaking moments and confidence now land in one calm place instead of your inbox.",
+    "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":"A quick note or voice memo after a hard conversation or a practice session. Ten seconds, no appointment, no one waiting on the other end.",
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":"A simple way to see how your clients are doing between sessions. They note how home practice and real conversations went, and you get a short summary before the next appointment.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own energy, cravings and patterns over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a nutritionist.":"Anyone can use it as a private diary. Check in after practice or a hard conversation and watch your own progress over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you work with a professional."
+  });
+  Object.assign(SPEECH_FR, {
+    "Your clients tell you about the hard night the moment it happens, by voice or text, in under a minute. Between turns it into a short summary, a mood trend and a drafted chart note, waiting in your dashboard before the next session. You skip the catch-up and start where it matters.":"Vos clients vous parlent de l'appel difficile, des exercices faits ou de la présentation réussie au moment où ça arrive, par la voix ou par écrit, en moins d'une minute. Between en fait un court résumé, une tendance des exercices et de la confiance, et une ébauche de note au dossier, prêts avant la prochaine séance. Vous commencez là où ça compte.",
+    "The check-ins that used to reach you by email and phone now land in one calm place instead of your inbox.":"Les notes entre les séances sur les exercices, les moments de parole et la confiance arrivent dans un seul endroit calme, plutôt que dans votre boîte de réception.",
+    "A quick note or voice memo whenever something comes up. Ten seconds, no appointment, no one waiting on the other end.":"Un mot ou un message vocal après une conversation difficile ou des exercices. Dix secondes, sans rendez-vous et sans personne à l'autre bout.",
+    "A simple way to see how your clients are doing between sessions. They send a quick note when something comes up and you get a short summary before the next appointment.":"Une façon simple de voir comment vont vos clients entre les séances. Ils notent comment se sont passés les exercices à la maison et les vraies conversations, et vous recevez un court résumé avant le prochain rendez-vous.",
+    "Anyone can use it as a private diary. Check in whenever something comes up and watch your own energy, cravings and patterns over time. On a hard day it even shows you a note you left yourself on a better one. Your data stays private to you whether or not you have a nutritionist.":"Tout le monde peut l'utiliser comme journal privé. Faites un suivi après vos exercices ou une conversation difficile et voyez vos progrès au fil du temps. Lors d'une journée difficile, Between vous montre même un mot laissé lors d'une meilleure journée. Vos données restent privées, avec ou sans professionnel."
+  });
+
   // "For clinics & practices" band — adapt the wording to each field. Audiences
   // not listed here (therapy, physio/kinesiology/osteo/occupational, neuro) keep
   // the default clinic/clinician/caseload copy, which already fits them.
@@ -9632,7 +9713,7 @@
   (function(){
     const TEAM = { "$99.99":"$99", "$79.99":"$79", "$149.99":"$199", "$959.88":"$948" };
     const TRAINER = { "$99.99":"$49", "$79.99":"$39", "$149.99":"$99", "$959.88":"$468" };
-    [PHYSIO_EN, PHYSIO_FR, KIN_EN, KIN_FR, OST_EN, OST_FR, OCC_EN, OCC_FR, SPORTS_EN, SPORTS_FR, NEURO_EN, NEURO_FR, NUTRITION_EN, NUTRITION_FR].forEach(function(d){ Object.assign(d, TEAM); });
+    [PHYSIO_EN, PHYSIO_FR, KIN_EN, KIN_FR, OST_EN, OST_FR, OCC_EN, OCC_FR, SPORTS_EN, SPORTS_FR, NEURO_EN, NEURO_FR, SPEECH_EN, SPEECH_FR, NUTRITION_EN, NUTRITION_FR].forEach(function(d){ Object.assign(d, TEAM); });
     [FITNESS_EN, FITNESS_FR].forEach(function(d){ Object.assign(d, TRAINER); });
   })();
   const HERO_THREAD = {
@@ -9732,6 +9813,18 @@
         {cls:"good",when:"Sam · 15 h 20",text:"Réussi les escaliers sans aide aujourd'hui."},
         {cls:"good",when:"Lun · 8 h 05",text:"L'aide de préhension a facilité le déjeuner."}]}
     },
+    speech:{
+      en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"A hard phone call early in the week, then steadier. Home practice done most days and a class presentation went well by Friday.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
+        {cls:"rough",when:"Wed · 7:12a",text:"Hard phone call at work. Got stuck on my words."},
+        {cls:"mid",voice:true,when:"Thu · 8:40p",text:"Did my practice tonight. The s sounds are still hard."},
+        {cls:"good",when:"Fri · 3:20p",text:"My presentation went well. Spoke slowly and it worked."},
+        {cls:"good",when:"Mon · 8:05a",text:"Ordered coffee without stopping. Small win."}]},
+      fr:{last:"Dernière séance",next:"Prochaine séance",day:"Mar",day2:"Mar",ai:"Résumé IA",since:"Depuis la dernière séance",waiting:"En attente avant mar.",flag:"1 point à surveiller",summary:"Un appel difficile en début de semaine, puis plus stable. Les exercices faits presque tous les jours et une présentation réussie vendredi.",aria:"Une semaine d'une séance à l'autre, avec quatre suivis qui forment un court résumé.",checkins:[
+        {cls:"rough",when:"Mer · 7 h 12",text:"Appel difficile au travail. Je bloquais sur les mots."},
+        {cls:"mid",voice:true,when:"Jeu · 20 h 40",text:"J'ai fait mes exercices ce soir. Les « s » restent difficiles."},
+        {cls:"good",when:"Ven · 15 h 20",text:"Ma présentation s'est bien passée. J'ai parlé lentement et ça a marché."},
+        {cls:"good",when:"Lun · 8 h 05",text:"J'ai commandé un café sans bloquer. Petite victoire."}]}
+    },
     neuropsych:{
       en:{last:"Last session",next:"Next session",day:"Tue",day2:"Tue",ai:"AI summary",since:"Since last session",waiting:"Waiting before Tue",flag:"1 flagged",summary:"Foggy, effortful start with focus and word-finding, then steadier. Memory strategies helped by the weekend and mood lifted with better sleep.",aria:"A week from last session to next session, with four check-ins that gather into a short summary.",checkins:[
         {cls:"rough",when:"Wed · 7:12a",text:"Lost my train of thought a lot today. Foggy by afternoon."},
@@ -9826,15 +9919,16 @@
     // The field's own illustration (same art as the "Who's it for?" cards), so a
     // physio, coach or school sees their own work at the top of the page.
     var _artKey = ['therapy','physio','kinesiology','osteo','occupational','neuropsych','nutrition','sports','fitness','recovery','schools','individual'].indexOf(curAudience) >= 0 ? curAudience : 'therapy';
+    var _noArt = (curAudience === 'speech'); // no illustration for this field yet
     var _artSrc = '/assets/fields/hero/' + _artKey + '.webp';
     var _artSm = document.getElementById('btwHeroArtSm');
-    if(_artSm && _artSm.getAttribute('src') !== _artSrc) _artSm.setAttribute('src', _artSrc);
+    if(_artSm){ _artSm.style.display = _noArt ? 'none' : ''; if(!_noArt && _artSm.getAttribute('src') !== _artSrc) _artSm.setAttribute('src', _artSrc); }
     var _aside = document.getElementById('btwHeroAside');
     if(_aside){
       var _v = d.checkins.filter(function(c){return c.voice;})[0] || d.checkins[0];
       var _bars = [8,16,28,12,38,20,48,18,34,10,26,42,14,32,10,24,40,12,30,10,22,38,16,30,12,26,44,14,28,8,20,36,12,22].map(function(x){return '<span style="height:'+x+'px"></span>';}).join('');
       _aside.innerHTML =
-        '<div class="btw-hero-art"><img src="'+_artSrc+'" alt="" width="560" height="560" decoding="async"></div>'+
+        (_noArt ? '' : '<div class="btw-hero-art"><img src="'+_artSrc+'" alt="" width="560" height="560" decoding="async"></div>')+
         '<div class="btw-cap">'+
           '<div class="btw-cap-top"><span class="btw-cap-rec"></span>REC · 0:12</div>'+
           '<div class="btw-cap-wave" aria-hidden="true">'+_bars+'</div>'+
@@ -9883,6 +9977,7 @@
     physio:{en:['Knee','Pain'],fr:['Genou','Douleur']},
     occupational:{en:['Daily tasks','Fatigue'],fr:['Tâches quotidiennes','Fatigue']},
     neuropsych:{en:['Focus','Fatigue'],fr:['Concentration','Fatigue']},
+    speech:{en:['Practice','Confidence'],fr:['Exercices','Confiance']},
     sports:{en:['Fatigue','Sleep'],fr:['Fatigue','Sommeil']},
     recovery:{en:['Craving','Support'],fr:['Envie','Soutien']},
     schools:{en:['Focus','Stress'],fr:['Concentration','Stress']},
@@ -9927,6 +10022,8 @@
              fr:{metric:'RÉCUPÉRATION',trend:'Votre tendance de récupération · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre physiothérapeute',r1:'Signalé · douleur en hausse 3 j',r2:'Nouveau suivi · exercices manqués',safe:'MONTRÉ AUSSITÔT À LA PERSONNE'} },
     occupational:{ en:{metric:'FUNCTION',trend:'Your daily-function trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your occupational therapist',r1:'Flagged · daily tasks harder',r2:'New check-in · very fatigued',safe:'SHOWN TO THE CLIENT INSTANTLY'},
                    fr:{metric:'FONCTION',trend:'Votre tendance de fonction · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre ergothérapeute',r1:'Signalé · tâches plus dures',r2:'Nouveau suivi · très fatigué',safe:'MONTRÉ AUSSITÔT À LA PERSONNE'} },
+    speech:{ en:{metric:'CONFIDENCE',trend:'Your speaking-confidence trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your speech-language pathologist',r1:'Flagged · stuck on words at work',r2:'New check-in · practice skipped',safe:'SHOWN TO THE CLIENT INSTANTLY'},
+             fr:{metric:'CONFIANCE',trend:'Votre confiance à l’oral · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre orthophoniste',r1:'Signalé · blocages au travail',r2:'Nouveau suivi · exercices sautés',safe:'MONTRÉ AUSSITÔT À LA PERSONNE'} },
     neuropsych:{ en:{metric:'FOCUS',trend:'Your focus trend · last 6 weeks',scan:'CASELOAD · NEEDS YOU FIRST',who:'your neuropsychologist',r1:'Flagged · foggy, losing focus',r2:'New check-in · more forgetful',safe:'SHOWN TO THE CLIENT INSTANTLY'},
                  fr:{metric:'CONCENTRATION',trend:'Votre tendance de concentration · 6 dernières semaines',scan:'SUIVIS · À VOIR EN PREMIER',who:'votre neuropsychologue',r1:'Signalé · brouillard, concentration',r2:'Nouveau suivi · plus distrait',safe:'MONTRÉ AUSSITÔT À LA PERSONNE'} },
     sports:{ en:{metric:'FORM',trend:'Your form trend · last 6 weeks',scan:'ROSTER · CHECK ON FIRST',who:'your coach',r1:'Flagged · pressure building',r2:'New check-in · legs heavy',safe:'SHOWN TO THE PLAYER INSTANTLY'},
@@ -9986,6 +10083,9 @@
     var NOTE = bodyF
       ? (fr ? ['Genou douloureux dans les escaliers en début de semaine, mieux vendredi.', 'Douleur 6 → 3/10 sur 5 suivis · programme fait 5 jours sur 6.', 'Progresse comme prévu.', 'Passer aux montées de marche, 3 × 10.']
             : ['Knee sore on stairs early in the week, easing by Friday.', 'Pain 6 → 3/10 over 5 check-ins · program done 5 of 6 days.', 'Improving as expected.', 'Progress to step-ups, 3 × 10.'])
+      : fk === 'speech'
+      ? (fr ? ['Appel difficile au travail lundi, blocages sur les mots; mieux en fin de semaine.', 'Exercices faits 5 jours sur 7 · confiance 4 → 6/10 sur 5 suivis.', 'Progresse; les situations au téléphone restent les plus dures.', 'Ajouter des exercices de parole au téléphone, 2 fois par jour.']
+            : ['Hard phone call at work Monday, stuck on words; better by the weekend.', 'Practice done 5 of 7 days · confidence 4 → 6/10 over 5 check-ins.', 'Improving; phone situations are still the hardest.', 'Add phone-call practice, twice a day.'])
       : fk === 'nutrition'
       ? (fr ? ["Baisses d'énergie l'après-midi, moins de fringales; énergie 4 → 6/10 sur 5 suivis · habitudes faites 4 jours sur 7.", 'Apport en protéines insuffisant le midi, lié aux baisses d’énergie.', 'Ajouter des protéines au dîner.', 'Énergie et fringales dans 2 semaines.']
             : ['Energy dips mid-afternoon, fewer cravings; energy 4 → 6/10 over 5 check-ins · habits done 4 of 7 days.', 'Low protein at lunch, related to afternoon energy dips.', 'Add protein at lunch.', 'Energy and cravings in 2 weeks.'])
@@ -10409,15 +10509,15 @@
 
   // The header switcher is a compact dropdown; keep its label on the current
   // field. (The homepage "Who's it for?" cards are the fuller front door.)
-  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physiotherapist', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychologist', nutrition:'Nutrition' };
+  const AUD_LABEL = { therapy:'Psychotherapist', individual:'For myself', sports:'Sports', recovery:'Addiction', schools:'Schools', fitness:'Fitness', physio:'Physiotherapist', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychologist', speech:'Speech therapy', nutrition:'Nutrition' };
   function syncAudSelLabel(){
     const lbl = document.getElementById('btwAudSelLabel');
     if(lbl) lbl.textContent = _homeGated ? t('Choose your field') : t(AUD_LABEL[curAudience] || 'Therapy');
     if(window.__btwRenderAudMenu) window.__btwRenderAudMenu();
   }
   // Each field has a real URL: therapy is the root, the rest are /physio etc.
-  const AUD_TO_PATH = { therapy:'/therapy', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
-  const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/occupational-therapy':'occupational', '/neuropsychology':'neuropsych', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
+  const AUD_TO_PATH = { therapy:'/therapy', individual:'/individual', physio:'/physio', kinesiology:'/kinesiology', osteo:'/osteopathy', occupational:'/occupational-therapy', neuropsych:'/neuropsychology', speech:'/speech-therapy', sports:'/sports', fitness:'/fitness', recovery:'/addiction', schools:'/schools', nutrition:'/nutrition' };
+  const PATH_TO_AUD = { '/therapy':'therapy', '/individual':'individual', '/physio':'physio', '/kinesiology':'kinesiology', '/osteopathy':'osteo', '/occupational-therapy':'occupational', '/neuropsychology':'neuropsych', '/speech-therapy':'speech', '/sports':'sports', '/fitness':'fitness', '/addiction':'recovery', '/schools':'schools', '/nutrition':'nutrition' };
   // French pages live under /fr (/fr, /fr/physio, …): same app, French first.
   function basePath(){ return (location.pathname || '/').replace(/\/+$/, '').replace(/^\/fr(?=\/|$)/, '') || '/'; }
   function langPrefix(){ return curLang === 'fr' ? '/fr' : ''; }
@@ -10459,6 +10559,7 @@
     fitness: { title: 'Between | Between-session check-ins for personal trainers', desc: 'Clients check in between workouts. Between summarizes it and personal trainers see how they are doing before the next session. Private and consent-first.' },
     recovery: { title: 'Between | Between-session check-ins for recovery programs', desc: 'People check in between meetings. Between summarizes it and mentors see how they are doing. Private, consent-first and not a crisis service.' },
     schools: { title: 'Between | Between-session check-ins for schools', desc: 'Students check in between sessions. Between summarizes it and school staff see how they are doing. Private, consent-first and not a crisis service.' },
+    speech: { title: 'Between | Between-session check-ins for speech therapy', desc: 'Clients note how speaking, practice and confidence are going between sessions. Between summarizes it and speech-language pathologists see the trend before the next appointment. Private and consent-first.' },
     nutrition: { title: 'Between | Between-session check-ins for nutritionists', desc: 'Clients check in on energy, cravings and how the plan is going between sessions. Between summarizes it and nutritionists see the trend before the next appointment. Private and consent-first.' }
   };
   // French copy, served at /fr/… (must match FIELD_META_FR in server.js).
@@ -10474,6 +10575,7 @@
     fitness: { title: 'Between | Suivis entre les séances pour l’entraînement personnel', desc: 'Les clients font un suivi entre leurs entraînements. Between le résume, et vous voyez comment ça va avant la prochaine séance. Privé et basé sur le consentement.' },
     recovery: { title: 'Between | Suivis entre les rencontres pour les programmes de rétablissement', desc: 'Les participants font un suivi entre les rencontres. Between le résume et les mentors voient comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
     schools: { title: 'Between | Suivis entre les séances pour les écoles', desc: 'Les élèves font un suivi entre les séances. Between le résume et le personnel scolaire voit comment ils vont. Privé, basé sur le consentement et pas un service de crise.' },
+    speech: { title: 'Between | Suivis entre les séances en orthophonie', desc: 'Les personnes suivies notent comment vont la parole, les exercices et la confiance entre les séances. Between le résume et les orthophonistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' },
     nutrition: { title: 'Between | Suivis entre les séances pour les nutritionnistes', desc: 'Les clients font le point sur leur énergie, leurs envies et le déroulement du plan entre les séances. Between le résume et les nutritionnistes voient l’évolution avant le prochain rendez-vous. Privé et basé sur le consentement.' }
   };
   // The per-field copy block (server-written for the URL that was loaded):
@@ -10542,7 +10644,7 @@
     // switch away (dropdown, chooser card, or a field URL) and keep it pinned.
     const _locked = accountAudience();
     if(_locked) a = _locked;
-    curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'occupational' || a === 'neuropsych' || a === 'nutrition') ? a : 'therapy';
+    curAudience = (a === 'individual' || a === 'sports' || a === 'recovery' || a === 'schools' || a === 'fitness' || a === 'physio' || a === 'kinesiology' || a === 'osteo' || a === 'occupational' || a === 'neuropsych' || a === 'speech' || a === 'nutrition') ? a : 'therapy';
     // btw_field = "a field was actually chosen" (gate reads this). btw_audience
     // is the legacy key the pre-gate build wrote on every load (even the
     // default), so it can't tell a real pick from a default and must NOT gate.
@@ -10597,6 +10699,7 @@
       sports: w('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6"/>'),
       fitness: w('<path d="M6.5 7v10M17.5 7v10M4 9.5v5M20 9.5v5M6.5 12h11"/>'),
       nutrition: w('<path d="M5 19c0-7 6-12.5 14-13.5.6 8-5 14.5-12 14.5a5 5 0 0 1-2-1Z"/><path d="M5.5 18.5c2.2-5 6-8.2 10-9.2"/>'),
+      speech: w('<path d="M4 5.5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-3.5 3v-3H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M19.5 8.5c1 .9 1 4.1 0 5"/>'),
       neuropsych: w('<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.4c-.6.6-1 1.4-1 2.1H9c0-.7-.4-1.5-1-2.1A6 6 0 0 1 12 3Z"/>'),
       recovery: w('<path d="M12 20S3.5 15 3.5 8.9A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8.5 1.9C20.5 15 12 20 12 20Z"/>'),
       schools: w('<path d="M3 8.5 12 4.5l9 4-9 4-9-4Z"/><path d="M7 10.5v4.3c0 1 2.2 2.2 5 2.2s5-1.2 5-2.2v-4.3"/>'),
@@ -10701,7 +10804,7 @@
       ['Mind & mood', ['therapy','neuropsych','recovery']],
       ['Body & movement', ['physio','osteo','kinesiology','occupational']],
       ['Sport & performance', ['sports','fitness']],
-      ['Wellbeing & support', ['nutrition','schools']],
+      ['Wellbeing & support', ['nutrition','speech','schools']],
       ['On your own', ['individual']]
     ];
     menu.innerHTML = GROUPS.map(function(g){
@@ -10771,7 +10874,7 @@
   function maybeCoachAudience(){
     if(!state.me) return;
     if(state.me.account_type === 'coach'){
-      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo' || state.me.discipline === 'occupational' || state.me.discipline === 'neuropsych' || state.me.discipline === 'nutrition') ? state.me.discipline : 'sports';
+      const want = (state.me.discipline === 'physio' || state.me.discipline === 'kinesiology' || state.me.discipline === 'osteo' || state.me.discipline === 'occupational' || state.me.discipline === 'neuropsych' || state.me.discipline === 'speech' || state.me.discipline === 'nutrition') ? state.me.discipline : 'sports';
       if(curAudience !== want) setAudience(want);
     }
     else if(state.me.account_type === 'mentor' && curAudience !== 'recovery') setAudience('recovery');
@@ -10792,7 +10895,7 @@
     if(ownerFreeAccess) return null;
     if(state.me){
       const at = state.me.account_type;
-      if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'neuropsych' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'neuropsych' || d === 'speech' || d === 'nutrition') ? d : 'sports'; }
       if(at === 'mentor') return 'recovery';
       if(at === 'school') return 'schools';
       if(at === 'trainer') return 'fitness';
@@ -10803,7 +10906,7 @@
       // with no clinician is using Between for themselves, so they're locked to
       // the individual field.
       const at = state.patient.clinician_account_type;
-      if(at === 'coach'){ const d = state.patient.clinician_discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'neuropsych' || d === 'nutrition') ? d : 'sports'; }
+      if(at === 'coach'){ const d = state.patient.clinician_discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'neuropsych' || d === 'speech' || d === 'nutrition') ? d : 'sports'; }
       if(at === 'mentor') return 'recovery';
       if(at === 'school') return 'schools';
       if(at === 'trainer') return 'fitness';
@@ -10966,7 +11069,7 @@
 
   // --- "Book a 15-minute demo" -------------------------------------------------
   const demoOverlay = document.getElementById('btwDemoOverlay');
-  const DEMO_FIELD_OPTS = [['therapy','Psychotherapy / counselling','Psychothérapie / counselling'],['physio','Physiotherapy','Physiothérapie'],['kinesiology','Kinesiology','Kinésiologie'],['osteo','Osteopathy','Ostéopathie'],['occupational','Occupational therapy','Ergothérapie'],['neuropsych','Neuropsychology','Neuropsychologie'],['nutrition','Nutrition','Nutrition'],['sports','Sports','Sports'],['fitness','Fitness','Entraînement'],['recovery','Recovery / addiction','Rétablissement / dépendance'],['schools','Schools','Écoles'],['other','Other','Autre']];
+  const DEMO_FIELD_OPTS = [['therapy','Psychotherapy / counselling','Psychothérapie / counselling'],['physio','Physiotherapy','Physiothérapie'],['kinesiology','Kinesiology','Kinésiologie'],['osteo','Osteopathy','Ostéopathie'],['occupational','Occupational therapy','Ergothérapie'],['neuropsych','Neuropsychology','Neuropsychologie'],['speech','Speech therapy','Orthophonie'],['nutrition','Nutrition','Nutrition'],['sports','Sports','Sports'],['fitness','Fitness','Entraînement'],['recovery','Recovery / addiction','Rétablissement / dépendance'],['schools','Schools','Écoles'],['other','Other','Autre']];
   let _bookingUrl; // undefined = not asked yet; null = none → use the form
   async function bookingUrl(){
     if(_bookingUrl !== undefined) return _bookingUrl;
@@ -11572,6 +11675,7 @@
           recovery:{en:'Steadier week. He kept his routine and got through a couple of hard moments. Sleep still short.',fr:'Semaine plus stable. Il a gardé sa routine et traversé quelques moments difficiles. Sommeil encore court.'},
           schools:{en:'Steadier week. He kept up with classes and had a couple of good days. Sleep still short.',fr:'Semaine plus stable. Il a suivi ses cours et connu quelques bonnes journées. Sommeil encore court.'},
           nutrition:{en:'Steadier week. He hit his meals most days and energy held up. Sleep still short.',fr:'Semaine plus stable. Il a respecté ses repas la plupart des jours et l’énergie a tenu. Sommeil encore court.'},
+          speech:{en:'Steadier week. He did his practice most days and a hard call went better. Sleep still short.',fr:'Semaine plus stable. Il a fait ses exercices presque tous les jours et un appel difficile s’est mieux passé. Sommeil encore court.'},
           neuropsych:{en:'Steadier week. Focus held up better and the memory strategies stuck. Mental fatigue still hits by afternoon.',fr:'Semaine plus stable. La concentration a mieux tenu et les stratégies de mémoire ont pris. La fatigue mentale frappe encore l’après-midi.'}
         },
         dir:{en:'→ steady',fr:'→ stable'}, dirColor:'soft',
@@ -11587,6 +11691,7 @@
           recovery:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
           schools:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her check in again.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à refaire un suivi.'},
           nutrition:{en:'No check-ins in a few days, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis quelques jours, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
+          speech:{en:'No check-ins since the last session, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis la dernière séance, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'},
           neuropsych:{en:'No check-ins since the last session, so nothing to review yet. A gentle nudge might help her re-engage.',fr:'Aucun suivi depuis la dernière séance, donc rien à examiner. Un petit rappel pourrait l’aider à reprendre.'}
         },
         dir:{en:': no data',fr:' : aucune donnée'}, dirColor:'soft',
@@ -13166,6 +13271,7 @@
       nutrition: { en:{ bubble:"Skipped lunch, energy crashed by 3.", tags:["Meals","Energy"] },             fr:{ bubble:"Dîner sauté, panne d'énergie vers 15 h.", tags:["Repas","Énergie"] } },
       recovery:  { en:{ bubble:"Craving hit hard tonight. Sitting with it.", tags:["Craving","Support"] },   fr:{ bubble:"Forte envie ce soir. Je reste avec, sans agir.", tags:["Envie","Soutien"] } },
       occupational: { en:{ bubble:"Dressing was slow and tiring this morning.", tags:["Daily tasks","Fatigue"] }, fr:{ bubble:"M'habiller était lent et fatigant ce matin.", tags:["Tâches quotidiennes","Fatigue"] } },
+      speech: { en:{ bubble:"Hard phone call at work. Got stuck on my words.", tags:["Practice","Confidence"] }, fr:{ bubble:"Appel difficile au travail. Je bloquais sur les mots.", tags:["Exercices","Confiance"] } },
       neuropsych: { en:{ bubble:"Lost my train of thought a lot today. Foggy by afternoon.", tags:["Focus","Fatigue"] }, fr:{ bubble:"J'ai souvent perdu le fil aujourd'hui. Brouillard en après-midi.", tags:["Concentration","Fatigue"] } },
       schools:   { en:{ bubble:"Rough day. Couldn't focus in class.", tags:["Focus","Stress"] },             fr:{ bubble:"Journée difficile. Impossible de me concentrer en classe.", tags:["Concentration","Stress"] } },
       ind_mind:  { en:{ bubble:"Couldn't switch off after work.", tags:["Work","Sleep"], note:"Mood mostly okay and climbing. Sleep came up most." },   fr:{ bubble:"Impossible de décrocher après le travail.", tags:["Travail","Sommeil"], note:"Humeur surtout correcte, et en hausse. Le sommeil est revenu le plus souvent." } },
@@ -13175,7 +13281,7 @@
     };
     // Per field: the AI summary line, why the person shows in "Needs you
     // today", and a short chart note in that field's format.
-    const DEMO_MORE = {"therapy": {"en": {"summary": "Work stress keeping them up; third poor night this week.", "reason": "Mood dipping 3 days", "fmt": "DAP", "chart": [["D", "Reports work stress and poor sleep, 3 nights this week."], ["A", "Stress tied to sleep loss; mood 4/10, down from 6."], ["P", "Review wind-down routine; check in on workload."]]}, "fr": {"summary": "Le stress du travail l'empêche de dormir; troisième mauvaise nuit cette semaine.", "reason": "Humeur en baisse depuis 3 jours", "fmt": "DAP", "chart": [["D", "Rapporte du stress au travail et un mauvais sommeil, 3 nuits cette semaine."], ["A", "Stress lié au manque de sommeil; humeur 4/10, en baisse de 6."], ["P", "Revoir la routine du soir; faire le point sur la charge de travail."]]}}, "physio": {"en": {"summary": "Knee pain 6/10, worse after stairs, third morning in a row.", "reason": "Pain getting worse", "fmt": "SOAP", "chart": [["S", "Knee sore on waking, 6/10, worse on stairs."], ["O", "Did 2 of 3 home exercises."], ["A", "Flare after more walking; no red flags."], ["P", "Ease step-downs; recheck next visit."]]}, "fr": {"summary": "Douleur au genou 6/10, pire après les escaliers, troisième matin de suite.", "reason": "Douleur qui empire", "fmt": "SOAP", "chart": [["S", "Genou douloureux au réveil, 6/10, pire dans les escaliers."], ["O", "2 exercices sur 3 faits à domicile."], ["A", "Poussée après plus de marche; aucun signal d'alarme."], ["P", "Alléger les descentes de marche; réévaluer à la prochaine visite."]]}}, "sports": {"en": {"summary": "Legs heavy after the game; slept 6 hours.", "reason": "Energy down 3 days", "fmt": "SOAP", "chart": [["S", "Legs heavy after Saturday's game."], ["O", "Slept 6 h; skipped the recovery session."], ["A", "Under-recovered, not injured."], ["P", "Lighter practice; prioritise sleep."]]}, "fr": {"summary": "Jambes lourdes après le match; 6 heures de sommeil.", "reason": "Énergie en baisse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Jambes lourdes après le match de samedi."], ["O", "6 h de sommeil; séance de récupération sautée."], ["A", "Récupération insuffisante, pas de blessure."], ["P", "Entraînement plus léger; priorité au sommeil."]]}}, "fitness": {"en": {"summary": "Skipped a workout; energy low most of the week.", "reason": "Missed 2 sessions", "fmt": "SOAP", "chart": [["S", "Felt sluggish, skipped Tuesday's workout."], ["O", "2 of 4 sessions done."], ["A", "Low energy, likely sleep-related."], ["P", "Shorter sessions this week; recheck energy."]]}, "fr": {"summary": "Entraînement sauté; énergie basse presque toute la semaine.", "reason": "2 séances manquées", "fmt": "SOAP", "chart": [["S", "Se sentait amorphe, entraînement de mardi sauté."], ["O", "2 séances sur 4 faites."], ["A", "Énergie basse, probablement liée au sommeil."], ["P", "Séances plus courtes cette semaine; revoir l'énergie."]]}}, "nutrition": {"en": {"summary": "Skipped lunch twice; energy crashed mid-afternoon.", "reason": "Meals skipped 3 days", "fmt": "ADIME", "chart": [["A", "Skipping lunch on workdays; 3 pm crashes; 2 meals a day on 4 of 7 days."], ["D", "Irregular meals related to the work schedule."], ["I", "Plan a portable lunch; add a 2 pm snack."], ["M/E", "Energy and meals at the next visit."]]}, "fr": {"summary": "Dîner sauté deux fois; panne d'énergie en après-midi.", "reason": "Repas sautés 3 jours", "fmt": "ADIME", "chart": [["A", "Dîner sauté les jours de travail; coups de barre vers 15 h; 2 repas par jour, 4 jours sur 7."], ["D", "Repas irréguliers liés à l’horaire de travail."], ["I", "Prévoir un dîner à emporter; collation vers 14 h."], ["M/E", "Énergie et repas à la prochaine visite."]]}}, "recovery": {"en": {"summary": "Strong craving tonight; used a coping skill and stayed with it.", "reason": "Cravings up this week", "fmt": "DAP", "chart": [["D", "Strong evening craving; called a support person."], ["A", "Coping held; cravings up since Friday."], ["P", "Plan for evenings; check in Monday."]]}, "fr": {"summary": "Forte envie ce soir; a utilisé une stratégie et a tenu bon.", "reason": "Envies en hausse cette semaine", "fmt": "DAP", "chart": [["D", "Forte envie en soirée; a appelé une personne de soutien."], ["A", "Les stratégies ont tenu; envies en hausse depuis vendredi."], ["P", "Prévoir un plan pour les soirées; suivi lundi."]]}}, "occupational": {"en": {"summary": "Dressing slow and tiring; fatigue by mid-morning.", "reason": "Fatigue up 4 days", "fmt": "SOAP", "chart": [["S", "Dressing slow and tiring this morning."], ["O", "Used the reacher; rested twice."], ["A", "Fatigue limiting the morning routine."], ["P", "Pace tasks; sit to dress."]]}, "fr": {"summary": "S'habiller était lent et fatigant; fatigue dès le milieu de matinée.", "reason": "Fatigue en hausse depuis 4 jours", "fmt": "SOAP", "chart": [["S", "S'habiller était lent et fatigant ce matin."], ["O", "A utilisé la pince; deux pauses."], ["A", "La fatigue limite la routine du matin."], ["P", "Fractionner les tâches; s'habiller assis."]]}}, "neuropsych": {"en": {"summary": "Lost focus often; foggy by afternoon after a short night.", "reason": "Focus slipping", "fmt": "DAP", "chart": [["D", "Frequent lapses in focus; foggy by afternoon."], ["A", "Worse after short sleep; mood steady."], ["P", "Demanding tasks in the morning; track sleep."]]}, "fr": {"summary": "Perte de concentration fréquente; brouillard en après-midi après une courte nuit.", "reason": "Concentration en baisse", "fmt": "DAP", "chart": [["D", "Pertes de concentration fréquentes; brouillard en après-midi."], ["A", "Pire après une courte nuit; humeur stable."], ["P", "Tâches exigeantes le matin; suivre le sommeil."]]}}, "schools": {"en": {"summary": "Hard day; couldn't focus in class, worried about a test.", "reason": "Stress up 3 days", "fmt": "SOAP", "chart": [["S", "Couldn't focus in class; worried about a test."], ["O", "Checked in 3 days running."], ["A", "Test stress affecting focus."], ["P", "Quick check-in Thursday; share a study plan."]]}, "fr": {"summary": "Journée difficile; impossible de se concentrer, inquiet pour un examen.", "reason": "Stress en hausse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Difficile de se concentrer en classe; inquiet pour un examen."], ["O", "Suivi 3 jours de suite."], ["A", "Le stress de l'examen nuit à la concentration."], ["P", "Court suivi jeudi; partager un plan d'étude."]]}}, "ind_mind": {"en": {"summary": "Hard to switch off after work; sleep came up again."}, "fr": {"summary": "Difficile de décrocher après le travail; le sommeil revient encore."}}, "ind_body": {"en": {"summary": "Knee sore this morning, 6/10, easing since Monday."}, "fr": {"summary": "Genou douloureux ce matin, 6/10, en baisse depuis lundi."}}, "ind_sport": {"en": {"summary": "Legs heavy after training; slept 6 hours."}, "fr": {"summary": "Jambes lourdes après l'entraînement; 6 heures de sommeil."}}, "ind_eating": {"en": {"summary": "Skipped lunch; energy crashed mid-afternoon."}, "fr": {"summary": "Dîner sauté; panne d'énergie en après-midi."}}};
+    const DEMO_MORE = {"speech": {"en": {"summary": "Stuck on words during a work call; practice done most days.", "reason": "Hard speaking moment", "fmt": "SOAP", "chart": [["S", "Hard phone call at work; got stuck on words."], ["O", "Practice done 5 of 7 days; confidence 4 → 6/10."], ["A", "Improving; phone calls still hardest."], ["P", "Add phone-call practice twice a day."]]}, "fr": {"summary": "Blocages pendant un appel au travail; exercices faits presque tous les jours.", "reason": "Moment de parole difficile", "fmt": "SOAP", "chart": [["S", "Appel difficile au travail; blocages sur les mots."], ["O", "Exercices faits 5 jours sur 7; confiance 4 → 6/10."], ["A", "Progresse; les appels restent le plus difficile."], ["P", "Ajouter des exercices d’appel 2 fois par jour."]]}}, "therapy": {"en": {"summary": "Work stress keeping them up; third poor night this week.", "reason": "Mood dipping 3 days", "fmt": "DAP", "chart": [["D", "Reports work stress and poor sleep, 3 nights this week."], ["A", "Stress tied to sleep loss; mood 4/10, down from 6."], ["P", "Review wind-down routine; check in on workload."]]}, "fr": {"summary": "Le stress du travail l'empêche de dormir; troisième mauvaise nuit cette semaine.", "reason": "Humeur en baisse depuis 3 jours", "fmt": "DAP", "chart": [["D", "Rapporte du stress au travail et un mauvais sommeil, 3 nuits cette semaine."], ["A", "Stress lié au manque de sommeil; humeur 4/10, en baisse de 6."], ["P", "Revoir la routine du soir; faire le point sur la charge de travail."]]}}, "physio": {"en": {"summary": "Knee pain 6/10, worse after stairs, third morning in a row.", "reason": "Pain getting worse", "fmt": "SOAP", "chart": [["S", "Knee sore on waking, 6/10, worse on stairs."], ["O", "Did 2 of 3 home exercises."], ["A", "Flare after more walking; no red flags."], ["P", "Ease step-downs; recheck next visit."]]}, "fr": {"summary": "Douleur au genou 6/10, pire après les escaliers, troisième matin de suite.", "reason": "Douleur qui empire", "fmt": "SOAP", "chart": [["S", "Genou douloureux au réveil, 6/10, pire dans les escaliers."], ["O", "2 exercices sur 3 faits à domicile."], ["A", "Poussée après plus de marche; aucun signal d'alarme."], ["P", "Alléger les descentes de marche; réévaluer à la prochaine visite."]]}}, "sports": {"en": {"summary": "Legs heavy after the game; slept 6 hours.", "reason": "Energy down 3 days", "fmt": "SOAP", "chart": [["S", "Legs heavy after Saturday's game."], ["O", "Slept 6 h; skipped the recovery session."], ["A", "Under-recovered, not injured."], ["P", "Lighter practice; prioritise sleep."]]}, "fr": {"summary": "Jambes lourdes après le match; 6 heures de sommeil.", "reason": "Énergie en baisse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Jambes lourdes après le match de samedi."], ["O", "6 h de sommeil; séance de récupération sautée."], ["A", "Récupération insuffisante, pas de blessure."], ["P", "Entraînement plus léger; priorité au sommeil."]]}}, "fitness": {"en": {"summary": "Skipped a workout; energy low most of the week.", "reason": "Missed 2 sessions", "fmt": "SOAP", "chart": [["S", "Felt sluggish, skipped Tuesday's workout."], ["O", "2 of 4 sessions done."], ["A", "Low energy, likely sleep-related."], ["P", "Shorter sessions this week; recheck energy."]]}, "fr": {"summary": "Entraînement sauté; énergie basse presque toute la semaine.", "reason": "2 séances manquées", "fmt": "SOAP", "chart": [["S", "Se sentait amorphe, entraînement de mardi sauté."], ["O", "2 séances sur 4 faites."], ["A", "Énergie basse, probablement liée au sommeil."], ["P", "Séances plus courtes cette semaine; revoir l'énergie."]]}}, "nutrition": {"en": {"summary": "Skipped lunch twice; energy crashed mid-afternoon.", "reason": "Meals skipped 3 days", "fmt": "ADIME", "chart": [["A", "Skipping lunch on workdays; 3 pm crashes; 2 meals a day on 4 of 7 days."], ["D", "Irregular meals related to the work schedule."], ["I", "Plan a portable lunch; add a 2 pm snack."], ["M/E", "Energy and meals at the next visit."]]}, "fr": {"summary": "Dîner sauté deux fois; panne d'énergie en après-midi.", "reason": "Repas sautés 3 jours", "fmt": "ADIME", "chart": [["A", "Dîner sauté les jours de travail; coups de barre vers 15 h; 2 repas par jour, 4 jours sur 7."], ["D", "Repas irréguliers liés à l’horaire de travail."], ["I", "Prévoir un dîner à emporter; collation vers 14 h."], ["M/E", "Énergie et repas à la prochaine visite."]]}}, "recovery": {"en": {"summary": "Strong craving tonight; used a coping skill and stayed with it.", "reason": "Cravings up this week", "fmt": "DAP", "chart": [["D", "Strong evening craving; called a support person."], ["A", "Coping held; cravings up since Friday."], ["P", "Plan for evenings; check in Monday."]]}, "fr": {"summary": "Forte envie ce soir; a utilisé une stratégie et a tenu bon.", "reason": "Envies en hausse cette semaine", "fmt": "DAP", "chart": [["D", "Forte envie en soirée; a appelé une personne de soutien."], ["A", "Les stratégies ont tenu; envies en hausse depuis vendredi."], ["P", "Prévoir un plan pour les soirées; suivi lundi."]]}}, "occupational": {"en": {"summary": "Dressing slow and tiring; fatigue by mid-morning.", "reason": "Fatigue up 4 days", "fmt": "SOAP", "chart": [["S", "Dressing slow and tiring this morning."], ["O", "Used the reacher; rested twice."], ["A", "Fatigue limiting the morning routine."], ["P", "Pace tasks; sit to dress."]]}, "fr": {"summary": "S'habiller était lent et fatigant; fatigue dès le milieu de matinée.", "reason": "Fatigue en hausse depuis 4 jours", "fmt": "SOAP", "chart": [["S", "S'habiller était lent et fatigant ce matin."], ["O", "A utilisé la pince; deux pauses."], ["A", "La fatigue limite la routine du matin."], ["P", "Fractionner les tâches; s'habiller assis."]]}}, "neuropsych": {"en": {"summary": "Lost focus often; foggy by afternoon after a short night.", "reason": "Focus slipping", "fmt": "DAP", "chart": [["D", "Frequent lapses in focus; foggy by afternoon."], ["A", "Worse after short sleep; mood steady."], ["P", "Demanding tasks in the morning; track sleep."]]}, "fr": {"summary": "Perte de concentration fréquente; brouillard en après-midi après une courte nuit.", "reason": "Concentration en baisse", "fmt": "DAP", "chart": [["D", "Pertes de concentration fréquentes; brouillard en après-midi."], ["A", "Pire après une courte nuit; humeur stable."], ["P", "Tâches exigeantes le matin; suivre le sommeil."]]}}, "schools": {"en": {"summary": "Hard day; couldn't focus in class, worried about a test.", "reason": "Stress up 3 days", "fmt": "SOAP", "chart": [["S", "Couldn't focus in class; worried about a test."], ["O", "Checked in 3 days running."], ["A", "Test stress affecting focus."], ["P", "Quick check-in Thursday; share a study plan."]]}, "fr": {"summary": "Journée difficile; impossible de se concentrer, inquiet pour un examen.", "reason": "Stress en hausse depuis 3 jours", "fmt": "SOAP", "chart": [["S", "Difficile de se concentrer en classe; inquiet pour un examen."], ["O", "Suivi 3 jours de suite."], ["A", "Le stress de l'examen nuit à la concentration."], ["P", "Court suivi jeudi; partager un plan d'étude."]]}}, "ind_mind": {"en": {"summary": "Hard to switch off after work; sleep came up again."}, "fr": {"summary": "Difficile de décrocher après le travail; le sommeil revient encore."}}, "ind_body": {"en": {"summary": "Knee sore this morning, 6/10, easing since Monday."}, "fr": {"summary": "Genou douloureux ce matin, 6/10, en baisse depuis lundi."}}, "ind_sport": {"en": {"summary": "Legs heavy after training; slept 6 hours."}, "fr": {"summary": "Jambes lourdes après l'entraînement; 6 heures de sommeil."}}, "ind_eating": {"en": {"summary": "Skipped lunch; energy crashed mid-afternoon."}, "fr": {"summary": "Dîner sauté; panne d'énergie en après-midi."}}};
     Object.keys(DEMO_MORE).forEach(function(k){ if(DEMO_COPY[k]){ ['en','fr'].forEach(function(l){ Object.assign(DEMO_COPY[k][l], DEMO_MORE[k][l]); }); } });
     function demoKey(){
       if(curAudience === 'individual') return 'ind_' + (typeof curIndividualMode !== 'undefined' ? curIndividualMode : 'mind');
@@ -13350,6 +13456,7 @@
   }
   const COMPOSE_QUESTION = {
     neuropsych: 'How are your focus and energy today?',
+    speech: 'How did speaking go today?',
     recovery: 'How are you holding up today?',
     schools: "How's your day going?",
     physio: "How's your body feeling today?",
@@ -13363,6 +13470,7 @@
   const COMPOSE_WHO_SEES = {
     therapy: 'A quick check-in whenever something comes up. Your therapist will see it.',
     neuropsych: 'A quick check-in whenever something comes up. Your neuropsychologist will see it.',
+    speech: 'A quick check-in whenever something comes up. Your speech-language pathologist will see it.',
     recovery: 'A quick check-in whenever something comes up. Your mentor will see it.',
     schools: "A quick check-in whenever something comes up. Your school's support staff will see it.",
     physio: 'A quick check-in whenever something comes up. Your physiotherapist will see it.',
@@ -14191,7 +14299,7 @@
     loadDemoRequests();
   }
   // --- Owner: website traffic + demo requests ---
-  const ST_FIELD = { therapy:'Therapy', individual:'On their own', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychology', nutrition:'Nutrition', sports:'Sports', fitness:'Fitness', recovery:'Recovery', schools:'Schools', '':'Not picked yet' };
+  const ST_FIELD = { therapy:'Therapy', individual:'On their own', physio:'Physio', kinesiology:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', neuropsych:'Neuropsychology', speech:'Speech therapy', nutrition:'Nutrition', sports:'Sports', fitness:'Fitness', recovery:'Recovery', schools:'Schools', '':'Not picked yet' };
   const ST_PAGE = { home:'Home', learn:'How it works', pricing:'Pricing', guide:'Guide', product:'Dashboard (demo)', chooser:'Field chooser', features:'Features' };
   async function loadSiteStats(days){
     const el = document.getElementById('btwTrafficBody'); if(!el) return;
@@ -14366,6 +14474,7 @@
       if(tab === 'physio') return c.account_type === 'coach' && c.discipline === 'physio';
       if(tab === 'nutrition') return c.account_type === 'coach' && c.discipline === 'nutrition';
       if(tab === 'neuropsych') return c.account_type === 'coach' && c.discipline === 'neuropsych';
+      if(tab === 'speech') return c.account_type === 'coach' && c.discipline === 'speech';
       return c.account_type === 'therapist';
     });
   }
@@ -14379,14 +14488,16 @@
     const pBtn = document.getElementById('btwAdminTabPhysio');
     const nBtn = document.getElementById('btwAdminTabNutrition');
     const npBtn = document.getElementById('btwAdminTabNeuropsych');
+    const spBtn = document.getElementById('btwAdminTabSpeech'), spN = adminPending('speech');
     const tN = adminPending('therapist'), pN = adminPending('physio'), nN = adminPending('nutrition'), npN = adminPending('neuropsych');
     if(tBtn){ tBtn.textContent = 'Therapists' + (tN ? ' (' + tN + ')' : ''); tBtn.classList.toggle('active', _adminTab === 'therapist'); }
     if(pBtn){ pBtn.textContent = 'Physios' + (pN ? ' (' + pN + ')' : ''); pBtn.classList.toggle('active', _adminTab === 'physio'); }
     if(nBtn){ nBtn.textContent = 'Nutritionists' + (nN ? ' (' + nN + ')' : ''); nBtn.classList.toggle('active', _adminTab === 'nutrition'); }
     if(npBtn){ npBtn.textContent = 'Neuropsychologists' + (npN ? ' (' + npN + ')' : ''); npBtn.classList.toggle('active', _adminTab === 'neuropsych'); }
+    if(spBtn){ spBtn.textContent = 'Speech therapists' + (spN ? ' (' + spN + ')' : ''); spBtn.classList.toggle('active', _adminTab === 'speech'); }
     const list = document.getElementById('btwAdminList');
     const rows = adminRowsFor(_adminTab);
-    if(!rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No ' + (_adminTab === 'physio' ? 'physio' : _adminTab === 'nutrition' ? 'nutritionist' : _adminTab === 'neuropsych' ? 'neuropsychologist' : 'therapist') + ' accounts yet.</div>'; return; }
+    if(!rows.length){ list.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">No ' + (_adminTab === 'physio' ? 'physio' : _adminTab === 'nutrition' ? 'nutritionist' : _adminTab === 'neuropsych' ? 'neuropsychologist' : _adminTab === 'speech' ? 'speech therapist' : 'therapist') + ' accounts yet.</div>'; return; }
     list.innerHTML = rows.map(c=>{
       const verified = !!c.licence_verified;
       const reviewed = !!c.licence_reviewed_at;
@@ -14609,7 +14720,7 @@
   const NOTIF_TYPE = {
     therapist:'Therapist', coach:'Coach', mentor:'Mentor', school:'School', trainer:'Trainer',
     physio:'Physiotherapist', kinesiology:'Kinesiologist', osteo:'Osteopath',
-    occupational:'Occupational therapist', neuropsych:'Neuropsychologist',
+    occupational:'Occupational therapist', neuropsych:'Neuropsychologist', speech:'Speech-language pathologist',
     nutrition:'Nutritionist', sports:'Sports coach', fitness:'Personal trainer'
   };
   function notifIcon(type){ return type === 'clinician' ? '🩺' : type === 'patient' ? '🙂' : '✉️'; }
@@ -14875,6 +14986,7 @@
     if(curAudience === 'osteo')    return COACH_PLAN_FROM[p]   || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'occupational') return COACH_PLAN_FROM[p] || (p.indexOf('team_')  === 0 ? p : 'team_monthly');
     if(curAudience === 'neuropsych') return COACH_PLAN_FROM[p]  || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
+    if(curAudience === 'speech')   return COACH_PLAN_FROM[p]  || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'nutrition') return COACH_PLAN_FROM[p]  || (p.indexOf('team_')    === 0 ? p : 'team_monthly');
     if(curAudience === 'recovery') return MENTOR_PLAN_FROM[p]  || (p.indexOf('mentor_')  === 0 ? p : 'mentor_monthly');
     if(curAudience === 'schools')  return SCHOOL_PLAN_FROM[p]  || (p.indexOf('school_')  === 0 ? p : 'school_monthly');
@@ -14897,10 +15009,10 @@
       openBilling(); return;
     }
     if(state.patient){ alert(t("You're already signed in. Open your settings to manage your plan.")); return; }
-    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'neuropsych' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
+    proSignup = (curAudience === 'sports' || curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'neuropsych' || curAudience === 'speech' || curAudience === 'nutrition') ? 'coach' : curAudience === 'recovery' ? 'mentor' : curAudience === 'schools' ? 'school' : curAudience === 'fitness' ? 'trainer' : null;
     // Physio is regulated: it's a coach account but goes through the licence
     // step and manual review, like a therapist. Other coaches stay one-step.
-    proNeedsLicence = (curAudience === 'physio' || curAudience === 'nutrition' || curAudience === 'neuropsych');
+    proNeedsLicence = (curAudience === 'physio' || curAudience === 'nutrition' || curAudience === 'neuropsych' || curAudience === 'speech');
     const teamField = document.getElementById('btwSuTeamField');
     const nextBtn = document.getElementById('btwStep1Next');
     const eyebrow = document.getElementById('btwStep1Eyebrow');
@@ -14912,14 +15024,14 @@
         nextBtn.textContent = t('Continue');
         if(eyebrow) eyebrow.textContent = t('Step 1 of 3 · Account');
         // Default the order picker to the right profession, not a psychology one.
-        const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = (curAudience === 'nutrition') ? 'CA-Dietitian' : (curAudience === 'neuropsych') ? 'CA-Psychology' : 'CA-Physio';
+        const ord = document.getElementById('btwSuOrder'); if(ord) ord.value = (curAudience === 'nutrition') ? 'CA-Dietitian' : (curAudience === 'neuropsych') ? 'CA-Psychology' : (curAudience === 'speech') ? 'CA-SLP' : 'CA-Physio';
       } else {
         // Sports / kinesiology / osteopathy sign up in one step: no verification.
         teamField.style.display = '';
         { const isTeam = curAudience === 'sports'; const tl = teamField.querySelector('label'), ti = document.getElementById('btwSuTeam');
           if(tl) tl.textContent = t(isTeam ? 'Team name' : 'Practice name (optional)'); if(ti) ti.placeholder = t(isTeam ? 'e.g. Riverside U15' : 'e.g. Riverside Kinesiology'); }
         nextBtn.textContent = t('Create account');
-        if(eyebrow) eyebrow.textContent = t((curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'occupational') ? 'Your occupational therapy account' : (curAudience === 'neuropsych') ? 'Your neuropsychology account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account');
+        if(eyebrow) eyebrow.textContent = t((curAudience === 'kinesiology') ? 'Your kinesiology account' : (curAudience === 'osteo') ? 'Your osteopathy account' : (curAudience === 'occupational') ? 'Your occupational therapy account' : (curAudience === 'neuropsych') ? 'Your neuropsychology account' : (curAudience === 'speech') ? 'Your speech therapy account' : (curAudience === 'nutrition') ? 'Your nutrition account' : 'Your coach account');
       }
     } else if(proSignup === 'mentor'){
       // Mentors sign up in one step too: no licence, no verification.
@@ -15644,7 +15756,7 @@
           body.teamName = document.getElementById('btwSuTeam').value.trim() || null;
           // Tell the server which coach-type discipline this is (sports / physio
           // / kinesiology) so it tailors the welcome email and the app copy.
-          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'sports' || curAudience === 'neuropsych' || curAudience === 'nutrition') body.discipline = curAudience;
+          if(curAudience === 'physio' || curAudience === 'kinesiology' || curAudience === 'osteo' || curAudience === 'occupational' || curAudience === 'sports' || curAudience === 'neuropsych' || curAudience === 'speech' || curAudience === 'nutrition') body.discipline = curAudience;
         }
         const endpoint = proSignup === 'coach' ? '/api/auth/coach/signup' : proSignup === 'school' ? '/api/auth/school/signup' : proSignup === 'trainer' ? '/api/auth/trainer/signup' : '/api/auth/mentor/signup';
         const data = await api('POST', endpoint, body);
@@ -17392,6 +17504,8 @@
     mixed: ['Soreness','Fatigue','Injury','Sleep','Pressure','Confidence','Motivation','Stress'],
     // Neuropsychology: cognition and mood, no body.
     neuropsych: ['Focus','Memory','Mental fatigue','Word-finding','Overwhelm','Sleep','Mood','Headache'],
+    // Speech therapy: home practice and real speaking situations, no body.
+    speech: ['Home practice','Fluency','Clarity','Word-finding','Voice','Confidence','Frustration','Swallowing'],
     // Each field's own topics, saved exactly as shown. (These used to be the
     // therapy topics relabelled on screen, which saved the wrong word; see
     // LEGACY_TAG_ALIAS. So none of these may reuse an alias source word.)
@@ -17442,6 +17556,7 @@
     let want = 'therapy';
     if(painMapContext()) want = (d === 'sports') ? 'mixed' : (d === 'occupational' ? 'ot' : 'phys');
     else if(d === 'neuropsych') want = 'neuropsych';
+    else if(d === 'speech') want = 'speech';
     else if(d === 'nutrition' || aud === 'nutrition') want = 'nutrition';
     else if(aud === 'recovery') want = 'recovery';
     else if(aud === 'schools') want = 'schools';
@@ -17544,6 +17659,7 @@
     osteo:        ['How has your body felt since last time?', 'What made it better or worse?', 'How did things feel day to day?'],
     occupational: ['How did your daily activities go since last time?', 'What was tiring or hard to manage?', 'What helped you get things done?'],
     neuropsych:   ['How were your focus and memory since last time?', 'When did mental fatigue hit hardest?', 'How has your mood been?'],
+    speech:       ['How did your practice go since last time?', 'When was speaking hardest?', 'What went well when you spoke?'],
     nutrition:    ['How did eating go since last time?', 'What was hard around food or energy?', 'What felt good or worked well?']
   };
   function composeQuestions(){ const d = (typeof painDiscipline === 'function') ? painDiscipline() : null; return COMPOSE_Q[d] || COMPOSE_Q.therapy; }
@@ -20499,7 +20615,7 @@
         // Their own professional and program words (nutritionist + habits,
         // coach + exercises…), not a generic "clinician" and "exercises".
         const fr = curLang === 'fr';
-        const PRO = { therapy:['therapist','thérapeute'], neuropsych:['neuropsychologist','neuropsychologue'], recovery:['mentor','mentor'], nutrition:['nutritionist','nutritionniste'],
+        const PRO = { therapy:['therapist','thérapeute'], neuropsych:['neuropsychologist','neuropsychologue'], speech:['speech-language pathologist','orthophoniste'], recovery:['mentor','mentor'], nutrition:['nutritionist','nutritionniste'],
           physio:['physiotherapist','physiothérapeute'], kinesiology:['kinesiologist','kinésiologue'], osteo:['osteopath','ostéopathe'], occupational:['occupational therapist','ergothérapeute'],
           sports:['coach','entraîneur'], fitness:['trainer','entraîneur'], schools:['school team','équipe-école'] };
         const pw = (PRO[curAudience] || PRO.therapy)[fr ? 1 : 0];
@@ -21449,7 +21565,7 @@
   // accounts; fitness is a trainer. All get the body map in the composer.
   const BODY_AUDIENCES = { sports:1, fitness:1, physio:1, kinesiology:1, osteo:1, occupational:1 };
   // Coach disciplines that do NOT use the body map (nutrition is mood-style).
-  const NON_BODY_DISCIPLINES = { nutrition:1, neuropsych:1 };
+  const NON_BODY_DISCIPLINES = { nutrition:1, neuropsych:1, speech:1 };
   function coachTypeHasBody(at, disc){
     if(at === 'trainer') return true;                 // fitness
     if(at === 'coach') return !NON_BODY_DISCIPLINES[disc]; // every coach but nutrition
@@ -21669,6 +21785,7 @@
     else if (['osteo','osteopath','osteopathy','osteopaths','osteopathic','osteopathe','ostéopathe','ostéopathie','ostéo'].includes(forParam)) _startAud = 'osteo';
     else if (['occupational','occupational-therapy','occupational therapy','ot','occupational-therapist','occupationaltherapy','ergo','ergotherapy','ergothérapie','ergotherapie','ergothérapeute','ergotherapeute'].includes(forParam)) _startAud = 'occupational';
     else if (['nutrition','nutritionist','nutritionists','dietitian','dietician','dietitians','nutritionniste','diététiste','dieteticienne','nutritionnistes'].includes(forParam)) _startAud = 'nutrition';
+    else if (['speech','speech-therapy','speech therapy','speech-therapist','speech-language-pathologist','slp','orthophonie','orthophoniste','orthophonistes','logopedie','logopédie'].includes(forParam)) _startAud = 'speech';
     else if (['neuropsych','neuropsychology','neuropsychologist','neuropsychologists','neuro','neuropsychologie','neuropsychologue','neuropsychologues'].includes(forParam)) _startAud = 'neuropsych';
     else if (['therapy','therapist','clinician'].includes(forParam)) _startAud = 'therapy';
     else if (['individual','myself','me','self','personal','solo','yourself'].includes(forParam)) _startAud = 'individual';
@@ -21679,7 +21796,7 @@
   // A remembered field wins (a returning visitor lands back on their field).
   // Only when NOTHING is known — no field URL, no ?for=, no remembered choice —
   // do we start gated on the chooser so the visitor picks their field first.
-  var _VALID_AUD = ['individual','sports','recovery','schools','fitness','physio','kinesiology','osteo','occupational','neuropsych','nutrition','therapy'];
+  var _VALID_AUD = ['individual','sports','recovery','schools','fitness','physio','kinesiology','osteo','occupational','neuropsych','speech','nutrition','therapy'];
   // The "Who's it for?" chooser shows on every plain home visit — including
   // returning visitors who've picked before — so the landing always asks which
   // field it's for. Account-holders don't need to re-pick; they log in (the
