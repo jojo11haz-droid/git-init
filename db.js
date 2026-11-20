@@ -265,6 +265,12 @@ CREATE TABLE IF NOT EXISTS outreach_leads (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Leads added later from data/outreach-updates.json, so each is added once
+-- and stays deleted if the owner deletes it.
+CREATE TABLE IF NOT EXISTS outreach_imported (
+  id TEXT PRIMARY KEY,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 // Databases created before the auth release have a patients table without
@@ -476,6 +482,19 @@ async function applyOutreachUpdates() {
   catch (e) { return; }
   for (const u of ups) {
     if (!u || !u.id) continue;
+    if (u.add) { // a new lead: insert it once, never again (even after a delete)
+      try {
+        const done = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', [u.id]);
+        if (!done.rows.length) continue;
+        await pool.query(
+          `INSERT INTO outreach_leads (id, name, contact, profession, city, lang, email, phone, website, status, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'to_contact', $10) ON CONFLICT (id) DO NOTHING`,
+          [u.id, u.name, u.contact || '', u.profession || 'other', u.city || '', u.lang || 'fr', u.email || '',
+           u.phone || '', u.website || '', u.note || '']
+        );
+      } catch (e) {}
+      continue;
+    }
     const sets = []; const vals = [u.id];
     for (const f of OUTREACH_FILL) {
       if (!u[f]) continue;
