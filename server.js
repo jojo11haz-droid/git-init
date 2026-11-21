@@ -1362,7 +1362,7 @@ app.post('/api/auth/signup', requireDb, signupLimiter, async (req, res) => {
       clinician,
       verificationRequired: !owner && !clinician.licence_verified,
       billingEnabled: stripeConfigured(),
-      freeAccess: owner
+      freeAccess: owner, owner: isSiteOwner(clinician.email)
     });
   } catch (err) {
     if (err && err.code === '23505') { // unique_violation — signup raced the pre-check
@@ -1430,7 +1430,7 @@ app.post('/api/auth/coach/signup', requireDb, signupLimiter, async (req, res) =>
       checkoutUrl,
       verificationRequired: pending,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
-      freeAccess: isFreeAccess(coach.email)
+      freeAccess: isFreeAccess(coach.email), owner: isSiteOwner(coach.email)
     });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -1474,7 +1474,7 @@ app.post('/api/auth/mentor/signup', requireDb, signupLimiter, async (req, res) =
       checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
-      freeAccess: isFreeAccess(mentor.email)
+      freeAccess: isFreeAccess(mentor.email), owner: isSiteOwner(mentor.email)
     });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -1518,7 +1518,7 @@ app.post('/api/auth/school/signup', requireDb, signupLimiter, async (req, res) =
       checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
-      freeAccess: isFreeAccess(school.email)
+      freeAccess: isFreeAccess(school.email), owner: isSiteOwner(school.email)
     });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -1562,7 +1562,7 @@ app.post('/api/auth/trainer/signup', requireDb, signupLimiter, async (req, res) 
       checkoutUrl,
       verificationRequired: false,
       billingEnabled: stripeConfigured() && !!priceForPlan(plan),
-      freeAccess: isFreeAccess(trainer.email)
+      freeAccess: isFreeAccess(trainer.email), owner: isSiteOwner(trainer.email)
     });
   } catch (err) {
     if (err && err.code === '23505') {
@@ -1598,7 +1598,7 @@ app.post('/api/auth/login', requireDb, loginIpLimiter, loginEmailLimiter, async 
 
     await startSession(res, req, clinician.id);
     const { password_hash, mfa_secret, ...publicClinician } = clinician;
-    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(publicClinician.email), brandPremium: clinicianIsPremium(publicClinician) });
+    res.json({ clinician: publicClinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(publicClinician.email), owner: isSiteOwner(publicClinician.email), brandPremium: clinicianIsPremium(publicClinician) });
   } catch (err) {
     console.error('Error in login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -1623,7 +1623,7 @@ app.post('/api/auth/login/mfa', requireDb, mfaCodeLimiter, async (req, res) => {
     await deleteMfaChallenge(challenge.token_hash);
     await startSession(res, req, challenge.clinician_id);
     const clinician = await getClinicianById(challenge.clinician_id);
-    res.json({ clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email), brandPremium: clinicianIsPremium(clinician) });
+    res.json({ clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(clinician.email), owner: isSiteOwner(clinician.email), brandPremium: clinicianIsPremium(clinician) });
   } catch (err) {
     console.error('Error in MFA login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -1690,7 +1690,7 @@ app.post('/api/auth/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/auth/me', requireDb, requireAuth, (req, res) => {
-  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email), brandPremium: clinicianIsPremium(req.clinician) });
+  res.json({ clinician: req.clinician, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.clinician.email), owner: isSiteOwner(req.clinician.email), brandPremium: clinicianIsPremium(req.clinician) });
 });
 
 // --- Owner: clinician licence review ---
@@ -4095,6 +4095,14 @@ const FREE_ACCESS_EMAILS = [OWNER_EMAIL]
 function isFreeAccess(email) {
   return !!email && FREE_ACCESS_EMAILS.includes(String(email).toLowerCase());
 }
+// Owner-only tools (clinic outreach): the site owner alone, never the wider
+// free-access list. OWNER_TEST_EMAIL lets a local test account act as the
+// owner; it is not set in production.
+const SITE_OWNERS = [OWNER_EMAIL, process.env.OWNER_TEST_EMAIL || '']
+  .map(e => e.trim().toLowerCase()).filter(Boolean);
+function isSiteOwner(email) {
+  return !!email && SITE_OWNERS.includes(String(email).toLowerCase());
+}
 function patientNeedsSub(p) {
   return stripeConfigured() && !isFreeAccess(p.email) && !!p.plan && !subActive(p.subscription_status);
 }
@@ -4202,6 +4210,12 @@ function requireOwner(req, res, next) {
   }
   next();
 }
+function requireSiteOwner(req, res, next) {
+  if (!req.clinician || !isSiteOwner(req.clinician.email)) {
+    return res.status(403).json({ error: 'Owner access required.' });
+  }
+  next();
+}
 
 const inviteLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 10,
@@ -4249,7 +4263,7 @@ app.post('/api/patient/accept-invite', requireDb, inviteLimiter, async (req, res
 
     const token = await startPatientSession(patient.id);
     sendWelcomeEmail({ to: patient.email, name: patient.display_name, kind: 'patient' });
-    res.status(201).json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
+    res.status(201).json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email), owner: isSiteOwner(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
@@ -4308,7 +4322,7 @@ app.post('/api/patient/signup', requireDb, inviteLimiter, async (req, res) => {
       catch (e) { console.error('Could not start checkout:', e.message); }
     }
 
-    res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
+    res.status(201).json({ token, patient: publicPatient(patient), checkoutUrl, billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email), owner: isSiteOwner(patient.email) });
   } catch (err) {
     if (err && err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists. Try logging in instead.' });
@@ -4470,7 +4484,7 @@ app.post('/api/patient/login', requireDb, patientLoginLimiter, async (req, res) 
     }
 
     const token = await startPatientSession(patient.id);
-    res.json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email) });
+    res.json({ token, patient: publicPatient(await withClinicianInfo(patient)), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(patient.email), owner: isSiteOwner(patient.email) });
   } catch (err) {
     console.error('Error in patient login:', err);
     res.status(500).json({ error: 'Could not sign in.' });
@@ -4489,7 +4503,7 @@ app.post('/api/patient/logout', requireDb, async (req, res) => {
 });
 
 app.get('/api/patient/me', requireDb, requirePatientAuth, (req, res) => {
-  res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.patient.email) });
+  res.json({ patient: publicPatient(req.patient), billingEnabled: stripeConfigured(), freeAccess: isFreeAccess(req.patient.email), owner: isSiteOwner(req.patient.email) });
 });
 
 // A self-serve individual's own intentions/goals. Up to two short lines they
@@ -5742,17 +5756,17 @@ function cleanOutreach(body) {
   }
   return out;
 }
-app.get('/api/admin/outreach', requireDb, requireAuth, requireOwner, async (req, res) => {
+app.get('/api/admin/outreach', requireDb, requireAuth, requireSiteOwner, async (req, res) => {
   try { res.json(await listOutreachLeads()); }
   catch (err) { console.error('Outreach list error:', err); res.status(500).json({ error: 'Could not load the outreach list.' }); }
 });
-app.post('/api/admin/outreach', requireDb, requireAuth, requireOwner, async (req, res) => {
+app.post('/api/admin/outreach', requireDb, requireAuth, requireSiteOwner, async (req, res) => {
   const lead = cleanOutreach(req.body);
   if (!lead.name) return res.status(400).json({ error: 'Give the clinic a name.' });
   try { res.status(201).json(await createOutreachLead(lead)); }
   catch (err) { console.error('Outreach create error:', err); res.status(500).json({ error: 'Could not save that lead.' }); }
 });
-app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, async (req, res) => {
+app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireSiteOwner, async (req, res) => {
   const patch = cleanOutreach(req.body);
   if (patch.name !== undefined && !patch.name) return res.status(400).json({ error: 'Give the clinic a name.' });
   try {
@@ -5765,7 +5779,7 @@ app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, async
 // clinic's own website (their words: specialty, approach, area, team). Reads
 // the public site only (see site-reader.js), never invents.
 const OUTREACH_PROF_EN = { physio: 'physiotherapy', psycho: 'psychotherapy', kinesio: 'kinesiology', osteo: 'osteopathy', other: 'health' };
-app.post('/api/admin/outreach/:id/opener', requireDb, requireAuth, requireOwner, prepLimiter, async (req, res) => {
+app.post('/api/admin/outreach/:id/opener', requireDb, requireAuth, requireSiteOwner, prepLimiter, async (req, res) => {
   try {
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI writer is unavailable right now.' });
     const id = String(req.params.id).slice(0, 200);
@@ -5809,7 +5823,7 @@ Respond with ONLY a JSON object, no preamble and no markdown fences: {"line": "t
     res.status(502).json({ error: 'Could not write the line just now. Please try again.' });
   }
 });
-app.delete('/api/admin/outreach/:id', requireDb, requireAuth, requireOwner, async (req, res) => {
+app.delete('/api/admin/outreach/:id', requireDb, requireAuth, requireSiteOwner, async (req, res) => {
   try {
     if (!(await deleteOutreachLead(String(req.params.id).slice(0, 200)))) return res.status(404).json({ error: 'Lead not found.' });
     res.json({ ok: true });

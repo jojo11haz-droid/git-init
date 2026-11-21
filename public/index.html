@@ -6066,6 +6066,7 @@
   function isTherapist(){ return state.role === 'therapist'; }
   let billingEnabled = false; // set from the server: is Stripe configured?
   let ownerFreeAccess = false; // server says this account is on the comp list
+  let siteOwner = false; // the site owner only (outreach), never the wider comp list
   // The product owner's own account. They get a "god-mode" header that keeps
   // the full chrome (every nav tab + field switcher) so they can reach both the
   // professional and the patient-facing side of the product from one login.
@@ -13452,7 +13453,7 @@
     const billCheckBtn = document.getElementById('btwBillCheckBtn');
     if(billCheckBtn) billCheckBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const outreachBtn = document.getElementById('btwOutreachBtn');
-    if(outreachBtn) outreachBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    if(outreachBtn) outreachBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const engBtn = document.getElementById('btwEngagementBtn');
     if(engBtn) engBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
     const notifBtn = document.getElementById('btwNotifBtn');
@@ -13622,7 +13623,7 @@
       try{
         const data = await pApi('GET', '/api/patient/me');
         state.patient = data.patient; state.role = 'patient'; state.me = null;
-        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
         renderAuthState();
         await loadPatientCheckIns();
         if(_goCheckin) goToView(navProduct, viewProduct);
@@ -13636,7 +13637,7 @@
     }
     try{
       const data = await api('GET', '/api/auth/me');
-      state.me = data.clinician; state.role = 'therapist'; billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+      state.me = data.clinician; state.role = 'therapist'; billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
       maybeCoachAudience();
     }catch(err){
       state.me = null; state.role = null; // 401 = signed out; 503 = no DB configured
@@ -14094,12 +14095,12 @@
   // Deferred so the join handlers below have finished initializing first.
   const _pjoin = _q.get('pjoin');
   if(_pjoin){ setTimeout(()=> openJoin(_pjoin), 0); }
-  async function finishLogin(clinician, biEnabled, freeAcc){
+  async function finishLogin(clinician, biEnabled, freeAcc, isOwner){
     // Clear any patient session in this browser so the two roles never mix.
     setPToken(null); state.patient = null;
     state.me = clinician; state.role = 'therapist';
     if(biEnabled !== undefined) billingEnabled = !!biEnabled;
-    ownerFreeAccess = !!freeAcc;
+    ownerFreeAccess = !!freeAcc; siteOwner = !!isOwner;
     maybeCoachAudience();
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
@@ -14114,7 +14115,7 @@
   async function finishPatientLogin(data){
     setPToken(data.token);
     state.patient = data.patient; state.role = 'patient'; state.me = null;
-    billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+    billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
     loginOverlay.style.display = 'none';
     document.getElementById('btwLoginPassword').value = '';
     renderAuthState();
@@ -14143,7 +14144,7 @@
         const code = document.getElementById('btwLoginMfaCode').value.trim();
         if(!code){ loginError.textContent = t('Enter the 6-digit code from your authenticator app.'); return; }
         const data = await api('POST', '/api/auth/login/mfa', { mfaToken: pendingMfaToken, code });
-        await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
+        await finishLogin(data.clinician, data.billingEnabled, data.freeAccess, data.owner);
         return;
       }
       if(!email || !password){ loginError.textContent = t('Enter your email and password.'); return; }
@@ -14155,7 +14156,7 @@
         document.getElementById('btwLoginMfaCode').focus();
         return;
       }
-      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
+      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess, data.owner);
     }catch(err){
       loginError.textContent = err.message;
     }
@@ -14950,7 +14951,7 @@
       const data = await api('POST', '/api/practice/join', { token: joinToken, name, password, licenceNumber });
       joinOverlay.style.display = 'none';
       history.replaceState(null, '', location.pathname);
-      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess);
+      await finishLogin(data.clinician, data.billingEnabled, data.freeAccess, data.owner);
       if(data.verificationRequired){ alert(t('Your account is created and pending licence review. You will get access once it is approved.')); }
     }catch(e){ err.textContent = e.message; err.style.display = ''; }
   });
@@ -15810,7 +15811,7 @@
         if(data.checkoutUrl){ btwGo(data.checkoutUrl); return; }
         setPToken(null); state.patient = null;
         state.me = data.clinician; state.role = 'therapist';
-        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+        billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
         renderAuthState();
         await loadPatients();
         closeSignup();
@@ -15892,7 +15893,7 @@
       if(data.checkoutUrl){ btwGo(data.checkoutUrl); return; }
       setPToken(null); state.patient = null;
       state.me = data.clinician; state.role = 'therapist';
-      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
       // New accounts are pending licence verification: no Stripe, no dashboard
       // yet. Render the (gated) state behind them and show the pending screen.
       // The owner's free-access account is verified on creation and skips this.
@@ -15958,7 +15959,7 @@
       const data = await pApi('POST', '/api/patient/signup', { name, email, password: pw, plan: patientPlan, guardianAck: true });
       setPToken(data.token);
       state.patient = data.patient; state.role = 'patient'; state.me = null;
-      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
       // Record a baseline consent decision (AI off) so check-ins are unblocked;
       // the agree checkbox above is that explicit, opt-in-off consent moment.
       try{
@@ -16012,7 +16013,7 @@
       const data = await pApi('POST', '/api/patient/accept-invite', { inviteCode, email, password: pw, guardianAck: true });
       setPToken(data.token);
       state.patient = data.patient; state.role = 'patient'; state.me = null;
-      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess;
+      billingEnabled = !!data.billingEnabled; ownerFreeAccess = !!data.freeAccess; siteOwner = !!data.owner;
       try{
         const r = await pApi('POST', '/api/patient/consent', { enabled: false });
         state.patient = {...state.patient, ...r.patient};
