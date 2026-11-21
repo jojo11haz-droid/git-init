@@ -13447,17 +13447,17 @@
     if(brandBtn) brandBtn.style.display = ((asTherapist && !pendingVerify) || (asPatient && soloIndividual() && !_ownerPreview)) ? '' : 'none';
     try { btwApplyAccent(); } catch(e){}
     const adminBtn = document.getElementById('btwAdminBtn');
-    if(adminBtn) adminBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    if(adminBtn) adminBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const trafficBtn = document.getElementById('btwTrafficBtn');
-    if(trafficBtn) trafficBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    if(trafficBtn) trafficBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const billCheckBtn = document.getElementById('btwBillCheckBtn');
-    if(billCheckBtn) billCheckBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    if(billCheckBtn) billCheckBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const outreachBtn = document.getElementById('btwOutreachBtn');
     if(outreachBtn) outreachBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const engBtn = document.getElementById('btwEngagementBtn');
-    if(engBtn) engBtn.style.display = (asTherapist && ownerFreeAccess) ? '' : 'none';
+    if(engBtn) engBtn.style.display = (asTherapist && siteOwner) ? '' : 'none';
     const notifBtn = document.getElementById('btwNotifBtn');
-    const isOwnerHere = asTherapist && ownerFreeAccess;
+    const isOwnerHere = asTherapist && siteOwner;
     if(notifBtn) notifBtn.style.display = isOwnerHere ? '' : 'none';
     // Refresh the "new since last look" badge for the owner; hide it otherwise.
     if(isOwnerHere){ if(window.__btwRefreshNotif) window.__btwRefreshNotif(); }
@@ -14822,7 +14822,7 @@
   // patient): re-fetch the notification badge + feed and, if the notifications
   // or overview panel is open, re-render it with fresh data.
   async function refreshOwnerViews(){
-    if(!(isTherapist() && ownerFreeAccess)) return;
+    if(!(isTherapist() && siteOwner)) return;
     try { await refreshNotifBadge(); } catch(e){}
     const no = document.getElementById('btwNotifOverlay');
     if(no && no.style.display !== 'none' && _notifRows) renderNotifList(_notifRows);
