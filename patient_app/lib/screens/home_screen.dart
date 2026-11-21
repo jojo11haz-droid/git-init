@@ -791,6 +791,9 @@ class _HomeScreenState extends State<HomeScreen>
           CoachStep(title: s.topicsTitle, body: s.coachTopicsBody),
         CoachStep(title: s.reminderCardTitle, body: s.coachReminderBody),
         CoachStep(
+            title: s.futureNoteTitle,
+            body: '${s.futureNoteIntro} ${s.futureNotePrivacy(providerKey)}'),
+        CoachStep(
             targetKey: _kProgress,
             title: s.coachProgressTitle,
             body: s.coachProgressBody),

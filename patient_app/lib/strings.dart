@@ -853,8 +853,8 @@ class S {
       'Écrivez un mot, enregistrez une note vocale, ou répondez à quelques questions, dès que quelque chose survient.');
   String get coachProgressTitle => _('Your progress', 'Vos progrès');
   String get coachProgressBody => _(
-      'Tap here anytime to see your trends and recovery over time.',
-      'Touchez ici à tout moment pour voir vos tendances et votre rétablissement au fil du temps.');
+      'Tap here anytime to see your trends and recovery over time. You can print it, or save it as a PDF to bring to an appointment.',
+      'Touchez ici à tout moment pour voir vos tendances et votre rétablissement au fil du temps. Vous pouvez l’imprimer, ou l’enregistrer en PDF pour l’apporter à un rendez-vous.');
   String get coachHistoryTitle => _('Your history', 'Votre historique');
   String get coachHistoryBody => _(
       'Every check-in you make is saved here to read back.',
