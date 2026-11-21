@@ -44,7 +44,7 @@
   <section id="secEn">
     <div class="eyebrow" style="margin-top:6px;">Between</div>
     <h1>Subprocessors & data location</h1>
-    <div class="meta">Last updated: October 25, 2026</div>
+    <div class="meta">Last updated: November 21, 2026</div>
 
 
     <p>Between relies on a small number of third-party processors to run the service. Each one processes data only to provide its service to us, under its own agreement. The table below lists who they are, what they do, the data they can access and where they process it.</p>
@@ -54,8 +54,8 @@
       <tbody>
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">privacy</a></td>
-          <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in (only when the client has opted in to AI summaries). Also reads a document or photo a clinician uploads, to summarize an intake document, or to pull out first names when adding several patients at once.</td>
-          <td>Check-in text (only with the client's AI consent), plus any document, file or photo a clinician uploads for document review or to add patients, and the transcript of a recorded session or dictation the clinician asks to write up (not stored by Between).</td>
+          <td>Writes the short AI summary and theme tags and runs the safety screening on a check-in. For the professional, drafts what they ask for from those check-ins: session prep, chart notes, reports and letters, program suggestions and reviews, short messages and the field's insight read (all only when the client has turned AI summaries on). Turns a plan the professional writes into check-in questions. Reads a document or photo a professional uploads, to summarize it or to pull out first names when adding several people at once.</td>
+          <td>Check-in text (only with the client's AI consent), what the professional types or dictates for a note, plan or report, any document, file or photo a professional uploads, and the transcript of a recorded session or dictation the professional asks to write up (not stored by Between).</td>
           <td>United States</td>
         </tr>
         <tr>
@@ -66,14 +66,14 @@
         </tr>
         <tr>
           <td><strong>Resend</strong><br><a href="https://resend.com/legal/privacy-policy">privacy</a></td>
-          <td>Sends account and notification emails such as invites, alerts and password resets. Used where configured.</td>
+          <td>Sends account and notification emails such as invites, password resets, new-message notices (with nothing private in them) and the optional morning list of people who need attention. Used where configured.</td>
           <td>Name and email address and the content of the email.</td>
           <td>United States</td>
         </tr>
         <tr>
           <td><strong>Twilio</strong><br><a href="https://www.twilio.com/en-us/legal/privacy">privacy</a></td>
-          <td>Sends SMS reminders to patients who have opted in to text reminders.</td>
-          <td>The patient's mobile number and the reminder message.</td>
+          <td>Sends daily check-in reminders by text to people who turned them on, and alerts Between by text when someone books a demo.</td>
+          <td>The person's mobile number and the reminder message; for a demo request, the name and contact details the person entered.</td>
           <td>United States and internationally</td>
         </tr>
         <tr>
@@ -94,16 +94,23 @@
           <td>All stored data: account details, check-in content, voice memos, photos and uploaded documents.</td>
           <td>United States (the region selected for the database)</td>
         </tr>
+        <tr>
+          <td><strong>Google Fonts</strong><br><a href="https://policies.google.com/privacy">privacy</a></td>
+          <td>Serves the typefaces the website uses.</td>
+          <td>The visitor's browser asks Google for the font files, so Google sees the IP address and browser details. No account, check-in or health data.</td>
+          <td>United States and internationally</td>
+        </tr>
       </tbody>
     </table>
 
     <h2>What this means for your data</h2>
     <ul>
-      <li>AI analysis is <strong>off by default</strong> and runs only with the client's explicit consent. If a client leaves AI off, their check-ins are never sent to Anthropic.</li>
-      <li>Voice memos and photos are stored in the database on Neon and a voice memo reaches Deepgram only if the client records one.</li>
-      <li>A session a clinician records (with the client's agreement) is transcribed and written up, then dropped: Between keeps neither the audio nor the transcript.</li>
+      <li>AI analysis is <strong>off by default</strong> and runs only with the client's explicit consent. If a client leaves AI off, their check-ins are never sent to Anthropic, and the professional's AI tools work only from what the professional types.</li>
+      <li>Voice memos and photos are stored in the database on Neon, and a voice memo reaches Deepgram only if the client records one.</li>
+      <li>A session a professional records (with the client's agreement) is transcribed and written up, then dropped: Between keeps neither the audio nor the transcript.</li>
+      <li>The website uses no advertising or tracking cookies. Visit counts are anonymous: no cookies, no visitor IDs and no IP addresses are stored.</li>
       <li>We do not sell data and we do not use it to train AI models.</li>
-      <li>A client can see, correct and delete their own data at any time.</li>
+      <li>Everyone can see, correct and delete their own data at any time.</li>
       <li>Because this can involve storing and processing personal information in the United States, outside Quebec and outside Canada, we take applicable cross-border requirements into account under Canadian privacy law, including the federal PIPEDA and Quebec's Law 25.</li>
     </ul>
 
@@ -115,7 +122,7 @@
   <section id="secFr" hidden>
     <div class="eyebrow" style="margin-top:6px;">Between</div>
     <h1>Sous-traitants et lieu de traitement</h1>
-    <div class="meta">Dernière mise à jour : 25 octobre 2026</div>
+    <div class="meta">Dernière mise à jour : 21 novembre 2026</div>
 
 
     <p>Between s'appuie sur un petit nombre de sous-traitants pour offrir le service. Chacun ne traite les données que pour nous fournir son service, selon sa propre entente. Le tableau ci-dessous indique qui ils sont, ce qu'ils font, les données auxquelles ils accèdent et où ils les traitent.</p>
@@ -125,8 +132,8 @@
       <tbody>
         <tr>
           <td><strong>Anthropic</strong> (Claude)<br><a href="https://www.anthropic.com/legal/privacy">confidentialité</a></td>
-          <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi (uniquement si le client a activé les résumés IA). Lit aussi un document ou une photo qu'un clinicien téléverse, pour résumer un document d'accueil, ou pour en extraire des prénoms lors de l'ajout de plusieurs patients à la fois.</td>
-          <td>Le texte du suivi (uniquement avec le consentement IA du client), ainsi que tout document, fichier ou photo qu'un clinicien téléverse pour l'analyse de document ou pour ajouter des patients, et la transcription d'une séance enregistrée ou d'une dictée que le clinicien fait rédiger (non conservée par Between).</td>
+          <td>Rédige le court résumé et les étiquettes de thèmes et effectue le filtrage de sécurité d'un suivi. Pour la ou le professionnel, rédige ce qui est demandé à partir de ces suivis : préparation de séance, notes au dossier, rapports et lettres, suggestions et révisions de programme, courts messages et la lecture propre au domaine (seulement si la personne suivie a activé les résumés IA). Transforme un plan écrit par la ou le professionnel en questions de suivi. Lit un document ou une photo téléversé par la ou le professionnel, pour le résumer ou pour en extraire des prénoms lors de l'ajout de plusieurs personnes à la fois.</td>
+          <td>Le texte des suivis (seulement avec le consentement IA de la personne suivie), ce que la ou le professionnel tape ou dicte pour une note, un plan ou un rapport, tout document, fichier ou photo qu'elle ou il téléverse, et la transcription d'une séance enregistrée ou d'une dictée à rédiger (non conservée par Between).</td>
           <td>États-Unis</td>
         </tr>
         <tr>
@@ -137,14 +144,14 @@
         </tr>
         <tr>
           <td><strong>Resend</strong><br><a href="https://resend.com/legal/privacy-policy">confidentialité</a></td>
-          <td>Envoie les courriels de compte et de notification comme les invitations, les alertes et les réinitialisations de mot de passe. Utilisé là où il est configuré.</td>
+          <td>Envoie les courriels de compte et de notification comme les invitations, les réinitialisations de mot de passe, les avis de nouveau message (sans aucun détail privé) et la liste facultative du matin des personnes à voir. Utilisé là où il est configuré.</td>
           <td>Le nom et l'adresse courriel, et le contenu du courriel.</td>
           <td>États-Unis</td>
         </tr>
         <tr>
           <td><strong>Twilio</strong><br><a href="https://www.twilio.com/en-us/legal/privacy">confidentialité</a></td>
-          <td>Envoie des rappels par SMS aux patients qui ont accepté les rappels texte.</td>
-          <td>Le numéro de mobile du patient et le message de rappel.</td>
+          <td>Envoie les rappels quotidiens par texto aux personnes qui les ont activés, et avertit Between par texto quand quelqu'un demande une démo.</td>
+          <td>Le numéro de mobile de la personne et le message de rappel; pour une demande de démo, le nom et les coordonnées que la personne a saisis.</td>
           <td>États-Unis et à l'international</td>
         </tr>
         <tr>
@@ -165,16 +172,23 @@
           <td>Toutes les données stockées : renseignements de compte, contenu des suivis, notes vocales, photos et documents téléversés.</td>
           <td>États-Unis (la région choisie pour la base de données)</td>
         </tr>
+        <tr>
+          <td><strong>Google Fonts</strong><br><a href="https://policies.google.com/privacy">confidentialité</a></td>
+          <td>Fournit les polices de caractères du site web.</td>
+          <td>Le navigateur de la personne qui visite demande les fichiers de police à Google, qui voit donc l'adresse IP et les détails du navigateur. Aucune donnée de compte, de suivi ou de santé.</td>
+          <td>États-Unis et à l'international</td>
+        </tr>
       </tbody>
     </table>
 
     <h2>Ce que cela signifie pour vos données</h2>
     <ul>
-      <li>L'analyse par IA est <strong>désactivée par défaut</strong> et ne s'exécute qu'avec le consentement explicite du client. Si un client laisse l'IA désactivée, ses suivis ne sont jamais envoyés à Anthropic.</li>
-      <li>Les notes vocales et les photos sont stockées dans la base de données sur Neon, et une note vocale n'atteint Deepgram que si le client en enregistre une.</li>
-      <li>Une séance qu'un clinicien enregistre (avec l'accord du client) est transcrite et rédigée, puis abandonnée : Between ne conserve ni l'audio ni la transcription.</li>
+      <li>L'analyse par IA est <strong>désactivée par défaut</strong> et ne s'exécute qu'avec le consentement explicite de la personne suivie. Si elle laisse l'IA désactivée, ses suivis ne sont jamais envoyés à Anthropic, et les outils IA de la ou du professionnel n'utilisent que ce qu'elle ou il tape.</li>
+      <li>Les notes vocales et les photos sont stockées dans la base de données sur Neon, et une note vocale n'atteint Deepgram que si la personne en enregistre une.</li>
+      <li>Une séance que la ou le professionnel enregistre (avec l'accord de la personne suivie) est transcrite et rédigée, puis supprimée : Between ne conserve ni l'audio ni la transcription.</li>
+      <li>Le site web n'utilise aucun témoin publicitaire ni de suivi. Le décompte des visites est anonyme : aucun témoin, aucun identifiant de visite et aucune adresse IP n'est conservé.</li>
       <li>Nous ne vendons pas les données et nous ne les utilisons pas pour entraîner des modèles d'IA.</li>
-      <li>Un client peut consulter, corriger et supprimer ses propres données en tout temps.</li>
+      <li>Chaque personne peut consulter, corriger et supprimer ses propres données en tout temps.</li>
       <li>Comme cela peut impliquer le stockage et le traitement de renseignements personnels aux États-Unis, hors du Québec et hors du Canada, nous tenons compte des exigences applicables en matière de transferts sous les lois canadiennes sur la vie privée, dont la LPRPDE fédérale et la loi 25 du Québec.</li>
     </ul>
 
