@@ -3021,6 +3021,8 @@
   /* The How-it-works steps now lead the "How it works" page, which already has
      its own "How it works" eyebrow: hide the section's duplicate there. */
   #btwViewLearn .btw-howitworks .btw-section-label{display:none;}
+  /* The page's first label sits right under the header's own line: no second rule. */
+  #btwViewLearn > div:first-child > .btw-section-label{border-top:0;padding-top:10px;}
   /* Side nav: a dot per feature, click to jump, label on hover/active. */
   .btw-featnav{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:40;display:none;flex-direction:column;gap:13px;align-items:flex-end;}
   .btw-featnav.show{display:flex;}
