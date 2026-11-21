@@ -847,5 +847,183 @@
     "lang": "fr",
     "note": "Apollo had no email (Nov 21): find it on their website or call.",
     "add": true
+  },
+  {
+    "id": "osteo-fertilita",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "osteo-le-workshop",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-clinique-ami",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-kiddo-active",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-vivago",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-constellation",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-speech-language-fun",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "kinesio-eki-mouvement",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "neuro-cenop",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "neuro-nepsya",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "nutrition-manutritionniste",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "nutrition-nutrivia",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "osteo-osteovie",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-clinique-essa",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-ergotherapie-chez-soi",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-grandir-simplement",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-les-zailes",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-orthophonie-laurier",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-voix-lactee",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "speech-clinique-lelan",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-dexterite",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "kinesio-groupe-kinexia",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "nutrition-science-et-fourchette",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "neuro-idea-neuropsychologie",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "ot-la-solution-ergo",
+    "note": "Sequence turned ON Nov 21: Apollo is emailing them now."
+  },
+  {
+    "id": "nutrition-altitude",
+    "contact": "Chloé Brassard (founder, dietitian)",
+    "city": "Terrebonne",
+    "phone": "450-312-0464",
+    "website": "altitudenutrition.ca",
+    "note": "Owner: Chloé Brassard (founder, dietitian). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
+  },
+  {
+    "id": "ot-horizon-ergo",
+    "contact": "Stéphanie L. (founder, OT, mental health)",
+    "city": "Terrebonne",
+    "website": "horizonergo.ca",
+    "note": "Owner: Stéphanie L. (founder, OT, mental health). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form. Solo practice."
+  },
+  {
+    "id": "speech-jessica-belisle-macquart",
+    "contact": "Jessica Bélisle Macquart (owner, speech therapist)",
+    "city": "Gatineau",
+    "email": "jessica.macquart@cabinetjbm.com",
+    "phone": "819-962-8356",
+    "website": "cabinetjbm.com",
+    "note": "Owner: Jessica Bélisle Macquart (owner, speech therapist). Apollo guessed this email from the clinic's email pattern (not verified, Nov 21), so it is not in the sequence. Send the first email by hand, or call first to check it. About 12 people on the team."
+  },
+  {
+    "id": "osteo-axe-osteo",
+    "contact": "Valérie Girard (co-owner, osteopath)",
+    "city": "Rosemère",
+    "phone": "450-965-0555",
+    "website": "axeosteo.com",
+    "note": "Owner: Valérie Girard (co-owner, osteopath). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
+  },
+  {
+    "id": "kinesio-centre-athletique-dvi",
+    "contact": "Jason Dunn (founder, kinesiologist)",
+    "city": "Saint-Jérôme",
+    "phone": "450-821-7493",
+    "website": "centreathletiquedvi.com",
+    "note": "Owner: Jason Dunn (founder, kinesiologist). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
+  },
+  {
+    "id": "kinesio-just-be-fit",
+    "contact": "Étienne Gillard (co-founder, kinesiologist)",
+    "city": "Trois-Rivières",
+    "website": "justbefit.ca",
+    "note": "Owner: Étienne Gillard (co-founder, kinesiologist). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form. Mostly online coaching, so likely a weak fit."
+  },
+  {
+    "id": "kinesio-progres-100-limites",
+    "contact": "Judith Chalifour (owner, kinesiologist)",
+    "city": "Trois-Rivières",
+    "phone": "819-698-5833",
+    "website": "progres100limites.com",
+    "note": "Owner: Judith Chalifour (owner, kinesiologist). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
+  },
+  {
+    "id": "kinesio-kine-plus-solution",
+    "contact": "Louis Woitier (owner, kinesiologist)",
+    "city": "Gatineau",
+    "note": "Owner: Louis Woitier (owner, kinesiologist). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
+  },
+  {
+    "id": "ot-beca-sante",
+    "contact": "Ginette Bui (co-owner, OT, mental health and return to work)",
+    "city": "Mascouche",
+    "email": "ginette@becasante.ca",
+    "phone": "450-313-0173",
+    "website": "becasante.ca",
+    "note": "Owner: Ginette Bui (co-owner, OT, mental health and return to work). Apollo guessed this email from the clinic's email pattern (not verified, Nov 21), so it is not in the sequence. Send the first email by hand, or call first to check it."
+  },
+  {
+    "id": "kinesio-mouvement-proactif",
+    "contact": "Marianne Chartrand (owner, kinesiologist)",
+    "city": "Saint-Hyacinthe",
+    "phone": "450-521-4844",
+    "website": "mouvementproactif.com",
+    "note": "Owner: Marianne Chartrand (owner, kinesiologist). Apollo has no email for the owner (checked Nov 21). Call the clinic or use their website contact form."
   }
 ]
