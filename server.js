@@ -5742,7 +5742,7 @@ app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async 
 
 // Owner: clinic outreach list (who to email, where each one is in the sequence).
 const OUTREACH_STATUSES = ['to_contact', 'emailed', 'followup1', 'followup2', 'replied', 'trial', 'customer', 'not_interested'];
-const OUTREACH_PROFESSIONS = ['physio', 'psycho', 'kinesio', 'osteo', 'other'];
+const OUTREACH_PROFESSIONS = ['physio', 'psycho', 'kinesio', 'osteo', 'occupational', 'speech', 'nutrition', 'neuropsych', 'other'];
 const OUTREACH_TEXT = { name: 160, contact: 120, city: 80, email: 200, phone: 40, website: 400, notes: 2000 };
 function cleanOutreach(body) {
   const b = body && typeof body === 'object' ? body : {};
@@ -5780,7 +5780,7 @@ app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireSiteOwner, a
 // Owner: a personal first line for an outreach email, written from the
 // clinic's own website (their words: specialty, approach, area, team). Reads
 // the public site only (see site-reader.js), never invents.
-const OUTREACH_PROF_EN = { physio: 'physiotherapy', psycho: 'psychotherapy', kinesio: 'kinesiology', osteo: 'osteopathy', other: 'health' };
+const OUTREACH_PROF_EN = { physio: 'physiotherapy', psycho: 'psychotherapy', kinesio: 'kinesiology', osteo: 'osteopathy', occupational: 'occupational therapy', speech: 'speech-language pathology', nutrition: 'nutrition', neuropsych: 'neuropsychology', other: 'health' };
 app.post('/api/admin/outreach/:id/opener', requireDb, requireAuth, requireSiteOwner, prepLimiter, async (req, res) => {
   try {
     if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'The AI writer is unavailable right now.' });

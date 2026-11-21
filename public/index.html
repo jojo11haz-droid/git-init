@@ -3265,6 +3265,11 @@
   .btw-or-funnel i{font-style:normal;opacity:.5;}
   .btw-or-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .btw-or-tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;}
+  .btw-or-profs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px;}
+  .btw-or-profs button{font:inherit;font-size:12px;font-weight:600;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btw-or-profs button .c{font-weight:700;font-size:11px;color:var(--ink-soft);opacity:.8;}
+  .btw-or-profs button.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-or-profs button.on .c{color:#fff;opacity:.9;}
   .btw-or-tabs button{border:0;background:transparent;border-radius:999px;padding:6px 13px;font-size:13px;cursor:pointer;color:var(--ink-soft);font-family:var(--font-body);font-weight:600;}
   .btw-or-tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12);}
   .btw-or-tabs button .c{font-weight:500;opacity:.7;margin-left:3px;}
@@ -5736,6 +5741,7 @@
             <button type="button" class="btw-or-b" id="btwOrAdd">+ Add clinic</button>
           </div>
         </div>
+        <div class="btw-or-profs" id="btwOrProfs" role="group" aria-label="Filter by profession"></div>
         <div class="btw-form-error" id="btwOrError"></div>
       </div>
       <div class="btw-or-body" id="btwOrList"></div>
@@ -5790,7 +5796,7 @@
             <div class="btw-form-field"><label for="btwOrContact">Contact person <span style="font-weight:400;">(optional)</span></label><input type="text" id="btwOrContact" maxlength="120" placeholder="e.g. Marie Roy"></div>
             <div class="btw-form-field"><label for="btwOrEmail">Email</label><input type="email" id="btwOrEmail" maxlength="200"></div>
             <div class="btw-form-field"><label for="btwOrPhone">Phone</label><input type="tel" id="btwOrPhone" maxlength="40"></div>
-            <div class="btw-form-field"><label for="btwOrProf">Profession</label><select id="btwOrProf"><option value="physio">Physiotherapy</option><option value="psycho">Psychotherapy / psychology</option><option value="kinesio">Kinesiology</option><option value="osteo">Osteopathy</option><option value="other">Other</option></select></div>
+            <div class="btw-form-field"><label for="btwOrProf">Profession</label><select id="btwOrProf"><option value="physio">Physiotherapy</option><option value="psycho">Psychotherapy / psychology</option><option value="kinesio">Kinesiology</option><option value="osteo">Osteopathy</option><option value="occupational">Occupational therapy</option><option value="speech">Speech therapy</option><option value="nutrition">Nutrition</option><option value="neuropsych">Neuropsychology</option><option value="other">Other</option></select></div>
             <div class="btw-form-field"><label for="btwOrLang">Write to them in</label><select id="btwOrLang"><option value="fr">French</option><option value="en">English</option></select></div>
             <div class="btw-form-field"><label for="btwOrCity">City / area</label><input type="text" id="btwOrCity" maxlength="80"></div>
             <div class="btw-form-field"><label for="btwOrWebsite">Website</label><input type="url" id="btwOrWebsite" maxlength="400"></div>
@@ -14923,6 +14929,7 @@
     'Kinesiologist':'Kinésiologue', 'Osteopath':'Ostéopathe', 'Occupational therapist':'Ergothérapeute', 'Neuropsychologist':'Neuropsychologue',
     'Speech-language pathologist':'Orthophoniste', 'Nutritionist':'Nutritionniste', 'Sports coach':'Coach sportif', 'Personal trainer':'Coach en entraînement',
     // outreach
+    'All professions':'Toutes les professions', 'Psychotherapy':'Psychothérapie', 'Filter by profession':'Filtrer par profession',
     'Clinic outreach':'Prospection des cliniques', 'Search…':'Rechercher…', 'Search clinics':'Rechercher des cliniques', '+ Add clinic':'+ Ajouter une clinique',
     'How this works':'Comment ça marche', 'Today':"Aujourd'hui", 'Waiting':'En attente', 'Done':'Terminées', 'All':'Toutes',
     'not contacted':'pas contactées', 'emailed':'contactées', 'replied':'ont répondu', 'trials':'essais', 'customers':'clientes',
@@ -14991,7 +14998,7 @@
     [/^(.+?) · (.+)$/, (m, a, b) => OWNER_FR[a] ? OWNER_FR[a] + ' · ' + b.replace(/\bmonthly\b/, 'mensuel').replace(/\byearly\b/, 'annuel') : m],
     [/^(\d+) (Therapists|Coaches|Mentors|Schools|Trainers)$/, (m, n, a) => n + ' ' + OWNER_FR[a]],
     // outreach
-    [/^(?:(.*) · )?(Physio|Psychotherapy|Kinesiology|Osteopathy|Other) · (English|Français)$/, (m, a, p, l) => (a ? a + ' · ' : '') + ({ Physio:'Physio', Psychotherapy:'Psychothérapie', Kinesiology:'Kinésiologie', Osteopathy:'Ostéopathie', Other:'Autre' })[p] + ' · ' + (l === 'English' ? 'Anglais' : 'Français')],
+    [/^(?:(.*) · )?(Physio|Psychotherapy|Kinesiology|Osteopathy|Occupational therapy|Speech therapy|Nutrition|Neuropsychology|Other) · (English|Français)$/, (m, a, p, l) => (a ? a + ' · ' : '') + ({ Physio:'Physio', Psychotherapy:'Psychothérapie', Kinesiology:'Kinésiologie', Osteopathy:'Ostéopathie', 'Occupational therapy':'Ergothérapie', 'Speech therapy':'Orthophonie', Nutrition:'Nutrition', Neuropsychology:'Neuropsychologie', Other:'Autre' })[p] + ' · ' + (l === 'English' ? 'Anglais' : 'Français')],
     [/^Contacted (.+?) · (.+)$/, (m, d, r) => 'Contactée le ' + d + ' · ' + ownerT(r)],
     [/^follow-up overdue since (.+)$/, 'relance en retard depuis le $1'], [/^next follow-up (.+)$/, 'prochaine relance le $1'],
     [/^No clinic matches “(.+)”\.$/, 'Aucune clinique ne correspond à « $1 ».'],
@@ -15521,8 +15528,11 @@
                   emailed:{ to:'followup1', days:5, write:'Write follow-up 1', title:'Follow-up 1' },
                   followup1:{ to:'followup2', days:0, write:'Write follow-up 2', title:'Follow-up 2 (the last one)' } };
     const STEP = { to_contact:0, emailed:1, followup1:2, followup2:3 };
-    const PROF = { physio:'Physio', psycho:'Psychotherapy', kinesio:'Kinesiology', osteo:'Osteopathy', other:'Other' };
-    const PATH = { physio:'physio', psycho:'therapy', kinesio:'kinesiology', osteo:'osteopathy', other:'' };
+    const PROF = { physio:'Physio', psycho:'Psychotherapy', kinesio:'Kinesiology', osteo:'Osteopathy', occupational:'Occupational therapy', speech:'Speech therapy', nutrition:'Nutrition', neuropsych:'Neuropsychology', other:'Other' };
+    const PATH = { physio:'physio', psycho:'therapy', kinesio:'kinesiology', osteo:'osteopathy', occupational:'occupational-therapy', speech:'speech-therapy', nutrition:'nutrition', neuropsych:'neuropsychology', other:'' };
+    // Profession filter ("categories"): narrows every tab, count and search.
+    let prof = 'all'; try { const sp = localStorage.getItem('btw_or_prof'); if(sp && (sp === 'all' || PROF[sp])) prof = sp; } catch(e){}
+    const pool = () => prof === 'all' ? leads : leads.filter(l => (l.profession || 'other') === prof);
     let leads = [], tab = 'today', editing = null, composing = null, bodyDirty = false, opened = false, undoFn = null;
 
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -15540,11 +15550,19 @@
             psycho:'your clients check in when something happens, by voice or text. Before the next session you see their mood trend, the themes that keep coming back, and a drafted note.',
             kinesio:'your clients log pain, energy and the program they did between sessions, so you see their progress before they come in.',
             osteo:'your patients log where it hurts and how it changed after treatment, so you see it before the next one.',
+            occupational:'your clients note how daily tasks, self-care and pain are going between visits, with a body map. Before the next visit you see the trend, whether they did their program, and a drafted note.',
+            speech:'your clients tell you how home practice and real conversations went between sessions, by voice or text. Before the next session you see what carried over, what got in the way, and a drafted note.',
+            nutrition:'your clients log meals, energy and cravings between appointments in under a minute. Before the next one you see the patterns around their harder days, without judgment, and a drafted note.',
+            neuropsych:'your patients note how focus, memory, mental fatigue and mood are going between assessments and sessions. Before you meet you see what tends to come before their hardest days, and a drafted note.',
             other:'the people you work with send a one-minute check-in between appointments, and you see how they’ve been before you meet.' },
       fr: { physio:'entre les visites, vos patients envoient un suivi d’une minute, par la voix ou par écrit, et montrent où ça fait mal sur une carte du corps. Avant le prochain rendez-vous, vous avez la tendance de la douleur, l’assiduité aux exercices et une note SOAP rédigée.',
             psycho:'vos clients font un suivi quand quelque chose arrive, par la voix ou par écrit. Avant la prochaine séance, vous voyez la tendance de l’humeur, les thèmes qui reviennent et une note rédigée.',
             kinesio:'vos clients notent la douleur, l’énergie et le programme fait entre les séances; vous voyez leur progression avant qu’ils arrivent.',
             osteo:'vos patients notent où ça fait mal et comment ça a évolué après le traitement; vous le voyez avant le prochain.',
+            occupational:'vos clients notent comment vont leurs tâches quotidiennes, leurs soins personnels et la douleur entre les visites, avec une carte du corps. Avant la prochaine visite, vous voyez la tendance, l’assiduité au programme et une note rédigée.',
+            speech:'vos clients vous disent comment se sont passées la pratique à la maison et les vraies conversations entre les séances, par la voix ou par écrit. Avant la prochaine séance, vous voyez ce qui s’est transféré, ce qui a bloqué, et une note rédigée.',
+            nutrition:'vos clients notent leurs repas, leur énergie et leurs envies entre les rendez-vous, en moins d’une minute. Avant le prochain, vous voyez les tendances autour de leurs journées plus difficiles, sans jugement, et une note rédigée.',
+            neuropsych:'vos patients notent comment vont leur concentration, leur mémoire, leur fatigue mentale et leur humeur entre les évaluations et les séances. Avant la rencontre, vous voyez ce qui précède souvent leurs journées les plus difficiles, et une note rédigée.',
             other:'les personnes que vous accompagnez envoient un suivi d’une minute entre les rendez-vous, et vous voyez comment elles vont avant la rencontre.' } };
     const SIG = { en:'--\nJack Hazan · Founder, Between\n514-667-9513 · owner@betweenpsych.com · betweenpsych.com\n2600, rue Dragon, Montréal (Québec)\nNot interested? Reply "no thanks" and I won’t write again.',
                   fr:'--\nJack Hazan · Fondateur, Between\n514-667-9513 · owner@betweenpsych.com · betweenpsych.com\n2600, rue Dragon, Montréal (Québec)\nPas intéressé(e)? Répondez « non merci » et je ne vous écrirai plus.' };
@@ -15554,7 +15572,7 @@
       const hi = lang === 'fr' ? 'Bonjour' + (first ? ' ' + first : '') + ',' : (first ? 'Hi ' + first + ',' : 'Hello,');
       const prof = LINE[lang][l.profession] ? l.profession : 'other';
       const url = 'betweenpsych.com/' + (lang === 'fr' ? 'fr/' : '') + (PATH[prof] || '') + '?ref=email';
-      const cl = prof !== 'physio' && prof !== 'osteo';
+      const cl = prof !== 'physio' && prof !== 'osteo' && prof !== 'neuropsych';
       const who = lang === 'fr' ? (cl ? 'vos clients' : 'vos patients') : (cl ? 'your clients' : 'your patients');
       const sub1 = lang === 'fr' ? 'Petite question' + (first ? ', ' + first : ' pour ' + l.name) : 'Quick question' + (first ? ', ' + first : ' for ' + l.name);
       const re = (lang === 'fr' ? 'Re : ' : 'Re: ') + sub1;
@@ -15582,7 +15600,7 @@
     const byNext = (a, b) => (a.next || '9999').localeCompare(b.next || '9999') || a.name.localeCompare(b.name);
     const byName = (a, b) => a.name.localeCompare(b.name);
     function groups(){
-      const t = today(), L = leads;
+      const t = today(), L = pool();
       if(tab === 'today') return [
         ['Follow-ups overdue', L.filter(l => isDue(l) && l.next < t).sort(byNext), 'late', ''],
         ['Follow up today', L.filter(l => isDue(l) && l.next === t).sort(byName), 'due', ''],
@@ -15599,10 +15617,11 @@
       return [['All clinics', L.slice().sort(byName), '', '']];
     }
     function counts(){
-      const todo = leads.filter(l => isDue(l) || l.status === 'replied' || l.status === 'to_contact').length;
-      const waiting = leads.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial').length;
-      const closed = leads.filter(l => l.status === 'customer' || l.status === 'followup2' || l.status === 'not_interested').length;
-      return { today: todo, waiting, closed, all: leads.length };
+      const P = pool();
+      const todo = P.filter(l => isDue(l) || l.status === 'replied' || l.status === 'to_contact').length;
+      const waiting = P.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial').length;
+      const closed = P.filter(l => l.status === 'customer' || l.status === 'followup2' || l.status === 'not_interested').length;
+      return { today: todo, waiting, closed, all: P.length };
     }
 
     /* ---- render ---- */
@@ -15622,7 +15641,12 @@
       $o('btwOrTabs').innerHTML = [['today','Today'],['waiting','Waiting'],['closed','Done'],['all','All']].map(([k, lab]) =>
         '<button type="button" role="tab" aria-selected="' + (tab === k) + '" data-ortab="' + k + '" class="' + (tab === k ? 'on' : '') + '">' + lab + '<span class="c">' + c[k] + '</span></button>').join('');
       const q = ($o('btwOrSearch').value || '').trim().toLowerCase();
-      let gs = q ? [['Search results', leads.filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
+      // Profession chips: every profession that has at least one clinic, with its count.
+      const present = Object.keys(PROF).filter(k => leads.some(l => (l.profession || 'other') === k));
+      if(prof !== 'all' && present.indexOf(prof) < 0) prof = 'all';
+      $o('btwOrProfs').innerHTML = [['all', 'All professions', leads.length]].concat(present.map(k => [k, PROF[k], leads.filter(l => (l.profession || 'other') === k).length]))
+        .map(([k, lab, cnt]) => '<button type="button" data-orprof="' + k + '" aria-pressed="' + (prof === k) + '" class="' + (prof === k ? 'on' : '') + '">' + esc(lab) + '<span class="c">' + cnt + '</span></button>').join('');
+      let gs = q ? [['Search results', pool().filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
       gs = gs.filter(g => g[1].length);
       if(!gs.length){
         $o('btwOrList').innerHTML = '<div class="btw-or-empty"><b>' + (q ? 'No clinic matches “' + esc(q) + '”.' : tab === 'today' ? 'All done for today 🎉' : 'Nothing here yet.') + '</b>' +
@@ -15729,6 +15753,7 @@
       if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
       if(e.key === 'Escape'){ closeMenus(); }
     });
+    $o('btwOrProfs').addEventListener('click', function(e){ const b = e.target.closest('[data-orprof]'); if(!b) return; prof = b.dataset.orprof; try { localStorage.setItem('btw_or_prof', prof); } catch(_){} render(); });
     $o('btwOrTabs').addEventListener('click', function(e){ const b = e.target.closest('[data-ortab]'); if(!b) return; tab = b.dataset.ortab; $o('btwOrSearch').value = ''; render(); $o('btwOrList').scrollTop = 0; });
     $o('btwOrSearch').addEventListener('input', render);
 
