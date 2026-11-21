@@ -596,5 +596,256 @@
     "city": "Québec",
     "lang": "fr",
     "note": "Apollo had no email (Nov 21): find it on their website or call."
+  },
+  {
+    "id": "osteo-fertilita",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "osteo-le-workshop",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-clinique-ami",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-kiddo-active",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-vivago",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-constellation",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-speech-language-fun",
+    "note": "[Apollo sequence] In the English Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "kinesio-eki-mouvement",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "neuro-cenop",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "neuro-nepsya",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "nutrition-manutritionniste",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "nutrition-nutrivia",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "osteo-osteovie",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-clinique-essa",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-ergotherapie-chez-soi",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "ot-grandir-simplement",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-les-zailes",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-orthophonie-laurier",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-voix-lactee",
+    "note": "[Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand."
+  },
+  {
+    "id": "speech-clinique-lelan",
+    "name": "Clinique L'élan",
+    "contact": "Méredith Bergeron (owner, speech therapist)",
+    "profession": "speech",
+    "city": "Brossard",
+    "lang": "fr",
+    "email": "mbergeron@cliniquecroissance.com",
+    "phone": "450-386-0232",
+    "note": "Email via Apollo (Nov 21). It is on cliniquecroissance.com, her other clinic. [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "ot-dexterite",
+    "name": "Dextérité",
+    "contact": "Marie-Hélène Dufour (owner, OT)",
+    "profession": "occupational",
+    "city": "Québec",
+    "lang": "fr",
+    "email": "mhdufour@madexterite.com",
+    "phone": "418-353-8353",
+    "website": "madexterite.com",
+    "note": "Email via Apollo (verified, Nov 21). [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "kinesio-groupe-kinexia",
+    "name": "Groupe Kinexia",
+    "contact": "Evelyne Blouin (founder, kinesiologist)",
+    "profession": "kinesio",
+    "city": "Québec",
+    "lang": "fr",
+    "email": "evelyne.blouin@kinexia.ca",
+    "phone": "581-849-1017",
+    "website": "kinexia.ca",
+    "note": "Email via Apollo (Nov 21). [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "nutrition-science-et-fourchette",
+    "name": "Science et Fourchette",
+    "contact": "Annie Ferland (founder, dietitian)",
+    "profession": "nutrition",
+    "city": "Québec",
+    "lang": "fr",
+    "email": "annie@sciencefourchette.com",
+    "website": "sciencefourchette.com",
+    "note": "Email via Apollo (verified, Nov 21). Her business is mostly writing and teaching, so she may not see clients much. [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "neuro-idea-neuropsychologie",
+    "name": "IDEA Neuropsychologie",
+    "contact": "Catherine Taïeb-Lachance (founder, neuropsychologist)",
+    "profession": "neuropsych",
+    "city": "Terrebonne",
+    "lang": "fr",
+    "email": "c.taieb-lachance@ideaneuropsy.com",
+    "website": "ideaneuropsy.com",
+    "note": "Email via Apollo (verified, Nov 21). [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "ot-la-solution-ergo",
+    "name": "La Solution Ergo +",
+    "contact": "Frédéric Villeneuve (owner, OT)",
+    "profession": "occupational",
+    "city": "Québec",
+    "lang": "fr",
+    "email": "frederic.villeneuve@solutionergo.com",
+    "phone": "418-621-9877",
+    "website": "solutionergo.com",
+    "note": "Email via Apollo (verified, Nov 21). [Apollo sequence] In the French Apollo sequence (3 emails, set up Nov 21). It stays OFF until you turn it on in Apollo. Don't email them by hand.",
+    "add": true
+  },
+  {
+    "id": "nutrition-altitude",
+    "name": "Clinique Altitude Nutrition",
+    "contact": "Chloé (founder, dietitian)",
+    "profession": "nutrition",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "ot-horizon-ergo",
+    "name": "Horizon Ergo",
+    "contact": "Stéphanie (founder, OT)",
+    "profession": "occupational",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "speech-jessica-belisle-macquart",
+    "name": "Cabinet d'orthophonie Jessica Bélisle Macquart",
+    "contact": "Jessica Bélisle Macquart (owner, speech therapist)",
+    "profession": "speech",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "osteo-axe-osteo",
+    "name": "Axé Ostéo",
+    "contact": "Valérie (co-owner, osteopath)",
+    "profession": "osteo",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "kinesio-centre-athletique-dvi",
+    "name": "Centre Athlétique DVI",
+    "contact": "Jason (founder, kinesiologist)",
+    "profession": "kinesio",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "kinesio-just-be-fit",
+    "name": "Just Be Fit",
+    "contact": "Étienne (co-founder, kinesiologist)",
+    "profession": "kinesio",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "kinesio-progres-100-limites",
+    "name": "Progrès 100 limites",
+    "contact": "Judith (owner, kinesiologist)",
+    "profession": "kinesio",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "kinesio-kine-plus-solution",
+    "name": "Kiné+ Solution",
+    "contact": "Louis (owner, kinesiologist)",
+    "profession": "kinesio",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "ot-beca-sante",
+    "name": "Clinique BECA Santé",
+    "contact": "Ginette Bui (co-owner, OT)",
+    "profession": "occupational",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
+  },
+  {
+    "id": "kinesio-mouvement-proactif",
+    "name": "Mouvement ProActif",
+    "contact": "Marianne (owner, kinesiologist)",
+    "profession": "kinesio",
+    "city": "",
+    "lang": "fr",
+    "note": "Apollo had no email (Nov 21): find it on their website or call.",
+    "add": true
   }
 ]

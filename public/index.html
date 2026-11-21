@@ -14934,7 +14934,9 @@
     'How this works':'Comment ça marche', 'Today':"Aujourd'hui", 'Waiting':'En attente', 'Done':'Terminées', 'All':'Toutes',
     'not contacted':'pas contactées', 'emailed':'contactées', 'replied':'ont répondu', 'trials':'essais', 'customers':'clientes',
     'Follow-ups overdue':'Relances en retard', 'Follow up today':"Relancer aujourd'hui", 'They replied: answer them':'Elles ont répondu : répondez-leur',
-    'Ready for a first email':'Prêtes pour un premier courriel', 'Find their email first':"Trouvez d'abord leur courriel",
+    'Ready for a first email':'Prêtes pour un premier courriel', 'In Apollo sequence':'Dans la séquence Apollo',
+    'Apollo sends their emails. Don’t email them by hand.':'Apollo leur envoie les courriels. Ne leur écrivez pas à la main.',
+    'Apollo sends the emails':'Apollo envoie les courriels', 'Find their email first':"Trouvez d'abord leur courriel",
     'Send the video and offer to set them up.':"Envoyez la vidéo et offrez de configurer leur compte.", 'Send 10–15 a day, in the morning.':'Envoyez-en 10 à 15 par jour, le matin.',
     'Look on their website, then add it here.':'Cherchez sur leur site web, puis ajoutez-le ici.', 'Waiting for a reply':'En attente de réponse',
     'Their next follow-up date is on each card.':'La date de la prochaine relance est sur chaque fiche.', 'On trial':'En essai',
@@ -15597,6 +15599,8 @@
 
     /* ---- grouping ---- */
     const isDue = l => OPEN[l.status] && l.status !== 'to_contact' && l.next && l.next <= today();
+    // Clinics an Apollo sequence emails for you: never offer a hand-written first email.
+    const inSeq = l => l.status === 'to_contact' && (l.notes || '').indexOf('[Apollo sequence]') >= 0;
     const byNext = (a, b) => (a.next || '9999').localeCompare(b.next || '9999') || a.name.localeCompare(b.name);
     const byName = (a, b) => a.name.localeCompare(b.name);
     function groups(){
@@ -15605,10 +15609,11 @@
         ['Follow-ups overdue', L.filter(l => isDue(l) && l.next < t).sort(byNext), 'late', ''],
         ['Follow up today', L.filter(l => isDue(l) && l.next === t).sort(byName), 'due', ''],
         ['They replied: answer them', L.filter(l => l.status === 'replied').sort(byName), 'hot', 'Send the video and offer to set them up.'],
-        ['Ready for a first email', L.filter(l => l.status === 'to_contact' && l.email).sort(byName), '', 'Send 10–15 a day, in the morning.'],
-        ['Find their email first', L.filter(l => l.status === 'to_contact' && !l.email).sort(byName), '', 'Look on their website, then add it here.']];
+        ['Ready for a first email', L.filter(l => l.status === 'to_contact' && l.email && !inSeq(l)).sort(byName), '', 'Send 10–15 a day, in the morning.'],
+        ['Find their email first', L.filter(l => l.status === 'to_contact' && !l.email && !inSeq(l)).sort(byName), '', 'Look on their website, then add it here.']];
       if(tab === 'waiting') return [
         ['Waiting for a reply', L.filter(l => OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)).sort(byNext), '', 'Their next follow-up date is on each card.'],
+        ['In Apollo sequence', L.filter(inSeq).sort(byName), '', 'Apollo sends their emails. Don’t email them by hand.'],
         ['On trial', L.filter(l => l.status === 'trial').sort(byName), '', 'Check in with them during the trial.']];
       if(tab === 'closed') return [
         ['Customers', L.filter(l => l.status === 'customer').sort(byName), '', ''],
@@ -15618,8 +15623,8 @@
     }
     function counts(){
       const P = pool();
-      const todo = P.filter(l => isDue(l) || l.status === 'replied' || l.status === 'to_contact').length;
-      const waiting = P.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial').length;
+      const todo = P.filter(l => isDue(l) || l.status === 'replied' || (l.status === 'to_contact' && !inSeq(l))).length;
+      const waiting = P.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial' || inSeq(l)).length;
       const closed = P.filter(l => l.status === 'customer' || l.status === 'followup2' || l.status === 'not_interested').length;
       return { today: todo, waiting, closed, all: P.length };
     }
@@ -15627,7 +15632,7 @@
     /* ---- render ---- */
     function render(){
       const t = today(), n = s => leads.filter(l => l.status === s).length;
-      const due = leads.filter(isDue).length, rep = n('replied'), ready = leads.filter(l => l.status === 'to_contact' && l.email).length;
+      const due = leads.filter(isDue).length, rep = n('replied'), ready = leads.filter(l => l.status === 'to_contact' && l.email && !inSeq(l)).length;
       const bits = [];
       const fr = curLang === 'fr';
       if(due) bits.push(fr ? '<b>' + due + ' relance' + (due > 1 ? 's' : '') + '</b> à envoyer' : '<b>' + due + ' follow-up' + (due > 1 ? 's' : '') + '</b> to send');
@@ -15672,10 +15677,11 @@
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(OPEN[l.status] && l.status !== 'to_contact' && l.next) when = contacted + (late ? 'follow-up overdue since ' + fmt(l.next) : due ? 'follow up today' : 'next follow-up ' + fmt(l.next));
+      else if(inSeq(l)) when = 'Apollo sends the emails';
       else if(l.status === 'to_contact') when = 'Not contacted yet';
       else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
-      const sq = SEQ[l.status];
-      let main = '';
+      const sq = inSeq(l) ? null : SEQ[l.status];
+      let main = inSeq(l) ? '<span class="btw-or-pill">In Apollo sequence</span>' : '';
       if(!l.email && (sq || l.status === 'replied' || l.status === 'trial')) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
       else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
       else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
@@ -15688,7 +15694,7 @@
       if(l.status === 'replied') menu.push(['set:trial', 'They started a trial']);
       if(l.status === 'trial') menu.push(['set:customer', 'They became a customer']);
       if(l.status !== 'not_interested' && l.status !== 'customer') menu.push(['set:not_interested', 'Not interested']);
-      if(l.email && !sq && l.status !== 'replied') menu.push(['email', 'Write them an email']);
+      if(l.email && !sq && !inSeq(l) && l.status !== 'replied') menu.push(['email', 'Write them an email']);
       menu.push(['edit', 'Edit details']);
       if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
       return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
