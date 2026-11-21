@@ -4204,8 +4204,11 @@ function fieldOf(req) {
   const f = FIELD_AS[String(req.get('x-btw-field') || '')];
   return f && Object.prototype.hasOwnProperty.call(FIELD_AS, String(req.get('x-btw-field'))) ? { ...c, ...f } : c;
 }
+// Owner tools (licence review, site traffic, billing check, engagement,
+// notifications, storage, test messages, outreach): the site owner's own
+// address only. Free access (FREE_ACCESS_EMAILS) never grants these.
 function requireOwner(req, res, next) {
-  if (!req.clinician || !isFreeAccess(req.clinician.email)) {
+  if (!req.clinician || !isSiteOwner(req.clinician.email)) {
     return res.status(403).json({ error: 'Owner access required.' });
   }
   next();
