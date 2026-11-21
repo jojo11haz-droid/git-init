@@ -475,7 +475,7 @@ export async function initDb() {
 // Contact details found later (data/outreach-updates.json) for leads already in
 // the table. Only fills fields that are still blank, and adds a note once, so
 // it never overwrites anything the owner typed and is safe on every start.
-const OUTREACH_FILL = ['contact', 'email', 'phone', 'website'];
+const OUTREACH_FILL = ['contact', 'email', 'phone', 'website', 'city'];
 async function applyOutreachUpdates() {
   let ups = [];
   try { ups = JSON.parse(readFileSync(new URL('./data/outreach-updates.json', import.meta.url), 'utf8')); }
