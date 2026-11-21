@@ -2059,7 +2059,7 @@ app.post('/api/auth/checkout/start', requireDb, requireAuth, async (req, res) =>
     const requested = (req.body || {}).plan;
     // Owner/admin accounts may check out any plan (for testing every price id);
     // everyone else is restricted to their account type's plans.
-    const canAny = isFreeAccess(req.clinician.email) && !!priceForPlan(requested);
+    const canAny = isSiteOwner(req.clinician.email) && !!priceForPlan(requested);
     const plan = (allowedPlans.includes(requested) || canAny) ? requested : (req.clinician.plan || defaultPlan);
     const currency = billingCurrency(req);
     const url = await startClinicianCheckout(req.clinician, plan, siteOrigin(req), currency);
@@ -2117,9 +2117,9 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     // also be USD.
     const currency = (String(req.clinician.billing_currency).toUpperCase() === 'USD') ? 'USD' : 'CAD';
     const newPriceId = priceForPlan(plan, currency);
-    // Owner/admin accounts may pick any plan (to test every price id); everyone
-    // else is restricted to their account type's plans.
-    const canAny = isFreeAccess(req.clinician.email) && !!newPriceId;
+    // The site owner may pick any plan (to test every price id); everyone
+    // else, comp accounts included, is restricted to their account type's plans.
+    const canAny = isSiteOwner(req.clinician.email) && !!newPriceId;
     if (!allowedPlans.includes(plan) && !canAny) return res.status(400).json({ error: 'That plan is not available.' });
     if (!newPriceId) return res.status(400).json({ error: 'That plan is not available for checkout.' });
 
@@ -2140,7 +2140,7 @@ app.post('/api/auth/plan/change', requireDb, requireAuth, async (req, res) => {
     console.error('Error changing plan:', err);
     // The owner/admin sees Stripe's own message (e.g. "No such price") so a
     // misconfigured price is diagnosable; customers get a plain sentence.
-    const showRaw = req.clinician && isFreeAccess(req.clinician.email) && err && err.message;
+    const showRaw = req.clinician && isSiteOwner(req.clinician.email) && err && err.message;
     res.status(502).json({ error: showRaw ? ('Billing error: ' + err.message) : 'Checkout for this plan is not available right now. Please try again later or contact us.' });
   }
 });
@@ -4183,10 +4183,8 @@ function requireVerifiedClinician(req, res, next) {
   }
   next();
 }
-// Owner-only routes (licence review). Gated to the free-access/comp list so a
-// regular clinician can never reach another clinician's account.
 // The owner previews every field from one account: the dashboard sends the
-// field being viewed (X-Btw-Field), and for the owner/comp account the AI
+// field being viewed (X-Btw-Field), and for the owner's account only the AI
 // tools, needs list and outcomes answer as a clinician of that field (physio
 // gets SOAP notes, exercises and pain scores; a therapist gets DAP notes and
 // practices). Everyone else always gets their own account's field.
@@ -4200,7 +4198,7 @@ const FIELD_AS = {
 };
 function fieldOf(req) {
   const c = req.clinician;
-  if (!c || !isFreeAccess(c.email)) return c;
+  if (!c || !isSiteOwner(c.email)) return c;
   const f = FIELD_AS[String(req.get('x-btw-field') || '')];
   return f && Object.prototype.hasOwnProperty.call(FIELD_AS, String(req.get('x-btw-field'))) ? { ...c, ...f } : c;
 }

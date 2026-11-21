@@ -7873,6 +7873,9 @@
     const d = audDicts();
     if(d){
       if(curLang === 'fr' && d[1][en]) return d[1][en];
+      // French with no field-specific French: the general French beats the
+      // field's English wording (fieldNoun() then fixes the noun for the field).
+      if(curLang === 'fr' && FR[en]) return FR[en];
       if(d[0][en]) return d[0][en];
     }
     return curLang === 'fr' ? (FR[en] || en) : en;
@@ -7895,18 +7898,27 @@
     const cap = function(w, P){ return (P === 'P' || P === 'C') ? w.charAt(0).toUpperCase() + w.slice(1) : w; };
     if((lang || curLang) === 'fr'){
       const f = FIELD_NOUN_FR[aud]; if(!f) return str;
+      // "clientèle" means a client list: a school has a class, a team its
+      // players, a recovery program its group. Articles follow the new word.
+      const CL = { schools:['la classe', 'de la classe', 'classe'], sports:["l'équipe", "de l'équipe", 'équipe'], recovery:['le groupe', 'du groupe', 'groupe'] }[aud];
+      if(CL && /clientèle/i.test(str)){
+        const capw = function(m, w){ return m.charAt(0) === m.charAt(0).toUpperCase() ? w.charAt(0).toUpperCase() + w.slice(1) : w; };
+        str = str.replace(/\b[Dd]e la clientèle/g, function(m){ return capw(m, CL[1]); })
+                 .replace(/\b[Ll]a clientèle/g, function(m){ return capw(m, CL[0]); })
+                 .replace(/[Cc]lientèle/g, function(m){ return capw(m, CL[2]); });
+      }
       if(/^[aeiouéèêh]/i.test(f[0])){
         const w = f[0];
-        str = str.replace(/\b(ce|le|du|au|Ce|Le|Du|Au) (patient|client)(e?)\b/g, function(m, art){
+        str = str.replace(/\b(ce|le|du|au|Ce|Le|Du|Au) (patient|client)(e?)(?![\wÀ-ÿ])/g, function(m, art){
           const a = art.toLowerCase(), up = art.charAt(0) === art.charAt(0).toUpperCase();
           const r = a === 'ce' ? 'cet ' + w : a === 'le' ? "l'" + w : a === 'du' ? "de l'" + w : "à l'" + w;
           return up ? r.charAt(0).toUpperCase() + r.slice(1) : r;
         });
       }
-      return str.replace(/\b(P|p|C|c)(?:atient|lient)(e?)(s?)\b(?!-)/g, function(m, P, e, pl){ return cap(e ? f[1] : f[0], P) + pl; });
+      return str.replace(/\b(P|p|C|c)(?:atient|lient)(e?)(s?)(?![\wÀ-ÿ-])/g, function(m, P, e, pl){ return cap(e ? f[1] : f[0], P) + pl; });
     }
     const n = FIELD_NOUN[aud]; if(!n) return str;
-    return str.replace(/\b(P|p|C|c)(?:atient|lient)(s?)\b(?!-)/g, function(m, P, pl){ return cap(n, P) + pl; });
+    return str.replace(/\b(P|p|C|c)(?:atient|lient)(s?)(?![\wÀ-ÿ-])/g, function(m, P, pl){ return cap(n, P) + pl; });
   }
 
 
@@ -8086,7 +8098,7 @@
     "What you see: your whole caseload at a glance, with each client's trends ready before the session.":
       "Ce que vous voyez : toute l'équipe en un coup d'œil, avec les tendances de chaque athlète avant un entraînement ou un match.",
     "Patient view":"Vue de l'athlète",
-    "Therapist view":"Vue entraîneur",
+    "Therapist view":"Vue coach",
     "Clients put it in Between the moment something happens":"Les athlètes le notent dans Between dès que quelque chose se passe",
     "You start the session already knowing their week":"Vous commencez l'entraînement ou le match en connaissant déjà leur semaine",
     "Voicemails and phone tag between sessions":"Messages vocaux et appels manqués entre les entraînements, les matchs et les tournois",
@@ -8158,7 +8170,7 @@
     // dashboard (coach view)
     "Caseload":"Équipe",
     "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Choisissez une ou un athlète pour voir son historique et ses tendances.",
-    "Selected patient":"Athlète sélectionné(e)",
+    "Selected patient":"Personne sélectionnée",
     "No patient selected, pick one from your caseload":"Aucune sélection : choisissez une ou un athlète dans votre équipe",
     "No patients yet, add your first patient to start receiving check-ins.":"Votre équipe est vide pour l'instant : ajoutez une ou un athlète pour commencer à recevoir des suivis.",
     "Add patient":"Ajouter une ou un athlète",
@@ -8562,8 +8574,10 @@
     const d = audDicts();
     if(d){
       if(curLang === 'fr' && d[1][key]) return d[1][key];
+      // French with no field-specific French: the general French, never the
+      // field's English wording.
+      if(curLang === 'fr' && FR[key]) return FR[key];
       if(d[0][key]) return d[0][key];
-      if(curLang === 'fr' && FR[key]) return FR[key]; // no audience variant: fall back to therapy FR
       return null;
     }
     if(curLang === 'fr' && FR[key]) return FR[key];
@@ -8771,7 +8785,7 @@
     "Where is my patients' data stored?":"Où sont stockées les données de mes élèves?",
     "Caseload":"Élèves",
     "Auto-updating as check-ins come in. Select a patient to see their timeline and trends.":"Mise à jour automatique à mesure que les suivis arrivent. Choisissez une ou un élève pour voir son historique et ses tendances.",
-    "Selected patient":"Élève sélectionné(e)",
+    "Selected patient":"Personne sélectionnée",
     "No patient selected, pick one from your caseload":"Aucune sélection : choisissez une ou un élève dans votre liste",
     "No patients yet, add your first patient to start receiving check-ins.":"Votre liste est vide pour l'instant : ajoutez une ou un élève pour commencer à recevoir des suivis.",
     "Add patient":"Ajouter une ou un élève",
@@ -15253,7 +15267,7 @@
     if(state.me){
       // Owner/admin: allowed to check out any plan for testing, cross-type
       // included — mapped to the current audience so the right price is used.
-      if(ownerFreeAccess){ changePlan(resolveAudiencePlan(plan)); return; }
+      if(siteOwner){ changePlan(resolveAudiencePlan(plan)); return; }
       const target = planAccountType(plan);
       if(target && target !== state.me.account_type){
         alert(t("You're signed in as a different kind of account. Log out first to start a plan for another kind of account."));
@@ -16152,7 +16166,7 @@
     // Already signed in? Skip the create-account form. A professional account
     // can't hold a personal plan; a patient is already set up.
     if(state.me){
-      if(ownerFreeAccess){ changePlan(plan); return; } // admin: test any checkout
+      if(siteOwner){ changePlan(plan); return; } // owner: test any checkout
       alert(t("You're signed in as a professional account. Log out first to use a personal plan."));
       return;
     }
