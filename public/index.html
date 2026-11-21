@@ -6268,7 +6268,8 @@
     "Students between check-ins":"Les élèves entre les rencontres",
     "Log in":"Connexion","Sign up":"S'inscrire","Security":"Sécurité","Log out":"Déconnexion","My data & settings":"Mes données et paramètres",
     "Settings":"Paramètres","Billing & subscription":"Facturation et abonnement","Account, data & billing":"Compte, données et facturation",
-    "New professional":"Nouveau professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invité","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
+    "Engagement":"Participation","Notifications":"Notifications","Owner":"Propriétaire",
+    "New professional":"Nouveau compte professionnel","New patient":"Nouveau patient","needs review":"à vérifier","invited":"invitation envoyée","active":"actif","Message":"Message","Nothing yet.":"Rien pour l'instant.",
     "Clinician":"Clinicien","Individual":"Particulier","Preview the patient side of the product.":"Aperçu du côté patient du produit.","Previewing the patient view. Nothing here is saved or sent.":"Aperçu de la vue patient. Rien ici n'est enregistré ni envoyé.","Previewing the individual view. Nothing here is saved or sent.":"Aperçu de la vue particulier. Rien ici n'est enregistré ni envoyé.","This is a preview. Your check-in was not sent.":"Ceci est un aperçu. Votre suivi n'a pas été envoyé.",
     "Download my data":"Télécharger mes données","Preparing…":"Préparation…","Could not prepare your data. Please try again.":"Impossible de préparer vos données. Veuillez réessayer.",
     // hero
@@ -14499,7 +14500,9 @@
         btn.disabled = false; btn.textContent = 'Free up space';
         const nP = prev.photos.count, nA = prev.audio.count, freed = (prev.photos.bytes || 0) + (prev.audio.bytes || 0);
         if(nP === 0 && nA === 0){ showResult('<span style="color:var(--ink-soft);">Nothing older than ' + months + ' months: there\'s nothing to delete.</span>'); return; }
-        if(!confirm('This will permanently delete ' + nP + ' photo(s) and ' + nA + ' voice memo(s) older than ' + months + ' months, freeing about ' + btwFmtBytes(freed) + '.\n\nThe check-ins and their text are kept. This affects all patients and cannot be undone. Continue?')) return;
+        if(!confirm(curLang === 'fr'
+          ? 'Cela supprimera pour de bon ' + nP + ' photo(s) et ' + nA + ' message(s) vocal(aux) de plus de ' + months + ' mois, pour libérer environ ' + btwFmtBytes(freed) + '.\n\nLes suivis et leur texte sont conservés. Cela touche toutes les personnes suivies et ne peut pas être annulé. Continuer ?'
+          : 'This will permanently delete ' + nP + ' photo(s) and ' + nA + ' voice memo(s) older than ' + months + ' months, freeing about ' + btwFmtBytes(freed) + '.\n\nThe check-ins and their text are kept. This affects all patients and cannot be undone. Continue?')) return;
         btn.disabled = true; btn.textContent = 'Working…';
         try {
           const r = await api('POST', '/api/admin/purge-old-media', { months });
@@ -14784,13 +14787,13 @@
       const isNew = Date.parse(r.at) > seen;
       let title, sub;
       if(r.type === 'clinician'){
-        title = t('New professional') + ': ' + esc(r.title || '');
-        sub = esc(NOTIF_TYPE[r.detail] || r.detail || '') + (r.pending ? '<span class="btw-notif-pending">' + esc(t('needs review')) + '</span>' : '');
+        title = t('New professional') + (curLang === 'fr' ? ' : ' : ': ') + esc(r.title || '');
+        sub = esc(ownerT(NOTIF_TYPE[r.detail] || r.detail || '')) + (r.pending ? '<span class="btw-notif-pending">' + esc(t('needs review')) + '</span>' : '');
       } else if(r.type === 'patient'){
-        title = t('New patient') + ': ' + esc(r.title || '');
+        title = t('New patient') + (curLang === 'fr' ? ' : ' : ': ') + esc(r.title || '');
         sub = esc(r.detail === 'active' ? t('active') : t('invited'));
       } else {
-        title = t('Message') + ': ' + esc(r.title || '');
+        title = t('Message') + (curLang === 'fr' ? ' : ' : ': ') + esc(r.title || '');
         sub = esc(r.detail || '');
       }
       return '<div class="btw-notif-row' + (isNew ? ' btw-notif-new' : '') + '">'
@@ -14800,6 +14803,208 @@
         + '</div>';
     }).join('');
   }
+  // --- Owner tools in French ---
+  // The owner panels (licence review, traffic, storage, engagement, billing
+  // check, notifications, outreach) are written in English. In French mode,
+  // every text piece and placeholder/title/aria-label inside them is swapped
+  // for its French: exact strings first, then patterns for the ones that carry
+  // numbers, names or dates. Owner data (clinic names, notes, emails) is left
+  // as typed. Only the owner ever sees these panels.
+  const OWNER_FR = {
+    'Owner':'Propriétaire', 'Owner · Licence review':'Propriétaire · Vérification des permis', 'Owner · Engagement':'Propriétaire · Participation',
+    'Owner · Notifications':'Propriétaire · Notifications', 'Owner · Outreach':'Propriétaire · Prospection', 'Close':'Fermer',
+    'Loading…':'Chargement…', 'Sending…':'Envoi…', 'Checking…':'Vérification…', 'Working…':'En cours…', 'Save':'Enregistrer', 'Cancel':'Annuler', 'Undo':'Annuler',
+    // licence review
+    'Therapists':'Psychothérapeutes', 'Physios':'Physiothérapeutes', 'Physiotherapists':'Physiothérapeutes', 'Nutritionists':'Nutritionnistes',
+    'Neuropsychologists':'Neuropsychologues', 'Speech therapists':'Orthophonistes', 'check registry ↗':'vérifier au registre ↗',
+    'Pending review':'En attente de vérification', 'Approve':'Approuver', '✓ Approved':'✓ Approuvé', 'Not approved':'Non approuvé', 'Revoke access':"Retirer l'accès",
+    // traffic
+    'Website · Traffic':'Site web · Trafic', '7 days':'7 jours', '30 days':'30 jours', '90 days':'90 jours',
+    'visits':'visites', 'pages viewed':'pages vues', 'new accounts':'nouveaux comptes', 'walkthroughs':'visites guidées', 'video plays':'lectures de vidéo',
+    'Visits per day':'Visites par jour', 'By field':'Par domaine', 'Where they came from':'Provenance', 'Pages':'Pages', 'Device':'Appareil',
+    'Language':'Langue', 'None yet':"Rien pour l'instant", 'French':'Français', 'English':'Anglais', 'direct':'direct',
+    'mobile':'mobile', 'desktop':'ordinateur', 'tablet':'tablette',
+    'Counts only: no cookies, no visitor IDs, no IP addresses. Your own devices, signed-in users and browsers that ask not to be tracked aren\'t counted.':
+      "Des chiffres seulement : aucun témoin, aucun identifiant de visite, aucune adresse IP. Vos propres appareils, les comptes connectés et les navigateurs qui demandent à ne pas être suivis ne sont pas comptés.",
+    'Therapy':'Psychothérapie', 'On their own':'Usage personnel', 'Physio':'Physiothérapie', 'Kinesiology':'Kinésiologie', 'Osteopathy':'Ostéopathie',
+    'Occupational therapy':'Ergothérapie', 'Neuropsychology':'Neuropsychologie', 'Speech therapy':'Orthophonie', 'Nutrition':'Nutrition', 'Sports':'Sport',
+    'Fitness':'Entraînement', 'Recovery':'Rétablissement', 'Schools':'Écoles', 'Not picked yet':'Pas encore choisi', 'Other':'Autre',
+    'Home':'Accueil', 'How it works':'Comment ça marche', 'Pricing':'Tarifs', 'Guide':'Guide', 'Dashboard (demo)':'Tableau de bord (démo)',
+    'Field chooser':'Choix du domaine', 'Features':'Fonctionnalités',
+    // demo requests
+    'Website · Demo requests':'Site web · Demandes de démo',
+    'No demo requests yet. They also arrive by email (and by text, if an alert number is set up).':"Aucune demande de démo pour l'instant. Elles arrivent aussi par courriel (et par texto, si un numéro d'alerte est configuré).",
+    'Email alert not delivered: saved here only.':'Alerte par courriel non livrée : enregistrée ici seulement.',
+    // storage
+    'Backend · Storage':'Serveur · Stockage', 'total database':'pour toute la base de données',
+    'To see how full you are here, set':"Pour voir ici à quel point l'espace est rempli, réglez",
+    'on Render to your Postgres plan\'s storage (in MB, e.g. 1024 for 1 GB). Until then, compare this number to your plan\'s limit in the Render dashboard and upgrade before ~80%.':
+      "dans Render selon le stockage de votre forfait Postgres (en Mo, par ex. 1024 pour 1 Go). D'ici là, comparez ce chiffre à la limite de votre forfait dans le tableau de bord Render et passez au forfait supérieur avant ~80 %.",
+    'Photos & voice memos are about':'Les photos et les messages vocaux représentent environ',
+    'of your data: the part that grows over time. (This is a breakdown of what you\'re using, not how full you are.)':
+      "de vos données : la partie qui grandit avec le temps. (C'est la répartition de ce que vous utilisez, pas le niveau de remplissage.)",
+    'Free up space: delete media older than':"Libérer de l'espace : supprimer les médias de plus de", 'Free up space':"Libérer de l'espace",
+    '6 months':'6 mois', '12 months':'12 mois', '24 months':'24 mois',
+    'Upgrade your plan soon':'Passez bientôt au forfait supérieur', 'Getting full: plan an upgrade':'Presque plein : prévoyez un forfait supérieur', 'Plenty of room':"Beaucoup d'espace",
+    'Storage cost ≈':'Coût du stockage ≈',
+    'Usage-based: storage auto-scales, so there\'s no limit to hit; the cost just tracks your data.':"À l'usage : le stockage s'ajuste tout seul, donc aucune limite à atteindre; le coût suit simplement vos données.",
+    // test messages
+    'Backend · Notifications (email)':'Serveur · Notifications (courriel)', 'Backend · Notifications (SMS)':'Serveur · Notifications (texto)',
+    'Send yourself a test email to confirm demo requests and sign-up alerts reach you. Leave the box blank to use your alert address.':
+      "Envoyez-vous un courriel test pour vérifier que les demandes de démo et les alertes d'inscription vous parviennent. Laissez la case vide pour utiliser votre adresse d'alerte.",
+    'Send yourself a test text to confirm Twilio is working. Leave the box blank to use your configured alert number.':
+      "Envoyez-vous un texto test pour vérifier que Twilio fonctionne. Laissez la case vide pour utiliser votre numéro d'alerte configuré.",
+    'Send test email':'Envoyer un courriel test', 'Send test SMS':'Envoyer un texto test',
+    'you@example.com (optional)':'vous@exemple.com (facultatif)', '+15145551234 (optional)':'+15145551234 (facultatif)',
+    // billing check
+    'Billing setup check':'Vérification de la facturation', 'Check again':'Vérifier de nouveau',
+    "Reading each plan's price from Stripe…":'Lecture du prix de chaque forfait dans Stripe…',
+    'Stripe is not connected on this server (no secret key), so nothing can be charged.':"Stripe n'est pas connecté sur ce serveur (aucune clé secrète) : rien ne peut être facturé.",
+    'Needs fixing':'À corriger', 'Set up correctly':'Bien configurés', 'Could not check the billing setup just now.':'Impossible de vérifier la facturation pour le moment.',
+    // engagement
+    'Account overview':"Vue d'ensemble des comptes", 'Clinicians':'Spécialistes', 'clinicians':'spécialistes', 'Verified':'Permis vérifié',
+    'Subscribed':'Avec abonnement', 'Patients':'Personnes suivies', 'Active':'Actives', 'Check-ins':'Suivis', 'New clinicians':'Nouveaux comptes pros',
+    'New patients':'Nouvelles personnes suivies', 'last 7 days':'7 derniers jours', 'Clinicians by type:':'Spécialistes par type :',
+    'Coaches':'Coachs', 'Mentors':'Mentors', 'Trainers':'Entraînement', 'By professional':'Par spécialiste',
+    'had a client check in this week':'ont eu un suivi cette semaine', 'Search by name':'Rechercher par nom',
+    'Most check-ins':'Le plus de suivis', 'Most clients':'Le plus de personnes', 'Newest':'Les plus récents', 'Least recently signed in':'Connexion la plus ancienne',
+    'Show test accounts':'Afficher les comptes de test', 'No professionals match.':'Aucun résultat.',
+    'Needs review':'À vérifier', 'Trial':'Essai', 'Payment due':'Paiement dû', 'Cancelled':'Annulé',
+    'client':'personne', 'clients':'personnes', 'joined':'inscrites', 'invite pending':'invitation en attente', 'active this week':'actives cette semaine',
+    'check-ins · 30d':'suivis · 30 j', 'messages/replies · 30d':'messages/réponses · 30 j',
+    'Have checked in':'Ont fait un suivi', 'Total check-ins':'Suivis au total', 'Reminders on':'Rappels activés',
+    'Retention: still checking in N weeks after their first':'Rétention : font encore des suivis N semaines après le premier',
+    'Not enough history yet, needs patients whose first check-in was at least two weeks ago.':"Pas encore assez d'historique : il faut des personnes dont le premier suivi date d'au moins deux semaines.",
+    'Active patients per week (last 12)':'Personnes actives par semaine (12 dernières)', '(no data yet)':'(pas encore de données)',
+    // professional types (notifications, engagement rows)
+    'Therapist':'Psychothérapeute', 'Coach':'Coach', 'Mentor':'Mentor', 'School':'École', 'Trainer':'Coach en entraînement', 'Physiotherapist':'Physiothérapeute',
+    'Kinesiologist':'Kinésiologue', 'Osteopath':'Ostéopathe', 'Occupational therapist':'Ergothérapeute', 'Neuropsychologist':'Neuropsychologue',
+    'Speech-language pathologist':'Orthophoniste', 'Nutritionist':'Nutritionniste', 'Sports coach':'Coach sportif', 'Personal trainer':'Coach en entraînement',
+    // outreach
+    'Clinic outreach':'Prospection des cliniques', 'Search…':'Rechercher…', 'Search clinics':'Rechercher des cliniques', '+ Add clinic':'+ Ajouter une clinique',
+    'How this works':'Comment ça marche', 'Today':"Aujourd'hui", 'Waiting':'En attente', 'Done':'Terminées', 'All':'Toutes',
+    'not contacted':'pas contactées', 'emailed':'contactées', 'replied':'ont répondu', 'trials':'essais', 'customers':'clientes',
+    'Follow-ups overdue':'Relances en retard', 'Follow up today':"Relancer aujourd'hui", 'They replied: answer them':'Elles ont répondu : répondez-leur',
+    'Ready for a first email':'Prêtes pour un premier courriel', 'Find their email first':"Trouvez d'abord leur courriel",
+    'Send the video and offer to set them up.':"Envoyez la vidéo et offrez de configurer leur compte.", 'Send 10–15 a day, in the morning.':'Envoyez-en 10 à 15 par jour, le matin.',
+    'Look on their website, then add it here.':'Cherchez sur leur site web, puis ajoutez-le ici.', 'Waiting for a reply':'En attente de réponse',
+    'Their next follow-up date is on each card.':'La date de la prochaine relance est sur chaque fiche.', 'On trial':'En essai',
+    'Check in with them during the trial.':"Prenez de leurs nouvelles pendant l'essai.", 'Customers':'Clientes', 'No reply after 3 emails':'Aucune réponse après 3 courriels',
+    'You can try again in a few months.':'Vous pourrez réessayer dans quelques mois.', 'Not interested':'Pas intéressée', 'Don’t email them again.':'Ne leur écrivez plus.',
+    'All clinics':'Toutes les cliniques', 'Search results':'Résultats de recherche', 'All done for today 🎉':"Tout est fait pour aujourd'hui 🎉", 'Nothing here yet.':"Rien ici pour l'instant.",
+    'Try another word, or add it with “+ Add clinic”.':'Essayez un autre mot, ou ajoutez-la avec « + Ajouter une clinique ».',
+    'Follow-ups will show up here on the day they’re due.':'Les relances apparaîtront ici le jour prévu.',
+    'Not contacted yet':'Pas encore contactée', 'First email sent':'Premier courriel envoyé', 'Follow-up 1 sent':'Relance 1 envoyée', 'Replied':'A répondu', 'Customer':'Cliente',
+    'Write first email':'Écrire le premier courriel', 'Write follow-up 1':'Écrire la relance 1', 'Write follow-up 2':'Écrire la relance 2',
+    'First email':'Premier courriel', 'Follow-up 1':'Relance 1', 'Follow-up 2':'Relance 2', 'Follow-up 2 (the last one)':'Relance 2 (la dernière)', 'Reply with the video':'Répondre avec la vidéo',
+    'change':'modifier', 'No email yet':'Pas encore de courriel', 'Find it ↗':'La trouver ↗', 'Website ↗':'Site web ↗', 'follow up today':"relancer aujourd'hui",
+    '+ Add email':'+ Ajouter un courriel', 'Write it early':"L'écrire en avance", 'Write it before the follow-up date':"L'écrire avant la date de relance", 'Send the video':'Envoyer la vidéo',
+    '✓ They became a customer':'✓ Elle est devenue cliente', '✓ Mark as sent':'✓ Marquer comme envoyé',
+    'Already sent it another way (for example a Gmail draft)? Log it here.':'Déjà envoyé autrement (par exemple un brouillon Gmail) ? Notez-le ici.',
+    'They replied':'Elle a répondu', 'They started a trial':'Elle a commencé un essai', 'They became a customer':'Elle est devenue cliente',
+    'Write them an email':'Lui écrire un courriel', 'Edit details':'Modifier les détails', 'Start over (not contacted)':'Recommencer (pas contactée)',
+    'Click to see all':'Cliquez pour tout voir', 'their@email.com':'leur@courriel.com', '← Back to the list':'← Retour à la liste',
+    'Your personal first line':'Votre première phrase personnelle', '(one sentence about them: it\'s what gets replies)':"(une phrase sur la clinique : c'est ce qui fait répondre)",
+    'Reads their website and writes a line from their own words':'Lit leur site web et écrit une phrase avec leurs propres mots', '✨ Write it for me':"✨ L'écrire pour moi",
+    'Subject':'Objet', 'Email':'Courriel', '(edit anything you like)':'(modifiez ce que vous voulez)', 'Open in Gmail':'Ouvrir dans Gmail', 'Copy email':'Copier le courriel',
+    'Not opening?':'Ça ne s\'ouvre pas ?', 'Gmail in the browser':'Gmail dans le navigateur', 'Other mail app':'Autre application de courriel',
+    'Sent it?':'Envoyé ?', '✓ I sent it':'✓ Je l\'ai envoyé', 'Add a clinic':'Ajouter une clinique',
+    'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
+    'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
+    'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
+    'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
+    'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
+    'Nothing specific enough on their site. Write the line yourself (their notes are below).':"Rien d'assez précis sur leur site. Écrivez la phrase vous-même (leurs notes sont plus bas).",
+    'Give the clinic a name.':'Donnez un nom à la clinique.', 'Copy didn’t work here: select the text and copy it.':"La copie n'a pas fonctionné ici : sélectionnez le texte et copiez-le.",
+    'Marked as replied. Answer them today!':"Marquée comme ayant répondu. Répondez-lui aujourd'hui !", 'On trial. Check in with them in a week.':'En essai. Prenez de ses nouvelles dans une semaine.',
+    'A new customer! 🎉':'Une nouvelle cliente ! 🎉', 'Marked as not interested.':'Marquée comme pas intéressée.', 'Moved back to not contacted.':'Remise à « pas contactée ».',
+    'Saved.':'Enregistré.', 'Undone.':'Annulé.', 'Restored.':'Restaurée.', 'That doesn’t look like an email address.':'Ça ne ressemble pas à une adresse courriel.',
+    'Send it without a personal first line? Emails with one get more replies.':'Envoyer sans phrase personnelle ? Les courriels qui en ont une obtiennent plus de réponses.',
+    'Nothing to do today. Add clinics or find more email addresses.':"Rien à faire aujourd'hui. Ajoutez des cliniques ou trouvez d'autres adresses courriel."
+  };
+  function _ownerAgo(s){ const m = /^(\d+)(m|h|d) ago$/.exec(s); return m ? 'il y a ' + m[1] + ' ' + ({ m:'min', h:'h', d:'j' })[m[2]] : s; }
+  const OWNER_FR_RX = [
+    [/^(.+) \((\d+)\)$/, (m, a, n) => OWNER_FR[a] ? OWNER_FR[a] + ' (' + n + ')' : m],
+    [/^(.+) · test$/, (m, a) => OWNER_FR[a] ? OWNER_FR[a] + ' · test' : m],
+    [/^sign-up clicks · (.+)$/, "clics d'inscription · $1"], [/^demo requests · (\d+) opened$/, 'demandes de démo · $1 ouvertes'],
+    [/^live demo tries · (\d+) voice$/, 'essais de la démo · $1 en voix'],
+    [/^(\d+) visits(?: · (\d+) sign-ups)?(?: · (\d+) demos)?$/, (m, a, b, c) => a + ' visites' + (b ? ' · ' + b + ' inscriptions' : '') + (c ? ' · ' + c + ' démos' : '')],
+    [/^(\S+): (\d+) visits$/, '$1 : $2 visites'], [/^(\S+): (\d+) active, (\d+) check-ins$/, '$1 : $2 actives, $3 suivis'],
+    [/^Could not load: ([\s\S]*)$/, 'Chargement impossible : $1'], [/^Could not send: ([\s\S]*)$/, 'Envoi impossible : $1'],
+    [/^Could not reach the server: ([\s\S]*)$/, 'Impossible de joindre le serveur : $1'],
+    [/^✓ Sent to (.+) \(from (.+)\)\. Check that inbox, and its spam folder, in a minute\.$/, '✓ Envoyé à $1 (de $2). Vérifiez cette boîte, et ses courriels indésirables, dans une minute.'],
+    [/^✓ Sent to (.+)\. You should get the text in a few seconds\.$/, '✓ Envoyé à $1. Le texto devrait arriver dans quelques secondes.'],
+    [/^Not sent to ([^:]+): ([\s\S]*)$/, (m, a, b) => 'Non envoyé à ' + (a === 'your alert address' ? "votre adresse d'alerte" : a) + ' : ' + b.replace('\n\nWhat to do: ', '\n\nQuoi faire : ')],
+    [/^Best time: (.+)$/, 'Meilleur moment : $1'], [/^(\d+) photos · (.+)$/, '$1 photos · $2'], [/^(\d+) voice memos · (.+)$/, '$1 messages vocaux · $2'],
+    [/^of (.+) used ·$/, 'utilisés sur $1 ·'], [/^(.+) \/ month$/, '$1 / mois'], [/^\(at (.+)\/GB-month\)$/, '(à $1/Go-mois)'], [/^under \$0\.01$/, 'moins de 0,01 $'],
+    [/^Nothing older than (\d+) months: there's nothing to delete\.$/, "Rien de plus de $1 mois : il n'y a rien à supprimer."],
+    [/^Freed (.+): removed (\d+) photos and (\d+) voice memos\.$/, '$1 libérés : $2 photos et $3 messages vocaux supprimés.'],
+    [/^No (physio|nutritionist|neuropsychologist|speech therapist|therapist) accounts yet\.$/, (m, a) => 'Aucun compte en ' + ({ physio:'physiothérapie', nutritionist:'nutrition', neuropsychologist:'neuropsychologie', 'speech therapist':'orthophonie', therapist:'psychothérapie' })[a] + " pour l'instant."],
+    [/^(\d+) new · 30d$/, (m, n) => n + (n === '1' ? ' nouveau' : ' nouveaux') + ' · 30 j'], [/^(\d+)(m|h|d)$/, (m, n, u) => n + ' ' + ({ m:'min', h:'h', d:'j' })[u]], [/^(\d+) pending$/, '$1 en attente'], [/^(\d+) pending invites$/, '$1 invitations en attente'],
+    [/^(\d+) left$/, '$1 départs'], [/^(\d+) this week$/, '$1 cette semaine'], [/^of (\d+) have at least one client ·$/, 'sur $1 ont au moins une personne suivie ·'],
+    [/^Week (\d+)$/, 'Semaine $1'],
+    [/^Signed in (.+) · last check-in (.+) · joined (.+)$/, (m, a, b, c) => 'Connexion : ' + _ownerAgo(a) + ' · dernier suivi : ' + _ownerAgo(b) + ' · inscription : ' + c],
+    [/^(.+?) · (.+)$/, (m, a, b) => OWNER_FR[a] ? OWNER_FR[a] + ' · ' + b.replace(/\bmonthly\b/, 'mensuel').replace(/\byearly\b/, 'annuel') : m],
+    [/^(\d+) (Therapists|Coaches|Mentors|Schools|Trainers)$/, (m, n, a) => n + ' ' + OWNER_FR[a]],
+    // outreach
+    [/^(?:(.*) · )?(Physio|Psychotherapy|Kinesiology|Osteopathy|Other) · (English|Français)$/, (m, a, p, l) => (a ? a + ' · ' : '') + ({ Physio:'Physio', Psychotherapy:'Psychothérapie', Kinesiology:'Kinésiologie', Osteopathy:'Ostéopathie', Other:'Autre' })[p] + ' · ' + (l === 'English' ? 'Anglais' : 'Français')],
+    [/^Contacted (.+?) · (.+)$/, (m, d, r) => 'Contactée le ' + d + ' · ' + ownerT(r)],
+    [/^follow-up overdue since (.+)$/, 'relance en retard depuis le $1'], [/^next follow-up (.+)$/, 'prochaine relance le $1'],
+    [/^No clinic matches “(.+)”\.$/, 'Aucune clinique ne correspond à « $1 ».'],
+    [/^Change the email for (.+)$/, 'Modifier le courriel de $1'], [/^Email for (.+)$/, 'Courriel de $1'], [/^More actions for (.+)$/, 'Autres actions pour $1'],
+    [/^To (.+)$/, 'À $1'], [/^From your notes: ([\s\S]+)$/, "D'après vos notes : $1"],
+    [/^Sent it\? The next follow-up will be scheduled for (.+)\.$/, 'Envoyé ? La prochaine relance sera prévue le $1.'],
+    [/^Sent it\? That was the last email in the sequence\.$/, "Envoyé ? C'était le dernier courriel de la séquence."],
+    [/^(Marked as contacted\. |Logged\. |Done\. )?Follow-up scheduled for (.+)\.$/, (m, a, d) => ({ 'Marked as contacted. ':'Marquée comme contactée. ', 'Logged. ':'Noté. ', 'Done. ':'Fait. ' }[a] || '') + 'Relance prévue le ' + d + '.'],
+    [/^(Marked as contacted\. |Logged\. |Done\. )?That was the last email for (.+)\.$/, (m, a, n) => ({ 'Marked as contacted. ':'Marquée comme contactée. ', 'Logged. ':'Noté. ', 'Done. ':'Fait. ' }[a] || '') + "C'était le dernier courriel pour " + n + '.'],
+    [/^Done\. Logged for (.+)\.$/, 'Fait. Noté pour $1.'],
+    [/^Email saved\. (.+) is ready for a first email\.$/, 'Courriel enregistré. $1 est prête pour un premier courriel.'], [/^Email saved for (.+)\.$/, 'Courriel enregistré pour $1.'],
+    [/^Copied\. Paste it into a new email to (.+)\.$/, (m, a) => 'Copié. Collez-le dans un nouveau courriel à ' + (a === 'them' ? 'la clinique' : a) + '.'],
+    [/^Reading (.+) and its about \/ team \/ services pages…$/, 'Lecture de $1 et de ses pages à propos / équipe / services…'],
+    [/^Based on their site: “([\s\S]+)$/, 'Selon leur site : « $1'], [/^(.+) added\.$/, '$1 ajoutée.'], [/^(.+) deleted\.$/, '$1 supprimée.'],
+    [/^Delete (.+) from your outreach list\?$/, 'Retirer $1 de votre liste de prospection ?']
+  ];
+  function ownerT(s){
+    if(curLang !== 'fr' || s == null) return s;
+    const k = String(s).trim(); if(!k) return s;
+    let v = Object.prototype.hasOwnProperty.call(OWNER_FR, k) ? OWNER_FR[k] : null;
+    if(v == null) for(const [rx, rep] of OWNER_FR_RX){ if(rx.test(k)){ const out = k.replace(rx, rep); if(out !== k){ v = out; break; } } }
+    return v == null ? s : String(s).replace(k, v.replace(/\.\.$/, '.'));
+  }
+  (function(){
+    const ROOTS = ['btwAdminOverlay', 'btwEngagementOverlay', 'btwNotifOverlay', 'btwOutreachOverlay', 'btwBillCheckOverlay', 'btwOrToast'];
+    const SKIP = '.btw-or-notes, .btw-or-name, .btw-or-contact a[href^="mailto:"], .btw-or-contact a[href^="tel:"], textarea, .btw-dr strong';
+    const HELP_FR = '<li><b>Aujourd\'hui</b> montre quoi faire maintenant : les relances dues, les réponses à donner et les cliniques prêtes pour un premier courriel. De 10 à 15 premiers courriels par jour, c\'est amplement suffisant.</li>'
+      + '<li>Cliquez sur <b>Écrire le premier courriel</b>, ajoutez une phrase personnelle sur la clinique (ou touchez <b>✨ L\'écrire pour moi</b> pour qu\'elle soit écrite à partir de leur site), puis cliquez sur <b>Ouvrir dans Gmail</b> (il s\'ouvre avec owner@betweenpsych.com) ou copiez-le.</li>'
+      + '<li>Après l\'envoi, cliquez sur <b>Je l\'ai envoyé</b>. La relance est prévue pour vous : 4 jours plus tard, puis 5 jours après.</li>'
+      + '<li>Quand une clinique répond, ouvrez <b>⋯ → Elle a répondu</b> et envoyez-lui la vidéo. Utilisez Annuler si vous cliquez sur quelque chose par erreur.</li>';
+    let helpEn = null;
+    function run(root){
+      const help = root.querySelector('.btw-or-help ol');
+      if(help){
+        if(helpEn == null) helpEn = help.innerHTML;
+        const want = curLang === 'fr' ? HELP_FR : helpEn;
+        if(help.innerHTML !== want) help.innerHTML = want;
+      }
+      if(curLang !== 'fr') return;
+      const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null); let n;
+      while((n = w.nextNode())){
+        const p = n.parentElement; if(!p || (p.closest && p.closest(SKIP))) continue;
+        const v = ownerT(n.nodeValue); if(v !== n.nodeValue) n.nodeValue = v;
+      }
+      root.querySelectorAll('[placeholder],[title],[aria-label]').forEach(function(e){
+        ['placeholder', 'title', 'aria-label'].forEach(function(a){ const o = e.getAttribute(a); if(o){ const v = ownerT(o); if(v !== o) e.setAttribute(a, v); } });
+      });
+    }
+    ROOTS.forEach(function(id){
+      const root = document.getElementById(id); if(!root || !window.MutationObserver) return;
+      let tm = null;
+      new MutationObserver(function(){ clearTimeout(tm); tm = setTimeout(function(){ run(root); }, 20); })
+        .observe(root, { subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:['style', 'hidden', 'class'] });
+    });
+  })();
   async function openNotifications(){
     const err = document.getElementById('btwNotifError');
     const body = document.getElementById('btwNotifBody');
@@ -15280,7 +15485,7 @@
 
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
     function addDays(iso, n){ const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
-    function fmt(iso){ try { return new Date(iso + 'T12:00:00').toLocaleDateString('en-CA', { weekday:'short', month:'short', day:'numeric' }); } catch(e){ return iso; } }
+    function fmt(iso){ try { return new Date(iso + 'T12:00:00').toLocaleDateString(curLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday:'short', month:'short', day:'numeric' }); } catch(e){ return iso; } }
     function toast(msg, undo){
       $o('btwOrToastMsg').textContent = msg; undoFn = undo || null; $o('btwOrUndo').hidden = !undo;
       const t = $o('btwOrToast'); t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove('show'), undo ? 6000 : 2600);
@@ -15363,10 +15568,11 @@
       const t = today(), n = s => leads.filter(l => l.status === s).length;
       const due = leads.filter(isDue).length, rep = n('replied'), ready = leads.filter(l => l.status === 'to_contact' && l.email).length;
       const bits = [];
-      if(due) bits.push('<b>' + due + ' follow-up' + (due > 1 ? 's' : '') + '</b> to send');
-      if(rep) bits.push('<b>' + rep + ' repl' + (rep > 1 ? 'ies' : 'y') + '</b> to answer');
-      if(ready) bits.push('<b>' + ready + '</b> clinic' + (ready > 1 ? 's' : '') + ' ready for a first email');
-      $o('btwOrSub').innerHTML = bits.length ? 'Today: ' + bits.join(', ') + '.' : 'Nothing to do today. Add clinics or find more email addresses.';
+      const fr = curLang === 'fr';
+      if(due) bits.push(fr ? '<b>' + due + ' relance' + (due > 1 ? 's' : '') + '</b> à envoyer' : '<b>' + due + ' follow-up' + (due > 1 ? 's' : '') + '</b> to send');
+      if(rep) bits.push(fr ? '<b>' + rep + ' réponse' + (rep > 1 ? 's' : '') + '</b> à donner' : '<b>' + rep + ' repl' + (rep > 1 ? 'ies' : 'y') + '</b> to answer');
+      if(ready) bits.push(fr ? '<b>' + ready + '</b> clinique' + (ready > 1 ? 's' : '') + ' prête' + (ready > 1 ? 's' : '') + ' pour un premier courriel' : '<b>' + ready + '</b> clinic' + (ready > 1 ? 's' : '') + ' ready for a first email');
+      $o('btwOrSub').innerHTML = bits.length ? (fr ? "Aujourd'hui : " : 'Today: ') + bits.join(', ') + '.' : ownerT('Nothing to do today. Add clinics or find more email addresses.');
       const sent = leads.length - n('to_contact');
       const steps = [[n('to_contact'), 'not contacted'], [sent, 'emailed'], [rep + n('trial') + n('customer'), 'replied'], [n('trial') + n('customer'), 'trials'], [n('customer'), 'customers']];
       $o('btwOrFunnel').innerHTML = steps.map(s => '<span class="n"><b>' + s[0] + '</b>' + s[1] + '</span>').join('<i>→</i>');
@@ -15547,7 +15753,7 @@
     function showSent(){ opened = true; $o('btwOrCSent').hidden = false; }
     ['btwOrCMail', 'btwOrCWeb', 'btwOrCOther'].forEach(function(id){
       $o(id).addEventListener('click', function(e){
-        if(composing && composing.status === 'to_contact' && !$o('btwOrCOpener').value.trim() && !bodyDirty && !confirm('Send it without a personal first line? Emails with one get more replies.')){ e.preventDefault(); return; }
+        if(composing && composing.status === 'to_contact' && !$o('btwOrCOpener').value.trim() && !bodyDirty && !confirm(ownerT('Send it without a personal first line? Emails with one get more replies.'))){ e.preventDefault(); return; }
         setTimeout(showSent, 400);
       });
     });
@@ -15586,7 +15792,7 @@
     });
     $o('btwOrDelete').addEventListener('click', async function(){
       if(!editing) return; const l = leads.find(x => x.id === editing); if(!l) return;
-      if(!confirm('Delete ' + l.name + ' from your outreach list?')) return;
+      if(!confirm(ownerT('Delete ' + l.name + ' from your outreach list?'))) return;
       try {
         await api('DELETE', '/api/admin/outreach/' + encodeURIComponent(l.id)); leads = leads.filter(x => x.id !== l.id); closeSheets(); render();
         const copy = Object.assign({}, l); delete copy.id; delete copy.created_at; delete copy.updated_at;
@@ -15605,6 +15811,7 @@
     const lead = document.getElementById('btwBillCheckLead'), list = document.getElementById('btwBillCheckList');
     const per = iv => iv === 'year' ? 'per year' : iv === 'month' ? 'per month' : (iv ? 'per ' + iv : 'one time');
     function fix(r){
+      if(curLang === 'fr') return fixFr(r);
       const want = r.wantInterval === 'year' ? 'yearly' : 'monthly';
       const how = ' In Stripe, add a ' + want + ' recurring price in ' + r.currency + ' to this product, copy its ID (it starts with price_), and put it in Render as <code>' + esc(r.setting) + '</code>.';
       if(r.problem === 'missing') return 'No price is set for this plan, so it cannot be bought.' + how;
@@ -15615,8 +15822,20 @@
       if(r.problem === 'wrong_currency') return 'This price is in ' + esc(r.priceCurrency || '?') + ' but this setting is for ' + r.currency + '.' + how;
       return 'Stripe did not answer for this price' + (r.detail ? ' (' + esc(r.detail) + ')' : '') + '. Try again in a minute.';
     }
+    function fixFr(r){
+      const want = r.wantInterval === 'year' ? 'annuel' : 'mensuel';
+      const how = ' Dans Stripe, ajoutez un prix récurrent ' + want + ' en ' + r.currency + ' à ce produit, copiez son identifiant (il commence par price_) et mettez-le dans Render sous <code>' + esc(r.setting) + '</code>.';
+      if(r.problem === 'missing') return "Aucun prix n'est réglé pour ce forfait : il ne peut pas être acheté." + how;
+      if(r.problem === 'not_found') return 'Stripe ne connaît pas le prix enregistré dans Render (mauvais identifiant, ou identifiant du mode test).' + how;
+      if(r.problem === 'one_time') return "Ce prix est un paiement unique. Un abonnement a besoin d'un prix récurrent, donc le paiement échoue." + how;
+      if(r.problem === 'wrong_interval') return 'Ce forfait est vendu en ' + want + ', mais son prix Stripe facture ' + perFr(r.interval) + '.' + how;
+      if(r.problem === 'archived') return 'Ce prix est archivé dans Stripe : les nouveaux abonnements ne peuvent pas l\'utiliser. Désarchivez-le, ou :' + how;
+      if(r.problem === 'wrong_currency') return 'Ce prix est en ' + esc(r.priceCurrency || '?') + ', mais ce réglage est pour ' + r.currency + '.' + how;
+      return "Stripe n'a pas répondu pour ce prix" + (r.detail ? ' (' + esc(r.detail) + ')' : '') + '. Réessayez dans une minute.';
+    }
+    const perFr = iv => iv === 'year' ? 'par année' : iv === 'month' ? 'par mois' : (iv ? 'par ' + iv : 'une seule fois');
     function row(r){
-      const money = r.amount != null ? ' <span class="dt">· $' + esc(Number(r.amount).toFixed(2)) + ' ' + esc(r.priceCurrency || r.currency) + ' ' + esc(per(r.interval)) + '</span>' : '';
+      const money = r.amount != null ? ' <span class="dt">· $' + esc(Number(r.amount).toFixed(2)) + ' ' + esc(r.priceCurrency || r.currency) + ' ' + esc(curLang === 'fr' ? perFr(r.interval) : per(r.interval)) + '</span>' : '';
       return '<div class="btw-billcheck-row' + (r.ok ? '' : ' bad') + '"><span class="mk">' + (r.ok ? '✓' : '✗') + '</span><span><span class="nm">' + esc(r.label) + (r.currency === 'USD' ? ' (USD)' : '') + '</span>' + money + '</span>' + (r.ok ? '' : '<span class="fix">' + fix(r) + '</span>') + '</div>';
     }
     async function run(){
@@ -15625,7 +15844,9 @@
         const d = await api('GET', '/api/admin/billing-check');
         if(!d.configured){ lead.textContent = 'Stripe is not connected on this server (no secret key), so nothing can be charged.'; return; }
         const bad = d.plans.filter(r => !r.ok), good = d.plans.filter(r => r.ok);
-        lead.textContent = bad.length ? bad.length + ' of ' + d.plans.length + ' plans need fixing. The rest are set up correctly. Compare the amounts with your Pricing page too.' : 'All ' + d.plans.length + ' plans are set up correctly in Stripe. Compare the amounts below with your Pricing page.';
+        lead.textContent = curLang === 'fr'
+          ? (bad.length ? bad.length + ' forfait(s) sur ' + d.plans.length + ' à corriger. Les autres sont bien configurés. Comparez aussi les montants avec votre page Tarifs.' : 'Les ' + d.plans.length + ' forfaits sont bien configurés dans Stripe. Comparez les montants ci-dessous avec votre page Tarifs.')
+          : (bad.length ? bad.length + ' of ' + d.plans.length + ' plans need fixing. The rest are set up correctly. Compare the amounts with your Pricing page too.' : 'All ' + d.plans.length + ' plans are set up correctly in Stripe. Compare the amounts below with your Pricing page.');
         list.innerHTML = (bad.length ? '<div class="btw-billcheck-h">Needs fixing</div>' + bad.map(row).join('') : '') + (good.length ? '<div class="btw-billcheck-h">Set up correctly</div>' + good.map(row).join('') : '');
       } catch(e){ lead.textContent = (e && e.message) || 'Could not check the billing setup just now.'; }
     }
