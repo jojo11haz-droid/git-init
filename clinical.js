@@ -15,6 +15,7 @@ export function signatureLens(discipline, accountType) {
   if (d === 'sports') return 'readiness';
   if (d === 'fitness' || a === 'trainer') return 'drift';
   if (d === 'neuropsych') return 'cognitive';
+  if (d === 'speech') return 'carryover';
   return 'thread';
 }
 
@@ -43,6 +44,10 @@ export const SIGNATURE_LENS = {
     task: "Combine $who's soreness/energy and mood into a simple read of whether they look ready, worth monitoring, or in need of a lighter load, and flag any drift toward burnout or overtraining.",
     read_hint: 'a ready / monitor / back-off read and why',
     points_hint: 'load-vs-readiness signals and any burnout drift' },
+  carryover: { role: 'speech-language pathologist',
+    task: "Read whether $who's home practice is carrying over into real speaking (conversations, phone calls, school or work), which situations go better or worse (tiredness, stress, people, places), and how confidence and frustration move with it. Never diagnose.",
+    read_hint: 'whether practice is carrying over into everyday speaking, and where it breaks down',
+    points_hint: 'practice consistency, the situations that help or get in the way, and a confidence shift worth naming' },
   drift: { role: 'personal trainer or coach',
     task: "Notice whether $who is staying engaged or quietly drifting (check-ins thinning, energy or motivation dropping), and what seems to help them stay on track.",
     read_hint: 'whether they are engaged or drifting, and why',
@@ -272,6 +277,7 @@ export function programKind({ accountType, discipline } = {}) {
   const d = discipline || '', a = accountType || '';
   if (PAIN_DISCIPLINES.includes(d) || d === 'sports' || a === 'trainer') return 'exercise';
   if (d === 'nutrition') return 'habit';
+  if (d === 'speech') return 'speech';
   if (a === 'mentor') return 'recovery';
   if (a === 'school') return 'school';
   return 'practice'; // psychotherapy, neuropsychology, anything else

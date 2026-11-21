@@ -6755,6 +6755,8 @@
     "Goal, e.g. cravings in the evening":"Objectif, p. ex. envies le soir",
     "How often, e.g. every evening":"Fréquence, p. ex. chaque soir",
     "Strategies to practise":"Stratégies à pratiquer",
+    "Home practice program":"Programme de pratique à la maison","Your home practice":"Votre pratique à la maison","Goal, e.g. /s/ in conversation, fluency on the phone":"Objectif, p. ex. le /s/ en conversation, la fluidité au téléphone",
+    "Suggest home practice":"Suggérer de la pratique à la maison","Practice activity":"Activité de pratique","How often, e.g. 10 min, 5 days a week":"Fréquence, p. ex. 10 min, 5 jours par semaine","Add activity":"Ajouter une activité",
     "Your strategies to practise":"Vos stratégies à pratiquer",
     "Goal, e.g. focus during homework":"Objectif, p. ex. concentration pendant les devoirs",
     "Suggest strategies":"Suggérer des stratégies",
@@ -18785,6 +18787,7 @@
   function hepKind(at, disc){
     if(['physio','kinesiology','osteo','occupational','sports'].indexOf(disc) >= 0 || at === 'trainer') return 'exercise';
     if(disc === 'nutrition') return 'habit';
+    if(disc === 'speech') return 'speech';
     if(at === 'mentor') return 'recovery';
     if(at === 'school') return 'school';
     return 'practice';
@@ -18794,7 +18797,8 @@
     practice: { title:'Between-session practice', mine:'Your practice between sessions', goal:'Goal, e.g. worry at night, low motivation', sug:'Suggest practices', name:'Practice name', dose:'How often, e.g. daily, 5 min', add:'Add practice' },
     habit:    { title:'Habits to practise', mine:'Your habits to practise', goal:'Goal, e.g. more energy in the afternoon', sug:'Suggest habits', name:'Habit', dose:'How often, e.g. daily', add:'Add habit' },
     recovery: { title:'Daily recovery practices', mine:'Your daily practices', goal:'Goal, e.g. cravings in the evening', sug:'Suggest practices', name:'Practice name', dose:'How often, e.g. every evening', add:'Add practice' },
-    school:   { title:'Strategies to practise', mine:'Your strategies to practise', goal:'Goal, e.g. focus during homework', sug:'Suggest strategies', name:'Strategy', dose:'When, e.g. before homework', add:'Add strategy' }
+    school:   { title:'Strategies to practise', mine:'Your strategies to practise', goal:'Goal, e.g. focus during homework', sug:'Suggest strategies', name:'Strategy', dose:'When, e.g. before homework', add:'Add strategy' },
+    speech:   { title:'Home practice program', mine:'Your home practice', goal:'Goal, e.g. /s/ in conversation, fluency on the phone', sug:'Suggest home practice', name:'Practice activity', dose:'How often, e.g. 10 min, 5 days a week', add:'Add activity' }
   };
   function hepWords(){
     var at, disc;
@@ -19638,9 +19642,11 @@
     if(d === 'sports') return 'readiness';
     if(d === 'fitness') return 'drift';
     if(d === 'neuropsych') return 'cognitive';
+    if(d === 'speech') return 'carryover';
     return 'thread';
   }
   var SIGNATURE_TITLES = {
+    carryover: ['Carryover read', 'Lecture du transfert'],
     thread: ['Between-session thread', 'Le fil entre les séances'],
     cognitive: ['Cognitive-load read', 'Lecture de la charge cognitive'],
     trajectory: ['Recovery trajectory', 'Trajectoire de récupération'],
@@ -19659,7 +19665,8 @@
       triggers: L('The patterns around their harder days, without judgment.', 'Les tendances autour de ses journées plus difficiles, sans jugement.'),
       radar: L('Where risk rose or steadied, and any milestone to name.', 'Où le risque a monté ou s’est stabilisé, et tout jalon à souligner.'),
       readiness: L('A ready / monitor / back-off read from soreness and mood.', 'Un signal prêt / à surveiller / à alléger, selon courbatures et humeur.'),
-      drift: L('Whether they’re staying engaged or quietly drifting.', 'S’il reste engagé ou décroche peu à peu.')
+      drift: L('Whether they’re staying engaged or quietly drifting.', 'S’il reste engagé ou décroche peu à peu.'),
+      carryover: L('Whether home practice is carrying over into everyday speaking, and where it breaks down.', 'Si la pratique à la maison se transfère à la parole de tous les jours, et où ça bloque.')
     };
     return m[signatureLensClient()] || m.thread;
   }

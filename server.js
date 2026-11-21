@@ -565,8 +565,8 @@ function localChartNote({ format, lang, stats, exercises, kind }) {
   const data = statsText(stats, false, lang);
   const names = (exercises || []).filter(e => !e.archived_at).slice(0, 8).map(e => e.name).join(', ');
   const progWord = fr
-    ? { exercise: 'Programme à domicile', practice: 'Pratique entre les séances', habit: 'Habitudes à pratiquer', recovery: 'Pratiques quotidiennes', school: 'Stratégies à pratiquer' }[kind]
-    : { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise' }[kind];
+    ? { exercise: 'Programme à domicile', practice: 'Pratique entre les séances', habit: 'Habitudes à pratiquer', recovery: 'Pratiques quotidiennes', school: 'Stratégies à pratiquer', speech: 'Pratique à la maison' }[kind]
+    : { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise', speech: 'Home practice' }[kind];
   const said = fr ? '[À compléter : ce que la personne a rapporté. Les résumés IA sont désactivés pour elle, donc ses mots ne sont pas lus par l’IA.]'
     : '[To add: what they reported. AI summaries are off for this client, so their words are not read by AI.]';
   const prog = `${progWord}: ${names || (fr ? 'rien d’assigné dans Between' : 'nothing assigned in Between')}. ${fr ? '[Plan à ajouter]' : '[Clinician to add plan]'}`;
@@ -582,7 +582,7 @@ async function draftSoapNote({ name, discipline, accountType, checkIns, exercise
   const pain = PAIN_DISCIPLINES.includes(discipline || '');
   const format = noteFormat({ accountType, discipline });
   const kind = programKind({ accountType, discipline });
-  const progWord = { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise' }[kind];
+  const progWord = { exercise: 'Home program', practice: 'Between-session practice', habit: 'Habits to practise', recovery: 'Daily practices', school: 'Strategies to practise', speech: 'Home practice' }[kind];
   const scoreWord = pain ? 'pain' : 'mood';
   const who = name || 'the patient';
   const cutoff = Date.now() - 28 * 24 * 60 * 60 * 1000;
@@ -3028,7 +3028,8 @@ const PROGRAM_PROMPT = {
   practice: { what: 'between-session practice (homework)', items: 'common, evidence-informed between-session practices or skills (e.g. from CBT, DBT, ACT, behavioural activation, mindfulness, sleep hygiene) that a client can do on their own', dose: 'how often (e.g. "once a day, 5 min" or "when you notice the worry")' },
   habit: { what: 'set of habits to practise', items: 'small, realistic, well-established eating and lifestyle habits', dose: 'how often (e.g. "daily" or "at 3 meals")' },
   recovery: { what: 'daily recovery practices', items: 'common, supportive recovery practices (coping with cravings, routines, connection, self-care)', dose: 'how often (e.g. "every evening")' },
-  school: { what: 'set of strategies to practise', items: 'simple, age-appropriate strategies a student can practise at school or home (focus, organisation, calming, friendships)', dose: 'when or how often (e.g. "before homework")' }
+  school: { what: 'set of strategies to practise', items: 'simple, age-appropriate strategies a student can practise at school or home (focus, organisation, calming, friendships)', dose: 'when or how often (e.g. "before homework")' },
+  speech: { what: 'home practice program', items: 'common, well-established speech-language home practice activities (e.g. sound or word drills, reading aloud, fluency or voice techniques, word-finding strategies, carryover tasks in real conversations) a client can do on their own or with family', dose: 'how often and how long (e.g. "10 minutes, 5 days a week")' }
 };
 async function suggestExercises({ goal, discipline, accountType, lang, context, caution }) {
   const focus = documentFocusForProfession({ discipline, accountType });
