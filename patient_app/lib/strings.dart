@@ -427,6 +427,9 @@ class S {
   // Home exercise program (assigned by the clinician) — mirrors the website.
   String get homeExercises =>
       _('Your home exercises', 'Vos exercices à domicile');
+  // Speech-language: the home practice list (mirrors the website).
+  String get homePractice =>
+      _('Your home practice', 'Votre pratique à la maison');
   // The same checklist, named for the field (mirrors the website).
   // "Do it now": a practice or exercise with its how-to and a timer.
   String get doItNow => _('Do it now', 'Faire maintenant');
