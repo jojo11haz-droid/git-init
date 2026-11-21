@@ -37,7 +37,7 @@ class S {
       'Between is not a crisis service. If you\'re in immediate danger or thinking about suicide, call or text 988, or call 911.',
       'Between n\'est pas un service de crise. Si vous êtes en danger immédiat ou pensez au suicide, appelez ou textez le 988, ou composez le 911.');
   // Standing support strip for self-serve individuals (no clinician notified).
-  String get supportTitle => _("You're not on your own", "Tu n'es pas seul");
+  String get supportTitle => _("You're not on your own", "De l'aide est là pour vous");
   String get supportText988 => _('Text 988', 'Texter 988');
   String get supportCall988 => _('Call 988', 'Appeler 988');
   String get supportEmergency => _('Emergency 911', 'Urgence 911');
