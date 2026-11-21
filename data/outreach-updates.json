@@ -1399,5 +1399,55 @@
     "note": "Found via Apollo (verified email, Nov 21). [Apollo sequence] In the French Apollo sequence (ON) since Nov 21. Don't email them by hand.",
     "phone": "438-533-2767",
     "website": "cliniqueapostrophe.ca"
+  },
+  {
+    "id": "physio-pivot-sherbrooke",
+    "add": true,
+    "name": "Pivot physiothérapie",
+    "contact": "",
+    "profession": "physio",
+    "city": "Sherbrooke",
+    "lang": "fr",
+    "email": "info@pivotphysiotherapie.com",
+    "phone": "819-434-2000",
+    "website": "pivot-physio.com",
+    "note": "Email published on the clinic's own website (checked Nov 21). Not in an Apollo sequence: email by hand. General inbox: ask who owns the clinic."
+  },
+  {
+    "id": "physio-dimensions-sante",
+    "add": true,
+    "name": "Clinique Dimensions Santé",
+    "contact": "Stéphanie Chaffey (owner, physiotherapist)",
+    "profession": "physio",
+    "city": "Longueuil",
+    "lang": "fr",
+    "email": "info@cliniqueds.com",
+    "phone": "450-286-0916",
+    "website": "cliniqueds.com",
+    "note": "Email published on the clinic's own website (checked Nov 21). Not in an Apollo sequence: email by hand. Run as a co-op by its founding members."
+  },
+  {
+    "id": "physio-physiotherapie-de-sherbrooke",
+    "add": true,
+    "name": "Clinique de physiothérapie de Sherbrooke",
+    "contact": "Jasmin Parenteau (physiotherapist, son of the founder)",
+    "profession": "physio",
+    "city": "Sherbrooke",
+    "lang": "fr",
+    "phone": "819-565-2321",
+    "website": "physiotherapiedesherbrooke.com",
+    "note": "No email on the clinic's website (contact form only, checked Nov 21). Call or use the form."
+  },
+  {
+    "id": "physio-physio-sante-sherbrooke",
+    "add": true,
+    "name": "Clinique Physio-Santé de Sherbrooke",
+    "contact": "",
+    "profession": "physio",
+    "city": "Sherbrooke",
+    "lang": "fr",
+    "phone": "819-573-0400",
+    "website": "cliniquephysiosante.com",
+    "note": "No email on the clinic's website (checked Nov 21). Call or use the form."
   }
 ]
