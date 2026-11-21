@@ -870,7 +870,7 @@ class S {
           'Votre ${_providerFr[providerKey] ?? 'intervenant ou intervenante'} voit vos suivis; les mots que vous vous laissez restent privés. Faites-en un quand vous voulez.');
   // A note to your future self
   String get futureNoteTitle =>
-      _('A note to your future self', 'Un mot à votre futur vous');
+      _('A note to your future self', 'Un mot pour vous, pour plus tard');
   String get futureNoteIntro => _(
       'Leave yourself something kind for a harder day. Between shows it back to you after a low check-in.',
       'Laissez-vous un mot bienveillant pour une journée difficile. Between vous le remontre après un suivi plus bas.');
