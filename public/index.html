@@ -6071,12 +6071,13 @@
   // the full chrome (every nav tab + field switcher) so they can reach both the
   // professional and the patient-facing side of the product from one login.
   // (free-access can cover several comp'd emails; this is strictly the owner.)
-  const OWNER_EMAIL = 'jojo11haz@gmail.com';
+  // Who the owner is comes from the server (siteOwner): no address is written
+  // into the page.
   // The field the owner is viewing on the clinician dashboard (they can switch
   // fields to see each profession's full tools). null for everyone else, who
   // always works as their own account type.
   function ownerField(){
-    if(!ownerFreeAccess || !state.me || _ownerPreview) return null;
+    if(!siteOwner || !state.me || _ownerPreview) return null;
     const a = (typeof curAudience !== 'undefined') ? curAudience : null;
     return (a && PREVIEW_CLINICIAN[a]) ? a : null;
   }
@@ -6087,10 +6088,7 @@
     if(f) return { at: PREVIEW_CLINICIAN[f].at, disc: PREVIEW_CLINICIAN[f].disc };
     return { at: state.me && state.me.account_type, disc: state.me && state.me.discipline };
   }
-  function isOwnerAccount(){
-    const e = (state.me && state.me.email) || (state.patient && state.patient.email) || '';
-    return String(e).toLowerCase() === OWNER_EMAIL;
-  }
+  function isOwnerAccount(){ return !!siteOwner && !!(state.me || state.patient); }
   // Owner-only "preview the patient side" switch on the dashboard. It swaps in a
   // synthetic patient so the dashboard renders exactly as a patient sees it;
   // nothing is sent, and the real clinician session is restored on toggle off.
@@ -6119,7 +6117,7 @@
     return {
       id: '__preview__',
       display_name: (me.name || 'You') + ' (preview)',
-      email: me.email || OWNER_EMAIL,
+      email: me.email || '',
       plan: 'patient_monthly', subscription_status: 'active', is_premium: true,
       ai_consent_enabled: true,
       // A self-serve individual has no clinician attached — that's what flips
@@ -10938,7 +10936,7 @@
   // Returns null when nobody is signed in, or for an owner/comp account, which
   // is allowed to preview every field for testing.
   function accountAudience(){
-    if(ownerFreeAccess) return null;
+    if(siteOwner) return null;
     if(state.me){
       const at = state.me.account_type;
       if(at === 'coach'){ const d = state.me.discipline; return (d === 'physio' || d === 'kinesiology' || d === 'osteo' || d === 'occupational' || d === 'neuropsych' || d === 'speech' || d === 'nutrition') ? d : 'sports'; }
@@ -13943,6 +13941,11 @@
       state.me = null;
     }
     state.role = null; state.patients = []; state.checkIns = []; state.selectedPatientId = null;
+    // Owner/comp flags belong to the account that just left: clear them so
+    // the next sign-in on this device starts with no owner tools.
+    siteOwner = false; ownerFreeAccess = false;
+    ['btwAdminOverlay','btwEngagementOverlay','btwNotifOverlay','btwOutreachOverlay','btwBillCheckOverlay'].forEach(function(id){ const o = document.getElementById(id); if(o) o.style.display = 'none'; });
+    ['btwAdminList','btwTrafficBody','btwDemoReqBody','btwStorageBody','btwEngBody','btwNotifBody','btwOrList','btwOrFunnel','btwOrSub','btwBillCheckList'].forEach(function(id){ const e = document.getElementById(id); if(e) e.innerHTML = ''; });
     renderAuthState();
     renderAll();
   });
