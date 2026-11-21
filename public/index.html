@@ -7185,7 +7185,7 @@
     "Your account is pending verification":"Votre compte est en attente de validation",
     // dynamic (built in JS)
     "Signed in as":"Session ouverte :",
-    "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés","AI summaries:: ":"Résumés IA : : ",
+    "AI summaries: on":"Résumés IA : activés","AI summaries: off":"Résumés IA : désactivés",
     "No check-ins on file.":"Aucun suivi au dossier.","safety flag":"signal de sécurité","mood":"humeur",
     "Very low":"Très bas","Low":"Bas","Okay":"Correct","Good":"Bon","Great":"Excellent",
     "Flagged for review":"Signalé à revoir","At risk":"À risque",
@@ -16350,7 +16350,9 @@
     let on, has;
     if(isPatient()){ on = !!(state.patient && state.patient.ai_consent_enabled); has = true; }
     else { const p = selectedPatient(); on = !!(p && p.ai_consent_enabled); has = !!p; }
-    aiStatusEl.textContent = has ? (on ? t('AI summaries: on') : t('AI summaries: off')) : t('AI summaries:: ');
+    // Nothing to report until a person is selected: hide the badge.
+    aiStatusEl.textContent = on ? t('AI summaries: on') : t('AI summaries: off');
+    aiStatusEl.style.display = has ? 'inline-block' : 'none';
     const dataToggle = document.getElementById('btwDataAiToggle');
     if(dataToggle) dataToggle.checked = on;
   }
