@@ -7361,7 +7361,7 @@
     "Your caseload":"Votre clientèle",
     "Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.":"Toutes les personnes que vous suivez apparaissent ici, regroupées selon leur état : vert pour sur la bonne voie, ambre pour correct, rouge pour à examiner maintenant.",
     "Add your first patient":"Ajoutez votre premier patient",
-    "They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you. It just waits for your next session.":"Ils reçoivent un lien d'invitation privé et font un suivi par texte, par voix ou avec quelques questions guidées. Rien ne vous sollicite, le résumé attend simplement votre prochaine séance.",
+    "They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you. It just waits for your next session.":"La personne reçoit un lien d'invitation privé et fait ses suivis par texte, par voix ou avec quelques questions guidées. Rien ne vous sollicite, le résumé attend simplement votre prochaine séance.",
     "Trends at a glance":"Les tendances en un coup d'œil",
     "Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances d'humeur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
     "Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.":"Les tendances de douleur et de thèmes se construisent ici au fil des suivis, pour que vous arriviez en connaissant déjà leur semaine.",
@@ -21013,11 +21013,13 @@
         const fr = curLang === 'fr';
         const PRO = { therapy:['therapist','thérapeute'], neuropsych:['neuropsychologist','neuropsychologue'], speech:['speech-language pathologist','orthophoniste'], recovery:['mentor','mentor'], nutrition:['nutritionist','nutritionniste'],
           physio:['physiotherapist','physiothérapeute'], kinesiology:['kinesiologist','kinésiologue'], osteo:['osteopath','ostéopathe'], occupational:['occupational therapist','ergothérapeute'],
-          sports:['coach','entraîneur'], fitness:['trainer','entraîneur'], schools:['school team','équipe-école'] };
-        const pw = (PRO[curAudience] || PRO.therapy)[fr ? 1 : 0];
-        const yourPro = (fr ? 'votre ' : 'your ') + pw;
+          sports:['coach','coach'], fitness:['trainer','coach'], schools:['school team','équipe de l’école'] };
         const pt = state.patient || {};
-        const ITEMS = { exercise:['exercises','exercices'], practice:['practices','pratiques'], habit:['habits','habitudes'], recovery:['practices','pratiques'], school:['strategies','stratégies'] };
+        // Name the client's own professional (their account), not the page's field.
+        const ptField = ({ therapist:'therapy', mentor:'recovery', school:'schools', trainer:'fitness' })[pt.clinician_account_type] || pt.clinician_discipline || curAudience;
+        const pw = (PRO[ptField] || PRO.therapy)[fr ? 1 : 0];
+        const yourPro = (fr ? 'votre ' : 'your ') + pw;
+        const ITEMS = { exercise:['exercises','exercices'], practice:['practices','pratiques'], habit:['habits','habitudes'], recovery:['practices','pratiques'], school:['strategies','stratégies'], speech:['home practice activities','activités de pratique'] };
         const itemKind = hepKind(pt.clinician_account_type, pt.clinician_discipline);
         const items = (ITEMS[itemKind] || ITEMS.practice)[fr ? 1 : 0];
         const joined = (itemKind === 'exercise') ? 'joints' : 'jointes'; // exercices (m) vs habitudes / pratiques / stratégies (f)
@@ -21029,14 +21031,20 @@
         return [
           { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your check-ins, about 30 seconds. You can skip anytime.') },
           { sel:'#btwInbox', title:(fr ? 'Messages de ' + yourPro : 'Messages from ' + yourPro), body:(fr ? 'Les mots de ' + yourPro + ' s’affichent ici, avec les ' + items + ' ' + joined + ' et comment les faire. Touchez Répondre pour lui écrire (pas pour les urgences).' : 'Notes from ' + yourPro + ' show here, with any ' + items + ' they attached and how to do them. Tap Reply to write back (not for emergencies).') },
+          { sel:'#btwSupport', title:(fr ? 'De l’aide est là pour vous' : 'Help is here'), body:(fr ? 'Si vous avez besoin d’aide maintenant, textez ou appelez le 988, ou composez le 911. Between n’est pas fait pour les urgences.' : 'If you need help right now, text or call 988, or call 911. Between is not for emergencies.') },
           { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it, by writing, a voice note, or a few guided questions.') },
           { sel:'#btwMoodSlider', title: pm ? t('Rate your pain') : t('Set how you are doing'), body: pm ? t('Slide to show your pain right now, or let Between estimate it from what you wrote.') : t('Slide to show how you are feeling, or let Between estimate it from what you wrote.') },
           { sel:'#btwComposePain', title:t('Show where it hurts'), body:t('Tap the area, zoom in to the exact spot and say how it feels. Pick Man or Woman once; it stays that way.') },
           { sel:'#btwComposeHep', title:t('Tick what you did'), body:(fr ? 'Vos ' + items + ' sont ici. Cochez ce que vous avez fait depuis la dernière fois pour que ' + yourPro + ' voie comment ça se passe. « Faire maintenant » ouvre l’explication et une minuterie.' : 'Your ' + items + ' are here. Tick what you did since last time so ' + yourPro + ' can see how it is going. “Do it now” opens the how-to and a timer.') },
           { sel:'#btwSend', title:t('Send it'), body:t('That is it: a check-in takes under a minute, whenever something happens.') },
+          { sel:'#btwOpenFuture', title:(fr ? 'Un mot pour un jour plus difficile' : 'A note for a harder day'), body:(fr ? 'Écrivez-vous un mot gentil pour plus tard. Lors d’un jour difficile, Between vous le montre. ' + (solo ? 'Privé, toujours.' : cap1(yourPro) + ' ne le voit jamais.') : 'Write something kind to your future self. On a low day, Between shows it back to you. ' + (solo ? 'Always private.' : cap1(yourPro) + ' never sees it.')) },
+          { sel:'#btwReminderNudge', title:(fr ? 'Un rappel chaque jour' : 'A daily reminder'), body:(fr ? 'Recevez un court texto chaque jour pour que faire le point devienne une habitude. Vous pouvez l’arrêter quand vous voulez.' : 'Get a short text each day so checking in becomes a habit. Turn it off anytime.') },
           { sel:'#btwFirstWeek', title:t('Your first week'), body:t('Three small steps to get going: your first check-in, three different days, and a daily reminder. It goes away once you are done.') },
           { sel:'#btwSinceStart', title:t('Since you started'), body:t('After three weeks, see how things have changed since your first weeks, in plain words.') },
           { sel:'#btwTopics', title:t('For your next session'), body:(fr ? 'Notez ce dont vous voulez parler, dès que ça vous vient. ' + cap1(yourPro) + ' le voit avant votre rencontre.' : 'Jot down what you want to talk about, whenever it comes to mind. ' + cap1(yourPro) + ' sees it before you meet.') },
+          { sel:'#btwGoals', title:(fr ? 'Vos intentions' : 'Your intentions'), body:(fr ? 'Une ou deux choses que vous voulez garder en tête. Privé, juste pour vous.' : 'One or two things you want to keep in mind. Private, just for you.') },
+          { sel:'#btwSharePro', title:(fr ? 'Partager avec une ou un professionnel' : 'Share with a professional'), body:(fr ? 'Vous commencez à consulter ? Envoyez-lui un court résumé de vos suivis, seulement si vous le choisissez.' : 'Started seeing someone? Send them a short summary of your check-ins, only when you choose to.') },
+          { sel:'#btwPrintBtn', title:(fr ? 'Imprimer ou enregistrer' : 'Print or save'), body:(fr ? 'Imprimez votre progression, ou enregistrez-la en PDF pour l’apporter à un rendez-vous.' : 'Print your progress, or save it as a PDF to bring to an appointment.') },
           { sel:'#btwAccTrends', title:t('Your trends'), body:scoreTrend },
           { sel:'#btwAccTimeline', title:t('Your history'), body:t('Every check-in you make is saved here, so a rough stretch is something you can actually see.') },
           { sel:null, title:t('You are all set'), body: privacy + ' ' + t('You can replay this tour anytime: tap “Walk me through it” on your dashboard.') }
@@ -21045,17 +21053,27 @@
       // Clinician tour.
       const noun = personNoun();
       const hasPeople = !!(state.patients && state.patients.length);
-      const addTitle = hasPeople ? (curLang === 'fr' ? 'Ajoutez un ' : 'Add a ') + noun : (curLang === 'fr' ? 'Ajoutez votre premier ' : 'Add your first ') + noun;
+      const fr = curLang === 'fr';
+      const addTitle = hasPeople ? (fr ? 'Ajoutez une personne' : 'Add a ' + noun) : (fr ? 'Ajoutez votre première personne' : 'Add your first ' + noun);
+      // The program and the insight card are named for the field.
+      let hw = null; try { hw = hepWords(); } catch(e){}
+      const isEx = (function(){ try { return hepKind(meAs().at, meAs().disc) === 'exercise'; } catch(e){ return false; } })();
+      const progTitle = hw ? t(hw.title) : t('Their program');
+      let sigT = '', sigH = ''; try { sigT = signatureTitle(); sigH = signatureHint(); } catch(e){}
       return [
         { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your dashboard, about a minute. You can skip anytime.') },
         { sel:'#btwNeeds', title:t('Needs you today'), body:t('Only the patients who need you, with the reason: a safety flag, scores getting worse, or gone quiet. Tick the box to get this list by email each morning.') },
         { sel:'#btwPatientList', title:t('Your caseload'), body:t('Everyone you support shows here, grouped by how they are doing: green is on track, amber is doing okay, red needs attention now.') + ' ' + t('A “Replied” tag means they answered your message.') },
+        { sel:'#btwCaseDigest', title:(fr ? 'Votre semaine en un coup d’œil' : 'Your week at a glance'), body:(fr ? 'Un clic pour un court aperçu de tout le monde et des personnes à voir en premier.' : 'One tap for a short read on everyone and who to see first.') },
         { sel:'#btwAddPatient', title:addTitle, body:t('They get a private invite link and check in by text, voice or a few guided questions. Nothing pings you. It just waits for your next session.') },
+        { sel:'#btwClinNote', title:(fr ? 'Comment la personne fait ses suivis, et vos notes' : 'How they check in, and your notes'), body:(fr ? 'Choisissez les questions guidées seulement, ou laissez la personne écrire ou envoyer un message vocal. Vos notes ici sont privées : elle ne les voit jamais.' : 'Choose guided questions only, or let them write or send a voice memo. Your notes here are private: they never see them.') },
+        { sel:'#btwNextSessionBar', title:(fr ? 'Prochaine séance et impression' : 'Next session and printing'), body:(fr ? 'Notez la date de la prochaine séance. « Imprimer » donne sa progression sur papier ou en PDF pour votre dossier.' : 'Note the date of their next session. Print gives you their progress on paper or as a PDF for your file.') },
         { sel:'#btwCopyEmrBar', title:t('Your tools for each patient'), body:t('AI draft note writes the chart note from their check-ins; type or dictate your findings into it. Record session turns an appointment into the note. Report / letter drafts progress reports and letters.') },
         { sel:'#btwEncourageBtn', title:t('Messages, both ways'), body:t('Send them a short note, with items from their program attached. Their replies come back to the same thread, and you get an email with nothing private in it.') },
-        { sel:'#btwHep', title:t('Their program'), body:t('Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.') },
+        { sel:'#btwHep', title:progTitle, body: isEx ? t('Build their program with AI suggestions based on their check-ins, each with a dose and a clear rule for discomfort. They tick it off when they check in.')
+            : (fr ? 'Bâtissez son programme avec des suggestions de l’IA tirées de ses suivis, avec la fréquence de chaque élément. La personne les coche quand elle fait son suivi.' : 'Build their program with AI suggestions based on their check-ins, with how often to do each one. They tick them off when they check in.') },
         { sel:'#btwTopicsPro', title:t('What they want to bring up'), body:t('Topics they jotted down for the next session. Tick each one once you have talked about it.') },
-        { sel:'.btw-prep-pair', title:t('Prep in seconds'), body:t('A short read on how they have been since last time and what to open with, plus the thread running through their weeks.') },
+        { sel:'.btw-prep-pair', title:t('Prep in seconds'), body: sigT ? (fr ? 'Un court aperçu de son état depuis la dernière fois et par quoi commencer. À côté, ' + sigT + ' : ' + sigH.charAt(0).toLowerCase() + sigH.slice(1) : 'A short read on how they have been since last time and what to open with. Next to it, ' + sigT + ': ' + sigH.charAt(0).toLowerCase() + sigH.slice(1)) : t('A short read on how they have been since last time and what to open with, plus the thread running through their weeks.') },
         { sel:'#btwAccTrends', title:t('Trends at a glance'), body: pm ? t('Pain and theme trends build here as check-ins come in, so you walk in already knowing their week.') : t('Mood and theme trends build here as check-ins come in, so you walk in already knowing their week.') },
         { sel:'#btwAccTimeline', title:t('The timeline'), body:t('Every check-in lands here as a short, dated summary you can read in seconds.') },
         { sel:'#btwSaved', title:t('Time saved'), body:t('Every note, brief and program Between drafts for you adds up here.') },
