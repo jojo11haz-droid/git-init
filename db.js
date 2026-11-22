@@ -509,6 +509,15 @@ async function applyOutreachUpdates() {
         }
       } catch (e) {}
     }
+    // A wrong profession found later: corrected once ever, so the owner can still change it afterwards.
+    if (u.fix_profession && /^[a-z]{2,20}$/.test(u.fix_profession)) {
+      try {
+        const once = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', ['profession:' + u.id + ':' + u.fix_profession]);
+        if (once.rows.length) {
+          await pool.query('UPDATE outreach_leads SET profession = $2, updated_at = now() WHERE id = $1', [u.id, u.fix_profession]);
+        }
+      } catch (e) {}
+    }
     // Taken out of the Apollo queue so the owner emails them by hand: applied once ever, and only
     // while the lead is still waiting for a first email.
     if (u.unqueue === true) {
