@@ -5743,7 +5743,7 @@ app.get('/api/admin/demo-requests', requireDb, requireAuth, requireOwner, async 
 // Owner: clinic outreach list (who to email, where each one is in the sequence).
 const OUTREACH_STATUSES = ['to_contact', 'emailed', 'followup1', 'followup2', 'replied', 'trial', 'customer', 'not_interested'];
 const OUTREACH_PROFESSIONS = ['physio', 'psycho', 'kinesio', 'osteo', 'occupational', 'speech', 'nutrition', 'neuropsych', 'other'];
-const OUTREACH_TEXT = { name: 160, contact: 120, city: 80, email: 200, phone: 40, website: 400, notes: 2000 };
+const OUTREACH_TEXT = { name: 160, contact: 120, city: 80, email: 200, phone: 40, website: 400, notes: 4000 };
 function cleanOutreach(body) {
   const b = body && typeof body === 'object' ? body : {};
   const out = {};

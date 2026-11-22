@@ -3304,6 +3304,17 @@
   .btw-or-hot b{color:var(--moss);} .btw-or-hot .who{display:flex;flex-wrap:wrap;gap:6px;}
   .btw-or-hot button{border:1px solid var(--moss);background:var(--panel);color:var(--moss);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-body);}
   .btw-or-hot[hidden]{display:none;}
+  .btw-or-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;}
+  .btw-or-chips button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+  .btw-or-chips button.on{background:var(--moss);border-color:var(--moss);color:#fff;}
+  .btw-or-script{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:6px 0 4px;font-size:13.5px;line-height:1.5;color:var(--ink);white-space:pre-wrap;}
+  .btw-or-outcomes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-top:8px;}
+  .btw-or-work{margin:8px 0 0;font-size:12.5px;color:var(--ink-soft);}
+  .btw-or-work summary{cursor:pointer;font-weight:700;color:var(--ink);}
+  .btw-or-work table{border-collapse:collapse;margin-top:6px;width:100%;max-width:520px;}
+  .btw-or-work th,.btw-or-work td{text-align:left;padding:3px 8px 3px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+  .btw-or-work td.r,.btw-or-work th.r{text-align:right;}
+  .btw-or-work .best{color:var(--moss);font-weight:700;}
   .btw-or-hot.bounce{background:transparent;border-color:var(--clay);} .btw-or-hot.bounce b{color:var(--clay);} .btw-or-hot.bounce button{border-color:var(--clay);color:var(--clay);}
   .btw-or-lead.flash{box-shadow:0 0 0 3px var(--moss);transition:box-shadow .3s;} .btw-or-pill.no{background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-weight:600;}
   .btw-or-when{font-size:12px;color:var(--ink-soft);} .btw-or-when.late{color:var(--clay);font-weight:700;} .btw-or-when.due{color:var(--moss);font-weight:700;}
@@ -5750,6 +5761,7 @@
         <div class="btw-or-funnel" id="btwOrFunnel"></div>
         <div class="btw-or-hot" id="btwOrHot" hidden></div>
         <div class="btw-or-hot bounce" id="btwOrBounce" hidden></div>
+        <details class="btw-or-work" id="btwOrWork" hidden><summary>What’s working</summary><div id="btwOrWorkBody"></div></details>
         <div class="btw-or-tools">
           <div class="btw-or-tabs" role="tablist" id="btwOrTabs"></div>
           <div class="btw-or-right">
@@ -5785,6 +5797,10 @@
             <div class="btw-or-hint" id="btwOrCAiNote" hidden></div>
             <div class="btw-or-hint" id="btwOrCHint"></div>
           </div>
+          <div id="btwOrCRepliesWrap" hidden>
+            <div class="btw-or-lbl">What did they say? <small>(picks a ready answer, then edit it)</small></div>
+            <div class="btw-or-chips" id="btwOrCReplies" role="group" aria-label="What did they say?"></div>
+          </div>
           <label class="btw-or-lbl" for="btwOrCSubject">Subject</label>
           <input type="text" id="btwOrCSubject" maxlength="200">
           <label class="btw-or-lbl" for="btwOrCBody">Email <small>(edit anything you like)</small></label>
@@ -5802,6 +5818,28 @@
         </div>
       </div>
 
+      <div class="btw-or-sheet" id="btwOrCall" hidden>
+        <button type="button" class="btw-or-back" data-orclose>← Back to the list</button>
+        <div class="btw-or-sheet-body">
+          <h3 id="btwOrCallTitle">Call</h3>
+          <div class="who" id="btwOrCallWho"></div>
+          <div class="btw-or-sheet-acts" style="margin-top:8px;"><a class="btw-or-b pri" id="btwOrCallDial" href="#">📞 Call</a></div>
+          <div class="btw-or-lbl">What to say</div>
+          <div class="btw-or-script" id="btwOrCallScript"></div>
+          <div class="btw-or-lbl">If you get voicemail <small>(about 15 seconds)</small></div>
+          <div class="btw-or-script" id="btwOrCallVm"></div>
+          <div class="btw-or-lbl">How did it go? <small>(logs it in their notes)</small></div>
+          <div class="btw-or-outcomes">
+            <button type="button" class="btw-or-b" data-orcall="noanswer">No answer</button>
+            <button type="button" class="btw-or-b" data-orcall="vm">Left a voicemail</button>
+            <button type="button" class="btw-or-b" data-orcall="email">Got their email</button>
+            <button type="button" class="btw-or-b pri" data-orcall="yes">They’re interested</button>
+            <button type="button" class="btw-or-b" data-orcall="later">Call back later</button>
+            <button type="button" class="btw-or-b warn" data-orcall="no">Not interested</button>
+          </div>
+          <div class="btw-or-addemail" id="btwOrCallEmailWrap" hidden style="margin-top:8px;"><input type="email" id="btwOrCallEmail" placeholder="their@email.com" aria-label="Their email"><button type="button" class="btw-or-b pri" id="btwOrCallEmailSave">Save</button></div>
+        </div>
+      </div>
       <div class="btw-or-sheet" id="btwOrForm" hidden>
         <button type="button" class="btw-or-back" data-orclose>← Back to the list</button>
         <div class="btw-or-sheet-body">
@@ -14950,7 +14988,17 @@
     'How this works':'Comment ça marche', 'Today':"Aujourd'hui", 'Waiting':'En attente', 'Done':'Terminées', 'All':'Toutes',
     'not contacted':'pas contactées', 'emailed':'contactées', 'replied':'ont répondu', 'trials':'essais', 'customers':'clientes',
     'Follow-ups overdue':'Relances en retard', 'Follow up today':"Relancer aujourd'hui", 'They replied: answer them':'Elles ont répondu : répondez-leur', 'Said no thanks':'Ont dit non merci',
-    'Email bounced: call them instead':'Courriel rebondi : appelez plutôt', 'Their email address doesn’t work. Call, or find a new address.':'Leur adresse courriel ne fonctionne pas. Appelez, ou trouvez une nouvelle adresse.',
+    'Email bounced: call them instead':'Courriel rebondi : appelez plutôt', 'What’s working':'Ce qui fonctionne', 'Emailed':'Contactées', 'Interested':'Intéressées',
+    'Counts hand-sent emails logged here. Apollo sequence results show up once those clinics are marked.':'Compte les courriels envoyés à la main et notés ici. Les résultats des séquences Apollo apparaissent une fois ces cliniques marquées.',
+    'What did they say?':'Qu’ont-elles répondu ?', '(picks a ready answer, then edit it)':'(choisit une réponse prête, que vous pouvez modifier)',
+    'Yes, send the video':'Oui, envoyez la vidéo', 'How much?':'Combien ?', 'Privacy?':'Confidentialité ?', 'We have an EMR':'On a déjà un DME',
+    'Patients won’t use it':'Les patients ne l’utiliseront pas', 'Not now':'Pas maintenant', 'Replace what you wrote with this answer?':'Remplacer ce que vous avez écrit par cette réponse ?',
+    '📞 Call script':'📞 Script d’appel', 'What to say':'Quoi dire', 'If you get voicemail':'Si vous tombez sur la boîte vocale', '(about 15 seconds)':'(environ 15 secondes)',
+    'How did it go?':'Comment ça s’est passé ?', '(logs it in their notes)':'(le note dans leur fiche)', 'No answer':'Pas de réponse', 'Left a voicemail':'Message laissé',
+    'Got their email':'J’ai leur courriel', 'They’re interested':'Intéressée', 'Call back later':'Rappeler plus tard', 'Their email':'Leur courriel',
+    'Logged: no answer. Try again another day.':'Noté : pas de réponse. Réessayez un autre jour.', 'Logged: voicemail left.':'Noté : message laissé.',
+    'Logged. Call them back in a few days.':'Noté. Rappelez dans quelques jours.', 'Marked as interested. Send them the video today!':"Marquée comme intéressée. Envoyez-lui la vidéo aujourd'hui !",
+    'Saved. They’re ready for a first email.':'Enregistré. Prête pour un premier courriel.', 'In French':'En français', 'In English':'En anglais', 'Their email address doesn’t work. Call, or find a new address.':'Leur adresse courriel ne fonctionne pas. Appelez, ou trouvez une nouvelle adresse.',
     'Email bounced':'Courriel rebondi', 'Their email address doesn’t work':'Leur adresse courriel ne fonctionne pas', '📞 Call':'📞 Appeler', 'New email':'Nouveau courriel',
     'Ready for a first email':'Prêtes pour un premier courriel', 'In Apollo sequence':'Dans la séquence Apollo',
     'Apollo sends their emails. Don’t email them by hand.':'Apollo leur envoie les courriels. Ne leur écrivez pas à la main.',
@@ -15553,7 +15601,7 @@
     // Profession filter ("categories"): narrows every tab, count and search.
     let prof = 'all'; try { const sp = localStorage.getItem('btw_or_prof'); if(sp && (sp === 'all' || PROF[sp])) prof = sp; } catch(e){}
     const pool = () => prof === 'all' ? leads : leads.filter(l => (l.profession || 'other') === prof);
-    let leads = [], tab = 'today', editing = null, composing = null, bodyDirty = false, opened = false, undoFn = null;
+    let leads = [], tab = 'today', editing = null, composing = null, calling = null, bodyDirty = false, opened = false, undoFn = null;
 
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
     function addDays(iso, n){ const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -15610,6 +15658,53 @@
         ? `${hi}\n\n${op}Petite question : quand ${who} reviennent, se souviennent-ils vraiment de leur semaine?\n\nJ’ai créé Between : ${LINE.fr[prof]}\n\nUne vidéo d’une minute qui montre comment ça marche vous serait-elle utile?\n\nJack\n\n${SIG.fr}`
         : `${hi}\n\n${op}Quick question: when ${who} come back, do they actually remember how their week went?\n\nI built Between: ${LINE.en[prof]}\n\nWould a 1-minute video of how it works be useful?\n\nJack\n\n${SIG.en}` };
     }
+    // Ready answers to the replies clinics actually send (same wording as outreach-kit.md §8).
+    const REPLIES = [
+      ['video', 'Yes, send the video'], ['price', 'How much?'], ['privacy', 'Privacy?'], ['emr', 'We have an EMR'],
+      ['wontuse', 'Patients won’t use it'], ['notnow', 'Not now']];
+    function replyFor(l, kind){
+      const lang = l.lang === 'en' ? 'en' : 'fr', first = firstName(l), fr = lang === 'fr';
+      const prof = LINE[lang][l.profession] ? l.profession : 'other';
+      const cl = prof !== 'physio' && prof !== 'osteo' && prof !== 'neuropsych';
+      const url = 'betweenpsych.com/' + (fr ? 'fr/' : '') + (PATH[prof] || '') + '?ref=reply';
+      const hi = fr ? 'Bonjour' + (first ? ' ' + first : '') + ',' : (first ? 'Hi ' + first + ',' : 'Hello,');
+      const setup = fr ? 'Si vous voulez l’essayer, je peux configurer votre compte avec vous en 10 minutes, par téléphone ou en vidéo.' : 'If you’d like to try it, I can set up your account with you in 10 minutes, by phone or video.';
+      const P = fr ? (cl ? 'clients' : 'patients') : (cl ? 'clients' : 'patients');
+      const T = {
+        price: fr ? `Bonne question! Les forfaits sont sur le site. Les 14 premiers jours sont gratuits (60 pour les 10 premières cliniques fondatrices, jusqu’au 31 janvier), et vos ${P} ne paient jamais.\n\nLa vidéo d’une minute, au besoin : ${url}\n\n${setup}`
+                  : `Good question! Plans are on the site. The first 14 days are free (60 for the first 10 founding clinics, until January 31), and your ${P} never pay.\n\nThe 1-minute video, if useful: ${url}\n\n${setup}`,
+        privacy: fr ? `Bonne question. Les résumés IA restent désactivés jusqu’à ce que chaque ${cl ? 'client' : 'patient'} les active, et Between est conçu en tenant compte de la Loi 25. La page confidentialité et sécurité liste chaque fournisseur : betweenpsych.com/security\n\n${setup}`
+                    : `Good question. AI summaries stay off until each ${cl ? 'client' : 'patient'} opts in, and Between is built with Quebec’s Law 25 in mind. The privacy and security page lists every provider: betweenpsych.com/security\n\n${setup}`,
+        emr: fr ? `Ça ne le remplace pas : vous copiez la note rédigée dans votre dossier. Ça couvre ce que le DME ne voit pas, les jours entre les ${cl ? 'séances' : 'visites'}.\n\nLa vidéo d’une minute : ${url}`
+                : `It doesn’t replace it: you copy the drafted note into your chart. It covers what the EMR can’t, the days between ${cl ? 'sessions' : 'visits'}.\n\nThe 1-minute video: ${url}`,
+        wontuse: fr ? `C’est une minute, par la voix, à partir du lien d’invitation, sans rien télécharger. Essayez d’abord avec vos 3 ${P} les plus engagés.\n\n${setup}`
+                    : `It’s one minute, by voice, from the invite link, no download. Try it with your 3 most engaged ${P} first.\n\n${setup}`,
+        notnow: fr ? `Aucun problème, merci de m’avoir répondu. Puis-je vous relancer dans quelques mois?` : `No problem, thanks for getting back to me. May I check back in a few months?`
+      };
+      if(kind === 'video' || !T[kind]) return emailFor(l, '').body;
+      return hi + '\n\n' + T[kind] + '\n\nJack\n\n' + SIG[lang];
+    }
+    // Phone: the script from outreach-kit.md §5, in their language.
+    function callScript(l){
+      const fr = l.lang !== 'en', name = firstName(l);
+      const prof = PROF_WHO[l.profession] || PROF_WHO.other;
+      return {
+        talk: fr ? `« Bonjour, mon nom est Jack Hazan, je suis le fondateur de Between. Ce n’est pas urgent. ${name ? 'Est-ce que je pourrais parler à ' + name + '? … ' : 'Qui, à la clinique, choisit les logiciels pour l’équipe? … '}Parfait, quelle est la meilleure adresse courriel pour lui envoyer une vidéo d’une minute? »`
+                 : `"Hi, my name is Jack Hazan, I’m the founder of Between. It’s not urgent. ${name ? 'Could I speak with ' + name + '? … ' : 'Who at the clinic chooses software for the team? … '}Great, what’s the best email to send them a one-minute video?"`,
+        vm: fr ? `« Bonjour${name ? ' ' + name : ''}, ici Jack Hazan de Between. On aide les ${prof.fr} à voir comment vont leurs ${prof.frWho} entre les ${prof.frVisits}, avec la note rédigée avant qu’ils arrivent. Je vous envoie une vidéo d’une minute par courriel, ou rappelez-moi au 514-667-9513. Bonne journée! »`
+               : `"Hi${name ? ' ' + name : ''}, it’s Jack Hazan from Between. We help ${prof.en} see how their ${prof.enWho} are doing between ${prof.enVisits}, with the note drafted before they walk in. I’ll send you a one-minute video by email, or call me back at 514-667-9513. Have a great day."`
+      };
+    }
+    const PROF_WHO = {
+      physio:{ en:'physios', enWho:'patients', enVisits:'visits', fr:'physiothérapeutes', frWho:'patients', frVisits:'visites' },
+      osteo:{ en:'osteopaths', enWho:'patients', enVisits:'visits', fr:'ostéopathes', frWho:'patients', frVisits:'visites' },
+      psycho:{ en:'therapists', enWho:'clients', enVisits:'sessions', fr:'psychothérapeutes', frWho:'clients', frVisits:'séances' },
+      kinesio:{ en:'kinesiologists', enWho:'clients', enVisits:'sessions', fr:'kinésiologues', frWho:'clients', frVisits:'séances' },
+      occupational:{ en:'OTs', enWho:'clients', enVisits:'visits', fr:'ergothérapeutes', frWho:'clients', frVisits:'visites' },
+      speech:{ en:'speech therapists', enWho:'clients', enVisits:'sessions', fr:'orthophonistes', frWho:'clients', frVisits:'séances' },
+      nutrition:{ en:'dietitians', enWho:'clients', enVisits:'appointments', fr:'nutritionnistes', frWho:'clients', frVisits:'rendez-vous' },
+      neuropsych:{ en:'neuropsychologists', enWho:'patients', enVisits:'appointments', fr:'neuropsychologues', frWho:'patients', frVisits:'rendez-vous' },
+      other:{ en:'clinicians', enWho:'clients', enVisits:'appointments', fr:'professionnels', frWho:'clients', frVisits:'rendez-vous' } };
     async function copyText(text){
       try { await navigator.clipboard.writeText(text); return true; } catch(e){}
       try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch(e){ return false; }
@@ -15677,6 +15772,19 @@
       const hot = $o('btwOrHot'), bnc = $o('btwOrBounce');
       hot.hidden = !hotL.length; bnc.hidden = !bncL.length;
       if(hotL.length) hot.innerHTML = '<span>🔥 <b>' + (fr ? hotL.length + (hotL.length > 1 ? ' cliniques ont répondu' : ' clinique a répondu') : hotL.length + (hotL.length > 1 ? ' clinics replied' : ' clinic replied')) + '</b>' + esc(fr ? ' : répondez-leur aujourd’hui.' : ': answer them today.') + '</span>' + chips(hotL);
+      // What's working: replies per profession and per language, among clinics you've emailed.
+      const ANS = { replied:1, trial:1, customer:1, not_interested:1 };
+      const contacted = leads.filter(l => l.status !== 'to_contact' && !inSeq(l));
+      const work = $o('btwOrWork'); work.hidden = contacted.length < 5;
+      if(!work.hidden){
+        const row = (lab, arr) => { const r = arr.filter(l => ANS[l.status] && l.status !== 'not_interested').length, n = arr.length; return [lab, n, r, n ? Math.round(r * 100 / n) : 0]; };
+        const rows = Object.keys(PROF).map(k => row(PROF[k], contacted.filter(l => (l.profession || 'other') === k))).filter(r => r[1])
+          .concat([row(fr ? 'En français' : 'In French', contacted.filter(l => l.lang !== 'en')), row(fr ? 'En anglais' : 'In English', contacted.filter(l => l.lang === 'en'))].filter(r => r[1]));
+        const best = Math.max.apply(null, rows.filter(r => r[1] >= 5).map(r => r[3]).concat([0]));
+        $o('btwOrWorkBody').innerHTML = '<table><thead><tr><th></th><th class="r">' + esc(ownerT('Emailed')) + '</th><th class="r">' + esc(ownerT('Interested')) + '</th><th class="r">%</th></tr></thead><tbody>' +
+          rows.map(r => '<tr' + (best && r[3] === best && r[1] >= 5 ? ' class="best"' : '') + '><td>' + esc(ownerT(r[0])) + '</td><td class="r">' + r[1] + '</td><td class="r">' + r[2] + '</td><td class="r">' + r[3] + '%</td></tr>').join('') +
+          '</tbody></table><div style="margin-top:4px;">' + esc(ownerT('Counts hand-sent emails logged here. Apollo sequence results show up once those clinics are marked.')) + '</div>';
+      }
       if(bncL.length) bnc.innerHTML = '<span>⚠️ <b>' + (fr ? bncL.length + (bncL.length > 1 ? ' courriels ont rebondi' : ' courriel a rebondi') : bncL.length + (bncL.length > 1 ? ' emails bounced' : ' email bounced')) + '</b>' + esc(fr ? ' : appelez plutôt.' : ': call them instead.') + '</span>' + chips(bncL);
       const c = counts();
       $o('btwOrTabs').innerHTML = [['today','Today'],['replied','Replied'],['waiting','Waiting'],['closed','Done'],['all','All']].map(([k, lab]) =>
@@ -15720,7 +15828,8 @@
       else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
       const sq = inSeq(l) || bounced(l) ? null : SEQ[l.status];
       let main = inSeq(l) ? '<span class="btw-or-pill">In Apollo sequence</span>' : '';
-      if(bounced(l)) main = (l.phone ? '<a class="btw-or-b pri" href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">📞 Call</a>' : '') + '<button type="button" class="btw-or-b" data-oract="editemail">New email</button>';
+      if(bounced(l)) main = (l.phone ? '<button type="button" class="btw-or-b pri" data-oract="call">📞 Call</button>' : '') + '<button type="button" class="btw-or-b" data-oract="editemail">New email</button>';
+      else if(!l.email && l.phone && l.status === 'to_contact' && !inSeq(l)) main = '<button type="button" class="btw-or-b pri" data-oract="call">📞 Call</button><button type="button" class="btw-or-b" data-oract="addemail">+ Add email</button>';
       else if(!l.email && (sq || l.status === 'replied' || l.status === 'trial')) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
       else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
       else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
@@ -15734,6 +15843,7 @@
       if(l.status === 'trial') menu.push(['set:customer', 'They became a customer']);
       if(l.status !== 'not_interested' && l.status !== 'customer') menu.push(['set:not_interested', 'Not interested']);
       if(l.email && !sq && !inSeq(l) && !bounced(l) && l.status !== 'replied') menu.push(['email', 'Write them an email']);
+      if(l.phone && l.status !== 'customer') menu.push(['call', '📞 Call script']);
       menu.push(['edit', 'Edit details']);
       if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
       return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
@@ -15788,6 +15898,7 @@
         const nx = sq.days ? addDays(t, sq.days) : '';
         await setStatus(l, { status: sq.to, last: t, next: nx }, (l.status === 'to_contact' ? 'Marked as contacted. ' : 'Logged. ') + (nx ? 'Follow-up scheduled for ' + fmt(nx) + '.' : 'That was the last email for ' + l.name + '.'));
       }
+      else if(act === 'call') openCall(l);
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
         const to = act === 'set' ? b.dataset.to : act.slice(4);
@@ -15808,6 +15919,44 @@
     });
     $o('btwOrTabs').addEventListener('click', function(e){ const b = e.target.closest('[data-ortab]'); if(!b) return; tab = b.dataset.ortab; $o('btwOrSearch').value = ''; render(); $o('btwOrList').scrollTop = 0; });
     $o('btwOrSearch').addEventListener('input', render);
+
+    /* ---- call sheet ---- */
+    function openCall(l){
+      calling = l; const sc = callScript(l);
+      $o('btwOrCallTitle').textContent = (curLang === 'fr' ? 'Appeler ' : 'Call ') + l.name;
+      $o('btwOrCallWho').textContent = [l.contact, l.phone, l.city].filter(Boolean).join(' · ');
+      $o('btwOrCallDial').href = 'tel:' + (l.phone || '').replace(/[^\d+]/g, '');
+      $o('btwOrCallDial').textContent = '📞 ' + (l.phone || '');
+      $o('btwOrCallScript').textContent = sc.talk; $o('btwOrCallVm').textContent = sc.vm;
+      $o('btwOrCallEmailWrap').hidden = true; $o('btwOrCallEmail').value = '';
+      $o('btwOrCall').hidden = false;
+    }
+    // Each outcome adds a dated line at the start of their notes (newest first).
+    function logLine(l, line){ return { notes: (fmt(today()) + ': ' + line + (l.notes ? '\n' + l.notes : '')).slice(0, 4000) }; }
+    $o('btwOrCall').addEventListener('click', async function(e){
+      const b = e.target.closest('[data-orcall]'); const l = calling; if(!b || !l) return;
+      const k = b.dataset.orcall, t = today();
+      if(k === 'email'){ $o('btwOrCallEmailWrap').hidden = false; $o('btwOrCallEmail').focus(); return; }
+      const M = {
+        noanswer: [logLine(l, 'called, no answer.'), 'Logged: no answer. Try again another day.'],
+        vm: [logLine(l, 'called, left a voicemail.'), 'Logged: voicemail left.'],
+        later: [Object.assign(logLine(l, 'called, asked to call back later.'), { next: addDays(t, 3) }), 'Logged. Call them back in a few days.'],
+        yes: [Object.assign(logLine(l, 'called, they’re interested.'), { status: 'replied', last: t, next: '' }), 'Marked as interested. Send them the video today!'],
+        no: [Object.assign(logLine(l, 'called, not interested.'), { status: 'not_interested', last: t, next: '' }), 'Marked as not interested.']
+      };
+      closeSheets();
+      const before = { notes: l.notes || '', status: l.status, last: l.last || '', next: l.next || '' };
+      try { await patch(l.id, M[k][0]); toast(M[k][1], async () => { try { await patch(l.id, before); toast('Undone.'); } catch(err){ toast(err.message); } }); }
+      catch(err){ toast(err.message); }
+    });
+    $o('btwOrCallEmailSave').addEventListener('click', async function(){
+      const l = calling; if(!l) return; const v = $o('btwOrCallEmail').value.trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ toast('That doesn’t look like an email address.'); return; }
+      closeSheets();
+      try { await patch(l.id, Object.assign(logLine(l, 'called, got their email (' + v + ').'), { email: v })); toast('Saved. They’re ready for a first email.'); }
+      catch(err){ toast(err.message); }
+    });
+    $o('btwOrCallEmail').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $o('btwOrCallEmailSave').click(); } });
 
     /* ---- composer ---- */
     // "Open in Gmail": the Gmail app on iPhone / iPad (Gmail's website can't
@@ -15834,6 +15983,9 @@
       $o('btwOrCTitle').textContent = l.status === 'replied' ? 'Reply with the video' : sq ? sq.title : 'Email';
       $o('btwOrCWho').textContent = 'To ' + (l.contact ? l.contact + ', ' : '') + l.name + (l.email ? ' · ' + l.email : '');
       $o('btwOrCOpenerWrap').hidden = !first;
+      const answering = l.status === 'replied' || l.status === 'trial';
+      $o('btwOrCRepliesWrap').hidden = !answering;
+      if(answering) $o('btwOrCReplies').innerHTML = REPLIES.map(([k, lab], i) => '<button type="button" data-orreply="' + k + '" class="' + (i ? '' : 'on') + '" aria-pressed="' + !i + '">' + esc(lab) + '</button>').join('');
       $o('btwOrCOpener').value = '';
       $o('btwOrCAiNote').hidden = true; $o('btwOrCAiNote').textContent = '';
       $o('btwOrCOpener').placeholder = l.lang === 'en' ? 'e.g. I saw you focus on post-op knees in NDG.' : 'ex. J’ai vu que vous combinez physio et ostéo à Villeray.';
@@ -15864,9 +16016,15 @@
       } catch(e){ note.textContent = e.message; }
       finally { btn.disabled = false; btn.textContent = orig; }
     });
-    function closeSheets(){ $o('btwOrCompose').hidden = true; $o('btwOrForm').hidden = true; composing = null; editing = null; }
+    function closeSheets(){ $o('btwOrCompose').hidden = true; $o('btwOrForm').hidden = true; $o('btwOrCall').hidden = true; composing = null; editing = null; calling = null; }
     ov.querySelectorAll('[data-orclose]').forEach(b => b.addEventListener('click', closeSheets));
     $o('btwOrCOpener').addEventListener('input', rebuild);
+    $o('btwOrCReplies').addEventListener('click', function(e){
+      const b = e.target.closest('[data-orreply]'); if(!b || !composing) return;
+      if(bodyDirty && !confirm(ownerT('Replace what you wrote with this answer?'))) return;
+      this.querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+      $o('btwOrCBody').value = replyFor(composing, b.dataset.orreply); bodyDirty = false; composeMail();
+    });
     $o('btwOrCSubject').addEventListener('input', composeMail);
     $o('btwOrCBody').addEventListener('input', function(){ bodyDirty = true; composeMail(); });
     function showSent(){ opened = true; $o('btwOrCSent').hidden = false; }
