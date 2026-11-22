@@ -5783,6 +5783,7 @@
           <li>Click <b>Write first email</b>, add one personal line about the clinic (or tap <b>✨ Write it for me</b> to have it written from their website), then click <b>Open in Gmail</b> (it opens as owner@betweenpsych.com) or copy it.</li>
           <li>After sending, click <b>I sent it</b>. The follow-up is scheduled for you: 4 days later, then 5 days after that.</li>
           <li>When someone answers, open <b>⋯ → They replied</b> and send them the video. Use Undo if you click something by mistake.</li>
+          <li>Cards marked <b>In Apollo sequence</b> are emailed by Apollo, follow-ups included. Click <b>What Apollo sent ↗</b> on a card to see each email it sent and any opens or replies. All of them: the <a href="https://app.apollo.io/#/sequences/6b01037f45fec7000c0efc83" target="_blank" rel="noopener">French sequence ↗</a> and the <a href="https://app.apollo.io/#/sequences/6b010384374100000c60004d" target="_blank" rel="noopener">English sequence ↗</a>.</li>
         </ol>
       </details>
 
@@ -15034,7 +15035,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15825,7 +15826,9 @@
       const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a> <button type="button" class="btw-or-b ghost" data-oract="editemail" style="padding:0 4px;font-size:12px;" aria-label="Change the email for ' + esc(l.name) + '">change</button>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
         (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '')
         // LinkedIn: opened by hand to connect or send a note (never automated).
-        + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>' : '');
+        + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>' : '')
+        // Their Apollo contact: every email Apollo sent them, opens and replies.
+        + (/^[a-f0-9]{24}$/.test(l.apollo_id || '') ? ' · <a href="https://app.apollo.io/#/contacts/' + l.apollo_id + '" target="_blank" rel="noopener" title="See the emails Apollo sent them, and opens and replies">What Apollo sent ↗</a>' : '');
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(bounced(l)) when = 'Their email address doesn’t work';
