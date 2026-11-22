@@ -7994,5 +7994,7 @@
   {"id": "psy-clinique-sante-lambert-levesque", "unqueue": true},
   {"id": "psy-clinique-sante-lambert-levesque", "note": "Moved to hand-send Nov 22 (the owner emails these by hand from the outreach page): NOT in the Apollo sequence."},
   {"id": "psy-services-psychologiques-sequoia", "unqueue": true},
-  {"id": "psy-services-psychologiques-sequoia", "note": "Moved to hand-send Nov 22 (the owner emails these by hand from the outreach page): NOT in the Apollo sequence."}
+  {"id": "psy-services-psychologiques-sequoia", "note": "Moved to hand-send Nov 22 (the owner emails these by hand from the outreach page): NOT in the Apollo sequence."},
+  {"id": "psy-aptitude-ergo", "fix_profession": "occupational"},
+  {"id": "psy-clinique-kine-sante", "fix_profession": "kinesio"}
 ]
