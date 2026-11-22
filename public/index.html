@@ -3296,6 +3296,7 @@
   .btw-or-noemail{color:var(--amber);font-weight:600;}
   .btw-or-apollo{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);font-size:13px;}
   .btw-or-apollo[hidden]{display:none;}
+  .btw-or-li-done{font-size:12px;color:var(--moss);}
   .btw-or-apollo .ae{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
   .btw-or-apollo .ae:first-of-type{border-top:0;padding-top:0;margin-top:0;}
   .btw-or-apollo .ah{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;color:var(--ink-soft);font-size:12px;}
@@ -15046,7 +15047,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15837,7 +15838,9 @@
       const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a> <button type="button" class="btw-or-b ghost" data-oract="editemail" style="padding:0 4px;font-size:12px;" aria-label="Change the email for ' + esc(l.name) + '">change</button>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
         (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '')
         // LinkedIn: opened by hand to connect or send a note (never automated).
-        + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>' : '')
+        + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>'
+          + (l.li_at ? ' <span class="btw-or-li-done" title="You connected with them on LinkedIn">✓ connected ' + esc(fmt(l.li_at)) + '</span>'
+            : ' <button type="button" class="btw-or-b ghost" data-oract="linote" style="padding:0 4px;font-size:12px;" title="Copy a short connection note with their first name">Copy note</button>') : '')
         // Their Apollo contact: every email Apollo sent them, opens and replies.
         + (/^[a-f0-9]{24}$/.test(l.apollo_id || '') || inSeq(l) ? ' · <button type="button" class="btw-or-b ghost" data-oract="apollo" style="padding:0 4px;font-size:12px;" aria-expanded="false" title="See the emails Apollo sent them, with opens and replies">📨 What Apollo sent</button>' : '');
       let when = '';
@@ -15865,6 +15868,7 @@
       if(l.status !== 'not_interested' && l.status !== 'customer') menu.push(['set:not_interested', 'Not interested']);
       if(l.email && !sq && !inSeq(l) && !bounced(l) && l.status !== 'replied') menu.push(['email', 'Write them an email']);
       if(l.phone && l.status !== 'customer') menu.push(['call', '📞 Call script']);
+      if(l.linkedin) menu.push(l.li_at ? ['linoconn', 'Not connected on LinkedIn (undo)'] : ['liconn', 'Connected on LinkedIn']);
       menu.push(['edit', 'Edit details']);
       if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
       return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
@@ -15899,6 +15903,14 @@
     }
     const SET_MSG = { replied:'Marked as replied. Answer them today!', trial:'On trial. Check in with them in a week.', customer:'A new customer! 🎉', not_interested:'Marked as not interested.', to_contact:'Moved back to not contacted.' };
 
+    // A LinkedIn connection note (under LinkedIn's 300 characters), in their
+    // language, with their first name. It mentions the email once one went out.
+    function liNote(l){
+      const first = ((l.contact || '').split('(')[0].trim().split(/\s+/)[0] || '').replace(/[^\p{L}'-]/gu, '');
+      const mailed = inSeq(l) || ['emailed', 'followup1', 'followup2'].indexOf(l.status) >= 0;
+      if(l.lang === 'en') return 'Hi' + (first ? ' ' + first : '') + ', I\'m Jack, founder of Between, a Montréal tool that helps clinics like yours see how clients are doing between sessions.' + (mailed ? ' I sent you a short email this week; happy to connect here too.' : ' Happy to connect.');
+      return 'Bonjour' + (first ? ' ' + first : '') + ', je suis Jack, fondateur de Between, un outil montréalais qui aide les cliniques à suivre leurs clients entre les séances.' + (mailed ? ' Je vous ai écrit un court courriel cette semaine; ravi de vous suivre ici aussi.' : ' Au plaisir d\'échanger.');
+    }
     // The emails Apollo sent this lead, read live from Apollo (opens and replies too).
     const AP_STATUS = { scheduled:'Scheduled', delayed:'Delayed', completed:'Sent', sent:'Sent', delivered:'Delivered', failed:'Not sent', paused:'Paused', not_sent:'Not sent', bounced:'Bounced' };
     async function showApollo(l, cardEl, btn){
@@ -15944,6 +15956,14 @@
       }
       else if(act === 'call') openCall(l);
       else if(act === 'apollo') showApollo(l, cardEl, b);
+      else if(act === 'linote'){
+        const note = liNote(l), ok = await copyTextToClipboard(note);
+        if(ok) toast('Note copied. Paste it in LinkedIn: Connect → Add a note. Then ⋯ → Connected on LinkedIn.');
+        else window.prompt('Copy this note:', note);
+      }
+      else if(act === 'liconn' || act === 'linoconn'){
+        try { await patch(l.id, { li_at: act === 'liconn' ? t : '' }); toast(act === 'liconn' ? 'Logged: connected with ' + l.name + ' on LinkedIn.' : 'Undone.'); } catch(err){ toast(err.message); }
+      }
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
         const to = act === 'set' ? b.dataset.to : act.slice(4);
