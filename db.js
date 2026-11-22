@@ -265,6 +265,8 @@ CREATE TABLE IF NOT EXISTS outreach_leads (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- The owner's LinkedIn profile link (opened by hand to connect; never automated).
+ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS linkedin TEXT NOT NULL DEFAULT '';
 -- Leads added later from data/outreach-updates.json, so each is added once
 -- and stays deleted if the owner deletes it.
 CREATE TABLE IF NOT EXISTS outreach_imported (
@@ -476,7 +478,7 @@ export async function initDb() {
 // the table. Only fills fields that are still blank, adds a note once, and can
 // move a lead to "replied" / "not_interested" once, so it never overwrites
 // anything the owner typed and is safe on every start.
-const OUTREACH_FILL = ['contact', 'email', 'phone', 'website', 'city'];
+const OUTREACH_FILL = ['contact', 'email', 'phone', 'website', 'city', 'linkedin'];
 const OUTREACH_FILE_STATUS = ['replied', 'not_interested'];
 async function applyOutreachUpdates() {
   let ups = [];
@@ -489,10 +491,10 @@ async function applyOutreachUpdates() {
         const done = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', [u.id]);
         if (!done.rows.length) continue;
         await pool.query(
-          `INSERT INTO outreach_leads (id, name, contact, profession, city, lang, email, phone, website, status, notes)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'to_contact', $10) ON CONFLICT (id) DO NOTHING`,
+          `INSERT INTO outreach_leads (id, name, contact, profession, city, lang, email, phone, website, status, notes, linkedin)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'to_contact', $10, $11) ON CONFLICT (id) DO NOTHING`,
           [u.id, u.name, u.contact || '', u.profession || 'other', u.city || '', u.lang || 'fr', u.email || '',
-           u.phone || '', u.website || '', u.note || '']
+           u.phone || '', u.website || '', u.note || '', u.linkedin || '']
         );
       } catch (e) {}
       continue;
@@ -2571,10 +2573,10 @@ export async function listDemoRequests(limit = 100) {
 }
 
 // --- Owner: clinic outreach list ---
-const OUTREACH_COLS = `id, name, contact, profession, city, lang, email, phone, website, status,
+const OUTREACH_COLS = `id, name, contact, profession, city, lang, email, phone, website, linkedin, status,
   next_at AS next, last_at AS last, notes, created_at, updated_at`;
 const OUTREACH_SET = { name: 'name', contact: 'contact', profession: 'profession', city: 'city', lang: 'lang', email: 'email',
-  phone: 'phone', website: 'website', status: 'status', next: 'next_at', last: 'last_at', notes: 'notes' };
+  phone: 'phone', website: 'website', linkedin: 'linkedin', status: 'status', next: 'next_at', last: 'last_at', notes: 'notes' };
 
 export async function listOutreachLeads() {
   const { rows } = await pool.query(`SELECT ${OUTREACH_COLS} FROM outreach_leads ORDER BY created_at, name`);
