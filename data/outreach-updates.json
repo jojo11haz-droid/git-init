@@ -2910,19 +2910,6 @@
     "note": "Québec batch (Apollo, verified email, Nov 22). Owner/founder. Licence not checked here (the order directory blocks automated lookups); it gets checked at signup."
   },
   {
-    "id": "speech-clinique-dynamique-nd",
-    "add": true,
-    "name": "Clinique Dynamique ND",
-    "contact": "Dorothy Rosenthal (Clinical Director and Speech Language Pathologist)",
-    "profession": "speech",
-    "city": "Montreal, QC",
-    "lang": "en",
-    "email": "dorothy.rosenthal@mail.mcgill.ca",
-    "phone": "+1 514-978-9558",
-    "website": "cliniquedynamiquend.com",
-    "note": "Québec batch (Apollo, verified email, Nov 22). Owner/founder. Licence not checked here (the order directory blocks automated lookups); it gets checked at signup."
-  },
-  {
     "id": "physio-jrdphysio",
     "add": true,
     "name": "JRDphysio",
@@ -3168,7 +3155,7 @@
     "id": "psycho-klinic-de-psychologie",
     "add": true,
     "name": "Klinic de psychologie",
-    "contact": "Dre Hebert (Psychologist)",
+    "contact": "Vickie Hébert (Psychologist)",
     "profession": "psycho",
     "city": "Gatineau, QC",
     "lang": "fr",
@@ -3886,7 +3873,7 @@
     "id": "nutrition-vivai-experts-en-nutrition",
     "add": true,
     "name": "Vivaï Experts en nutrition",
-    "contact": "Amelie Dietetiste-Nutritionniste (Nutritionniste du Sport)",
+    "contact": "Amélie Deschamps (Nutritionniste du Sport)",
     "profession": "nutrition",
     "city": "Longueuil, QC",
     "lang": "fr",
@@ -4020,5 +4007,6 @@
     "phone": "+1 514-819-1015",
     "website": "motivasante.com",
     "note": "Québec batch (Apollo, verified email, Nov 22). Practitioner at a small clinic (not confirmed as owner): ask them to pass it on to the owner. Licence confirmed in the OPPQ public directory (Nov 22)."
-  }
+  },
+  {"id": "speech-clinique-dynamique-nd", "note": "DON'T EMAIL: the address Apollo gave is a McGill university email, not the clinic's. Contact the clinic through its own website instead."}
 ]
