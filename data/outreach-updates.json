@@ -7690,5 +7690,7 @@
     "website": "kokaneephysiotherapy.com",
     "note": "[Apollo sequence] Canada batch 2 (Apollo, verified email, Nov 22). Queued for the Apollo sequence (EN, or FR for French-language leads), pending approval: enrolled after the Nov 23 bounce check. Don't email by hand."
   },
-  {"id": "physio-physioactif-ahuntsic", "note": "REPLIED Nov 21: wants the 1-minute video (\"Oui shoot moi la vidéo de 1 min\"), liked the lead research. Reply with the video link + 15-min setup offer drafted in Gmail Nov 22. Hot lead."}
+  {"id": "physio-physioactif-ahuntsic", "note": "REPLIED Nov 21: wants the 1-minute video (\"Oui shoot moi la vidéo de 1 min\"), liked the lead research. Reply with the video link + 15-min setup offer drafted in Gmail Nov 22. Hot lead."},
+  {"id": "psy-en-equilibre", "note": "BOUNCED twice (Nov 17 and the Nov 21 follow-up): their mail server rejects outside mail (\"554 Relay access denied\"), so info@psyenequilibre.com does not work. Don't email again. Call 514-839-8783 or use the contact form on their site."},
+  {"id": "speech-jessica-belisle-macquart", "note": "BOUNCED Nov 21: jessica.macquart@cabinetjbm.com does not exist (Apollo's guessed address was wrong). Don't email again. Call 819-962-8356 and ask for her right address."}
 ]
