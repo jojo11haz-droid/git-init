@@ -509,6 +509,18 @@ async function applyOutreachUpdates() {
         }
       } catch (e) {}
     }
+    // Taken out of the Apollo queue so the owner emails them by hand: applied once ever, and only
+    // while the lead is still waiting for a first email.
+    if (u.unqueue === true) {
+      try {
+        const once = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', ['unqueue:' + u.id]);
+        if (once.rows.length) {
+          await pool.query(
+            `UPDATE outreach_leads SET notes = replace(notes, '[Apollo sequence]', '[Hand-send]'), updated_at = now()
+             WHERE id = $1 AND status = 'to_contact'`, [u.id]);
+        }
+      } catch (e) {}
+    }
     const sets = []; const vals = [u.id];
     for (const f of OUTREACH_FILL) {
       if (!u[f]) continue;
