@@ -3219,12 +3219,14 @@ app.post('/api/patient/messages', requireDb, requirePatientAuth, replyLimiter, a
         // In the professional's language (the one they last used Between in).
         const fr = clinician.lang === 'fr';
         const name = req.patient.display_name || (fr ? 'Un(e) client(e)' : 'A client');
+        // A reply to one of their notes, or a message the client started.
+        const isReply = !!msg.reply_to;
         sendEmail({
           to: clinician.email,
-          subject: fr ? `${name} a répondu dans Between` : `${name} replied in Between`,
+          subject: fr ? (isReply ? `${name} a répondu dans Between` : `${name} vous a écrit dans Between`) : (isReply ? `${name} replied in Between` : `${name} sent you a message in Between`),
           text: fr
-            ? `${name} a répondu à votre message dans Between.\n\nLa lire sur sa page : ${SITE_URL}/#dashboard\n\n(Between est un outil de documentation, pas un service de surveillance. Aucune réponse n'est requise dans Between.)`
-            : `${name} replied to your message in Between.\n\nRead it on their page: ${SITE_URL}/#dashboard\n\n(Between is a documentation tool, not a monitoring service. No response is required through Between.)`
+            ? `${name} ${isReply ? 'a répondu à votre message' : 'vous a envoyé un message'} dans Between.\n\nLe lire sur sa page : ${SITE_URL}/#dashboard\n\n(Between est un outil de documentation, pas un service de surveillance. Aucune réponse n'est requise dans Between.)`
+            : `${name} ${isReply ? 'replied to your message' : 'sent you a message'} in Between.\n\nRead it on their page: ${SITE_URL}/#dashboard\n\n(Between is a documentation tool, not a monitoring service. No response is required through Between.)`
         }).catch(err => console.error('Reply email failed:', err && err.message));
       }
     } catch (err) { console.error('Reply notify error:', err); }
