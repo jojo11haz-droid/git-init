@@ -3294,6 +3294,17 @@
   .btw-or-contact{margin-top:2px;overflow-wrap:anywhere;}
   .btw-or-contact a{color:var(--moss);}
   .btw-or-noemail{color:var(--amber);font-weight:600;}
+  .btw-or-apollo{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);font-size:13px;}
+  .btw-or-apollo[hidden]{display:none;}
+  .btw-or-apollo .ae{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
+  .btw-or-apollo .ae:first-of-type{border-top:0;padding-top:0;margin-top:0;}
+  .btw-or-apollo .ah{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;color:var(--ink-soft);font-size:12px;}
+  .btw-or-apollo .ah b{color:var(--ink);font-size:13px;}
+  .btw-or-apollo .tag{border:1px solid var(--line);border-radius:100px;padding:0 7px;font-size:11px;}
+  .btw-or-apollo .tag.ok{border-color:var(--moss);color:var(--moss);}
+  .btw-or-apollo .tag.bad{border-color:var(--clay,#C0392B);color:var(--clay,#C0392B);}
+  .btw-or-apollo details summary{cursor:pointer;color:var(--moss);font-size:12px;margin-top:4px;}
+  .btw-or-apollo pre{white-space:pre-wrap;font:inherit;margin:6px 0 0;line-height:1.45;}
   .btw-or-notes{margin-top:3px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}
   .btw-or-notes.open{display:block;-webkit-line-clamp:unset;white-space:pre-wrap;}
   .btw-or-side{flex:0 0 236px;display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right;}
@@ -15035,7 +15046,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15828,7 +15839,7 @@
         // LinkedIn: opened by hand to connect or send a note (never automated).
         + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>' : '')
         // Their Apollo contact: every email Apollo sent them, opens and replies.
-        + (/^[a-f0-9]{24}$/.test(l.apollo_id || '') ? ' · <a href="https://app.apollo.io/#/contacts/' + l.apollo_id + '" target="_blank" rel="noopener" title="See the emails Apollo sent them, and opens and replies">What Apollo sent ↗</a>' : '');
+        + (/^[a-f0-9]{24}$/.test(l.apollo_id || '') || inSeq(l) ? ' · <button type="button" class="btw-or-b ghost" data-oract="apollo" style="padding:0 4px;font-size:12px;" aria-expanded="false" title="See the emails Apollo sent them, with opens and replies">📨 What Apollo sent</button>' : '');
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(bounced(l)) when = 'Their email address doesn’t work';
@@ -15861,6 +15872,7 @@
           '<div>' + esc([l.contact, l.city, PROF[l.profession] || '', l.lang === 'en' ? 'English' : 'Français'].filter(Boolean).join(' · ')) + '</div>' +
           '<div class="btw-or-contact">' + contact + '</div>' +
           (l.notes ? '<div class="btw-or-notes" data-oract="notes" title="Click to see all">' + esc(l.notes) + '</div>' : '') +
+          '<div class="btw-or-apollo" hidden></div>' +
           '<div class="btw-or-addemail" hidden><input type="email" placeholder="their@email.com" aria-label="Email for ' + esc(l.name) + '"><button type="button" class="btw-or-b pri" data-oract="saveemail">Save</button></div>' +
         '</div>' +
         '<div class="btw-or-side">' + stepper(l) + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
@@ -15887,6 +15899,28 @@
     }
     const SET_MSG = { replied:'Marked as replied. Answer them today!', trial:'On trial. Check in with them in a week.', customer:'A new customer! 🎉', not_interested:'Marked as not interested.', to_contact:'Moved back to not contacted.' };
 
+    // The emails Apollo sent this lead, read live from Apollo (opens and replies too).
+    const AP_STATUS = { scheduled:'Scheduled', delayed:'Delayed', completed:'Sent', sent:'Sent', delivered:'Delivered', failed:'Not sent', paused:'Paused', not_sent:'Not sent', bounced:'Bounced' };
+    async function showApollo(l, cardEl, btn){
+      const box = cardEl.querySelector('.btw-or-apollo');
+      if(!box.hidden){ box.hidden = true; btn.setAttribute('aria-expanded', 'false'); return; }
+      box.hidden = false; btn.setAttribute('aria-expanded', 'true');
+      const link = /^[a-f0-9]{24}$/.test(l.apollo_id || '') ? '<div style="margin-top:8px;"><a href="https://app.apollo.io/#/contacts/' + l.apollo_id + '" target="_blank" rel="noopener">Open in Apollo ↗</a></div>' : '';
+      box.innerHTML = 'Loading what Apollo sent…';
+      try {
+        const d = await api('GET', '/api/admin/outreach/' + encodeURIComponent(l.id) + '/apollo');
+        if(!d.configured){ box.innerHTML = 'To see the emails here, add your Apollo API key to the server (APOLLO_API_KEY on Render).' + link; return; }
+        const list = d.emails || [];
+        if(!list.length){ box.innerHTML = (inSeq(l) ? 'Apollo hasn’t sent or scheduled anything for them yet.' : 'No emails from Apollo to this address.') + link; return; }
+        box.innerHTML = list.map(function(m){
+          const sent = m.sent_at ? 'Sent ' + fmt(String(m.sent_at).slice(0, 10)) : (m.scheduled_at ? 'Scheduled for ' + fmt(String(m.scheduled_at).slice(0, 10)) : (AP_STATUS[m.status] || m.status || ''));
+          const tags = (m.replied ? '<span class="tag ok">Replied</span>' : '') + (m.opened ? '<span class="tag ok">Opened</span>' : '') + (m.clicked ? '<span class="tag ok">Clicked</span>' : '') + (m.bounced ? '<span class="tag bad">Bounced</span>' : '');
+          return '<div class="ae"><div class="ah"><b>' + esc(m.subject || '(no subject)') + '</b><span>' + esc(sent) + '</span>' + tags + '</div>'
+            + (m.failure ? '<div style="color:var(--clay,#C0392B);font-size:12px;margin-top:3px;">' + esc(m.failure) + '</div>' : '')
+            + (m.body ? '<details><summary>Show the email</summary><pre>' + esc(m.body) + '</pre></details>' : '') + '</div>';
+        }).join('') + link;
+      } catch(err){ box.innerHTML = esc(err.message || 'Could not load what Apollo sent.') + link; }
+    }
     function closeMenus(except){ ov.querySelectorAll('.btw-or-menu').forEach(m => { if(m !== except) m.hidden = true; }); }
     $o('btwOrList').addEventListener('click', async function(e){
       const b = e.target.closest('[data-oract]');
@@ -15909,6 +15943,7 @@
         await setStatus(l, { status: sq.to, last: t, next: nx }, (l.status === 'to_contact' ? 'Marked as contacted. ' : 'Logged. ') + (nx ? 'Follow-up scheduled for ' + fmt(nx) + '.' : 'That was the last email for ' + l.name + '.'));
       }
       else if(act === 'call') openCall(l);
+      else if(act === 'apollo') showApollo(l, cardEl, b);
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
         const to = act === 'set' ? b.dataset.to : act.slice(4);
