@@ -5755,6 +5755,12 @@ function cleanOutreach(body) {
   if (b.status !== undefined) out.status = OUTREACH_STATUSES.includes(b.status) ? b.status : 'to_contact';
   if (b.profession !== undefined) out.profession = OUTREACH_PROFESSIONS.includes(b.profession) ? b.profession : 'other';
   if (b.lang !== undefined) out.lang = b.lang === 'en' ? 'en' : 'fr';
+  // A LinkedIn profile or company page only, so the card's link always goes to LinkedIn.
+  if (b.linkedin !== undefined) {
+    const li = String(b.linkedin ?? '').trim().slice(0, 300).replace(/^http:\/\//i, 'https://');
+    const full = /^https:\/\//i.test(li) ? li : (li ? 'https://' + li : '');
+    out.linkedin = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|company)\/[^\s"'<>]+$/i.test(full) ? full : '';
+  }
   for (const k of ['next', 'last']) {
     if (b[k] !== undefined) out[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(b[k])) ? String(b[k]) : '';
   }
