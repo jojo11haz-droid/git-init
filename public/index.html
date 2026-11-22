@@ -1466,6 +1466,9 @@
   .btw-inbox-replybtn,.btw-inbox-cancel{margin-top:10px;font:inherit;font-size:13px;font-weight:600;background:none;border:1px solid var(--line);color:var(--moss);border-radius:100px;padding:6px 14px;cursor:pointer;min-height:36px;}
   .btw-inbox-compose{margin-top:10px;}
   .btw-inbox-compose textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.45;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);resize:vertical;}
+  .btw-inbox-new{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel);}
+  .btw-inbox-new .btw-inbox-compose{margin-top:6px;}
+  .btw-inbox-new .btw-inbox-h b{color:var(--moss);}
   .btw-inbox-note{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.4;}
   .btw-inbox-err{font-size:12.5px;color:var(--clay,#C0392B);}
   .btw-inbox-err:empty{display:none;}
@@ -6597,6 +6600,7 @@
     "Replied":"A répondu",
     "New reply from them":"Nouvelle réponse de sa part",
     "Write a reply to":"Écrire une réponse à",
+    "Write to":"Écrire à",
     "Between isn't for emergencies. If you're in danger, call 988 or 911.":"Between n'est pas fait pour les urgences. Si vous êtes en danger, appelez le 988 ou le 911.",
     "This sounds like a lot to carry right now.":"Ça semble lourd à porter en ce moment.",
     "Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.":"La personne qui vous suit ne le verra peut-être pas tout de suite. Si vous êtes en danger ou pensez au suicide, appelez ou textez le 988, ou appelez le 911.",
@@ -19518,7 +19522,10 @@
   function renderInbox(){
     var box = document.getElementById('btwInbox'); if(!box) return;
     var list = !isPatient() ? [] : (_ownerPreview ? previewMessages() : (state.messages || []));
-    if(!list.length){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    var connected = isPatient() && !!(state.patient && state.patient.clinician_account_type);
+    if(!list.length && !connected){ box.style.display = 'none'; box.innerHTML = ''; return; }
+    // Keep what they were typing across re-renders.
+    var oldTa = box.querySelector('.btw-inbox-new textarea'), keep = oldTa ? oldTa.value : '';
     box.style.display = '';
     var who = (state.patient && state.patient.clinician_name) || t('Your professional');
     // Threads: each of the professional's messages with the client's replies
@@ -19544,35 +19551,46 @@
         + '<div class="btw-inbox-body">' + esc(m.body) + '</div>'
         + (m.exercises && m.exercises.length ? '<div class="btw-inbox-ex">' + m.exercises.map(function(e){ return '<div class="btw-inbox-exi"><b>' + esc(e.name) + '</b>' + (e.dosage ? '<span class="d">' + esc(e.dosage) + '</span>' : '') + (e.description ? '<div class="h">' + esc(e.description) + '</div>' : '') + '</div>'; }).join('') + '</div>' : '')
         + th.replies.map(replyHtml).join('')
-        + (_inboxReplyTo === m.id
-          ? '<div class="btw-inbox-compose"><textarea maxlength="1000" rows="3" placeholder="' + esc(t('Write a reply to') + ' ' + who) + '"></textarea>'
-            + '<div class="btw-inbox-note">' + esc(t("Between isn't for emergencies. If you're in danger, call 988 or 911.")) + '</div>'
-            + '<div class="btw-inbox-err" role="alert"></div>'
-            + '<div class="btw-inbox-actions"><button type="button" class="btw-inbox-send" data-id="' + esc(m.id) + '">' + esc(t('Send')) + '</button><button type="button" class="btw-inbox-cancel">' + esc(t('Cancel')) + '</button></div></div>'
-          : (!(state.patient && state.patient.clinician_account_type) ? '' : '<button type="button" class="btw-inbox-replybtn" data-id="' + esc(m.id) + '">' + esc(t('Reply')) + '</button>'))
+        + (!connected ? '' : '<button type="button" class="btw-inbox-replybtn" data-id="' + esc(m.id) + '">' + esc(t('Reply')) + '</button>')
         + '</div>';
     }).join('') + (_inboxCrisis ? '<div class="btw-inbox-crisis" role="alert"><b>' + esc(t("This sounds like a lot to carry right now.")) + '</b> ' + esc(t("Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.")) + '</div>' : '')
       + (threads.length > 1 ? '<button type="button" class="btw-inbox-more">' + esc(_inboxAll ? t('Show only the latest') : t('Earlier messages') + ' (' + (threads.length - 1) + ')') + '</button>' : '');
+    // One message box, always there once they're connected: they can write to
+    // their professional first, not only answer. It threads under the latest
+    // note from the professional (or the one they tapped Reply on).
+    if(connected){
+      var latestPro = null; list.forEach(function(m){ if(m.sender !== 'client' && (!latestPro || m.created_at > latestPro.created_at)) latestPro = m; });
+      var target = _inboxReplyTo || (latestPro && latestPro.id) || '';
+      box.insertAdjacentHTML(list.length ? 'afterbegin' : 'beforeend', '<div class="btw-inbox-new"><div class="btw-inbox-h"><b>' + esc(t('Message') + ' · ' + who) + '</b></div>'
+        + '<div class="btw-inbox-compose"><textarea maxlength="1000" rows="2" placeholder="' + esc(t('Write to') + ' ' + who + '…') + '"></textarea>'
+        + '<div class="btw-inbox-note">' + esc(t("Between isn't for emergencies. If you're in danger, call 988 or 911.")) + '</div>'
+        + '<div class="btw-inbox-err" role="alert"></div>'
+        + '<div class="btw-inbox-actions"><button type="button" class="btw-inbox-send" data-id="' + esc(target) + '">' + esc(t('Send')) + '</button>' + (_inboxReplyTo ? '<button type="button" class="btw-inbox-cancel">' + esc(t('Cancel')) + '</button>' : '') + '</div></div></div>');
+      var nta = box.querySelector('.btw-inbox-new textarea'); if(nta && keep) nta.value = keep;
+    }
     var more = box.querySelector('.btw-inbox-more'); if(more) more.addEventListener('click', function(){ _inboxAll = !_inboxAll; renderInbox(); });
-    box.querySelectorAll('.btw-inbox-replybtn').forEach(function(b){ b.addEventListener('click', function(){ _inboxReplyTo = b.dataset.id; renderInbox(); var ta = box.querySelector('.btw-inbox-compose textarea'); if(ta) ta.focus(); }); });
+    box.querySelectorAll('.btw-inbox-replybtn').forEach(function(b){ b.addEventListener('click', function(){ _inboxReplyTo = b.dataset.id; renderInbox(); var ta = box.querySelector('.btw-inbox-new textarea'); if(ta){ ta.focus(); try { ta.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){} } }); });
     var cancel = box.querySelector('.btw-inbox-cancel'); if(cancel) cancel.addEventListener('click', function(){ _inboxReplyTo = null; renderInbox(); });
     var send = box.querySelector('.btw-inbox-send');
     if(send) send.addEventListener('click', async function(){
-      var ta = box.querySelector('.btw-inbox-compose textarea'), er = box.querySelector('.btw-inbox-err');
+      var ta = box.querySelector('.btw-inbox-new textarea'), er = box.querySelector('.btw-inbox-err');
       var body = (ta.value || '').trim(); if(!body){ ta.focus(); return; }
       send.disabled = true; er.textContent = '';
       if(_ownerPreview){
         // Preview: show it on this screen only; nothing is sent.
-        _prevThread = [{ id:'prevr' + Date.now(), sender:'client', reply_to:send.dataset.id, body:body, created_at:new Date().toISOString(), read_at:null }].concat(_prevThread || []);
-        _inboxCrisis = false; _inboxReplyTo = null; renderInbox(); return;
+        _prevThread = [{ id:'prevr' + Date.now(), sender:'client', reply_to:send.dataset.id || null, body:body, created_at:new Date().toISOString(), read_at:null }].concat(_prevThread || []);
+        ta.value = ''; _inboxCrisis = false; _inboxReplyTo = null; renderInbox(); return;
       }
       try{
-        var r = await pApi('POST', '/api/patient/messages', { body: body, replyTo: send.dataset.id });
+        var r = await pApi('POST', '/api/patient/messages', send.dataset.id ? { body: body, replyTo: send.dataset.id } : { body: body });
         if(r && r.message) state.messages = [r.message].concat(state.messages || []);
-        _inboxCrisis = !!(r && r.crisis);
+        ta.value = ''; _inboxCrisis = !!(r && r.crisis);
         _inboxReplyTo = null; renderInbox();
       }catch(x){ send.disabled = false; er.textContent = x.message; }
     });
+    // Ctrl/⌘+Enter sends.
+    var nta2 = box.querySelector('.btw-inbox-new textarea');
+    if(nta2 && send) nta2.addEventListener('keydown', function(e){ if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); send.click(); } });
     if(!_ownerPreview && !_inboxMarked && list.some(function(m){ return m.sender !== 'client' && !m.read_at; })){
       _inboxMarked = true;
       pApi('POST', '/api/patient/messages/read', {}).then(function(){ list.forEach(function(m){ if(!m.read_at) m._seen = true; }); }).catch(function(){ _inboxMarked = false; });
@@ -19587,7 +19605,7 @@
       const list = (mm && mm.messages) || [];
       const sig = function(l){ return l.map(function(m){ return m.id + (m.read_at ? '.' : ''); }).join(','); };
       if(sig(list) === sig(state.messages || [])) return;
-      if(_inboxReplyTo){ const ta = document.querySelector('#btwInbox .btw-inbox-compose textarea'); if(ta && ta.value.trim()) return; } // don't wipe a reply being written
+      { const ta = document.querySelector('#btwInbox .btw-inbox-new textarea'); if(ta && ta.value.trim() && document.activeElement === ta) return; } // don't redraw under someone typing
       state.messages = list;
       if(list.some(function(m){ return !m.read_at; })) _inboxMarked = false; // mark the new ones read too
       renderInbox();
@@ -21932,6 +21950,25 @@
       }catch(e){ status.textContent = (e && e.message) || t('Could not send the message.'); }
       finally{ send.disabled = false; sp.textContent = t('Send'); }
     });
+    // Ctrl/⌘+Enter sends.
+    ta.addEventListener('keydown', function(e){ if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); send.click(); } });
+    // While the conversation is open, a client's new message shows up on its own
+    // (every 30 seconds, and when the tab comes back), like a text thread.
+    async function refreshOpenThread(){
+      if(document.hidden || panel.style.display === 'none') return;
+      var p = selectedPatient(); if(!p || p.id !== forPid) return;
+      try{
+        var d = await api('GET', '/api/patients/' + p.id + '/messages');
+        var old = state.msgCache[p.id] || { messages: [] };
+        var sig = function(l){ return (l || []).map(function(m){ return m.id + (m.read_at ? '.' : ''); }).join(','); };
+        if(sig(d.messages) === sig(old.messages)) return;
+        var seen = new Set((old.messages || []).map(function(m){ return m.id; }));
+        (d.messages || []).forEach(function(m){ if(m.sender === 'client' && !seen.has(m.id)) m._wasNew = true; });
+        state.msgCache[p.id] = d; drawHist(d.messages, d.connected);
+      }catch(e){}
+    }
+    setInterval(refreshOpenThread, 30000);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) refreshOpenThread(); });
     var copyBtn = document.getElementById('btwEncourageCopy');
     if(copyBtn) copyBtn.addEventListener('click', async function(){
       var ok = await copyTextToClipboard(ta.value);
