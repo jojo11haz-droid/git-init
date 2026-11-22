@@ -473,9 +473,11 @@ export async function initDb() {
 }
 
 // Contact details found later (data/outreach-updates.json) for leads already in
-// the table. Only fills fields that are still blank, and adds a note once, so
-// it never overwrites anything the owner typed and is safe on every start.
+// the table. Only fills fields that are still blank, adds a note once, and can
+// move a lead to "replied" / "not_interested" once, so it never overwrites
+// anything the owner typed and is safe on every start.
 const OUTREACH_FILL = ['contact', 'email', 'phone', 'website', 'city'];
+const OUTREACH_FILE_STATUS = ['replied', 'not_interested'];
 async function applyOutreachUpdates() {
   let ups = [];
   try { ups = JSON.parse(readFileSync(new URL('./data/outreach-updates.json', import.meta.url), 'utf8')); }
@@ -494,6 +496,18 @@ async function applyOutreachUpdates() {
         );
       } catch (e) {}
       continue;
+    }
+    // A status change found later (a reply in the inbox, a "non merci"): applied once ever, and
+    // only while the lead is still in the email steps, so it never undoes the owner's own moves.
+    if (OUTREACH_FILE_STATUS.includes(u.status)) {
+      try {
+        const once = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', ['status:' + u.id + ':' + u.status]);
+        if (once.rows.length) {
+          await pool.query(
+            `UPDATE outreach_leads SET status = $2, last_at = to_char(now() AT TIME ZONE 'America/Toronto', 'YYYY-MM-DD'), next_at = '', updated_at = now()
+             WHERE id = $1 AND status IN ('to_contact', 'emailed', 'followup1', 'followup2')`, [u.id, u.status]);
+        }
+      } catch (e) {}
     }
     const sets = []; const vals = [u.id];
     for (const f of OUTREACH_FILL) {
