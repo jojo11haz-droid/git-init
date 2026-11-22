@@ -10,6 +10,10 @@
 
 const FR = {
   "Could not load your topics.": "Impossible de charger vos sujets.",
+  "Too many Apollo lookups at once. Wait a minute and try again.": "Trop de recherches Apollo à la fois. Attendez une minute et réessayez.",
+  "Could not reach Apollo just now. Try again in a moment.": "Impossible de joindre Apollo pour le moment. Réessayez dans un instant.",
+  "Apollo turned down the API key. Check APOLLO_API_KEY on the server.": "Apollo a refusé la clé d'API. Vérifiez APOLLO_API_KEY sur le serveur.",
+  "Could not load what Apollo sent.": "Impossible de charger ce qu'Apollo a envoyé.",
   "Topics are shared with your professional, and you are using Between on your own.": "Les sujets sont partagés avec la personne qui vous suit, et vous utilisez Between par vous-même.",
   "Keep it short: a line or two is plenty.": "Restez bref : une ligne ou deux suffisent.",
   "You already have 20 topics waiting. Remove one first.": "Vous avez déjà 20 sujets en attente. Retirez-en un d'abord.",

@@ -5786,6 +5786,57 @@ app.patch('/api/admin/outreach/:id', requireDb, requireAuth, requireSiteOwner, a
     res.json(lead);
   } catch (err) { console.error('Outreach update error:', err); res.status(500).json({ error: 'Could not save that lead.' }); }
 });
+// Owner: the emails Apollo's sequences sent (or scheduled) to one lead, read live
+// from Apollo with the owner's API key (APOLLO_API_KEY, set on the server only).
+// Apollo can't filter by contact, so it searches by the lead's address and keeps
+// only messages to that contact. Nothing is stored here.
+const apolloLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: 'Too many Apollo lookups at once. Wait a minute and try again.' });
+function apolloText(m) {
+  const t = m.body_text || m.text || '';
+  if (t) return String(t);
+  return String(m.body_html || m.html || '').replace(/<br\s*\/?>|<\/p>|<\/div>/gi, '\n').replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, '\n\n').trim();
+}
+app.get('/api/admin/outreach/:id/apollo', requireDb, requireAuth, requireSiteOwner, apolloLimiter, async (req, res) => {
+  const key = process.env.APOLLO_API_KEY || '';
+  if (!key) return res.json({ configured: false, emails: [] });
+  try {
+    const lead = await updateOutreachLead(String(req.params.id).slice(0, 200), {});
+    if (!lead) return res.status(404).json({ error: 'Lead not found.' });
+    const addr = (lead.email || '').toLowerCase();
+    if (!addr && !lead.apollo_id) return res.json({ configured: true, emails: [] });
+    const url = new URL('https://api.apollo.io/api/v1/emailer_messages/search');
+    url.searchParams.set('q_keywords', addr || lead.contact || lead.name);
+    url.searchParams.set('per_page', '50');
+    let r;
+    try {
+      r = await fetch(url, { headers: { 'X-Api-Key': key, 'Cache-Control': 'no-cache', 'Accept': 'application/json' }, signal: AbortSignal.timeout(15000) });
+    } catch (e) { return res.status(502).json({ error: 'Could not reach Apollo just now. Try again in a moment.' }); }
+    if (r.status === 401 || r.status === 403) return res.status(502).json({ error: 'Apollo turned down the API key. Check APOLLO_API_KEY on the server.' });
+    if (!r.ok) return res.status(502).json({ error: 'Could not reach Apollo just now. Try again in a moment.' });
+    const data = await r.json().catch(() => ({}));
+    const list = Array.isArray(data.emailer_messages) ? data.emailer_messages : [];
+    const mine = list.filter(m => (lead.apollo_id && m.contact_id === lead.apollo_id) || (addr && String(m.to_email || '').toLowerCase() === addr));
+    const emails = mine.map(m => ({
+      id: String(m.id || ''),
+      subject: String(m.subject || '').slice(0, 300),
+      body: apolloText(m).slice(0, 8000),
+      status: String(m.status || ''),
+      sent_at: m.completed_at || m.sent_at || null,
+      scheduled_at: m.due_at || m.scheduled_at || null,
+      opened: !!m.opened || (m.num_opens || 0) > 0,
+      clicked: !!m.clicked,
+      replied: !!m.replied,
+      bounced: !!m.bounced,
+      failure: m.failure_reason ? String(m.failure_reason).slice(0, 300) : (m.not_sent_reason ? String(m.not_sent_reason).slice(0, 300) : ''),
+    })).sort((a, b) => String(b.sent_at || b.scheduled_at || '').localeCompare(String(a.sent_at || a.scheduled_at || '')));
+    res.json({ configured: true, emails });
+  } catch (err) {
+    console.error('Outreach Apollo error:', err);
+    res.status(500).json({ error: 'Could not load what Apollo sent.' });
+  }
+});
 // Owner: a personal first line for an outreach email, written from the
 // clinic's own website (their words: specialty, approach, area, team). Reads
 // the public site only (see site-reader.js), never invents.
