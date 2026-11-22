@@ -560,6 +560,12 @@ class S {
   String get sendReply => _('Send', 'Envoyer');
   String get replyHint => _('Write your reply', 'Écrivez votre réponse');
   String get replyTitle => _('Reply to your professional', 'Répondre à la personne qui vous suit');
+  // Writing to their professional first (not only answering).
+  String messagePro(String? name) => name == null || name.isEmpty
+      ? _('Message your professional', 'Écrire à la personne qui vous suit')
+      : _('Message $name', 'Écrire à $name');
+  String get messageHint =>
+      _('Write your message', 'Écrivez votre message');
   String get replyNote => _(
       "Between isn't for emergencies. If you're in danger, call 988 or 911.",
       "Between n'est pas fait pour les urgences. Si vous êtes en danger, appelez le 988 ou le 911.");

@@ -70,6 +70,15 @@ class _HomeScreenState extends State<HomeScreen>
   List<ClinicianMessage> _messages = []; // notes from the professional + replies
   List<ClinicianMessage> get _proMessages =>
       _messages.where((m) => !m.fromClient).toList();
+  // Their own messages that don't sit under one of the professional's notes.
+  List<ClinicianMessage> get _ownMessages {
+    final shown = (_allMessages ? _proMessages.take(10) : _proMessages.take(1))
+        .map((m) => m.id)
+        .toSet();
+    return _messages
+        .where((m) => m.fromClient && !shown.contains(m.replyTo))
+        .toList();
+  }
   bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   String? _exStatus; // program in another app: 'yes' | 'some' | 'no'
@@ -436,14 +445,23 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// A sheet to write a reply to one of the professional's messages.
-  Future<void> _openReply(ClinicianMessage m, S s) async {
+  /// A sheet to write to their professional: a reply to one of their
+  /// messages, or (with [m] null) a new message, threaded under the latest one.
+  Future<void> _openReply(ClinicianMessage? m, S s) async {
     final app = context.read<AppState>();
+    final latest = _proMessages.isEmpty ? null : _proMessages.first;
+    final name = app.patient?.clinicianName;
     final result = await showModalBottomSheet<ReplyResult>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => _ReplySheet(app: app, replyTo: m.id, s: s),
+      builder: (_) => _ReplySheet(
+        app: app,
+        replyTo: (m ?? latest)?.id,
+        s: s,
+        title: m == null ? s.messagePro(name) : s.replyTitle,
+        hint: m == null ? s.messageHint : s.replyHint,
+      ),
     );
     if (result == null || !mounted) return;
     setState(() => _messages = [result.message, ..._messages]);
@@ -1171,6 +1189,25 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     const SizedBox(height: 8),
                   ],
+                  // Messages they wrote that aren't under one of the notes above
+                  // (they wrote first), newest first.
+                  for (final r in _ownMessages.take(_allMessages ? 10 : 2)) ...[
+                    _replyBubble(r, s),
+                    const SizedBox(height: 8),
+                  ],
+                  // Writing to their professional is one tap away, any time.
+                  if (patient.hasClinician) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openReply(null, s),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 18),
+                        label: Text(s.messagePro(patient.clinicianName)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Text(
                     s.hi(patient.firstName),
                     style: const TextStyle(
@@ -1761,10 +1798,17 @@ class _MiniToggle extends StatelessWidget {
 /// Writing a reply to one of the professional's messages. Pops with the
 /// [ReplyResult] once it's sent.
 class _ReplySheet extends StatefulWidget {
-  const _ReplySheet({required this.app, required this.replyTo, required this.s});
+  const _ReplySheet(
+      {required this.app,
+      required this.replyTo,
+      required this.s,
+      required this.title,
+      required this.hint});
   final AppState app;
-  final String replyTo;
+  final String? replyTo;
   final S s;
+  final String title;
+  final String hint;
 
   @override
   State<_ReplySheet> createState() => _ReplySheetState();
@@ -1811,7 +1855,7 @@ class _ReplySheetState extends State<_ReplySheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(s.replyTitle,
+          Text(widget.title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           TextField(
@@ -1822,7 +1866,7 @@ class _ReplySheetState extends State<_ReplySheet> {
             maxLines: 6,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
-              hintText: s.replyHint,
+              hintText: widget.hint,
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
