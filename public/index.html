@@ -3280,6 +3280,15 @@
   .btw-or-funnel span.n{display:inline-flex;align-items:baseline;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--paper);}
   .btw-or-funnel span.n b{font-size:13.5px;color:var(--ink);}
   .btw-or-funnel i{font-style:normal;opacity:.5;}
+  .btw-or-lifunnel{margin-top:-6px;}
+  .btw-or-lifunnel .lbl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:#0A66C2;color:#fff;font:700 12px/1 Arial,sans-serif;}
+  .btw-or-lifunnel button.n{font:inherit;font-size:12px;color:var(--ink-soft);display:inline-flex;align-items:baseline;gap:4px;border:1px solid #BFD3EA;border-radius:999px;padding:3px 10px;background:#F2F7FC;cursor:pointer;}
+  .btw-or-lifunnel button.n b{font-size:13.5px;color:#0A66C2;}
+  .btw-or-lifunnel button.n.on{background:#0A66C2;border-color:#0A66C2;color:#fff;}
+  .btw-or-lifunnel button.n.on b{color:#fff;}
+  .btw-or-lifunnel .wait{margin-left:6px;}
+  .btw-or-libadge{display:inline-block;font-size:11px;font-weight:700;color:#0A66C2;border:1px solid #0A66C2;border-radius:999px;padding:1px 8px;margin:4px 0 2px;}
+  .btw-or-libadge.ok{background:#0A66C2;color:#fff;}
   .btw-or-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .btw-or-tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;}
   .btw-or-profs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px;}
@@ -5794,6 +5803,7 @@
         <h2 id="btwOrTitle" style="margin-bottom:2px;">Clinic outreach</h2>
         <div class="btw-or-sub" id="btwOrSub"></div>
         <div class="btw-or-funnel" id="btwOrFunnel"></div>
+        <div class="btw-or-funnel btw-or-lifunnel" id="btwOrLiFunnel"></div>
         <div class="btw-or-hot" id="btwOrHot" hidden></div>
         <div class="btw-or-hot bounce" id="btwOrBounce" hidden></div>
         <details class="btw-or-work" id="btwOrWork" hidden><summary>What’s working</summary><div id="btwOrWorkBody"></div></details>
@@ -15069,7 +15079,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Invitation sent':'✓ Invitation envoyée', '✓ They accepted':'✓ Acceptée', 'To invite':'À inviter', 'Invitation sent':'Invitation envoyée', 'Connected':'Connectés', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Invitation sent':'✓ Invitation envoyée', '✓ They accepted':'✓ Acceptée', 'To invite':'À inviter', 'on LinkedIn':'sur LinkedIn', 'invitations sent':'invitations envoyées', 'connected':'connectés', 'waiting to accept:':'en attente d’acceptation :', 'Invitation sent':'Invitation envoyée', 'Connected':'Connectés', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15643,7 +15653,7 @@
     // LinkedIn step for each clinic: no profile, to invite, invitation sent, connected (they accepted).
     const liState = l => l.li_ok ? 'connected' : l.li_at ? 'sent' : l.linkedin ? 'toinvite' : 'none';
     let liF = 'all';
-    const pool = () => leads.filter(l => (prof === 'all' || (l.profession || 'other') === prof) && (liF === 'all' || liState(l) === liF));
+    const pool = () => leads.filter(l => (prof === 'all' || (l.profession || 'other') === prof) && (liF === 'all' || liState(l) === liF || (liF === 'haslink' && !!l.linkedin) || (liF === 'invited' && !!(l.li_at || l.li_ok))));
     let leads = [], tab = 'today', editing = null, composing = null, calling = null, bodyDirty = false, opened = false, undoFn = null;
 
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -15809,6 +15819,12 @@
       const sent = leads.length - n('to_contact');
       const steps = [[n('to_contact'), 'not contacted'], [sent, 'emailed'], [rep + n('trial') + n('customer'), 'replied'], [n('trial') + n('customer'), 'trials'], [n('customer'), 'customers']];
       $o('btwOrFunnel').innerHTML = steps.map(s => '<span class="n"><b>' + s[0] + '</b>' + s[1] + '</span>').join('<i>→</i>');
+      // LinkedIn, the same way: who has a profile, invitations sent, connected. Each step opens that list.
+      const liCount = k => leads.filter(l => liState(l) === k).length;
+      const liSent = liCount('sent') + liCount('connected');
+      const liSteps = [['haslink', liCount('toinvite') + liSent, 'on LinkedIn'], ['invited', liSent, 'invitations sent'], ['connected', liCount('connected'), 'connected']];
+      $o('btwOrLiFunnel').innerHTML = '<span class="lbl">in</span>' + liSteps.map(x => '<button type="button" class="n' + (liF === x[0] ? ' on' : '') + '" data-orli="' + x[0] + '"><b>' + x[1] + '</b>' + esc(ownerT(x[2])) + '</button>').join('<i>→</i>')
+        + (liCount('sent') ? '<span class="wait">' + esc(ownerT('waiting to accept:')) + ' <b>' + liCount('sent') + '</b></span>' : '');
       // Who answered, at a glance: one button per clinic, jumps straight to its card.
       const chips = arr => '<span class="who">' + arr.sort(byName).map(l => '<button type="button" data-orjump="' + esc(l.id) + '">' + esc(firstName(l) ? firstName(l) + ' · ' + l.name : l.name) + '</button>').join('') + '</span>';
       const hotL = leads.filter(l => l.status === 'replied'), bncL = leads.filter(bounced);
@@ -15913,7 +15929,7 @@
           '<div class="btw-or-apollo" hidden></div>' +
           '<div class="btw-or-addemail" hidden><input type="email" placeholder="their@email.com" aria-label="Email for ' + esc(l.name) + '"><button type="button" class="btw-or-b pri" data-oract="saveemail">Save</button></div>' +
         '</div>' +
-        '<div class="btw-or-side">' + stepper(l) + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
+        '<div class="btw-or-side">' + stepper(l) + (l.li_ok ? '<span class="btw-or-libadge ok">in · Connected</span>' : l.li_at ? '<span class="btw-or-libadge">in · Invite sent</span>' : '') + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
           '<div class="btw-or-acts">' + main + '<button type="button" class="btw-or-b more" data-oract="menu" aria-label="More actions for ' + esc(l.name) + '" aria-haspopup="true">⋯</button></div></div>' +
         '<div class="btw-or-menu" hidden>' + menu.map(m => '<button type="button" data-oract="' + m[0] + '"' + (m[0] === 'set:not_interested' ? ' class="warn"' : '') + '>' + esc(m[1]) + '</button>').join('') + '</div>' +
       '</div>';
@@ -16010,6 +16026,7 @@
       if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
       if(e.key === 'Escape'){ closeMenus(); }
     });
+    $o('btwOrLiFunnel').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = liF === b.dataset.orli ? 'all' : b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
     $o('btwOrLiF').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
     $o('btwOrProfs').addEventListener('click', function(e){ const b = e.target.closest('[data-orprof]'); if(!b) return; prof = b.dataset.orprof; try { localStorage.setItem('btw_or_prof', prof); } catch(_){} render(); });
     // Banner chips: open the tab that holds the clinic, then scroll to and flash its card.
