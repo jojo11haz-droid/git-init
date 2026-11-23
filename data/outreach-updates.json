@@ -10217,5 +10217,8 @@
 {"id": "nutrition-altitude", "apollo_id": "6b011aadf9b69c000cd2f995"},
 {"id": "kinesio-mouvement-proactif", "apollo_id": "6b011aadf9b69c000cd2f999"},
 {"id": "kinesio-progres-100-limites", "apollo_id": "6b011aadf9b69c000cd2f998"},
-{"id": "osteo-axe-osteo", "apollo_id": "6b011aadf9b69c000cd2f996"}
+{"id": "osteo-axe-osteo", "apollo_id": "6b011aadf9b69c000cd2f996"},
+{"id": "psy-declic", "status": "not_interested"},
+{"id": "psy-declic", "note": "Replied \"Non merci\" (Nov 22). Do not contact again."},
+{"id": "psy-clinique-femina", "note": "Auto-reply Nov 22: on maternity leave for several months. Left out of Apollo follow-ups; try again in spring."}
 ]
