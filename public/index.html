@@ -1466,9 +1466,21 @@
   .btw-inbox-replybtn,.btw-inbox-cancel{margin-top:10px;font:inherit;font-size:13px;font-weight:600;background:none;border:1px solid var(--line);color:var(--moss);border-radius:100px;padding:6px 14px;cursor:pointer;min-height:36px;}
   .btw-inbox-compose{margin-top:10px;}
   .btw-inbox-compose textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.45;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);resize:vertical;}
-  .btw-inbox-new{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel);}
-  .btw-inbox-new .btw-inbox-compose{margin-top:6px;}
-  .btw-inbox-new .btw-inbox-h b{color:var(--moss);}
+  .btw-inbox-chat{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel);}
+  .btw-inbox-chat > .btw-inbox-h b{color:var(--moss);}
+  .btw-ib-list{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px;}
+  .btw-ib-row{display:flex;}
+  .btw-ib-row.me{justify-content:flex-end;}
+  .btw-ib-b{max-width:85%;border-radius:14px;padding:8px 12px;}
+  .btw-ib-b.them{background:var(--paper);border-top-left-radius:4px;}
+  .btw-ib-b.them.new{box-shadow:inset 0 0 0 1.5px var(--moss);}
+  .btw-ib-b.me{background:rgba(31,78,140,.10);border-top-right-radius:4px;}
+  .btw-ib-h{font-size:11.5px;color:var(--ink-soft);margin-bottom:3px;}
+  .btw-ib-h b{color:var(--ink);}
+  .btw-ib-new{color:var(--moss);font-weight:700;}
+  .btw-inbox-chat .btw-inbox-more{margin:2px 0 4px;}
+  .btw-inbox-new{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;}
+  .btw-inbox-new .btw-inbox-compose{margin-top:0;}
   .btw-inbox-note{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.4;}
   .btw-inbox-err{font-size:12.5px;color:var(--clay,#C0392B);}
   .btw-inbox-err:empty{display:none;}
@@ -6619,6 +6631,7 @@
     "New reply from them":"Nouvelle réponse de sa part",
     "Write a reply to":"Écrire une réponse à",
     "Write to":"Écrire à",
+    "Messages":"Messages","No messages yet. Write to":"Pas encore de messages. Écrivez à",
     "Between isn't for emergencies. If you're in danger, call 988 or 911.":"Between n'est pas fait pour les urgences. Si vous êtes en danger, appelez le 988 ou le 911.",
     "This sounds like a lot to carry right now.":"Ça semble lourd à porter en ce moment.",
     "Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.":"La personne qui vous suit ne le verra peut-être pas tout de suite. Si vous êtes en danger ou pensez au suicide, appelez ou textez le 988, ou appelez le 911.",
@@ -19598,49 +19611,36 @@
     var oldTa = box.querySelector('.btw-inbox-new textarea'), keep = oldTa ? oldTa.value : '';
     box.style.display = '';
     var who = (state.patient && state.patient.clinician_name) || t('Your professional');
-    // Threads: each of the professional's messages with the client's replies
-    // under it (oldest first); a reply whose message has scrolled off stands alone.
-    var pro = {}, threads = [];
-    list.forEach(function(m){ if(m.sender !== 'client'){ pro[m.id] = { m:m, replies:[], last:m.created_at }; threads.push(pro[m.id]); } });
-    list.forEach(function(m){
-      if(m.sender !== 'client') return;
-      var th = m.reply_to && pro[m.reply_to];
-      if(th){ th.replies.unshift(m); if(m.created_at > th.last) th.last = m.created_at; }
-      else threads.push({ m:m, replies:[], last:m.created_at });
-    });
-    threads.sort(function(a, b){ return a.last < b.last ? 1 : a.last > b.last ? -1 : 0; });
-    var shown = _inboxAll ? threads.slice(0, 10) : threads.slice(0, 1);
-    var replyHtml = function(r){
-      return '<div class="btw-inbox-reply"><div class="btw-inbox-h"><b>' + esc(t('You')) + '</b><span>' + esc(fmtWhen(r.created_at)) + (r.read_at ? ' · ' + esc(t('Seen')) : '') + '</span></div><div class="btw-inbox-body">' + esc(r.body) + '</div></div>';
+    // One conversation, like a text thread: oldest at the top, newest at the
+    // bottom, the message box under it. The latest few show; the rest open
+    // with "Earlier messages".
+    var chron = list.slice().sort(function(a, b){ return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0; });
+    var SHOW = 6, hidden = _inboxAll ? 0 : Math.max(0, chron.length - SHOW);
+    var shown = chron.slice(hidden);
+    var exHtml = function(m){
+      return m.exercises && m.exercises.length ? '<div class="btw-inbox-ex">' + m.exercises.map(function(e){ return '<div class="btw-inbox-exi"><b>' + esc(e.name) + '</b>' + (e.dosage ? '<span class="d">' + esc(e.dosage) + '</span>' : '') + (e.description ? '<div class="h">' + esc(e.description) + '</div>' : '') + '</div>'; }).join('') + '</div>' : '';
     };
-    box.innerHTML = shown.map(function(th){
-      var m = th.m;
-      if(m.sender === 'client') return '<div class="btw-inbox-card mine">' + replyHtml(m) + '</div>';
+    var bubbles = shown.map(function(m){
+      if(m.sender === 'client'){
+        return '<div class="btw-ib-row me"><div class="btw-ib-b me"><div class="btw-ib-h">' + esc(t('You')) + ' · ' + esc(fmtWhen(m.created_at)) + (m.read_at ? ' · ' + esc(t('Seen')) : '') + '</div><div class="btw-inbox-body">' + esc(m.body) + '</div></div></div>';
+      }
       var unread = !m.read_at && !m._seen;
-      return '<div class="btw-inbox-card' + (m.read_at ? '' : ' new') + '"><div class="btw-inbox-h"><b>' + esc(unread ? t('New message') : t('Message')) + ' · ' + esc(who) + '</b><span>' + esc(fmtWhen(m.created_at)) + '</span></div>'
-        + '<div class="btw-inbox-body">' + esc(m.body) + '</div>'
-        + (m.exercises && m.exercises.length ? '<div class="btw-inbox-ex">' + m.exercises.map(function(e){ return '<div class="btw-inbox-exi"><b>' + esc(e.name) + '</b>' + (e.dosage ? '<span class="d">' + esc(e.dosage) + '</span>' : '') + (e.description ? '<div class="h">' + esc(e.description) + '</div>' : '') + '</div>'; }).join('') + '</div>' : '')
-        + th.replies.map(replyHtml).join('')
-        + (!connected ? '' : '<button type="button" class="btw-inbox-replybtn" data-id="' + esc(m.id) + '">' + esc(t('Reply')) + '</button>')
-        + '</div>';
-    }).join('') + (_inboxCrisis ? '<div class="btw-inbox-crisis" role="alert"><b>' + esc(t("This sounds like a lot to carry right now.")) + '</b> ' + esc(t("Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.")) + '</div>' : '')
-      + (threads.length > 1 ? '<button type="button" class="btw-inbox-more">' + esc(_inboxAll ? t('Show only the latest') : t('Earlier messages') + ' (' + (threads.length - 1) + ')') + '</button>' : '');
-    // One message box, always there once they're connected: they can write to
-    // their professional first, not only answer. It threads under the latest
-    // note from the professional (or the one they tapped Reply on).
-    if(connected){
-      var latestPro = null; list.forEach(function(m){ if(m.sender !== 'client' && (!latestPro || m.created_at > latestPro.created_at)) latestPro = m; });
-      var target = _inboxReplyTo || (latestPro && latestPro.id) || '';
-      box.insertAdjacentHTML(list.length ? 'afterbegin' : 'beforeend', '<div class="btw-inbox-new"><div class="btw-inbox-h"><b>' + esc(t('Message') + ' · ' + who) + '</b></div>'
-        + '<div class="btw-inbox-compose"><textarea maxlength="1000" rows="2" placeholder="' + esc(t('Write to') + ' ' + who + '…') + '"></textarea>'
+      return '<div class="btw-ib-row"><div class="btw-ib-b them' + (unread ? ' new' : '') + '"><div class="btw-ib-h"><b>' + esc(who) + '</b> · ' + esc(fmtWhen(m.created_at)) + (unread ? ' · <span class="btw-ib-new">' + esc(t('New')) + '</span>' : '') + '</div><div class="btw-inbox-body">' + esc(m.body) + '</div>' + exHtml(m) + '</div></div>';
+    }).join('');
+    var latestPro = null; list.forEach(function(m){ if(m.sender !== 'client' && (!latestPro || m.created_at > latestPro.created_at)) latestPro = m; });
+    box.innerHTML = '<div class="btw-inbox-chat"><div class="btw-inbox-h"><b>' + esc(t('Messages') + ' · ' + who) + '</b></div>'
+      + (hidden ? '<button type="button" class="btw-inbox-more">' + esc(t('Earlier messages') + ' (' + hidden + ')') + '</button>' : (_inboxAll && chron.length > SHOW ? '<button type="button" class="btw-inbox-more">' + esc(t('Show only the latest')) + '</button>' : ''))
+      + (bubbles ? '<div class="btw-ib-list">' + bubbles + '</div>' : '<div class="btw-inbox-note" style="margin:4px 0 8px;">' + esc(t('No messages yet. Write to') + ' ' + who + '.') + '</div>')
+      + (_inboxCrisis ? '<div class="btw-inbox-crisis" role="alert"><b>' + esc(t("This sounds like a lot to carry right now.")) + '</b> ' + esc(t("Your professional may not see this right away. If you're in danger or thinking about suicide, call or text 988, or call 911.")) + '</div>' : '')
+      // The message box, always there once they're connected: they can write
+      // first, not only answer. Their message is linked to the latest note.
+      + (!connected ? '' : '<div class="btw-inbox-new"><div class="btw-inbox-compose"><textarea maxlength="1000" rows="2" placeholder="' + esc(t('Write to') + ' ' + who + '…') + '"></textarea>'
         + '<div class="btw-inbox-note">' + esc(t("Between isn't for emergencies. If you're in danger, call 988 or 911.")) + '</div>'
         + '<div class="btw-inbox-err" role="alert"></div>'
-        + '<div class="btw-inbox-actions"><button type="button" class="btw-inbox-send" data-id="' + esc(target) + '">' + esc(t('Send')) + '</button>' + (_inboxReplyTo ? '<button type="button" class="btw-inbox-cancel">' + esc(t('Cancel')) + '</button>' : '') + '</div></div></div>');
-      var nta = box.querySelector('.btw-inbox-new textarea'); if(nta && keep) nta.value = keep;
-    }
+        + '<div class="btw-inbox-actions"><button type="button" class="btw-inbox-send" data-id="' + esc((latestPro && latestPro.id) || '') + '">' + esc(t('Send')) + '</button></div></div></div>')
+      + '</div>';
+    var nta = box.querySelector('.btw-inbox-new textarea'); if(nta && keep) nta.value = keep;
     var more = box.querySelector('.btw-inbox-more'); if(more) more.addEventListener('click', function(){ _inboxAll = !_inboxAll; renderInbox(); });
-    box.querySelectorAll('.btw-inbox-replybtn').forEach(function(b){ b.addEventListener('click', function(){ _inboxReplyTo = b.dataset.id; renderInbox(); var ta = box.querySelector('.btw-inbox-new textarea'); if(ta){ ta.focus(); try { ta.scrollIntoView({ block:'center', behavior:'smooth' }); } catch(e){} } }); });
-    var cancel = box.querySelector('.btw-inbox-cancel'); if(cancel) cancel.addEventListener('click', function(){ _inboxReplyTo = null; renderInbox(); });
     var send = box.querySelector('.btw-inbox-send');
     if(send) send.addEventListener('click', async function(){
       var ta = box.querySelector('.btw-inbox-new textarea'), er = box.querySelector('.btw-inbox-err');
@@ -19649,13 +19649,13 @@
       if(_ownerPreview){
         // Preview: show it on this screen only; nothing is sent.
         _prevThread = [{ id:'prevr' + Date.now(), sender:'client', reply_to:send.dataset.id || null, body:body, created_at:new Date().toISOString(), read_at:null }].concat(_prevThread || []);
-        ta.value = ''; _inboxCrisis = false; _inboxReplyTo = null; renderInbox(); return;
+        ta.value = ''; _inboxCrisis = false; renderInbox(); return;
       }
       try{
         var r = await pApi('POST', '/api/patient/messages', send.dataset.id ? { body: body, replyTo: send.dataset.id } : { body: body });
         if(r && r.message) state.messages = [r.message].concat(state.messages || []);
         ta.value = ''; _inboxCrisis = !!(r && r.crisis);
-        _inboxReplyTo = null; renderInbox();
+        renderInbox();
       }catch(x){ send.disabled = false; er.textContent = x.message; }
     });
     // Ctrl/⌘+Enter sends.
@@ -21397,7 +21397,7 @@
                 : cap1(yourPro) + ' sees a short summary, not the raw recording, and only with your consent.');
         return [
           { sel:null, title:t('Welcome to Between'), body:t('A quick tour of your check-ins, about 30 seconds. You can skip anytime.') },
-          { sel:'#btwInbox', title:(fr ? 'Messages de ' + yourPro : 'Messages from ' + yourPro), body:(fr ? 'Les mots de ' + yourPro + ' s’affichent ici, avec les ' + items + ' ' + joined + ' et comment les faire. Touchez Répondre pour lui écrire (pas pour les urgences).' : 'Notes from ' + yourPro + ' show here, with any ' + items + ' they attached and how to do them. Tap Reply to write back (not for emergencies).') },
+          { sel:'#btwInbox', title:(fr ? 'Messages de ' + yourPro : 'Messages from ' + yourPro), body:(fr ? 'Les mots de ' + yourPro + ' s’affichent ici, avec les ' + items + ' ' + joined + ' et comment les faire. Écrivez-lui dans la case sous la conversation (pas pour les urgences).' : 'Notes from ' + yourPro + ' show here, with any ' + items + ' they attached and how to do them. Write to them in the box under the conversation (not for emergencies).') },
           { sel:'#btwSupport', title:(fr ? 'De l’aide est là pour vous' : 'Help is here'), body:(fr ? 'Si vous avez besoin d’aide maintenant, textez ou appelez le 988, ou composez le 911. Between n’est pas fait pour les urgences.' : 'If you need help right now, text or call 988, or call 911. Between is not for emergencies.') },
           { sel:'#btwComposeArea', title:t('Check in here'), body:t('The moment something comes up, capture it, by writing, a voice note, or a few guided questions.') },
           { sel:'#btwMoodSlider', title: pm ? t('Rate your pain') : t('Set how you are doing'), body: pm ? t('Slide to show your pain right now, or let Between estimate it from what you wrote.') : t('Slide to show how you are feeling, or let Between estimate it from what you wrote.') },
