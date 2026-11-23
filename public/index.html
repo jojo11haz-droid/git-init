@@ -3323,9 +3323,11 @@
   .btw-or-lib:hover{background:rgba(10,102,194,.08);}
   .btw-or-li-done{font-size:12.5px;color:var(--moss);font-weight:600;}
   .btw-or-li-sent{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
-  .btw-or-lifilter{margin-top:6px;align-items:center;}
-  .btw-or-lifilter .lbl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:#0A66C2;color:#fff;font:700 12px/1 Arial,sans-serif;}
-  .btw-or-lifilter button.on{background:#0A66C2;border-color:#0A66C2;}
+  .btw-or-lifilter{margin-top:6px;}
+  .btw-or-lifilter:empty{display:none;}
+  .btw-or-lipill{font:inherit;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;background:#0A66C2;color:#fff;border:0;border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;}
+  .btw-or-lipill .lbl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#fff;color:#0A66C2;font:700 11px/1 Arial,sans-serif;}
+  .btw-or-lipill b{font-weight:700;opacity:.9;}
   .btw-or-apollo .ae{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
   .btw-or-apollo .ae:first-of-type{border-top:0;padding-top:0;margin-top:0;}
   .btw-or-apollo .ah{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;color:var(--ink-soft);font-size:12px;}
@@ -5815,7 +5817,7 @@
           </div>
         </div>
         <div class="btw-or-profs" id="btwOrProfs" role="group" aria-label="Filter by profession"></div>
-        <div class="btw-or-profs btw-or-lifilter" id="btwOrLiF" role="group" aria-label="Filter by LinkedIn"></div>
+        <div class="btw-or-lifilter" id="btwOrLiF" aria-live="polite"></div>
         <div class="btw-form-error" id="btwOrError"></div>
       </div>
       <div class="btw-or-body" id="btwOrList"></div>
@@ -15084,7 +15086,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Invitation sent':'✓ Invitation envoyée', '✓ They accepted':'✓ Acceptée', 'To invite':'À inviter', 'on LinkedIn':'sur LinkedIn', 'invitations sent':'invitations envoyées', 'connected':'connectés', 'waiting to accept:':'en attente d’acceptation :', 'Invitation sent':'Invitation envoyée', 'Connected':'Connectés', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Invitation sent':'✓ Invitation envoyée', '✓ They accepted':'✓ Acceptée', 'To invite':'À inviter', 'On LinkedIn':'Sur LinkedIn', 'Invitations sent':'Invitations envoyées', 'Remove the LinkedIn filter':'Retirer le filtre LinkedIn', 'on LinkedIn':'sur LinkedIn', 'invitations sent':'invitations envoyées', 'connected':'connectés', 'waiting to accept:':'en attente d’acceptation :', 'Invitation sent':'Invitation envoyée', 'Connected':'Connectés', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15657,7 +15659,7 @@
     let prof = 'all'; try { const sp = localStorage.getItem('btw_or_prof'); if(sp && (sp === 'all' || PROF[sp])) prof = sp; } catch(e){}
     // LinkedIn step for each clinic: no profile, to invite, invitation sent, connected (they accepted).
     const liState = l => l.li_ok ? 'connected' : l.li_at ? 'sent' : l.linkedin ? 'toinvite' : 'none';
-    let liF = 'all';
+    let liF = 'all', liPrevTab = null;
     const pool = () => leads.filter(l => (prof === 'all' || (l.profession || 'other') === prof) && (liF === 'all' || liState(l) === liF || (liF === 'haslink' && !!l.linkedin) || (liF === 'invited' && !!(l.li_at || l.li_ok))));
     let leads = [], tab = 'today', editing = null, composing = null, calling = null, bodyDirty = false, opened = false, undoFn = null;
 
@@ -15874,9 +15876,9 @@
       if(prof !== 'all' && present.indexOf(prof) < 0) prof = 'all';
       $o('btwOrProfs').innerHTML = [['all', 'All professions', leads.length]].concat(present.map(k => [k, PROF[k], leads.filter(l => (l.profession || 'other') === k).length]))
         .map(([k, lab, cnt]) => '<button type="button" data-orprof="' + k + '" aria-pressed="' + (prof === k) + '" class="' + (prof === k ? 'on' : '') + '">' + esc(lab) + '<span class="c">' + cnt + '</span></button>').join('');
-      const liN = k => leads.filter(l => liState(l) === k).length;
-      $o('btwOrLiF').innerHTML = '<span class="lbl">in</span>' + [['all', 'All', leads.length], ['toinvite', 'To invite', liN('toinvite')], ['sent', 'Invitation sent', liN('sent')], ['connected', 'Connected', liN('connected')]]
-        .map(([k, lab, cnt]) => '<button type="button" data-orli="' + k + '" aria-pressed="' + (liF === k) + '" class="' + (liF === k ? 'on' : '') + '">' + esc(ownerT(lab)) + '<span class="c">' + cnt + '</span></button>').join('');
+      // A LinkedIn step picked at the top shows here as a pill you can remove.
+      const LIF_LABEL = { haslink:'On LinkedIn', invited:'Invitations sent', toinvite:'To invite', sent:'Invitation sent', connected:'Connected' };
+      $o('btwOrLiF').innerHTML = liF === 'all' ? '' : '<button type="button" class="btw-or-lipill" data-orli="all" aria-label="' + esc(ownerT('Remove the LinkedIn filter')) + '"><span class="lbl">in</span>' + esc(ownerT(LIF_LABEL[liF] || '')) + ' <b aria-hidden="true">✕</b></button>';
       let gs = q ? [['Search results', pool().filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
       gs = gs.filter(g => g[1].length);
       if(!gs.length){
@@ -16046,13 +16048,16 @@
       if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
       if(e.key === 'Escape'){ closeMenus(); }
     });
-    $o('btwOrLiFunnel').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = liF === b.dataset.orli ? 'all' : b.dataset.orli; if(liF !== 'all' && tab !== 'linkedin') tab = 'all'; render(); });
-    $o('btwOrLiF').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
+    $o('btwOrLiFunnel').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; const was = liF; liF = liF === b.dataset.orli ? 'all' : b.dataset.orli;
+      if(liF !== 'all' && was === 'all' && tab !== 'linkedin'){ liPrevTab = tab; tab = 'all'; }
+      if(liF === 'all' && liPrevTab){ tab = liPrevTab; liPrevTab = null; }
+      render(); });
+    $o('btwOrLiF').addEventListener('click', function(e){ if(!e.target.closest('[data-orli]')) return; liF = 'all'; if(liPrevTab){ tab = liPrevTab; liPrevTab = null; } render(); });
     $o('btwOrProfs').addEventListener('click', function(e){ const b = e.target.closest('[data-orprof]'); if(!b) return; prof = b.dataset.orprof; try { localStorage.setItem('btw_or_prof', prof); } catch(_){} render(); });
     // Banner chips: open the tab that holds the clinic, then scroll to and flash its card.
     ov.addEventListener('click', function(e){
       const b = e.target.closest('[data-orjump]'); if(!b) return;
-      tab = 'today'; prof = 'all'; $o('btwOrSearch').value = ''; render();
+      tab = 'today'; prof = 'all'; liF = 'all'; $o('btwOrSearch').value = ''; render();
       const el = $o('btwOrList').querySelector('.btw-or-lead[data-id="' + (window.CSS && CSS.escape ? CSS.escape(b.dataset.orjump) : b.dataset.orjump) + '"]');
       if(el){ el.scrollIntoView({ block:'center', behavior:'smooth' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }
     });
@@ -16217,7 +16222,7 @@
     });
     ov.addEventListener('click', function(e){ if(!e.target.closest('.btw-or-menu') && !e.target.closest('[data-oract="menu"]')) closeMenus(); });
     ov.addEventListener('keydown', function(e){ if(e.key === 'Escape' && (!$o('btwOrCompose').hidden || !$o('btwOrForm').hidden)){ e.stopPropagation(); closeSheets(); } }, true);
-    btn.addEventListener('click', function(){ closeSheets(); tab = 'today'; $o('btwOrSearch').value = ''; ov.style.display = 'flex'; load(); });
+    btn.addEventListener('click', function(){ closeSheets(); tab = 'today'; liF = 'all'; $o('btwOrSearch').value = ''; ov.style.display = 'flex'; load(); });
   })();
 
   // Owner only: check every plan's Stripe price against how the site sells it.
