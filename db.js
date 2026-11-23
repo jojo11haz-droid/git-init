@@ -560,6 +560,34 @@ async function applyOutreachUpdates() {
         }
       } catch (e) {}
     }
+    // A follow-up reminder for a warm lead (e.g. "sent the video, check back Thursday"):
+    // set once per date, so the owner can still move or clear it on the page.
+    const isDay = (d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+    if (isDay(u.next)) {
+      try {
+        const once = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', ['next:' + u.id + ':' + u.next]);
+        if (once.rows.length) {
+          await pool.query(
+            `UPDATE outreach_leads SET next_at = $2, last_at = CASE WHEN $3 = '' THEN last_at ELSE $3 END, updated_at = now() WHERE id = $1`,
+            [u.id, u.next, isDay(u.last) ? u.last : '']);
+        }
+      } catch (e) {}
+    }
+    // First email sent by hand, follow-ups handed to Apollo: mark it sent (if the owner hadn't)
+    // and clear the page's own follow-up date so it never asks for a duplicate. Applied once ever.
+    if (isDay(u.apollo_followups)) {
+      try {
+        const once = await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id', ['apollofu:' + u.id]);
+        if (once.rows.length) {
+          await pool.query(
+            `UPDATE outreach_leads SET status = CASE WHEN status = 'to_contact' THEN 'emailed' ELSE status END,
+               last_at = CASE WHEN status = 'to_contact' OR last_at = '' THEN $2 ELSE last_at END,
+               next_at = '', notes = CASE WHEN position('[Hand-send]' in notes) > 0 THEN replace(notes, '[Hand-send]', '[Apollo follow-ups]')
+                 WHEN position('[Apollo follow-ups]' in notes) > 0 THEN notes ELSE trim(notes || E'\n[Apollo follow-ups]') END, updated_at = now()
+             WHERE id = $1 AND status IN ('to_contact', 'emailed', 'followup1')`, [u.id, u.apollo_followups]);
+        }
+      } catch (e) {}
+    }
     const sets = []; const vals = [u.id];
     for (const f of OUTREACH_FILL) {
       if (!u[f]) continue;
