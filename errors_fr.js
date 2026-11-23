@@ -10,6 +10,7 @@
 
 const FR = {
   "Could not load your topics.": "Impossible de charger vos sujets.",
+  "Between is starting up. Try again in a moment.": "Between démarre. Réessayez dans un instant.",
   "Too many Apollo lookups at once. Wait a minute and try again.": "Trop de recherches Apollo à la fois. Attendez une minute et réessayez.",
   "Could not reach Apollo just now. Try again in a moment.": "Impossible de joindre Apollo pour le moment. Réessayez dans un instant.",
   "Apollo turned down the API key. Check APOLLO_API_KEY on the server.": "Apollo a refusé la clé d'API. Vérifiez APOLLO_API_KEY sur le serveur.",

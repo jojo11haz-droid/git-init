@@ -1109,8 +1109,11 @@ app.post('/api/ask', askLimiter, async (req, res) => {
 // Cookie-based sessions: the token lives in an httpOnly cookie, its hash in
 // the auth_sessions table. See backend-spec.md §Auth & account.
 
+// Set once the database is connected and set up (see the end of this file).
+let dbReady = false;
 function requireDb(req, res, next) {
   if (!dbEnabled()) return res.status(503).json({ error: 'Database not configured.' });
+  if (!dbReady) return res.status(503).json({ error: 'Between is starting up. Try again in a moment.' });
   next();
 }
 
@@ -6308,9 +6311,22 @@ function startReminderSweep() {
 }
 
 const PORT = process.env.PORT || 3000;
-initDb().then(() => {
-  app.listen(PORT, () => { console.log(`Between server running on port ${PORT}`); checkPatientPricing(); startReminderSweep(); });
-}).catch(err => {
-  console.error('Failed to initialize database:', err);
-  app.listen(PORT, () => { console.log(`Between server running on port ${PORT} (without DB)`); checkPatientPricing(); });
-});
+// Never let one stray rejected promise take the whole site down: log it and keep serving.
+process.on('unhandledRejection', (reason) => { console.error('Unhandled promise rejection (server keeps running):', reason); });
+// Start serving right away, so the site is up even while the database is slow
+// or briefly unreachable; routes that need it answer 503 until it's ready.
+// The database setup is retried until it works.
+app.listen(PORT, () => { console.log(`Between server running on port ${PORT}`); checkPatientPricing(); });
+let dbAttempt = 0;
+function startDb() {
+  dbAttempt++;
+  initDb().then(() => {
+    dbReady = true;
+    console.log('Database connected' + (dbAttempt > 1 ? ` (after ${dbAttempt} attempts)` : '') + '.');
+    startReminderSweep();
+  }).catch(err => {
+    console.error(`Failed to initialize database (attempt ${dbAttempt}), retrying in 15 s:`, err && err.message);
+    setTimeout(startDb, 15000).unref?.();
+  });
+}
+if (dbEnabled()) startDb();
