@@ -3296,7 +3296,11 @@
   .btw-or-noemail{color:var(--amber);font-weight:600;}
   .btw-or-apollo{margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);font-size:13px;}
   .btw-or-apollo[hidden]{display:none;}
-  .btw-or-li-done{font-size:12px;color:var(--moss);}
+  .btw-or-li{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;}
+  .btw-or-li .lbl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:#0A66C2;color:#fff;font:700 12px/1 Arial,sans-serif;}
+  .btw-or-lib{font:inherit;font-size:12.5px;font-weight:600;color:#0A66C2;background:none;border:1px solid #0A66C2;border-radius:100px;padding:3px 10px;cursor:pointer;text-decoration:none;min-height:28px;display:inline-flex;align-items:center;}
+  .btw-or-lib:hover{background:rgba(10,102,194,.08);}
+  .btw-or-li-done{font-size:12.5px;color:var(--moss);font-weight:600;}
   .btw-or-apollo .ae{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
   .btw-or-apollo .ae:first-of-type{border-top:0;padding-top:0;margin-top:0;}
   .btw-or-apollo .ah{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;color:var(--ink-soft);font-size:12px;}
@@ -15047,7 +15051,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Mark connected':'✓ Contact fait', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15837,14 +15841,16 @@
       const find = 'https://www.google.com/search?q=' + encodeURIComponent(l.name + ' ' + (l.city || '') + (l.lang === 'en' ? ' email' : ' courriel'));
       const contact = (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a> <button type="button" class="btw-or-b ghost" data-oract="editemail" style="padding:0 4px;font-size:12px;" aria-label="Change the email for ' + esc(l.name) + '">change</button>' : '<span class="btw-or-noemail">No email yet</span> · <a href="' + esc(find) + '" target="_blank" rel="noopener">Find it ↗</a>') +
         (l.phone ? ' · <a href="tel:' + esc(l.phone.replace(/[^\d+]/g, '')) + '">' + esc(l.phone) + '</a>' : '') + (site ? ' · <a href="' + esc(site) + '" target="_blank" rel="noopener">Website ↗</a>' : '')
-        // LinkedIn: opened by hand to connect or send a note (never automated).
-        + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '') ? ' · <a href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">LinkedIn ↗</a>'
-          + (l.li_at ? ' <span class="btw-or-li-done" title="You connected with them on LinkedIn">✓ connected ' + esc(fmt(l.li_at)) + '</span>'
-            : ' <button type="button" class="btw-or-b ghost" data-oract="linote" style="padding:0 4px;font-size:12px;" title="Copy a short connection note with their first name">Copy note</button>')
-          // No profile saved yet: search LinkedIn for the person (or the clinic), then paste the profile in Edit details.
-          : ' · <a href="https://www.linkedin.com/search/results/' + ((l.contact || '').split('(')[0].trim() ? 'people/?keywords=' + encodeURIComponent((l.contact || '').split('(')[0].trim() + ' ' + l.name) : 'companies/?keywords=' + encodeURIComponent(l.name)) + '" target="_blank" rel="noopener" title="Search LinkedIn for them, then paste their profile in ⋯ → Edit details">Find on LinkedIn ↗</a>')
         // Their Apollo contact: every email Apollo sent them, opens and replies.
         + (/^[a-f0-9]{24}$/.test(l.apollo_id || '') || inSeq(l) ? ' · <button type="button" class="btw-or-b ghost" data-oract="apollo" style="padding:0 4px;font-size:12px;" aria-expanded="false" title="See the emails Apollo sent them, with opens and replies">📨 What Apollo sent</button>' : '');
+      // LinkedIn, on its own row so it's easy to spot: opened by hand to connect
+      // or send a note (never automated).
+      const person = (l.contact || '').split('(')[0].trim();
+      const liRow = '<div class="btw-or-li"><span class="lbl">in</span>' + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '')
+        ? '<a class="btw-or-lib" href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">Open LinkedIn ↗</a>'
+          + (l.li_at ? '<span class="btw-or-li-done" title="You connected with them on LinkedIn">✓ Connected ' + esc(fmt(l.li_at)) + '</span>'
+            : '<button type="button" class="btw-or-lib" data-oract="linote" title="Copy a short connection note with their first name">Copy note</button><button type="button" class="btw-or-lib" data-oract="liconn" title="Log that you sent the invitation">✓ Mark connected</button>')
+        : '<a class="btw-or-lib" href="https://www.linkedin.com/search/results/' + (person ? 'people/?keywords=' + encodeURIComponent(person + ' ' + l.name) : 'companies/?keywords=' + encodeURIComponent(l.name)) + '" target="_blank" rel="noopener" title="Search LinkedIn for them, then paste their profile in ⋯ → Edit details">Find on LinkedIn ↗</a>') + '</div>';
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(bounced(l)) when = 'Their email address doesn’t work';
@@ -15877,6 +15883,7 @@
         '<div class="btw-or-main"><div class="btw-or-name">' + esc(l.name) + '</div>' +
           '<div>' + esc([l.contact, l.city, PROF[l.profession] || '', l.lang === 'en' ? 'English' : 'Français'].filter(Boolean).join(' · ')) + '</div>' +
           '<div class="btw-or-contact">' + contact + '</div>' +
+          liRow +
           (l.notes ? '<div class="btw-or-notes" data-oract="notes" title="Click to see all">' + esc(l.notes) + '</div>' : '') +
           '<div class="btw-or-apollo" hidden></div>' +
           '<div class="btw-or-addemail" hidden><input type="email" placeholder="their@email.com" aria-label="Email for ' + esc(l.name) + '"><button type="button" class="btw-or-b pri" data-oract="saveemail">Save</button></div>' +
