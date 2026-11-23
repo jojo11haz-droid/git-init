@@ -511,5 +511,39 @@ console.log('Checking the body outline matches between web and app...');
   else ok('figure clothing → shorts and sports top identical on web and app');
 }
 
+// The site must open even when the database is slow or unreachable (Nov 22
+// outage: the server waited for a 4-minute database setup before listening,
+// and Render gave up on it). Start it pointed at a database that isn't there:
+// it has to be serving pages within seconds, with /health up and database
+// routes answering 503 instead of the whole site going down.
+console.log('Checking the site starts without waiting for the database...');
+{
+  const P2 = 3984, b2 = `http://127.0.0.1:${P2}`;
+  const t0 = Date.now();
+  const child = spawn(process.execPath, ['server.js'], {
+    cwd: root,
+    env: { ...process.env, PORT: String(P2), NODE_ENV: 'test', DISABLE_REMINDER_SWEEP: '1', DATABASE_URL: 'postgres://nobody@127.0.0.1:1/none', DATABASE_SSL: 'disable' }
+  });
+  let out = '';
+  child.stdout.on('data', d => { out += d; }); child.stderr.on('data', d => { out += d; });
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('not listening after 8 s')), 8000);
+      const tick = setInterval(() => { if (/running on port/i.test(out)) { clearTimeout(timer); clearInterval(tick); resolve(); } }, 50);
+      child.on('exit', code => { clearTimeout(timer); clearInterval(tick); reject(new Error('server exited (code ' + code + ')')); });
+    });
+    const secs = ((Date.now() - t0) / 1000).toFixed(1);
+    const home = await fetch(b2 + '/'), health = await fetch(b2 + '/health');
+    const api = await fetch(b2 + '/api/practice');
+    if (home.status === 200 && health.status === 200 && api.status === 503) ok(`site serves in ${secs}s with the database unreachable (/ 200, /health 200, API 503)`);
+    else fail(`with the database unreachable: / ${home.status}, /health ${health.status}, API ${api.status} (want 200, 200, 503)`);
+    await new Promise(r => setTimeout(r, 1500));
+    if (child.exitCode === null) ok('server keeps running while the database is unreachable');
+    else fail('server exited while the database was unreachable:\n' + out.slice(-400));
+  } catch (e) {
+    fail('site did not start with the database unreachable: ' + e.message + '\n' + out.slice(-400));
+  } finally { child.kill(); }
+}
+
 if (failures) { console.error('\n' + failures + ' app test(s) failed.'); process.exit(1); }
 console.log('\nAll app tests passed.');
