@@ -271,6 +271,8 @@ ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS linkedin TEXT NOT NULL DEFAU
 ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS apollo_id TEXT NOT NULL DEFAULT '';
 -- The day the owner connected with them on LinkedIn ('' = not yet).
 ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS li_at TEXT NOT NULL DEFAULT '';
+-- The day they accepted the LinkedIn invitation ('' = not yet). li_at is when it was sent.
+ALTER TABLE outreach_leads ADD COLUMN IF NOT EXISTS li_ok TEXT NOT NULL DEFAULT '';
 -- Leads added later from data/outreach-updates.json, so each is added once
 -- and stays deleted if the owner deletes it.
 CREATE TABLE IF NOT EXISTS outreach_imported (
@@ -2577,10 +2579,10 @@ export async function listDemoRequests(limit = 100) {
 }
 
 // --- Owner: clinic outreach list ---
-const OUTREACH_COLS = `id, name, contact, profession, city, lang, email, phone, website, linkedin, apollo_id, li_at, status,
+const OUTREACH_COLS = `id, name, contact, profession, city, lang, email, phone, website, linkedin, apollo_id, li_at, li_ok, status,
   next_at AS next, last_at AS last, notes, created_at, updated_at`;
 const OUTREACH_SET = { name: 'name', contact: 'contact', profession: 'profession', city: 'city', lang: 'lang', email: 'email',
-  phone: 'phone', website: 'website', linkedin: 'linkedin', apollo_id: 'apollo_id', li_at: 'li_at', status: 'status', next: 'next_at', last: 'last_at', notes: 'notes' };
+  phone: 'phone', website: 'website', linkedin: 'linkedin', apollo_id: 'apollo_id', li_at: 'li_at', li_ok: 'li_ok', status: 'status', next: 'next_at', last: 'last_at', notes: 'notes' };
 
 export async function listOutreachLeads() {
   const { rows } = await pool.query(`SELECT ${OUTREACH_COLS} FROM outreach_leads ORDER BY created_at, name`);

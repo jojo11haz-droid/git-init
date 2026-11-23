@@ -3313,6 +3313,10 @@
   .btw-or-lib{font:inherit;font-size:12.5px;font-weight:600;color:#0A66C2;background:none;border:1px solid #0A66C2;border-radius:100px;padding:3px 10px;cursor:pointer;text-decoration:none;min-height:28px;display:inline-flex;align-items:center;}
   .btw-or-lib:hover{background:rgba(10,102,194,.08);}
   .btw-or-li-done{font-size:12.5px;color:var(--moss);font-weight:600;}
+  .btw-or-li-sent{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+  .btw-or-lifilter{margin-top:6px;align-items:center;}
+  .btw-or-lifilter .lbl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:#0A66C2;color:#fff;font:700 12px/1 Arial,sans-serif;}
+  .btw-or-lifilter button.on{background:#0A66C2;border-color:#0A66C2;}
   .btw-or-apollo .ae{border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
   .btw-or-apollo .ae:first-of-type{border-top:0;padding-top:0;margin-top:0;}
   .btw-or-apollo .ah{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;color:var(--ink-soft);font-size:12px;}
@@ -5801,6 +5805,7 @@
           </div>
         </div>
         <div class="btw-or-profs" id="btwOrProfs" role="group" aria-label="Filter by profession"></div>
+        <div class="btw-or-profs btw-or-lifilter" id="btwOrLiF" role="group" aria-label="Filter by LinkedIn"></div>
         <div class="btw-form-error" id="btwOrError"></div>
       </div>
       <div class="btw-or-body" id="btwOrList"></div>
@@ -15064,7 +15069,7 @@
     'Only the name is required. Add the email so it shows up in "Ready for a first email".':'Seul le nom est obligatoire. Ajoutez le courriel pour que la clinique apparaisse dans « Prêtes pour un premier courriel ».',
     'Clinic name':'Nom de la clinique', 'Contact person':'Personne-ressource', '(optional)':'(facultatif)', 'e.g. Marie Roy':'ex. Marie Roy', 'Phone':'Téléphone',
     'Profession':'Profession', 'Physiotherapy':'Physiothérapie', 'Psychotherapy / psychology':'Psychothérapie / psychologie', 'Write to them in':'Leur écrire en',
-    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Mark connected':'✓ Contact fait', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
+    'City / area':'Ville / quartier', 'Website':'Site web', 'LinkedIn profile':'Profil LinkedIn', 'What Apollo sent ↗':'Ce qu’Apollo a envoyé ↗', '📨 What Apollo sent':'📨 Ce qu’Apollo a envoyé', 'Open in Apollo ↗':'Ouvrir dans Apollo ↗', 'Show the email':'Voir le courriel', 'Copy note':'Copier la note', 'Find on LinkedIn ↗':'Trouver sur LinkedIn ↗', 'Open LinkedIn ↗':'Ouvrir LinkedIn ↗', '✓ Invitation sent':'✓ Invitation envoyée', '✓ They accepted':'✓ Acceptée', 'To invite':'À inviter', 'Invitation sent':'Invitation envoyée', 'Connected':'Connectés', 'Connected on LinkedIn':'Contact LinkedIn fait', 'Not connected on LinkedIn (undo)':'Pas de contact LinkedIn (annuler)', 'Where they are':'Où elle en est', 'Next follow-up':'Prochaine relance', 'Notes':'Notes', 'Delete clinic':'Supprimer la clinique',
     'Their specialty, neighbourhood, or something from their website.':'Leur spécialité, leur quartier ou un détail de leur site web.',
     'That was the last email in the sequence.':'C\'était le dernier courriel de la séquence.',
     'Reading their site…':'Lecture de leur site…', 'Add their website first (⋯ → Edit details), then try again.':"Ajoutez d'abord leur site web (⋯ → Modifier les détails), puis réessayez.",
@@ -15635,7 +15640,10 @@
     const PATH = { physio:'physio', psycho:'therapy', kinesio:'kinesiology', osteo:'osteopathy', occupational:'occupational-therapy', speech:'speech-therapy', nutrition:'nutrition', neuropsych:'neuropsychology', other:'' };
     // Profession filter ("categories"): narrows every tab, count and search.
     let prof = 'all'; try { const sp = localStorage.getItem('btw_or_prof'); if(sp && (sp === 'all' || PROF[sp])) prof = sp; } catch(e){}
-    const pool = () => prof === 'all' ? leads : leads.filter(l => (l.profession || 'other') === prof);
+    // LinkedIn step for each clinic: no profile, to invite, invitation sent, connected (they accepted).
+    const liState = l => l.li_ok ? 'connected' : l.li_at ? 'sent' : l.linkedin ? 'toinvite' : 'none';
+    let liF = 'all';
+    const pool = () => leads.filter(l => (prof === 'all' || (l.profession || 'other') === prof) && (liF === 'all' || liState(l) === liF));
     let leads = [], tab = 'today', editing = null, composing = null, calling = null, bodyDirty = false, opened = false, undoFn = null;
 
     function today(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -15830,6 +15838,9 @@
       if(prof !== 'all' && present.indexOf(prof) < 0) prof = 'all';
       $o('btwOrProfs').innerHTML = [['all', 'All professions', leads.length]].concat(present.map(k => [k, PROF[k], leads.filter(l => (l.profession || 'other') === k).length]))
         .map(([k, lab, cnt]) => '<button type="button" data-orprof="' + k + '" aria-pressed="' + (prof === k) + '" class="' + (prof === k ? 'on' : '') + '">' + esc(lab) + '<span class="c">' + cnt + '</span></button>').join('');
+      const liN = k => leads.filter(l => liState(l) === k).length;
+      $o('btwOrLiF').innerHTML = '<span class="lbl">in</span>' + [['all', 'All', leads.length], ['toinvite', 'To invite', liN('toinvite')], ['sent', 'Invitation sent', liN('sent')], ['connected', 'Connected', liN('connected')]]
+        .map(([k, lab, cnt]) => '<button type="button" data-orli="' + k + '" aria-pressed="' + (liF === k) + '" class="' + (liF === k ? 'on' : '') + '">' + esc(ownerT(lab)) + '<span class="c">' + cnt + '</span></button>').join('');
       let gs = q ? [['Search results', pool().filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
       gs = gs.filter(g => g[1].length);
       if(!gs.length){
@@ -15861,8 +15872,9 @@
       const person = (l.contact || '').split('(')[0].trim();
       const liRow = '<div class="btw-or-li"><span class="lbl">in</span>' + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '')
         ? '<a class="btw-or-lib" href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">Open LinkedIn ↗</a>'
-          + (l.li_at ? '<span class="btw-or-li-done" title="You connected with them on LinkedIn">✓ Connected ' + esc(fmt(l.li_at)) + '</span>'
-            : '<button type="button" class="btw-or-lib" data-oract="linote" title="Copy a short connection note with their first name">Copy note</button><button type="button" class="btw-or-lib" data-oract="liconn" title="Log that you sent the invitation">✓ Mark connected</button>')
+          + (l.li_ok ? '<span class="btw-or-li-done" title="They accepted your LinkedIn invitation">✓ Connected ' + esc(fmt(l.li_ok)) + '</span>'
+            : l.li_at ? '<span class="btw-or-li-sent" title="You sent them a LinkedIn invitation">Invitation sent ' + esc(fmt(l.li_at)) + '</span><button type="button" class="btw-or-lib" data-oract="liaccept" title="They accepted: you’re connected">✓ They accepted</button>'
+            : '<button type="button" class="btw-or-lib" data-oract="linote" title="Copy a short connection note with their first name">Copy note</button><button type="button" class="btw-or-lib" data-oract="liconn" title="Log that you sent the invitation">✓ Invitation sent</button>')
         : '<a class="btw-or-lib" href="https://www.linkedin.com/search/results/' + (person ? 'people/?keywords=' + encodeURIComponent(person + ' ' + l.name) : 'companies/?keywords=' + encodeURIComponent(l.name)) + '" target="_blank" rel="noopener" title="Search LinkedIn for them, then paste their profile in ⋯ → Edit details">Find on LinkedIn ↗</a>') + '</div>';
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
@@ -15889,7 +15901,7 @@
       if(l.status !== 'not_interested' && l.status !== 'customer') menu.push(['set:not_interested', 'Not interested']);
       if(l.email && !sq && !inSeq(l) && !bounced(l) && l.status !== 'replied') menu.push(['email', 'Write them an email']);
       if(l.phone && l.status !== 'customer') menu.push(['call', '📞 Call script']);
-      if(l.linkedin) menu.push(l.li_at ? ['linoconn', 'Not connected on LinkedIn (undo)'] : ['liconn', 'Connected on LinkedIn']);
+      if(l.linkedin) menu.push(l.li_at || l.li_ok ? ['linoconn', 'Reset LinkedIn (not invited yet)'] : ['liconn', 'LinkedIn invitation sent']);
       menu.push(['edit', 'Edit details']);
       if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
       return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
@@ -15980,11 +15992,13 @@
       else if(act === 'apollo') showApollo(l, cardEl, b);
       else if(act === 'linote'){
         const note = liNote(l), ok = await copyTextToClipboard(note);
-        if(ok) toast('Note copied. Paste it in LinkedIn: Connect → Add a note. Then ⋯ → Connected on LinkedIn.');
+        if(ok) toast('Note copied. Paste it in LinkedIn: Connect → Add a note. Then click ✓ Invitation sent.');
         else window.prompt('Copy this note:', note);
       }
-      else if(act === 'liconn' || act === 'linoconn'){
-        try { await patch(l.id, { li_at: act === 'liconn' ? t : '' }); toast(act === 'liconn' ? 'Logged: connected with ' + l.name + ' on LinkedIn.' : 'Undone.'); } catch(err){ toast(err.message); }
+      else if(act === 'liconn' || act === 'liaccept' || act === 'linoconn'){
+        const pa = act === 'liconn' ? { li_at: t } : act === 'liaccept' ? { li_at: l.li_at || t, li_ok: t } : { li_at: '', li_ok: '' };
+        const msg = act === 'liconn' ? 'Logged: LinkedIn invitation sent to ' + l.name + '. When they accept, click ✓ They accepted.' : act === 'liaccept' ? 'Connected with ' + l.name + ' on LinkedIn.' : 'LinkedIn reset for ' + l.name + '.';
+        try { await patch(l.id, pa); toast(msg); } catch(err){ toast(err.message); }
       }
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
@@ -15996,6 +16010,7 @@
       if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
       if(e.key === 'Escape'){ closeMenus(); }
     });
+    $o('btwOrLiF').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
     $o('btwOrProfs').addEventListener('click', function(e){ const b = e.target.closest('[data-orprof]'); if(!b) return; prof = b.dataset.orprof; try { localStorage.setItem('btw_or_prof', prof); } catch(_){} render(); });
     // Banner chips: open the tab that holds the clinic, then scroll to and flash its card.
     ov.addEventListener('click', function(e){
