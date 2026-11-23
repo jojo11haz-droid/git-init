@@ -6061,7 +6061,9 @@ app.get(FR_PATHS, (req, res) => {
 });
 
 // Simple health check — useful for most hosting platforms' uptime checks
-app.get('/health', (req, res) => res.json({ ok: true }));
+// Render's health check: answers as soon as the server is listening (the site
+// works while the database is still being set up), and says whether it is.
+app.get('/health', (req, res) => res.json({ ok: true, db: dbEnabled() ? (dbReady ? 'ready' : 'starting') : 'none' }));
 
 // The full feature list, at a clean address (the file is public/features.html).
 app.get('/features', (req, res) => res.sendFile(path.join(__dirname, 'public', 'features.html')));
