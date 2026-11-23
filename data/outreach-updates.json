@@ -10208,5 +10208,14 @@
 {"id": "nutrition-altitude", "phone": "450-312-0464"},
 {"id": "kinesio-mouvement-proactif", "phone": "450-521-4844"},
 {"id": "kinesio-progres-100-limites", "phone": "819-698-5833"},
-{"id": "osteo-axe-osteo", "phone": "450-965-0555"}
+{"id": "osteo-axe-osteo", "phone": "450-965-0555"},
+{"id": "psy-clinique-de-psychologie-collins-sansfacon", "apollo_id": "6b038486d183a10014323029"},
+{"id": "physio-westmount-procare", "apollo_id": "6b038486d183a10014323026"},
+{"id": "kinesio-just-be-fit", "apollo_id": "6b038486d183a10014323027"},
+{"id": "ot-horizon-ergo", "apollo_id": "6b038486d183a10014323028"},
+{"id": "kinesio-centre-athletique-dvi", "apollo_id": "6b011aadf9b69c000cd2f997"},
+{"id": "nutrition-altitude", "apollo_id": "6b011aadf9b69c000cd2f995"},
+{"id": "kinesio-mouvement-proactif", "apollo_id": "6b011aadf9b69c000cd2f999"},
+{"id": "kinesio-progres-100-limites", "apollo_id": "6b011aadf9b69c000cd2f998"},
+{"id": "osteo-axe-osteo", "apollo_id": "6b011aadf9b69c000cd2f996"}
 ]
