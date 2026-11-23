@@ -15072,7 +15072,11 @@
     'Write first email':'Écrire le premier courriel', 'Write follow-up 1':'Écrire la relance 1', 'Write follow-up 2':'Écrire la relance 2',
     'First email':'Premier courriel', 'Follow-up 1':'Relance 1', 'Follow-up 2':'Relance 2', 'Follow-up 2 (the last one)':'Relance 2 (la dernière)', 'Reply with the video':'Répondre avec la vidéo',
     'change':'modifier', 'No email yet':'Pas encore de courriel', 'Find it ↗':'La trouver ↗', 'Website ↗':'Site web ↗', 'follow up today':"relancer aujourd'hui",
-    '+ Add email':'+ Ajouter un courriel', 'Write it early':"L'écrire en avance", 'Write it before the follow-up date':"L'écrire avant la date de relance", 'Send the video':'Envoyer la vidéo',
+    '+ Add email':'+ Ajouter un courriel', 'Write it early':"L'écrire en avance", 'Write it before the follow-up date':"L'écrire avant la date de relance", 'Send the video':'Envoyer la vidéo', 'Check in':'Faire un suivi', 'Check in early':'Faire un suivi en avance', 'Checking in':'Petit suivi',
+    'Apollo follow-ups':'Relances Apollo', 'Apollo sends the follow-ups':'Apollo envoie les relances', 'check back today':"faire un suivi aujourd'hui",
+    'Answered: waiting to hear back':'Répondu : en attente de nouvelles', 'You answered them. The card says when to check back.':'Vous leur avez répondu. La fiche indique quand faire un suivi.',
+    'You answered them. Check back on the date shown if they haven’t replied.':"Vous leur avez répondu. Faites un suivi à la date indiquée s'il n'y a pas de réponse.",
+    'Apollo sends their follow-ups':'Apollo envoie leurs relances', 'You sent the first email. Apollo sends the follow-ups: don’t email them by hand.':"Vous avez envoyé le premier courriel. Apollo envoie les relances : ne leur écrivez pas à la main.",
     '✓ They became a customer':'✓ Elle est devenue cliente', '✓ Mark as sent':'✓ Marquer comme envoyé',
     'Already sent it another way (for example a Gmail draft)? Log it here.':'Déjà envoyé autrement (par exemple un brouillon Gmail) ? Notez-le ici.',
     'They replied':'Elle a répondu', 'They started a trial':'Elle a commencé un essai', 'They became a customer':'Elle est devenue cliente',
@@ -15134,6 +15138,9 @@
     [/^(Marked as contacted\. |Logged\. |Done\. )?Follow-up scheduled for (.+)\.$/, (m, a, d) => ({ 'Marked as contacted. ':'Marquée comme contactée. ', 'Logged. ':'Noté. ', 'Done. ':'Fait. ' }[a] || '') + 'Relance prévue le ' + d + '.'],
     [/^(Marked as contacted\. |Logged\. |Done\. )?That was the last email for (.+)\.$/, (m, a, n) => ({ 'Marked as contacted. ':'Marquée comme contactée. ', 'Logged. ':'Noté. ', 'Done. ':'Fait. ' }[a] || '') + "C'était le dernier courriel pour " + n + '.'],
     [/^Done\. Logged for (.+)\.$/, 'Fait. Noté pour $1.'],
+    [/^(?:Answered (.+?) · )?check back(?:: overdue since| today|) ?(.*)$/, (m, a, d) => (a ? 'Répondu le ' + a + ' · ' : '') + (/overdue/.test(m) ? 'suivi en retard depuis le ' + d : /check back today/.test(m) ? "faire un suivi aujourd'hui" : 'faire un suivi le ' + d)],
+    [/^Sent it\? We’ll remind you to check back on (.+)\.$/, 'Envoyé ? On vous rappellera de faire un suivi le $1.'],
+    [/^Done\. We’ll remind you to check back on (.+)\.$/, 'Fait. On vous rappellera de faire un suivi le $1.'],
     [/^Email saved\. (.+) is ready for a first email\.$/, 'Courriel enregistré. $1 est prête pour un premier courriel.'], [/^Email saved for (.+)\.$/, 'Courriel enregistré pour $1.'],
     [/^Copied\. Paste it into a new email to (.+)\.$/, (m, a) => 'Copié. Collez-le dans un nouveau courriel à ' + (a === 'them' ? 'la clinique' : a) + '.'],
     [/^Reading (.+) and its about \/ team \/ services pages…$/, 'Lecture de $1 et de ses pages à propos / équipe / services…'],
@@ -15721,7 +15728,10 @@
     // Ready answers to the replies clinics actually send (same wording as outreach-kit.md §8).
     const REPLIES = [
       ['video', 'Yes, send the video'], ['price', 'How much?'], ['privacy', 'Privacy?'], ['emr', 'We have an EMR'],
-      ['wontuse', 'Patients won’t use it'], ['notnow', 'Not now']];
+      ['wontuse', 'Patients won’t use it'], ['notnow', 'Not now'], ['checkin', 'Checking in']];
+    // A lead who replied and got an answer: the page reminds you to check back after this many days.
+    const CHECK_BACK_DAYS = 3;
+    const waitingBack = l => (l.status === 'replied' || l.status === 'trial') && !!l.next;
     function replyFor(l, kind){
       const lang = l.lang === 'en' ? 'en' : 'fr', first = firstName(l), fr = lang === 'fr';
       const prof = LINE[lang][l.profession] ? l.profession : 'other';
@@ -15739,7 +15749,9 @@
                 : `It doesn’t replace it: you copy the drafted note into your chart. It covers what the EMR can’t, the days between ${cl ? 'sessions' : 'visits'}.\n\nThe 1-minute video: ${url}`,
         wontuse: fr ? `C’est une minute, par la voix, à partir du lien d’invitation, sans rien télécharger. Essayez d’abord avec vos 3 ${P} les plus engagés.\n\n${setup}`
                     : `It’s one minute, by voice, from the invite link, no download. Try it with your 3 most engaged ${P} first.\n\n${setup}`,
-        notnow: fr ? `Aucun problème, merci de m’avoir répondu. Puis-je vous relancer dans quelques mois?` : `No problem, thanks for getting back to me. May I check back in a few months?`
+        notnow: fr ? `Aucun problème, merci de m’avoir répondu. Puis-je vous relancer dans quelques mois?` : `No problem, thanks for getting back to me. May I check back in a few months?`,
+        checkin: fr ? `Je voulais m’assurer que la vidéo s’était bien rendue. Avez-vous eu la chance d’y jeter un coup d’œil?\n\nSi ça vous intéresse, je peux configurer votre compte avec vous en 10 minutes cette semaine, par téléphone ou en vidéo. Comme clinique fondatrice (jusqu’au 31 janvier), vous auriez 60 jours gratuits au lieu de 14.`
+                    : `Just making sure the video reached you. Did you get a chance to take a look?\n\nIf it’s of interest, I can set up your account with you in 10 minutes this week, by phone or video. As a founding clinic (until January 31), you’d get 60 days free instead of 14.`
       };
       if(kind === 'video' || !T[kind]) return emailFor(l, '').body;
       return hi + '\n\n' + T[kind] + '\n\nJack\n\n' + SIG[lang];
@@ -15771,9 +15783,11 @@
     }
 
     /* ---- grouping ---- */
-    const isDue = l => OPEN[l.status] && l.status !== 'to_contact' && l.next && l.next <= today() && !bounced(l);
+    const isDue = l => (OPEN[l.status] && l.status !== 'to_contact' || waitingBack(l)) && l.next && l.next <= today() && !bounced(l);
     // Clinics an Apollo sequence emails for you: never offer a hand-written first email.
     const inSeq = l => l.status === 'to_contact' && (l.notes || '').indexOf('[Apollo sequence]') >= 0;
+    // First email sent by hand, follow-ups handed to an Apollo sequence: never offer a hand-written follow-up.
+    const apolloFu = l => (l.status === 'emailed' || l.status === 'followup1') && (l.notes || '').indexOf('[Apollo follow-ups]') >= 0;
     // A bad address: the notes say "BOUNCED" and name the address that failed. Never offer to
     // email it; call instead. Saving a new email clears it (the new address isn't in the note).
     const bounced = l => !!l.email && /\bBOUNCED\b/.test(l.notes || '') && (l.notes || '').toLowerCase().indexOf(l.email.toLowerCase()) >= 0 &&
@@ -15785,17 +15799,20 @@
       if(tab === 'today') return [
         ['Follow-ups overdue', L.filter(l => isDue(l) && l.next < t).sort(byNext), 'late', ''],
         ['Follow up today', L.filter(l => isDue(l) && l.next === t).sort(byName), 'due', ''],
-        ['They replied: answer them', L.filter(l => l.status === 'replied').sort(byName), 'hot', 'Send the video and offer to set them up.'],
+        ['They replied: answer them', L.filter(l => l.status === 'replied' && !l.next).sort(byName), 'hot', 'Send the video and offer to set them up.'],
         ['Email bounced: call them instead', L.filter(bounced).sort(byName), 'late', 'Their email address doesn’t work. Call, or find a new address.'],
         ['Ready for a first email', L.filter(l => l.status === 'to_contact' && l.email && !inSeq(l) && !bounced(l)).sort(byName), '', 'Send 10–15 a day, in the morning.'],
         ['Find their email first', L.filter(l => l.status === 'to_contact' && !l.email && !inSeq(l)).sort(byName), '', 'Look on their website, then add it here.']];
       if(tab === 'replied') return [
-        ['They replied: answer them', L.filter(l => l.status === 'replied').sort(byName), 'hot', 'Send the video and offer to set them up.'],
+        ['They replied: answer them', L.filter(l => l.status === 'replied' && !l.next).sort(byName), 'hot', 'Send the video and offer to set them up.'],
+        ['Answered: waiting to hear back', L.filter(l => l.status === 'replied' && l.next).sort(byNext), '', 'You answered them. The card says when to check back.'],
         ['On trial', L.filter(l => l.status === 'trial').sort(byName), '', 'Check in with them during the trial.'],
         ['Customers', L.filter(l => l.status === 'customer').sort(byName), '', ''],
         ['Said no thanks', L.filter(l => l.status === 'not_interested').sort(byName), '', 'Don’t email them again.']];
       if(tab === 'waiting') return [
-        ['Waiting for a reply', L.filter(l => OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)).sort(byNext), '', 'Their next follow-up date is on each card.'],
+        ['Waiting for a reply', L.filter(l => OPEN[l.status] && l.status !== 'to_contact' && !isDue(l) && !apolloFu(l)).sort(byNext), '', 'Their next follow-up date is on each card.'],
+        ['Answered: waiting to hear back', L.filter(l => l.status === 'replied' && l.next && !isDue(l)).sort(byNext), '', 'You answered them. The card says when to check back.'],
+        ['Apollo sends their follow-ups', L.filter(apolloFu).sort(byName), '', 'You sent the first email. Apollo sends the follow-ups: don’t email them by hand.'],
         ['In Apollo sequence', L.filter(inSeq).sort(byName), '', 'Apollo sends their emails. Don’t email them by hand.'],
         ['On trial', L.filter(l => l.status === 'trial').sort(byName), '', 'Check in with them during the trial.']];
       if(tab === 'closed') return [
@@ -15918,16 +15935,19 @@
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(bounced(l)) when = 'Their email address doesn’t work';
       else if(OPEN[l.status] && l.status !== 'to_contact' && l.next) when = contacted + (late ? 'follow-up overdue since ' + fmt(l.next) : due ? 'follow up today' : 'next follow-up ' + fmt(l.next));
+      else if(waitingBack(l)) when = (l.last ? 'Answered ' + fmt(l.last) + ' · ' : '') + (late ? 'check back: overdue since ' + fmt(l.next) : due ? 'check back today' : 'check back ' + fmt(l.next));
       else if(inSeq(l)) when = 'Apollo sends the emails';
+      else if(apolloFu(l)) when = contacted + 'Apollo sends the follow-ups';
       else if(l.status === 'to_contact') when = 'Not contacted yet';
       else if(l.last) when = ST_LABEL[l.status] + ' · ' + fmt(l.last);
-      const sq = inSeq(l) || bounced(l) ? null : SEQ[l.status];
-      let main = inSeq(l) ? '<span class="btw-or-pill">In Apollo sequence</span>' : '';
+      const sq = inSeq(l) || apolloFu(l) || bounced(l) ? null : SEQ[l.status];
+      let main = inSeq(l) ? '<span class="btw-or-pill">In Apollo sequence</span>' : apolloFu(l) ? '<span class="btw-or-pill">Apollo follow-ups</span>' : '';
       if(bounced(l)) main = (l.phone ? '<button type="button" class="btw-or-b pri" data-oract="call">📞 Call</button>' : '') + '<button type="button" class="btw-or-b" data-oract="editemail">New email</button>';
       else if(!l.email && l.phone && l.status === 'to_contact' && !inSeq(l)) main = '<button type="button" class="btw-or-b pri" data-oract="call">📞 Call</button><button type="button" class="btw-or-b" data-oract="addemail">+ Add email</button>';
       else if(!l.email && (sq || l.status === 'replied' || l.status === 'trial')) main = '<button type="button" class="btw-or-b pri" data-oract="addemail">+ Add email</button>';
       else if(sq && (l.status === 'to_contact' || due)) main = '<button type="button" class="btw-or-b pri" data-oract="compose">' + sq.write + '</button>';
       else if(sq) main = '<button type="button" class="btw-or-b" data-oract="compose" title="Write it before the follow-up date">Write it early</button>';
+      else if(waitingBack(l)) main = '<button type="button" class="btw-or-b' + (due ? ' pri' : '') + '" data-oract="compose">' + (due ? 'Check in' : 'Check in early') + '</button>';
       else if(l.status === 'replied') main = '<button type="button" class="btw-or-b pri" data-oract="compose">Send the video</button>';
       else if(l.status === 'trial') main = '<button type="button" class="btw-or-b pri" data-oract="set" data-to="customer">✓ They became a customer</button>';
       // Sent it another way (a Gmail draft, their contact form, a call)? Log it.
@@ -16124,21 +16144,22 @@
     function openCompose(l){
       composing = l; bodyDirty = false; opened = false;
       const sq = SEQ[l.status], first = l.status === 'to_contact';
-      $o('btwOrCTitle').textContent = l.status === 'replied' ? 'Reply with the video' : sq ? sq.title : 'Email';
+      $o('btwOrCTitle').textContent = waitingBack(l) ? 'Check in' : l.status === 'replied' ? 'Reply with the video' : sq ? sq.title : 'Email';
       $o('btwOrCWho').textContent = 'To ' + (l.contact ? l.contact + ', ' : '') + l.name + (l.email ? ' · ' + l.email : '');
       $o('btwOrCOpenerWrap').hidden = !first;
       const answering = l.status === 'replied' || l.status === 'trial';
       $o('btwOrCRepliesWrap').hidden = !answering;
-      if(answering) $o('btwOrCReplies').innerHTML = REPLIES.map(([k, lab], i) => '<button type="button" data-orreply="' + k + '" class="' + (i ? '' : 'on') + '" aria-pressed="' + !i + '">' + esc(lab) + '</button>').join('');
+      const pick = waitingBack(l) ? 'checkin' : 'video';
+      if(answering) $o('btwOrCReplies').innerHTML = REPLIES.map(([k, lab]) => '<button type="button" data-orreply="' + k + '" class="' + (k === pick ? 'on' : '') + '" aria-pressed="' + (k === pick) + '">' + esc(lab) + '</button>').join('');
       $o('btwOrCOpener').value = '';
       $o('btwOrCAiNote').hidden = true; $o('btwOrCAiNote').textContent = '';
       $o('btwOrCOpener').placeholder = l.lang === 'en' ? 'e.g. I saw you focus on post-op knees in NDG.' : 'ex. J’ai vu que vous combinez physio et ostéo à Villeray.';
       $o('btwOrCHint').textContent = l.notes ? 'From your notes: ' + l.notes : 'Their specialty, neighbourhood, or something from their website.';
       const m = emailFor(l, '');
-      $o('btwOrCSubject').value = m.subject; $o('btwOrCBody').value = m.body; composeMail();
+      $o('btwOrCSubject').value = m.subject; $o('btwOrCBody').value = pick === 'checkin' ? replyFor(l, 'checkin') : m.body; composeMail();
       $o('btwOrCMail').style.display = l.email ? '' : 'none';
       const nx = sq && sq.days ? addDays(today(), sq.days) : '';
-      $o('btwOrCSentText').textContent = sq ? 'Sent it? ' + (nx ? 'The next follow-up will be scheduled for ' + fmt(nx) + '.' : 'That was the last email in the sequence.') : 'Sent it?';
+      $o('btwOrCSentText').textContent = sq ? 'Sent it? ' + (nx ? 'The next follow-up will be scheduled for ' + fmt(nx) + '.' : 'That was the last email in the sequence.') : answering ? 'Sent it? We’ll remind you to check back on ' + fmt(addDays(today(), CHECK_BACK_DAYS)) + '.' : 'Sent it?';
       $o('btwOrCSent').hidden = false;
       $o('btwOrCompose').hidden = false;
       setTimeout(() => (first ? $o('btwOrCOpener') : $o('btwOrCMail')).focus(), 30);
@@ -16187,6 +16208,7 @@
       const l = composing; if(!l) return; const t = today(), sq = SEQ[l.status];
       closeSheets();
       if(sq){ const nx = sq.days ? addDays(t, sq.days) : ''; await setStatus(l, { status: sq.to, last: t, next: nx }, nx ? 'Done. Follow-up scheduled for ' + fmt(nx) + '.' : 'Done. That was the last email for ' + l.name + '.'); }
+      else if(l.status === 'replied' || l.status === 'trial'){ const nx = addDays(t, CHECK_BACK_DAYS); await setStatus(l, { last: t, next: nx }, 'Done. We’ll remind you to check back on ' + fmt(nx) + '.'); }
       else await setStatus(l, { last: t }, 'Done. Logged for ' + l.name + '.');
     });
 
