@@ -70,15 +70,6 @@ class _HomeScreenState extends State<HomeScreen>
   List<ClinicianMessage> _messages = []; // notes from the professional + replies
   List<ClinicianMessage> get _proMessages =>
       _messages.where((m) => !m.fromClient).toList();
-  // Their own messages that don't sit under one of the professional's notes.
-  List<ClinicianMessage> get _ownMessages {
-    final shown = (_allMessages ? _proMessages.take(10) : _proMessages.take(1))
-        .map((m) => m.id)
-        .toSet();
-    return _messages
-        .where((m) => m.fromClient && !shown.contains(m.replyTo))
-        .toList();
-  }
   bool _allMessages = false; // show earlier messages too
   final Set<String> _exDone = {}; // exercise ids ticked in this check-in
   String? _exStatus; // program in another app: 'yes' | 'some' | 'no'
@@ -330,53 +321,108 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Widget _messageCard(ClinicianMessage m, S s, {bool canReply = false}) {
-    final when = m.createdAt;
-    final whenText = when == null
-        ? ''
-        : '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
+  String _when(DateTime? d) => d == null
+      ? ''
+      : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Their conversation with their professional, like a text thread: oldest
+  /// at the top, newest at the bottom, the "Message" button under it.
+  Widget _conversation(Patient patient, S s) {
+    final chron = [..._messages]..sort((a, b) =>
+        (a.createdAt ?? DateTime(0)).compareTo(b.createdAt ?? DateTime(0)));
+    const show = 6;
+    final hidden = _allMessages ? 0 : (chron.length > show ? chron.length - show : 0);
+    final shown = chron.sublist(hidden);
+    final name = patient.clinicianName ?? '';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: m.isRead ? BtwColors.line : BtwColors.moss,
-            width: m.isRead ? 1 : 1.5),
+        border: Border.all(color: BtwColors.line),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Text(
-                (m.isRead ? s.messageLabel : s.newMessage).toUpperCase(),
-                style: const TextStyle(
-                    fontSize: 11,
-                    letterSpacing: 0.6,
-                    fontWeight: FontWeight.w600,
-                    color: BtwColors.moss),
-              ),
-              const Spacer(),
-              Text(whenText,
-                  style:
-                      const TextStyle(fontSize: 11.5, color: BtwColors.inkSoft)),
-            ],
+          Text(
+            (name.isEmpty ? s.messagesTitle : '${s.messagesTitle} · $name')
+                .toUpperCase(),
+            style: const TextStyle(
+                fontSize: 11,
+                letterSpacing: 0.6,
+                fontWeight: FontWeight.w600,
+                color: BtwColors.moss),
           ),
-          const SizedBox(height: 6),
-          Text(m.body, style: const TextStyle(fontSize: 15, height: 1.45)),
-          for (final e in m.exercises) ...[
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              decoration: BoxDecoration(
-                color: BtwColors.cream,
-                borderRadius: BorderRadius.circular(10),
+          if (hidden > 0 || (_allMessages && chron.length > show))
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _allMessages = !_allMessages),
+                child: Text(
+                    hidden > 0 ? s.earlierMessages(hidden) : s.showOnlyLatest),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            ),
+          const SizedBox(height: 6),
+          if (shown.isEmpty)
+            Text(s.noMessagesYet(name),
+                style:
+                    const TextStyle(fontSize: 13.5, color: BtwColors.inkSoft)),
+          for (final m in shown) ...[
+            _bubble(m, s, name),
+            const SizedBox(height: 8),
+          ],
+          if (patient.hasClinician)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => _openReply(null, s),
+                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                label: Text(s.messagePro(patient.clinicianName)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// One message: theirs on the right, the professional's on the left.
+  Widget _bubble(ClinicianMessage m, S s, String name) {
+    final mine = m.fromClient;
+    final unread = !mine && !m.isRead;
+    final head = mine
+        ? '${s.you} · ${_when(m.createdAt)}${m.isRead ? ' · ${s.seen}' : ''}'
+        : '${name.isEmpty ? s.messageLabel : name} · ${_when(m.createdAt)}';
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: FractionallySizedBox(
+          widthFactor: 0.88,
+          alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 9),
+            decoration: BoxDecoration(
+              color: mine ? BtwColors.moss.withValues(alpha: 0.10) : BtwColors.cream,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(mine ? 14 : 4),
+                topRight: Radius.circular(mine ? 4 : 14),
+                bottomLeft: const Radius.circular(14),
+                bottomRight: const Radius.circular(14),
+              ),
+              border: unread ? Border.all(color: BtwColors.moss, width: 1.5) : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  unread ? '$head · ${s.newMessage}' : head,
+                  style: const TextStyle(
+                      fontSize: 11.5, color: BtwColors.inkSoft),
+                ),
+                const SizedBox(height: 3),
+                Text(m.body, style: const TextStyle(fontSize: 15, height: 1.4)),
+                for (final e in m.exercises) ...[
+                  const SizedBox(height: 6),
                   Text(
                     e.dosage == null || e.dosage!.isEmpty
                         ? e.name
@@ -385,62 +431,14 @@ class _HomeScreenState extends State<HomeScreen>
                         fontSize: 13.5, fontWeight: FontWeight.w600),
                   ),
                   if (e.description != null && e.description!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(e.description!,
-                          style: const TextStyle(
-                              fontSize: 12.5, color: BtwColors.inkSoft)),
-                    ),
+                    Text(e.description!,
+                        style: const TextStyle(
+                            fontSize: 12.5, color: BtwColors.inkSoft)),
                 ],
-              ),
+              ],
             ),
-          ],
-          // Their own replies to this message, oldest first.
-          for (final r in _messages.reversed
-              .where((x) => x.fromClient && x.replyTo == m.id)) ...[
-            const SizedBox(height: 8),
-            _replyBubble(r, s),
-          ],
-          if (canReply)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => _openReply(m, s),
-                icon: const Icon(Icons.reply_rounded, size: 18),
-                label: Text(s.reply),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _replyBubble(ClinicianMessage r, S s) {
-    final when = r.createdAt;
-    final whenText = when == null
-        ? ''
-        : '${when.year}-${when.month.toString().padLeft(2, '0')}-${when.day.toString().padLeft(2, '0')}';
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-      decoration: BoxDecoration(
-        color: BtwColors.cream,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${s.you.toUpperCase()} · $whenText${r.isRead ? ' · ${s.seen}' : ''}',
-            style: const TextStyle(
-                fontSize: 10.5,
-                letterSpacing: 0.5,
-                fontWeight: FontWeight.w600,
-                color: BtwColors.inkSoft),
           ),
-          const SizedBox(height: 3),
-          Text(r.body, style: const TextStyle(fontSize: 14, height: 1.4)),
-        ],
+        ),
       ),
     );
   }
@@ -1163,49 +1161,11 @@ class _HomeScreenState extends State<HomeScreen>
                     _brandCard(patient),
                     const SizedBox(height: 18),
                   ],
-                  // The latest message from their professional, on top.
-                  if (_proMessages.isNotEmpty) ...[
-                    for (final m in (_allMessages
-                        ? _proMessages.take(10)
-                        : _proMessages.take(1))) ...[
-                      identical(m, _proMessages.first)
-                          ? KeyedSubtree(
-                              key: _kMessage,
-                              child: _messageCard(m, s,
-                                  canReply: patient.hasClinician))
-                          : _messageCard(m, s, canReply: patient.hasClinician),
-                      const SizedBox(height: 10),
-                    ],
-                    if (_proMessages.length > 1)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: () =>
-                              setState(() => _allMessages = !_allMessages),
-                          child: Text(_allMessages
-                              ? s.showOnlyLatest
-                              : s.earlierMessages(_proMessages.length - 1)),
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                  ],
-                  // Messages they wrote that aren't under one of the notes above
-                  // (they wrote first), newest first.
-                  for (final r in _ownMessages.take(_allMessages ? 10 : 2)) ...[
-                    _replyBubble(r, s),
-                    const SizedBox(height: 8),
-                  ],
-                  // Writing to their professional is one tap away, any time.
-                  if (patient.hasClinician) ...[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _openReply(null, s),
-                        icon: const Icon(Icons.chat_bubble_outline_rounded,
-                            size: 18),
-                        label: Text(s.messagePro(patient.clinicianName)),
-                      ),
-                    ),
+                  // Their conversation with their professional: one thread,
+                  // oldest at the top, newest at the bottom, like texting.
+                  if (_messages.isNotEmpty || patient.hasClinician) ...[
+                    KeyedSubtree(
+                        key: _kMessage, child: _conversation(patient, s)),
                     const SizedBox(height: 16),
                   ],
                   Text(

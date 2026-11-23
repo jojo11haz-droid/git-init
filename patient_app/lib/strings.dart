@@ -457,8 +457,8 @@ class S {
   String get coachMessagesTitle =>
       _('Messages from your professional', 'Messages de la personne qui vous suit');
   String get coachMessagesBody => _(
-      'Their notes show at the top. Tap Reply to write back. It isn’t for emergencies.',
-      'Ses mots s’affichent en haut. Touchez Répondre pour lui écrire. Ce n’est pas pour les urgences.');
+      'Your conversation shows at the top. Tap the Message button to write to them. It isn’t for emergencies.',
+      'Votre conversation s’affiche en haut. Touchez le bouton Écrire pour lui écrire. Ce n’est pas pour les urgences.');
   String get coachFirstWeekBody => _(
       'Three small steps to get going: your first check-in, three different days, and a daily reminder.',
       'Trois petites étapes pour commencer : votre premier suivi, trois jours différents et un rappel quotidien.');
@@ -564,6 +564,10 @@ class S {
   String messagePro(String? name) => name == null || name.isEmpty
       ? _('Message your professional', 'Écrire à la personne qui vous suit')
       : _('Message $name', 'Écrire à $name');
+  String get messagesTitle => _('Messages', 'Messages');
+  String noMessagesYet(String name) => name.isEmpty
+      ? _('No messages yet.', 'Pas encore de messages.')
+      : _('No messages yet. Write to $name.', 'Pas encore de messages. Écrivez à $name.');
   String get messageHint =>
       _('Write your message', 'Écrivez votre message');
   String get replyNote => _(
