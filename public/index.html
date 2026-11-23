@@ -15051,6 +15051,11 @@
     'Saved. They’re ready for a first email.':'Enregistré. Prête pour un premier courriel.', 'In French':'En français', 'In English':'En anglais', 'Their email address doesn’t work. Call, or find a new address.':'Leur adresse courriel ne fonctionne pas. Appelez, ou trouvez une nouvelle adresse.',
     'Email bounced':'Courriel rebondi', 'Their email address doesn’t work':'Leur adresse courriel ne fonctionne pas', '📞 Call':'📞 Appeler', 'New email':'Nouveau courriel',
     'Ready for a first email':'Prêtes pour un premier courriel', 'In Apollo sequence':'Dans la séquence Apollo',
+    'LinkedIn':'LinkedIn', 'Did they accept?':'Ont-elles accepté ?', 'Invite today':'À inviter aujourd’hui', 'More to invite':'D’autres à inviter', 'Find their LinkedIn':'Trouvez leur LinkedIn',
+    'Check LinkedIn. When they accept, click ✓ They accepted. No answer after 3 weeks? Withdraw the invitation in LinkedIn.':'Vérifiez LinkedIn. Quand elles acceptent, cliquez ✓ Acceptée. Pas de réponse après 3 semaines ? Retirez l’invitation dans LinkedIn.',
+    '10–20 a day is plenty. Copy note, open LinkedIn, send, then click ✓ Invitation sent.':'10 à 20 par jour, c’est assez. Copiez la note, ouvrez LinkedIn, envoyez, puis cliquez ✓ Invitation envoyée.',
+    'For the next days.':'Pour les prochains jours.', 'Say thanks, or share the 1-minute video in a LinkedIn message when it fits.':'Remerciez, ou partagez la vidéo d’une minute dans un message LinkedIn au bon moment.',
+    'Search LinkedIn, then paste their profile in ⋯ → Edit details.':'Cherchez sur LinkedIn, puis collez leur profil dans ⋯ → Modifier les détails.',
     'Apollo sends their emails. Don’t email them by hand.':'Apollo leur envoie les courriels. Ne leur écrivez pas à la main.',
     'Apollo sends the emails':'Apollo envoie les courriels', 'Find their email first':"Trouvez d'abord leur courriel",
     'Send the video and offer to set them up.':"Envoyez la vidéo et offrez de configurer leur compte.", 'Send 10–15 a day, in the morning.':'Envoyez-en 10 à 15 par jour, le matin.',
@@ -15795,6 +15800,20 @@
         ['Customers', L.filter(l => l.status === 'customer').sort(byName), '', ''],
         ['No reply after 3 emails', L.filter(l => l.status === 'followup2').sort(byName), '', 'You can try again in a few months.'],
         ['Not interested', L.filter(l => l.status === 'not_interested').sort(byName), '', 'Don’t email them again.']];
+      if(tab === 'linkedin'){
+        // LinkedIn, as its own work list. Clinics already emailed come first:
+        // they'll recognize the name. Nobody who said no or is already a customer.
+        const warm = l => l.status === 'replied' ? 0 : ['emailed', 'followup1', 'followup2'].indexOf(l.status) >= 0 ? 1 : inSeq(l) ? 2 : 3;
+        const open = l => l.status !== 'not_interested' && l.status !== 'customer';
+        const ready = L.filter(l => open(l) && liState(l) === 'toinvite').sort((a, b) => warm(a) - warm(b) || byName(a, b));
+        const sentToday = leads.filter(l => l.li_at === t).length;
+        return [
+          ['Did they accept?', L.filter(l => liState(l) === 'sent').sort((a, b) => a.li_at < b.li_at ? -1 : a.li_at > b.li_at ? 1 : 0), 'due', 'Check LinkedIn. When they accept, click ✓ They accepted. No answer after 3 weeks? Withdraw the invitation in LinkedIn.'],
+          ['Invite today', ready.slice(0, 20), '', (sentToday ? sentToday + ' sent today. ' : '') + '10–20 a day is plenty. Copy note, open LinkedIn, send, then click ✓ Invitation sent.'],
+          ['More to invite', ready.slice(20), '', 'For the next days.'],
+          ['Connected', L.filter(l => liState(l) === 'connected').sort((a, b) => a.li_ok < b.li_ok ? 1 : a.li_ok > b.li_ok ? -1 : 0), 'hot', 'Say thanks, or share the 1-minute video in a LinkedIn message when it fits.'],
+          ['Find their LinkedIn', L.filter(l => open(l) && liState(l) === 'none').sort(byName), '', 'Search LinkedIn, then paste their profile in ⋯ → Edit details.']];
+      }
       return [['All clinics', L.slice().sort(byName), '', '']];
     }
     function counts(){
@@ -15803,7 +15822,8 @@
       const replied = P.filter(l => l.status === 'replied' || l.status === 'trial' || l.status === 'customer' || l.status === 'not_interested').length;
       const waiting = P.filter(l => (OPEN[l.status] && l.status !== 'to_contact' && !isDue(l)) || l.status === 'trial' || inSeq(l)).length;
       const closed = P.filter(l => l.status === 'customer' || l.status === 'followup2' || l.status === 'not_interested').length;
-      return { today: todo, replied, waiting, closed, all: P.length };
+      const li = P.filter(l => (liState(l) === 'sent' || liState(l) === 'toinvite') && l.status !== 'not_interested' && l.status !== 'customer').length;
+      return { today: todo, replied, waiting, closed, linkedin: li, all: P.length };
     }
 
     /* ---- render ---- */
@@ -15846,7 +15866,7 @@
       }
       if(bncL.length) bnc.innerHTML = '<span>⚠️ <b>' + (fr ? bncL.length + (bncL.length > 1 ? ' courriels ont rebondi' : ' courriel a rebondi') : bncL.length + (bncL.length > 1 ? ' emails bounced' : ' email bounced')) + '</b>' + esc(fr ? ' : appelez plutôt.' : ': call them instead.') + '</span>' + chips(bncL);
       const c = counts();
-      $o('btwOrTabs').innerHTML = [['today','Today'],['replied','Replied'],['waiting','Waiting'],['closed','Done'],['all','All']].map(([k, lab]) =>
+      $o('btwOrTabs').innerHTML = [['today','Today'],['replied','Replied'],['waiting','Waiting'],['closed','Done'],['linkedin','LinkedIn'],['all','All']].map(([k, lab]) =>
         '<button type="button" role="tab" aria-selected="' + (tab === k) + '" data-ortab="' + k + '" class="' + (tab === k ? 'on' : '') + '">' + lab + '<span class="c">' + c[k] + '</span></button>').join('');
       const q = ($o('btwOrSearch').value || '').trim().toLowerCase();
       // Profession chips: every profession that has at least one clinic, with its count.
@@ -16026,7 +16046,7 @@
       if(e.key === 'Enter' && e.target.matches('.btw-or-addemail input')){ e.preventDefault(); e.target.parentElement.querySelector('[data-oract="saveemail"]').click(); }
       if(e.key === 'Escape'){ closeMenus(); }
     });
-    $o('btwOrLiFunnel').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = liF === b.dataset.orli ? 'all' : b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
+    $o('btwOrLiFunnel').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = liF === b.dataset.orli ? 'all' : b.dataset.orli; if(liF !== 'all' && tab !== 'linkedin') tab = 'all'; render(); });
     $o('btwOrLiF').addEventListener('click', function(e){ const b = e.target.closest('[data-orli]'); if(!b) return; liF = b.dataset.orli; if(liF !== 'all') tab = 'all'; render(); });
     $o('btwOrProfs').addEventListener('click', function(e){ const b = e.target.closest('[data-orprof]'); if(!b) return; prof = b.dataset.orprof; try { localStorage.setItem('btw_or_prof', prof); } catch(_){} render(); });
     // Banner chips: open the tab that holds the clinic, then scroll to and flash its card.
