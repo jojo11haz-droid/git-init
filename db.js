@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { readFileSync } from 'fs';
+import { createHash } from 'crypto';
 
 const { Pool } = pg;
 
@@ -495,7 +496,23 @@ async function applyOutreachUpdates() {
   let ups = [];
   try { ups = JSON.parse(readFileSync(new URL('./data/outreach-updates.json', import.meta.url), 'utf8')); }
   catch (e) { return; }
-  for (const u of ups) {
+  // Entries are only ever appended to the file, so remember how far the last
+  // start got (and a hash of that part): each start then applies only the new
+  // entries instead of re-running thousands of queries. If the earlier part
+  // changed (an entry edited or removed), everything is applied again; every
+  // entry is safe to re-apply.
+  const sha = (x) => createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0, 16);
+  let start = 0, oldMark = null;
+  try {
+    const r = await pool.query("SELECT id FROM outreach_imported WHERE id LIKE 'meta:updates:%' ORDER BY at DESC LIMIT 1");
+    if (r.rows.length) {
+      oldMark = r.rows[0].id;
+      const [, , n, h] = oldMark.split(':');
+      const done = parseInt(n, 10);
+      if (done > 0 && done <= ups.length && sha(ups.slice(0, done)) === h) start = done;
+    }
+  } catch (e) {}
+  for (const u of ups.slice(start)) {
     if (!u || !u.id) continue;
     if (u.add) { // a new lead: insert it once, never again (even after a delete)
       try {
@@ -557,6 +574,14 @@ async function applyOutreachUpdates() {
     if (!sets.length) continue;
     try { await pool.query(`UPDATE outreach_leads SET ${sets.join(', ')} WHERE id = $1`, vals); } catch (e) {}
   }
+  try {
+    const mark = 'meta:updates:' + ups.length + ':' + sha(ups);
+    if (mark !== oldMark) {
+      await pool.query('INSERT INTO outreach_imported (id) VALUES ($1) ON CONFLICT DO NOTHING', [mark]);
+      await pool.query("DELETE FROM outreach_imported WHERE id LIKE 'meta:updates:%' AND id <> $1", [mark]);
+    }
+  } catch (e) {}
+  if (ups.length - start) console.log(`Outreach updates: applied ${ups.length - start} new entr${ups.length - start === 1 ? 'y' : 'ies'}.`);
 }
 
 // The first time the outreach table is created, fill it with the starting
