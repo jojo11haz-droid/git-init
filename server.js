@@ -5762,6 +5762,7 @@ function cleanOutreach(body) {
     out.linkedin = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\/(in|company)\/[^\s"'<>]+$/i.test(full) ? full : '';
   }
   if (b.li_at !== undefined) out.li_at = /^\d{4}-\d{2}-\d{2}$/.test(String(b.li_at)) ? String(b.li_at) : '';
+  if (b.li_ok !== undefined) out.li_ok = /^\d{4}-\d{2}-\d{2}$/.test(String(b.li_ok)) ? String(b.li_ok) : '';
   if (b.apollo_id !== undefined) out.apollo_id = /^[a-f0-9]{24}$/.test(String(b.apollo_id)) ? String(b.apollo_id) : '';
   for (const k of ['next', 'last']) {
     if (b[k] !== undefined) out[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(b[k])) ? String(b[k]) : '';
