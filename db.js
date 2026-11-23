@@ -10,9 +10,14 @@ const pool = process.env.DATABASE_URL
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL === 'disable'
         ? false
-        : { rejectUnauthorized: false } // most hosted free-tier Postgres requires SSL
+        : { rejectUnauthorized: false }, // most hosted free-tier Postgres requires SSL
+      // Give up on a connection attempt instead of hanging if the database is unreachable.
+      connectionTimeoutMillis: 15000
     })
   : null;
+// A dropped idle connection (database restart, network blip) must not crash
+// the whole server: without this listener Node exits on the 'error' event.
+if (pool) pool.on('error', (err) => console.error('Postgres connection error (server keeps running):', err && err.message));
 
 export function dbEnabled() {
   return !!pool;
