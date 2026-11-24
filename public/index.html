@@ -12109,13 +12109,18 @@
       front:[['lhip','left hip','hanche gauche',24,44],
              ['rhip','right hip','hanche droite',76,44],
              ['lgroin','left groin','aine gauche',41,62],
-             ['rgroin','right groin','aine droite',59,62]] } },
+             ['rgroin','right groin','aine droite',59,62],
+             ['lowbelly','lower belly','bas du ventre',50,37],
+             ['pubic','pubic bone','os pubien',50,46],
+             ['pelvicfloor','pelvic floor','plancher pelvien',50,57]] } },
     glutes: { sided:false, img:{ back:'glutes' }, views:{
       back:[['lbutt','left buttock','fesse gauche',40,58],
             ['rbutt','right buttock','fesse droite',60,58],
             ['louter','outside of the left hip','côté de la hanche gauche',28,46],
             ['router','outside of the right hip','côté de la hanche droite',72,46],
-            ['tailbone','tailbone','coccyx',50,40]] } },
+            ['tailbone','tailbone','coccyx',50,40],
+            ['lsi','left sacroiliac joint','articulation sacro-iliaque gauche',42,36],
+            ['rsi','right sacroiliac joint','articulation sacro-iliaque droite',58,36]] } },
     ankle: { sided:true, img:{ front:'ankle_front', back:'ankle_back' }, views:{
       front:[['outer','outer ankle bone','malléole externe',28,57],
              ['inner','inner ankle bone','malléole interne',71,57],
@@ -12698,7 +12703,7 @@
       [/neck/, 'front', ['neck']],
       [/chest|pec/, 'front', ['chest']],
       [/\babs\b|core|stomach|belly/, 'front', ['abs']],
-      [/\bhip|groin/, 'front', ['hips']],
+      [/\bhip|groin|pelvi|pubic/, 'front', ['hips']],
       [/elbow|forearm/, 'front', ['l_fore','r_fore']],
       [/wrist|hand/, 'front', ['l_hand','r_hand']],
       [/bicep|tricep|\barm\b/, 'front', ['l_arm','r_arm']]
@@ -13129,7 +13134,7 @@
       [/neck|\bcou\b|nuque/, 'front', ['neck']],
       [/chest|pec|poitrine/, 'front', ['chest']],
       [/\babs\b|core|stomach|belly|abdo|ventre|tronc/, 'front', ['abs']],
-      [/\bhip|groin|hanche|aine/, 'front', ['hips']],
+      [/\bhip|groin|hanche|aine|pelvi|pubi/, 'front', ['hips']],
       [/elbow|forearm|coude|avant-bras/, 'front', ['l_fore','r_fore']],
       [/wrist|hand|poignet|\bmain/, 'front', ['l_hand','r_hand']],
       [/bicep|tricep|\barm\b|\bbras\b/, 'front', ['l_arm','r_arm']]
