@@ -11189,5 +11189,6 @@
 {"id": "physio-energie-active-physio", "status": "not_interested"},
 {"id": "physio-energie-active-physio", "note": "Visited in person earlier by the owner: not interested. Stopped in the Apollo sequence Nov 24 (before the first email went out). Do not contact again."},
 {"id": "physio-kinatex-sante-pelvienne-pointe-claire", "note": "Visited in person Nov 24 (flyer route): explained use during appointments (Record session writes the chart note) and between them (patient check-ins, detailed pelvis on the body map). Follow up by email in a few days."},
-{"id": "psy-lakeshore-psychology-wellness", "note": "Flyer route Nov 24: nobody at the front desk (no receptionist). Call 514-320-6296 or email instead."}
+{"id": "psy-lakeshore-psychology-wellness", "note": "Flyer route Nov 24: nobody at the front desk (no receptionist). Call 514-320-6296 or email instead."},
+{"id": "physio-mttlurgy-physio-pointe-claire", "add": true, "name": "MTTLURGY Physio (inside Custom Conditioning)", "profession": "physio", "city": "Pointe-Claire", "lang": "en", "note": "201 av. Cartier, Pointe-Claire, inside the Custom Conditioning gym. Already visited in person by the owner (before Nov 24). Follow up by email if there was interest."}
 ]
