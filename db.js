@@ -2681,7 +2681,7 @@ export async function createRecordingConsent({ patientId, clinicianId, clientNam
   const { rows } = await pool.query(
     `INSERT INTO recording_consents (patient_id, clinician_id, client_name, clinician_name, client_signature, clinician_signature, form_text, lang, expires_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now() + ($9 || ' months')::interval)
-     RETURNING id, client_name, clinician_name, lang, signed_at, expires_at`,
+     RETURNING id, client_name, clinician_name, lang, signed_at, expires_at, (form_text LIKE '%"deviceBackup":true%') AS device_backup`,
     [patientId, clinicianId, clientName, clinicianName, clientSignature, clinicianSignature, formText, lang, String(months)]
   );
   return rows[0];
@@ -2691,7 +2691,7 @@ export async function createRecordingConsent({ patientId, clinicianId, clientNam
 // withdrawn, not expired. Null when a new signature is needed.
 export async function getValidRecordingConsent(patientId, clinicianId) {
   const { rows } = await pool.query(
-    `SELECT id, client_name, clinician_name, lang, signed_at, expires_at
+    `SELECT id, client_name, clinician_name, lang, signed_at, expires_at, (form_text LIKE '%"deviceBackup":true%') AS device_backup
      FROM recording_consents
      WHERE patient_id = $1 AND clinician_id = $2 AND revoked_at IS NULL AND expires_at > now()
      ORDER BY signed_at DESC LIMIT 1`,

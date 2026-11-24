@@ -3262,7 +3262,7 @@ const RECORDING_CONSENT_FORM = {
     title: 'Consent to record a session',
     paragraphs: [
       'I agree that my sessions with {pro} may be audio recorded so that Between can prepare a draft of the session note.',
-      'The recording is sent to a speech-to-text service and turned into text. An AI service then writes a draft note from that text. Between does not keep the audio or the transcript. {pro} reads and corrects the draft before it is used.',
+      'The recording is sent to a speech-to-text service and turned into text. An AI service then writes a draft note from that text. Between does not keep the audio or the transcript on its servers. While a session is being recorded, the audio is held on {pro}’s device so it isn’t lost if the page closes; it is deleted as soon as the note is written, or after 24 hours at most. {pro} reads and corrects the draft before it is used.',
       'Saying no changes nothing about my care. I can ask for the recording to be stopped at any time during a session.',
       'This consent covers sessions with {pro} for 12 months from today. I can withdraw it at any time by telling {pro}.'
     ],
@@ -3272,7 +3272,7 @@ const RECORDING_CONSENT_FORM = {
     title: "Consentement à l'enregistrement d'une séance",
     paragraphs: [
       "J'accepte que mes séances avec {pro} soient enregistrées (audio) afin que Between prépare une ébauche de la note de séance.",
-      "L'enregistrement est envoyé à un service de transcription et converti en texte. Un service d'IA rédige ensuite une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription. {pro} lit et corrige l'ébauche avant qu'elle soit utilisée.",
+      "L'enregistrement est envoyé à un service de transcription et converti en texte. Un service d'IA rédige ensuite une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription sur ses serveurs. Pendant l'enregistrement, l'audio est gardé sur l'appareil de {pro} pour ne pas être perdu si la page se ferme; il est supprimé dès que la note est rédigée, ou au plus tard après 24 heures. {pro} lit et corrige l'ébauche avant qu'elle soit utilisée.",
       "Un refus ne change rien à mes soins. Je peux demander l'arrêt de l'enregistrement à tout moment pendant une séance.",
       "Ce consentement couvre les séances avec {pro} pendant 12 mois à compter d'aujourd'hui. Je peux le retirer à tout moment en le disant à {pro}."
     ],
@@ -3286,7 +3286,7 @@ const RECORDING_CONSENT_FORM_MIND = {
     title: 'Consent to record a therapy session',
     paragraphs: [
       'I agree that my sessions with {pro} may be audio recorded so that Between can prepare a draft of the session note.',
-      'What I share in session stays confidential. The recording is sent to a speech-to-text service and turned into text, and an AI service writes a draft note from that text. Between does not keep the audio or the transcript, and no one listens to the recording. {pro} reads and corrects the draft before it goes in my file.',
+      'What I share in session stays confidential. The recording is sent to a speech-to-text service and turned into text, and an AI service writes a draft note from that text. Between does not keep the audio or the transcript on its servers. While a session is being recorded, the audio is held on {pro}’s device so it isn’t lost if the page closes; it is deleted as soon as the note is written, or after 24 hours at most. No one listens to the recording. {pro} reads and corrects the draft before it goes in my file.',
       'Saying no changes nothing about my care. At any point I can ask {pro} to pause or stop the recording, or not to record a session or a topic.',
       'This consent covers sessions with {pro} for 12 months from today. I can withdraw it at any time by telling {pro}.'
     ],
@@ -3296,7 +3296,7 @@ const RECORDING_CONSENT_FORM_MIND = {
     title: "Consentement à l'enregistrement d'une séance de thérapie",
     paragraphs: [
       "J'accepte que mes séances avec {pro} soient enregistrées (audio) afin que Between prépare une ébauche de la note de séance.",
-      "Ce que je partage en séance reste confidentiel. L'enregistrement est envoyé à un service de transcription et converti en texte, puis un service d'IA rédige une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription, et personne n'écoute l'enregistrement. {pro} lit et corrige l'ébauche avant qu'elle soit versée à mon dossier.",
+      "Ce que je partage en séance reste confidentiel. L'enregistrement est envoyé à un service de transcription et converti en texte, puis un service d'IA rédige une ébauche de note à partir de ce texte. Between ne conserve ni l'audio ni la transcription sur ses serveurs. Pendant l'enregistrement, l'audio est gardé sur l'appareil de {pro} pour ne pas être perdu si la page se ferme; il est supprimé dès que la note est rédigée, ou au plus tard après 24 heures. Personne n'écoute l'enregistrement. {pro} lit et corrige l'ébauche avant qu'elle soit versée à mon dossier.",
       "Un refus ne change rien à mes soins. À tout moment, je peux demander à {pro} de mettre l'enregistrement en pause ou de l'arrêter, ou de ne pas enregistrer une séance ou un sujet.",
       "Ce consentement couvre les séances avec {pro} pendant 12 mois à compter d'aujourd'hui. Je peux le retirer à tout moment en le disant à {pro}."
     ],
@@ -3307,7 +3307,9 @@ const isMindField = (c) => !!c && (c.account_type === 'therapist' || c.account_t
 function recordingConsentForm(lang, proName, mind) {
   const f = (mind ? RECORDING_CONSENT_FORM_MIND : RECORDING_CONSENT_FORM)[lang === 'fr' ? 'fr' : 'en'];
   const name = String(proName || '').trim() || (lang === 'fr' ? 'mon professionnel' : 'my professional');
-  return { title: f.title, paragraphs: f.paragraphs.map((p) => p.split('{pro}').join(name)), clientLabel: f.client, proLabel: f.pro };
+  // deviceBackup: this wording allows the page to hold the audio on the
+  // professional's device during a recording (crash recovery, deleted within 24 h).
+  return { title: f.title, paragraphs: f.paragraphs.map((p) => p.split('{pro}').join(name)), clientLabel: f.client, proLabel: f.pro, deviceBackup: true };
 }
 const reqLang = (req) => (String(req.get('X-Btw-Lang') || '').toLowerCase() === 'fr' ? 'fr' : 'en');
 // A drawn signature: a small PNG from the page's signature pad.
@@ -3315,7 +3317,9 @@ function cleanSignature(v) {
   if (typeof v !== 'string' || v.length < 400 || v.length > 45000) return null;
   return /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(v) ? v : null;
 }
-const publicConsent = (c) => c && ({ id: c.id, clientName: c.client_name, clinicianName: c.clinician_name, signedAt: c.signed_at, expiresAt: c.expires_at });
+// deviceBackup: signed with the wording that lets the page keep the audio on
+// this device until the note is written (older forms promised it wouldn't).
+const publicConsent = (c) => c && ({ id: c.id, clientName: c.client_name, clinicianName: c.clinician_name, signedAt: c.signed_at, expiresAt: c.expires_at, deviceBackup: !!c.device_backup });
 
 // The form to sign, and the signed one in force (if any).
 app.get('/api/patients/:id/recording-consent', requireDb, requireAuth, requireVerifiedClinician, async (req, res) => {
