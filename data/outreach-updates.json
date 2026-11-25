@@ -11190,5 +11190,14 @@
 {"id": "physio-energie-active-physio", "note": "Visited in person earlier by the owner: not interested. Stopped in the Apollo sequence Nov 24 (before the first email went out). Do not contact again."},
 {"id": "physio-kinatex-sante-pelvienne-pointe-claire", "note": "Visited in person Nov 24 (flyer route): explained use during appointments (Record session writes the chart note) and between them (patient check-ins, detailed pelvis on the body map). Follow up by email in a few days."},
 {"id": "psy-lakeshore-psychology-wellness", "note": "Flyer route Nov 24: nobody at the front desk (no receptionist). Call 514-320-6296 or email instead."},
-{"id": "physio-mttlurgy-physio-pointe-claire", "add": true, "name": "MTTLURGY Physio (inside Custom Conditioning)", "profession": "physio", "city": "Pointe-Claire", "lang": "en", "note": "201 av. Cartier, Pointe-Claire, inside the Custom Conditioning gym. Already visited in person by the owner (before Nov 24). Follow up by email if there was interest."}
+{"id": "physio-mttlurgy-physio-pointe-claire", "add": true, "name": "MTTLURGY Physio (inside Custom Conditioning)", "profession": "physio", "city": "Pointe-Claire", "lang": "en", "note": "201 av. Cartier, Pointe-Claire, inside the Custom Conditioning gym. Already visited in person by the owner (before Nov 24). Follow up by email if there was interest."},
+{"id": "physio-physio-multi-soins", "status": "not_interested"},
+{"id": "physio-physio-multi-soins", "note": "REPLIED Nov 24: \"Non merci\". Apollo stopped automatically. Do not contact again."},
+{"id": "psycho-centre-de-psychologie-humani-t", "note": "Nov 23 reply: \"Please remove\". Already unsubscribed and marked not interested."},
+{"id": "psycho-groupe-amorce", "note": "BOUNCED Nov 24: sbouhassoun-david@groupeamorce.com was not found at groupeamorce.com. Apollo stopped. Call instead or find another address."},
+{"id": "physio-physioworks", "note": "BOUNCED Nov 24: Apollo did not send to byron.chan@ptworks.ca (on its likely-to-bounce list, to protect the sender reputation). Call instead or find another address."},
+{"id": "kinesio-the-kin-studio", "note": "BOUNCED Nov 24: Apollo did not send to alex.kinesiologist@thekinstudio.ca (on its likely-to-bounce list, to protect the sender reputation). Call instead or find another address."},
+{"id": "nutrition-endorphine-nutrition-sportive", "note": "BOUNCED Nov 24: Apollo did not send to natasha@endorphinenutrition.com (on its likely-to-bounce list, to protect the sender reputation). Call instead or find another address."},
+{"id": "physio-clinique-pelvi-solutions", "note": "Nov 24 auto-reply: Valery is on maternity leave for an indefinite period. Apollo paused her emails (out of office). Try again later in 2027."},
+{"id": "psycho-clinique-psychologie-sante", "note": "Nov 24 auto-reply: the clinic is not taking new clients (waiting list closed). Not a no. Apollo counted it as a reply and stopped; follow up by hand later if you like."}
 ]
