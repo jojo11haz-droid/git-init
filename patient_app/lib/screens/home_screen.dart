@@ -573,8 +573,9 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Consecutive calendar days with at least one check-in, with a one-day grace
-  // so it doesn't reset the moment today's check-in isn't in yet.
+  // Days in the last 7 (today included) with at least one check-in. Not a
+  // streak on purpose: one missed day never drops it to zero, so a rough patch
+  // doesn't come with a "you broke it". Same rule as the website.
   int _computeStreak(List<CheckIn> items) {
     if (items.isEmpty) return 0;
     final days = <String>{};
@@ -584,17 +585,12 @@ class _HomeScreenState extends State<HomeScreen>
     }
     String key(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
     final now = DateTime.now();
-    var cur = DateTime(now.year, now.month, now.day);
-    if (!days.contains(key(cur))) {
-      cur = cur.subtract(const Duration(days: 1));
-      if (!days.contains(key(cur))) return 0;
+    var n = 0;
+    for (var i = 0; i < 7; i++) {
+      final day = DateTime(now.year, now.month, now.day - i);
+      if (days.contains(key(day))) n++;
     }
-    var streak = 0;
-    while (days.contains(key(cur))) {
-      streak++;
-      cur = cur.subtract(const Duration(days: 1));
-    }
-    return streak;
+    return n;
   }
 
   Widget _brandCard(Patient p) {
@@ -656,7 +652,7 @@ class _HomeScreenState extends State<HomeScreen>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.local_fire_department,
+            const Icon(Icons.event_available,
                 size: 18, color: Color(0xFFB8701F)),
             const SizedBox(width: 8),
             Text('$_streak',
