@@ -15094,7 +15094,9 @@
     'Saved. They’re ready for a first email.':'Enregistré. Prête pour un premier courriel.', 'In French':'En français', 'In English':'En anglais', 'Their email address doesn’t work. Call, or find a new address.':'Leur adresse courriel ne fonctionne pas. Appelez, ou trouvez une nouvelle adresse.',
     'Email bounced':'Courriel rebondi', 'Their email address doesn’t work':'Leur adresse courriel ne fonctionne pas', '📞 Call':'📞 Appeler', 'New email':'Nouveau courriel',
     'Ready for a first email':'Prêtes pour un premier courriel', 'In Apollo sequence':'Dans la séquence Apollo',
-    'LinkedIn':'LinkedIn', 'Did they accept?':'Ont-elles accepté ?', 'Invite today':'À inviter aujourd’hui', 'More to invite':'D’autres à inviter', 'Find their LinkedIn':'Trouvez leur LinkedIn',
+    'LinkedIn':'LinkedIn', 'Did they accept?':'Ont-elles accepté ?', 'Invite today':'À inviter aujourd’hui', 'More to invite':'D’autres à inviter', 'Find their LinkedIn':'Trouvez leur LinkedIn', 'Not found':'Introuvable', 'Not on LinkedIn':'Pas sur LinkedIn',
+    'Search LinkedIn, then paste their profile in ⋯ → Edit details. Can’t find them? Click Not found.':'Cherchez sur LinkedIn, puis collez leur profil dans ⋯ → Modifier. Introuvable ? Cliquez Introuvable.',
+    'You looked and couldn’t find them. Click Undo if you find them later.':'Vous avez cherché sans les trouver. Cliquez Annuler si vous les trouvez plus tard.',
     'Check LinkedIn. When they accept, click ✓ They accepted. No answer after 3 weeks? Withdraw the invitation in LinkedIn.':'Vérifiez LinkedIn. Quand elles acceptent, cliquez ✓ Acceptée. Pas de réponse après 3 semaines ? Retirez l’invitation dans LinkedIn.',
     '10–20 a day is plenty. Copy note, open LinkedIn, send, then click ✓ Invitation sent.':'10 à 20 par jour, c’est assez. Copiez la note, ouvrez LinkedIn, envoyez, puis cliquez ✓ Invitation envoyée.',
     'For the next days.':'Pour les prochains jours.', 'Say thanks, or share the 1-minute video in a LinkedIn message when it fits.':'Remerciez, ou partagez la vidéo d’une minute dans un message LinkedIn au bon moment.',
@@ -15186,7 +15188,8 @@
     [/^Copied\. Paste it into a new email to (.+)\.$/, (m, a) => 'Copié. Collez-le dans un nouveau courriel à ' + (a === 'them' ? 'la clinique' : a) + '.'],
     [/^Reading (.+) and its about \/ team \/ services pages…$/, 'Lecture de $1 et de ses pages à propos / équipe / services…'],
     [/^Based on their site: “([\s\S]+)$/, 'Selon leur site : « $1'], [/^(.+) added\.$/, '$1 ajoutée.'], [/^(.+) deleted\.$/, '$1 supprimée.'],
-    [/^Delete (.+) from your outreach list\?$/, 'Retirer $1 de votre liste de prospection ?']
+    [/^Delete (.+) from your outreach list\?$/, 'Retirer $1 de votre liste de prospection ?'],
+    [/^Marked not on LinkedIn: (.+)\.$/, 'Marquée introuvable sur LinkedIn : $1.'], [/^LinkedIn search back on for (.+)\.$/, 'Recherche LinkedIn réactivée pour $1.']
   ];
   function ownerT(s){
     if(curLang !== 'fr' || s == null) return s;
@@ -15706,7 +15709,8 @@
     // Profession filter ("categories"): narrows every tab, count and search.
     let prof = 'all'; try { const sp = localStorage.getItem('btw_or_prof'); if(sp && (sp === 'all' || PROF[sp])) prof = sp; } catch(e){}
     // LinkedIn step for each clinic: no profile, to invite, invitation sent, connected (they accepted).
-    const liState = l => l.li_ok ? 'connected' : l.li_at ? 'sent' : l.linkedin ? 'toinvite' : 'none';
+    // "Not found" (li_none) wins over a saved link: it's how a wrong or missing profile gets set aside.
+    const liState = l => l.li_ok ? 'connected' : l.li_at ? 'sent' : l.li_none ? 'notfound' : l.linkedin ? 'toinvite' : 'none';
     let liF = 'all', liPrevTab = null;
     const pool = () => leads.filter(l => (prof === 'all' || (l.profession || 'other') === prof) && (liF === 'all' || liState(l) === liF || (liF === 'haslink' && !!l.linkedin) || (liF === 'invited' && !!(l.li_at || l.li_ok))));
     let leads = [], tab = 'today', editing = null, composing = null, calling = null, bodyDirty = false, opened = false, undoFn = null;
@@ -15872,7 +15876,8 @@
           ['Invite today', ready.slice(0, 20), '', (sentToday ? sentToday + ' sent today. ' : '') + '10–20 a day is plenty. Copy note, open LinkedIn, send, then click ✓ Invitation sent.'],
           ['More to invite', ready.slice(20), '', 'For the next days.'],
           ['Connected', L.filter(l => liState(l) === 'connected').sort((a, b) => a.li_ok < b.li_ok ? 1 : a.li_ok > b.li_ok ? -1 : 0), 'hot', 'Say thanks, or share the 1-minute video in a LinkedIn message when it fits.'],
-          ['Find their LinkedIn', L.filter(l => open(l) && liState(l) === 'none').sort(byName), '', 'Search LinkedIn, then paste their profile in ⋯ → Edit details.']];
+          ['Find their LinkedIn', L.filter(l => open(l) && liState(l) === 'none').sort(byName), '', 'Search LinkedIn, then paste their profile in ⋯ → Edit details. Can’t find them? Click Not found.'],
+          ['Not on LinkedIn', L.filter(l => liState(l) === 'notfound').sort(byName), '', 'You looked and couldn’t find them. Click Undo if you find them later.']];
       }
       return [['All clinics', L.slice().sort(byName), '', '']];
     }
@@ -15966,12 +15971,15 @@
       // LinkedIn, on its own row so it's easy to spot: opened by hand to connect
       // or send a note (never automated).
       const person = (l.contact || '').split('(')[0].trim();
-      const liRow = '<div class="btw-or-li"><span class="lbl">in</span>' + (/^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '')
+      const liNone = '<button type="button" class="btw-or-lib" data-oract="linone" title="You searched LinkedIn and couldn’t find this clinic or person">Not found</button>';
+      const liRow = '<div class="btw-or-li"><span class="lbl">in</span>' + (liState(l) === 'notfound'
+        ? '<span class="btw-or-li-sent" title="Marked not found on LinkedIn">Not on LinkedIn</span><button type="button" class="btw-or-lib" data-oract="linoneundo" title="You found them after all">Undo</button>'
+        : /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(l.linkedin || '')
         ? '<a class="btw-or-lib" href="' + esc(l.linkedin) + '" target="_blank" rel="noopener" title="Open their LinkedIn profile to connect or send a note">Open LinkedIn ↗</a>'
           + (l.li_ok ? '<span class="btw-or-li-done" title="They accepted your LinkedIn invitation">✓ Connected ' + esc(fmt(l.li_ok)) + '</span>'
             : l.li_at ? '<span class="btw-or-li-sent" title="You sent them a LinkedIn invitation">Invitation sent ' + esc(fmt(l.li_at)) + '</span><button type="button" class="btw-or-lib" data-oract="liaccept" title="They accepted: you’re connected">✓ They accepted</button>'
-            : '<button type="button" class="btw-or-lib" data-oract="linote" title="Copy a short connection note with their first name">Copy note</button><button type="button" class="btw-or-lib" data-oract="liconn" title="Log that you sent the invitation">✓ Invitation sent</button>')
-        : '<a class="btw-or-lib" href="https://www.linkedin.com/search/results/' + (person ? 'people/?keywords=' + encodeURIComponent(person + ' ' + l.name) : 'companies/?keywords=' + encodeURIComponent(l.name)) + '" target="_blank" rel="noopener" title="Search LinkedIn for them, then paste their profile in ⋯ → Edit details">Find on LinkedIn ↗</a>') + '</div>';
+            : '<button type="button" class="btw-or-lib" data-oract="linote" title="Copy a short connection note with their first name">Copy note</button><button type="button" class="btw-or-lib" data-oract="liconn" title="Log that you sent the invitation">✓ Invitation sent</button>' + liNone)
+        : '<a class="btw-or-lib" href="https://www.linkedin.com/search/results/' + (person ? 'people/?keywords=' + encodeURIComponent(person + ' ' + l.name) : 'companies/?keywords=' + encodeURIComponent(l.name)) + '" target="_blank" rel="noopener" title="Search LinkedIn for them, then paste their profile in ⋯ → Edit details">Find on LinkedIn ↗</a>' + liNone) + '</div>';
       let when = '';
       const contacted = l.last && l.status !== 'to_contact' ? 'Contacted ' + fmt(l.last) + ' · ' : '';
       if(bounced(l)) when = 'Their email address doesn’t work';
@@ -16098,6 +16106,9 @@
         const pa = act === 'liconn' ? { li_at: t } : act === 'liaccept' ? { li_at: l.li_at || t, li_ok: t } : { li_at: '', li_ok: '' };
         const msg = act === 'liconn' ? 'Logged: LinkedIn invitation sent to ' + l.name + '. When they accept, click ✓ They accepted.' : act === 'liaccept' ? 'Connected with ' + l.name + ' on LinkedIn.' : 'LinkedIn reset for ' + l.name + '.';
         try { await patch(l.id, pa); toast(msg); } catch(err){ toast(err.message); }
+      }
+      else if(act === 'linone' || act === 'linoneundo'){
+        try { await patch(l.id, { li_none: act === 'linone' ? t : '' }); toast(act === 'linone' ? 'Marked not on LinkedIn: ' + l.name + '.' : 'LinkedIn search back on for ' + l.name + '.'); } catch(err){ toast(err.message); }
       }
       else if(act === 'edit') openForm(l);
       else if(act.indexOf('set:') === 0 || act === 'set'){
