@@ -147,7 +147,7 @@ class S {
       'Avec Premium, vous pouvez choisir votre couleur et ce qui s’affiche sur votre page.');
   String get colourLabel => _('Colour', 'Couleur');
   String get onMyPage => _('On my page', 'Sur ma page');
-  String get showStreak => _('Show my streak', 'Afficher ma série');
+  String get showStreak => _('Show my check-in days', 'Afficher mes jours de suivi');
   String get showReflection =>
       _('Show the weekly reflection', 'Afficher le bilan de la semaine');
   String get showGoals => _('Show my goals', 'Afficher mes objectifs');
@@ -321,16 +321,13 @@ class S {
   String get myHistory => _('My history', 'Mon historique');
   String get myDataSettings => _('My data & settings', 'Mes données et réglages');
   String hi(String name) => _('Hi $name.', 'Salut $name.');
-  // Check-in streak (habit chip)
-  String streakUnit(int s) => s == 1
-      ? _('day in a row', "jour d'affilée")
-      : _('days in a row', "jours d'affilée");
+  // Check-in habit chip: days with a check-in in the last 7 (not a streak).
+  String streakUnit(int s) => _('of the last 7 days', 'des 7 derniers jours');
   String streakNote(int s) {
-    if (s >= 30) return _('a month of showing up', 'un mois de présence');
-    if (s >= 14) return _('two weeks strong', 'deux semaines de suite');
-    if (s >= 7) return _('a full week: well done', 'une semaine complète : bravo');
+    if (s >= 7) return _('every day this week: well done', 'tous les jours cette semaine : bravo');
+    if (s >= 5) return _('a strong week', 'une belle semaine');
     if (s >= 3) return _('building a habit', "une habitude qui s'installe");
-    return _('keep it going', 'continuez comme ça');
+    return _('every check-in counts', 'chaque suivi compte');
   }
   // Intentions / goals (self-serve individuals)
   String get goalsTitle => _('Your intentions', 'Vos intentions');

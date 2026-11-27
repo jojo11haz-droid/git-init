@@ -6568,7 +6568,7 @@
     "Could not save the logo.":"Impossible d’enregistrer le logo.",
     "Logo saved":"Logo enregistré",
     "Logo removed":"Logo retiré",
-    "Show my streak":"Afficher ma série",
+    "Show my check-in days":"Afficher mes jours de suivi",
     "Show the weekly reflection":"Afficher le bilan de la semaine",
     "Show my goals":"Afficher mes objectifs",
     "Pick your colour and choose what shows on your page. This follows you to the app.":"Choisissez votre couleur et ce qui s’affiche sur votre page. Ça vous suit dans l’application.",
@@ -7015,8 +7015,8 @@
     "Meals":"Repas","Digestion":"Digestion","Hydration":"Hydratation","Energy":"Énergie","Snacking":"Grignotage","Habits":"Habitudes",
     "Daily tasks":"Tâches quotidiennes","Self-care":"Soins personnels",
     // check-in streak (habit chip)
-    "day in a row":"jour d'affilée","days in a row":"jours d'affilée",
-    "keep it going":"continuez comme ça","building a habit":"une habitude qui s'installe","a full week: well done":"une semaine complète : bravo","two weeks strong":"deux semaines de suite","a month of showing up":"un mois de présence",
+    "of the last 7 days":"des 7 derniers jours",
+    "every check-in counts":"chaque suivi compte","building a habit":"une habitude qui s'installe","a strong week":"une belle semaine","every day this week: well done":"tous les jours cette semaine : bravo",
     // dashboard zones + collapsible sections
     "Caseload overview":"Vue d'ensemble de la clientèle",
     "Your progress":"Votre progression",
@@ -19882,7 +19882,7 @@
     const pr = (state.patient && state.patient.prefs) || { accent:'', hide:[] };
     let accent = pr.accent || 'blue';
     const hide = (pr.hide || []).slice();
-    const rows = [['streak', t('Show my streak')], ['reflection', t('Show the weekly reflection')], ['goals', t('Show my goals')]];
+    const rows = [['streak', t('Show my check-in days')], ['reflection', t('Show the weekly reflection')], ['goals', t('Show my goals')]];
     body.innerHTML = (prem ? '<p class="btw-brand-hint">' + esc(t('Pick your colour and choose what shows on your page. This follows you to the app.')) + '</p>'
         : '<p class="btw-brand-hint">' + esc(t('With Premium you can pick your colour and choose what shows on your page.')) + '</p>')
       + '<div class="btw-form-field"><label>' + esc(t('Colour')) + '</label>' + swatchesHtml(accent, !prem) + '</div>'
@@ -20819,36 +20819,35 @@
   }
   window.__btwStartPremiumUpgrade = startPremiumUpgrade;
 
-  // --- Check-in streak: a gentle habit nudge for the person checking in.
-  // Counts consecutive calendar days with at least one check-in, with a
-  // one-day grace so it doesn't reset the instant today's isn't in yet.
+  // --- Check-in habit: a gentle nudge for the person checking in.
+  // Counts the days in the last 7 (today included) with at least one check-in.
+  // Not a streak on purpose: one missed day never drops it to zero, so a rough
+  // patch (when checking in matters most) doesn't come with a "you broke it".
   function computeStreak(checkIns){
     if(!checkIns || !checkIns.length) return 0;
     var days = {};
     checkIns.forEach(function(c){ if(c && c.time){ var d = new Date(c.time); days[d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()] = true; } });
     var key = function(dt){ return dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate(); };
     var cur = new Date(); cur.setHours(0,0,0,0);
-    if(!days[key(cur)]){ cur.setDate(cur.getDate() - 1); if(!days[key(cur)]) return 0; }
-    var streak = 0;
-    while(days[key(cur)]){ streak++; cur.setDate(cur.getDate() - 1); }
-    return streak;
+    var n = 0;
+    for(var i = 0; i < 7; i++){ if(days[key(cur)]) n++; cur.setDate(cur.getDate() - 1); }
+    return n;
   }
-  var _STREAK_FLAME = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2s4.5 4.2 4.5 8.5a4.5 4.5 0 0 1-1.6 3.4c.2-.7.1-1.6-.4-2.4-.6-1-1.5-1.6-1.5-1.6s.3 1.5-.6 2.8c-.8 1.1-1.9 1.6-1.9 3.1A2.5 2.5 0 0 0 12 20a5.5 5.5 0 0 0 5.5-5.5C17.5 8 12 2 12 2z"/><path d="M9.3 13.7c-.9 1-1.3 2-1.3 3A4 4 0 0 0 12 20a3.5 3.5 0 0 1-3.5-3.5c0-1 .3-1.9.8-2.8z" opacity=".55"/></svg>';
+  var _STREAK_FLAME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17M9 15l2 2 4-4"/></svg>';
   function renderStreak(){
     var el = document.getElementById('btwStreak'); if(!el) return;
     if(!isPatient()){ el.style.display = 'none'; el.innerHTML = ''; return; }
     var s = computeStreak(state.checkIns);
     if(s < 1){ el.style.display = 'none'; el.innerHTML = ''; return; }
     var msg;
-    if(s >= 30) msg = t('a month of showing up');
-    else if(s >= 14) msg = t('two weeks strong');
-    else if(s >= 7) msg = t('a full week: well done');
+    if(s >= 7) msg = t('every day this week: well done');
+    else if(s >= 5) msg = t('a strong week');
     else if(s >= 3) msg = t('building a habit');
-    else msg = t('keep it going');
+    else msg = t('every check-in counts');
     el.style.display = '';
     el.innerHTML = '<span class="fl">' + _STREAK_FLAME + '</span>'
       + '<span class="n">' + s + '</span>'
-      + '<span class="lab">' + esc(s === 1 ? t('day in a row') : t('days in a row')) + '</span>'
+      + '<span class="lab">' + esc(t('of the last 7 days')) + '</span>'
       + '<span class="msg">· ' + esc(msg) + '</span>';
   }
 
