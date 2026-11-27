@@ -5782,6 +5782,7 @@ function cleanOutreach(body) {
   }
   if (b.li_at !== undefined) out.li_at = /^\d{4}-\d{2}-\d{2}$/.test(String(b.li_at)) ? String(b.li_at) : '';
   if (b.li_ok !== undefined) out.li_ok = /^\d{4}-\d{2}-\d{2}$/.test(String(b.li_ok)) ? String(b.li_ok) : '';
+  if (b.li_none !== undefined) out.li_none = /^\d{4}-\d{2}-\d{2}$/.test(String(b.li_none)) ? String(b.li_none) : '';
   if (b.apollo_id !== undefined) out.apollo_id = /^[a-f0-9]{24}$/.test(String(b.apollo_id)) ? String(b.apollo_id) : '';
   for (const k of ['next', 'last']) {
     if (b[k] !== undefined) out[k] = /^\d{4}-\d{2}-\d{2}$/.test(String(b[k])) ? String(b[k]) : '';
