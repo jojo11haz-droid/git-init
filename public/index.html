@@ -3304,6 +3304,7 @@
   .btw-or-lifunnel .wait{margin-left:6px;}
   .btw-or-libadge{display:inline-block;font-size:11px;font-weight:700;color:#0A66C2;border:1px solid #0A66C2;border-radius:999px;padding:1px 8px;margin:4px 0 2px;}
   .btw-or-libadge.ok{background:#0A66C2;color:#fff;}
+  .btw-or-libadge.integ{color:#7a5a12;border-color:#c9a24a;background:#fbf4e3;}
   .btw-or-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .btw-or-tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;}
   .btw-or-profs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px;}
@@ -15116,7 +15117,7 @@
     'Saved. They’re ready for a first email.':'Enregistré. Prête pour un premier courriel.', 'In French':'En français', 'In English':'En anglais', 'Their email address doesn’t work. Call, or find a new address.':'Leur adresse courriel ne fonctionne pas. Appelez, ou trouvez une nouvelle adresse.',
     'Email bounced':'Courriel rebondi', 'Their email address doesn’t work':'Leur adresse courriel ne fonctionne pas', '📞 Call':'📞 Appeler', 'New email':'Nouveau courriel',
     'Ready for a first email':'Prêtes pour un premier courriel', 'In Apollo sequence':'Dans la séquence Apollo',
-    'LinkedIn':'LinkedIn', 'Did they accept?':'Ont-elles accepté ?', 'Invite today':'À inviter aujourd’hui', 'More to invite':'D’autres à inviter', 'Find their LinkedIn':'Trouvez leur LinkedIn', 'Not found':'Introuvable', 'Not on LinkedIn':'Pas sur LinkedIn',
+    'LinkedIn':'LinkedIn', 'Did they accept?':'Ont-elles accepté ?', 'Invite today':'À inviter aujourd’hui', 'More to invite':'D’autres à inviter', 'Find their LinkedIn':'Trouvez leur LinkedIn', 'Not found':'Introuvable', 'Not on LinkedIn':'Pas sur LinkedIn', 'Asked about integration':'A demandé une intégration', '🔌 Asked about integration':'🔌 A demandé une intégration', 'Remove “asked about integration”':'Retirer « a demandé une intégration »', 'Which software did they want Between connected to?':'À quel logiciel voulaient-elles relier Between ?',
     'Search LinkedIn, then paste their profile in ⋯ → Edit details. Can’t find them? Click Not found.':'Cherchez sur LinkedIn, puis collez leur profil dans ⋯ → Modifier. Introuvable ? Cliquez Introuvable.',
     'You looked and couldn’t find them. Click Undo if you find them later.':'Vous avez cherché sans les trouver. Cliquez Annuler si vous les trouvez plus tard.',
     'Check LinkedIn. When they accept, click ✓ They accepted. No answer after 3 weeks? Withdraw the invitation in LinkedIn.':'Vérifiez LinkedIn. Quand elles acceptent, cliquez ✓ Acceptée. Pas de réponse après 3 semaines ? Retirez l’invitation dans LinkedIn.',
@@ -15211,6 +15212,7 @@
     [/^Reading (.+) and its about \/ team \/ services pages…$/, 'Lecture de $1 et de ses pages à propos / équipe / services…'],
     [/^Based on their site: “([\s\S]+)$/, 'Selon leur site : « $1'], [/^(.+) added\.$/, '$1 ajoutée.'], [/^(.+) deleted\.$/, '$1 supprimée.'],
     [/^Delete (.+) from your outreach list\?$/, 'Retirer $1 de votre liste de prospection ?'],
+    [/^Logged: (.+) asked about (.+)\.$/, 'Noté : $1 a demandé une intégration avec $2.'], [/^Integration tag removed for (.+)\.$/, 'Étiquette d’intégration retirée pour $1.'],
     [/^Marked not on LinkedIn: (.+)\.$/, 'Marquée introuvable sur LinkedIn : $1.'], [/^LinkedIn search back on for (.+)\.$/, 'Recherche LinkedIn réactivée pour $1.']
   ];
   function ownerT(s){
@@ -15951,6 +15953,15 @@
           rows.map(r => '<tr' + (best && r[3] === best && r[1] >= 5 ? ' class="best"' : '') + '><td>' + esc(ownerT(r[0])) + '</td><td class="r">' + r[1] + '</td><td class="r">' + r[2] + '</td><td class="r">' + r[3] + '%</td></tr>').join('') +
           '</tbody></table><div style="margin-top:4px;">' + esc(ownerT('Counts hand-sent emails logged here. Apollo sequence results show up once those clinics are marked.')) + '</div>';
       }
+      // How many clinics asked for a practice-software connection, by software: the case for SOC 2.
+      const integL = leads.filter(l => l.integ);
+      if(integL.length){
+        work.hidden = false;
+        const by = {}; integL.forEach(l => { const k = l.integ; by[k] = (by[k] || 0) + 1; });
+        const parts = Object.keys(by).sort((a, b) => by[b] - by[a]).map(k => esc(k) + ' ' + by[k]).join(', ');
+        const oldSum = $o('btwOrWorkBody').querySelector('.btw-or-integsum'); if(oldSum) oldSum.remove();
+        $o('btwOrWorkBody').insertAdjacentHTML('beforeend', '<div class="btw-or-integsum" style="margin-top:8px;">🔌 <b>' + esc(ownerT('Asked about integration')) + ': ' + integL.length + '</b> (' + parts + ')</div>');
+      }
       if(bncL.length) bnc.innerHTML = '<span>⚠️ <b>' + (fr ? bncL.length + (bncL.length > 1 ? ' courriels ont rebondi' : ' courriel a rebondi') : bncL.length + (bncL.length > 1 ? ' emails bounced' : ' email bounced')) + '</b>' + esc(fr ? ' : appelez plutôt.' : ': call them instead.') + '</span>' + chips(bncL);
       const c = counts();
       $o('btwOrTabs').innerHTML = [['today','Today'],['replied','Replied'],['waiting','Waiting'],['closed','Done'],['linkedin','LinkedIn'],['all','All']].map(([k, lab]) =>
@@ -15964,7 +15975,7 @@
       // A LinkedIn step picked at the top shows here as a pill you can remove.
       const LIF_LABEL = { haslink:'On LinkedIn', invited:'Invitations sent', toinvite:'To invite', sent:'Invitation sent', connected:'Connected' };
       $o('btwOrLiF').innerHTML = liF === 'all' ? '' : '<button type="button" class="btw-or-lipill" data-orli="all" aria-label="' + esc(ownerT('Remove the LinkedIn filter')) + '"><span class="lbl">in</span>' + esc(ownerT(LIF_LABEL[liF] || '')) + ' <b aria-hidden="true">✕</b></button>';
-      let gs = q ? [['Search results', pool().filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession]].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
+      let gs = q ? [['Search results', pool().filter(l => [l.name, l.contact, l.city, l.notes, l.email, PROF[l.profession], l.integ].join(' ').toLowerCase().includes(q)).sort(byName), '', '']] : groups();
       gs = gs.filter(g => g[1].length);
       if(!gs.length){
         $o('btwOrList').innerHTML = '<div class="btw-or-empty"><b>' + (q ? 'No clinic matches “' + esc(q) + '”.' : tab === 'today' ? 'All done for today 🎉' : 'Nothing here yet.') + '</b>' +
@@ -16031,6 +16042,7 @@
       if(l.email && !sq && !inSeq(l) && !bounced(l) && l.status !== 'replied') menu.push(['email', 'Write them an email']);
       if(l.phone && l.status !== 'customer') menu.push(['call', '📞 Call script']);
       if(l.linkedin) menu.push(l.li_at || l.li_ok ? ['linoconn', 'Reset LinkedIn (not invited yet)'] : ['liconn', 'LinkedIn invitation sent']);
+      menu.push(l.integ ? ['nointeg', 'Remove “asked about integration”'] : ['integ', '🔌 Asked about integration']);
       menu.push(['edit', 'Edit details']);
       if(l.status !== 'to_contact') menu.push(['set:to_contact', 'Start over (not contacted)']);
       return '<div class="btw-or-lead ' + cls + '" data-id="' + esc(l.id) + '">' +
@@ -16042,7 +16054,8 @@
           '<div class="btw-or-apollo" hidden></div>' +
           '<div class="btw-or-addemail" hidden><input type="email" placeholder="their@email.com" aria-label="Email for ' + esc(l.name) + '"><button type="button" class="btw-or-b pri" data-oract="saveemail">Save</button></div>' +
         '</div>' +
-        '<div class="btw-or-side">' + stepper(l) + (l.li_ok ? '<span class="btw-or-libadge ok">in · Connected</span>' : l.li_at ? '<span class="btw-or-libadge">in · Invite sent</span>' : '') + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
+        '<div class="btw-or-side">' + stepper(l) + (l.li_ok ? '<span class="btw-or-libadge ok">in · Connected</span>' : l.li_at ? '<span class="btw-or-libadge">in · Invite sent</span>' : '') +
+          (l.integ ? '<span class="btw-or-libadge integ" title="They asked for Between to connect to their practice software">🔌 ' + esc(ownerT('Asked about integration')) + ': ' + esc(l.integ) + '</span>' : '') + '<div class="btw-or-when ' + cls + '">' + esc(when) + '</div>' +
           '<div class="btw-or-acts">' + main + '<button type="button" class="btw-or-b more" data-oract="menu" aria-label="More actions for ' + esc(l.name) + '" aria-haspopup="true">⋯</button></div></div>' +
         '<div class="btw-or-menu" hidden>' + menu.map(m => '<button type="button" data-oract="' + m[0] + '"' + (m[0] === 'set:not_interested' ? ' class="warn"' : '') + '>' + esc(m[1]) + '</button>').join('') + '</div>' +
       '</div>';
@@ -16128,6 +16141,15 @@
         const pa = act === 'liconn' ? { li_at: t } : act === 'liaccept' ? { li_at: l.li_at || t, li_ok: t } : { li_at: '', li_ok: '' };
         const msg = act === 'liconn' ? 'Logged: LinkedIn invitation sent to ' + l.name + '. When they accept, click ✓ They accepted.' : act === 'liaccept' ? 'Connected with ' + l.name + ' on LinkedIn.' : 'LinkedIn reset for ' + l.name + '.';
         try { await patch(l.id, pa); toast(msg); } catch(err){ toast(err.message); }
+      }
+      else if(act === 'integ' || act === 'nointeg'){
+        let sw = '';
+        if(act === 'integ'){
+          sw = window.prompt(ownerT('Which software did they want Between connected to?'), 'Jane');
+          if(sw == null) return;
+          sw = sw.trim() || 'Jane';
+        }
+        try { await patch(l.id, { integ: sw }); toast(sw ? 'Logged: ' + l.name + ' asked about ' + sw + '.' : 'Integration tag removed for ' + l.name + '.'); } catch(err){ toast(err.message); }
       }
       else if(act === 'linone' || act === 'linoneundo'){
         try { await patch(l.id, { li_none: act === 'linone' ? t : '' }); toast(act === 'linone' ? 'Marked not on LinkedIn: ' + l.name + '.' : 'LinkedIn search back on for ' + l.name + '.'); } catch(err){ toast(err.message); }
