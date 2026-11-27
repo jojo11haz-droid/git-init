@@ -11216,5 +11216,7 @@
 {"id": "psy-wood-and-associates", "note": "Final email sent Nov 25 (\"I'll leave it here\", reply in the same Gmail thread) after two emails with no reply. Do not email again unless they write back."},
 {"id": "physio-physio-monkland", "note": "Final email sent Nov 25 (\"I'll leave it here\", reply in the same Gmail thread) after two emails with no reply. Do not email again unless they write back."},
 {"id": "psy-anne-marie-perreault", "note": "Final email sent Nov 25 (\"I'll leave it here\", reply in the same Gmail thread) after two emails with no reply. Do not email again unless they write back."},
-{"id": "physio-physiotherapie-beauport", "status": "not_interested", "note": "REPLIED Nov 26 to hand follow-up: \"Non merci\". Not in any Apollo sequence. Do not contact again."}
+{"id": "physio-physiotherapie-beauport", "status": "not_interested", "note": "REPLIED Nov 26 to hand follow-up: \"Non merci\". Not in any Apollo sequence. Do not contact again."},
+{"id": "physio-physioactif-ahuntsic", "note": "Check-in email sent Nov 26 (setup offer + 60 days free). No reply yet. NEXT (Tue Dec 1): call the clinic or drop by in Ahuntsic and ask for Ariel. Offer: 1 physio, 5 patients, 4 weeks free, set up on site in 15 min. If no answer by phone, send the Gmail draft in the same thread (pilot offer, mardi ou jeudi?)."},
+{"id": "physio-physioactif-ahuntsic", "next": "2026-12-01", "last": "2026-11-26"}
 ]
