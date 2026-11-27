@@ -1578,6 +1578,8 @@
   @media (prefers-reduced-motion:reduce){ .btw-scribe.rec .btw-scribe-dot{animation:none;} }
   .btw-scribe-time{font-family:var(--font-mono);font-size:15px;min-width:52px;font-variant-numeric:tabular-nums;}
   .btw-scribe-main:disabled{opacity:.5;cursor:not-allowed;}
+  /* Menu panel: no duplicate Guide / How it works when the site links show above. */
+  .btw-drawer.btw-drawer-hasnav #btwMenuGuide,.btw-drawer.btw-drawer-hasnav #btwMenuAbout,.btw-drawer.btw-drawer-hasnav #btwNavMenuSepInfo{display:none!important;}
   /* Live microphone level while recording, so a muted mic shows right away. */
   .btw-scribe-level{width:64px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;flex:none;}
   .btw-scribe-level[hidden]{display:none;}
@@ -4016,6 +4018,12 @@
       var lbl = document.getElementById('btwAudSelLabel');
       if(lbl && rowName) rowName.textContent = lbl.textContent;
       var nv = d.querySelector('.btw-nav'); if(nv) nv.setAttribute('aria-hidden', getComputedStyle(nv).display === 'none' ? 'true' : 'false');
+      // The account list carries its own Guide / How it works for app mode
+      // (when the site links are hidden). When the panel already shows those
+      // links at the top, drop the copies so nothing appears twice.
+      var learn = document.getElementById('btwNavLearn');
+      var navShown = !!(nv && getComputedStyle(nv).display !== 'none' && learn && getComputedStyle(learn).display !== 'none');
+      d.classList.toggle('btw-drawer-hasnav', navShown);
     }
     // Keep the page still behind the menu. iOS Safari ignores overflow:hidden
     // for touch scrolling, so pin the body in place and put it back exactly
