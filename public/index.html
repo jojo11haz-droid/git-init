@@ -7925,6 +7925,15 @@
   const heroPhysioFr = 'Ce qui se passe<br><em>entre</em> les rendez-vous<br>ne devrait pas<br>rester un mystère.';
   const heroIndividualEn = 'What happens<br><em>between</em> your good<br>and hard days doesn\'t<br>have to stay a mystery.';
   const heroIndividualFr = 'Ce qui se passe<br><em>entre</em> vos bons<br>et mauvais jours ne<br>devrait pas rester un mystère.';
+  // For myself: Body, Sport and Eating each get their own headline (Mind keeps the one above).
+  const heroIndividualMode = {
+    body:   { en:'What happens<br><em>between</em> flare-ups<br>doesn\'t have to<br>stay a mystery.',
+              fr:'Ce qui se passe<br><em>entre</em> les poussées<br>de douleur ne devrait<br>pas rester un mystère.' },
+    sport:  { en:'What happens<br><em>between</em> workouts<br>doesn\'t have to<br>stay a mystery.',
+              fr:'Ce qui se passe<br><em>entre</em> les entraînements<br>ne devrait pas<br>rester un mystère.' },
+    eating: { en:'What happens<br><em>between</em> meals<br>doesn\'t have to<br>stay a mystery.',
+              fr:'Ce qui se passe<br><em>entre</em> les repas<br>ne devrait pas<br>rester un mystère.' }
+  };
   // Inputs whose placeholders translate: [id, fr]
   const PH_FR = {
     btwPlanQ1:'p. ex. Avez-vous fait vos montées de marche cette semaine ?',
@@ -8739,9 +8748,19 @@
     eating: { en:"Note your meals, energy and cravings as the day goes, by voice or text, in under a minute. Between turns them into a clear energy trend and the patterns that keep coming back, so you can see what fuels a good day and what leads to a crash.",
               fr:"Notez vos repas, votre énergie et vos envies au fil de la journée, par la voix ou par écrit, en moins d'une minute. Between en fait une tendance d'énergie claire et les habitudes qui reviennent, pour voir ce qui donne une bonne journée et ce qui mène à un coup de fatigue." }
   };
+  // ...and so does the small red line above the headline.
+  const IND_EYEBROW_KEY = "For therapists and counsellors";
+  const IND_EYEBROW_MODE = {
+    body:   { en:"For anyone keeping track of pain", fr:"Pour qui veut suivre sa douleur" },
+    sport:  { en:"For anyone keeping track of training", fr:"Pour qui veut suivre son entraînement" },
+    eating: { en:"For anyone keeping track of how they eat", fr:"Pour qui veut suivre son alimentation" }
+  };
   function pickCopy(key){
     if(key === IND_HERO_KEY && curAudience === 'individual' && typeof curIndividualMode !== 'undefined' && IND_HERO_MODE[curIndividualMode]){
       return IND_HERO_MODE[curIndividualMode][curLang === 'fr' ? 'fr' : 'en'];
+    }
+    if(key === IND_EYEBROW_KEY && curAudience === 'individual' && typeof curIndividualMode !== 'undefined' && IND_EYEBROW_MODE[curIndividualMode]){
+      return IND_EYEBROW_MODE[curIndividualMode][curLang === 'fr' ? 'fr' : 'en'];
     }
     const d = audDicts();
     if(d){
@@ -10150,6 +10169,9 @@
     // physio, coach or school sees their own work at the top of the page.
     var _artKey = ['therapy','physio','kinesiology','osteo','occupational','neuropsych','nutrition','sports','fitness','recovery','schools','individual'].indexOf(curAudience) >= 0 ? curAudience : 'therapy';
     var _noArt = (curAudience === 'speech'); // no illustration for this field yet
+    // For myself: the picture follows what they track (Mind keeps the reading-on-the-couch one).
+    var _indArt = { body:'physio', sport:'kinesiology', eating:'nutrition' };
+    if(curAudience === 'individual' && typeof curIndividualMode !== 'undefined' && _indArt[curIndividualMode]) _artKey = _indArt[curIndividualMode];
     var _artSrc = '/assets/fields/hero/' + _artKey + '.webp';
     var _artSm = document.getElementById('btwHeroArtSm');
     if(_artSm){ _artSm.style.display = _noArt ? 'none' : ''; if(!_noArt && _artSm.getAttribute('src') !== _artSrc) _artSm.setAttribute('src', _artSrc); }
@@ -10504,7 +10526,7 @@
     }
     if(heroH1){
       heroH1.innerHTML = curAudience === 'individual'
-        ? (curLang === 'fr' ? heroIndividualFr : heroIndividualEn)
+        ? (heroIndividualMode[curIndividualMode] ? heroIndividualMode[curIndividualMode][curLang === 'fr' ? 'fr' : 'en'] : (curLang === 'fr' ? heroIndividualFr : heroIndividualEn))
         : curAudience === 'sports'
         ? (curLang === 'fr' ? heroSportsFr : heroSportsEn)
         : curAudience === 'schools'
